@@ -5,6 +5,16 @@
 
 using namespace std;
 
+const int START_ASM_TABLE = 0x87CC;
+const int START_INIT_TABLE = 0x837D;
+const int START_1656_TABLE = 0x3F46C;
+const int START_1662_TABLE = 0x3F535;
+const int START_166E_TABLE = 0x3F5FE;
+const int START_167A_TABLE = 0x3F6C7;
+const int START_1686_TABLE = 0x3F790;
+const int START_190F_TABLE = 0x3F859;
+
+
 const int BANK_SIZE = 0x8000;
 const int HEADER_SIZE = 0x200;
 const int TAG_SIZE = 0xB;		//S T A R X X X X M D K
@@ -32,8 +42,8 @@ struct Location{
 
 	void print()
 	{
-		cout << hex << "SNES: " << bank_number << ":" << bank_SNES_addr << endl;
-		cout << hex << "PC: " << full_PC_addr << endl;
+		cout << hex << "PC: 0x" << full_PC_addr;
+		cout << "  (SNES: " << bank_number << ":" << bank_SNES_addr << ")" << endl;
 	}
 
 	int full_PC_addr;
@@ -57,6 +67,10 @@ char get_hex_digit(int digit);
 
 int main()
 {
+	cout << "\nSprite Tool v0.9, by mikeyk" << endl;
+	cout << "\nATTENTION: Donut lifts, boomerang brothers, and poison mushrooms\n";
+	cout << "are different from other sprites.  Be sure you've looked at the\n";
+	cout << "readme before using them!\n\n";
 	try{
 		string rom_filename;
 		rom_filename = "smw.smc";
@@ -69,11 +83,13 @@ int main()
 		getline(cin, sprite_list);
 
 		main_function(rom_filename, sprite_list);
+
+		cout<<"\nSprites inserted successfully\n\n";
 	}
 	catch (Error & err){
-		cout << "\n************ERROR************\n" << err.s << "\n*****************************\n";
+		cout << "\n************ERROR************\n" << err.s << "\n*****************************\n\n";
 	}
-
+	system("pause");
 	return 0;
 }
 
@@ -191,6 +207,9 @@ void main_function(string rom_filename, string sprite_list_filename)
 
 	int sprite_number;
 	while (sprites_in >> hex >> sprite_number){
+
+		if (sprite_number > 0x0C8)
+			throw Error("valid sprite numbers are 00 through C8");
 					
 		string sprite_cfg_filename;
 		sprites_in >> sprite_cfg_filename;
@@ -209,7 +228,12 @@ void main_function(string rom_filename, string sprite_list_filename)
 		}
 		
 		int type = int(unsigned char(table_row[0]));
-		if (type & 1){
+		if (type == 1){
+			for (int i=14; i<16; ++i){
+				sprite_cfg >> hex >> value;
+				table_row[i] = char(value);
+			}
+
 			string sprite_asm_filename;
 			sprite_cfg >> sprite_asm_filename;
 			sprite_asm_filename = PATH + sprite_asm_filename;
@@ -229,7 +253,8 @@ void main_function(string rom_filename, string sprite_list_filename)
 			sprite_asm_tmp.write(asm_file_contents, sprite_asm_size + 13);
 			sprite_asm_tmp.close();
 
-			system("trasm.exe tmpasm.asm -f");
+			system("trasm.exe tmpasm.asm -f > temp.log");
+			//system("trasm.exe tmpasm.asm -f");
 
 			fstream sprite_bin("tmpasm.bin", ios::in | ios::binary);
 			if (!sprite_bin) throw Error("couldn't open tmpasm.bin");
@@ -237,6 +262,7 @@ void main_function(string rom_filename, string sprite_list_filename)
 			Location sprite_location = find_free_space(rom_file, sprite_bin_size);
 			sprite_bin.close();
 			cout << "\nsprite: " << sprite_number << endl;
+			cout << sprite_cfg_filename << endl;
 			sprite_location.print();
 
 			asm_file_contents[10] = get_hex_digit((TAG_SIZE + sprite_location.bank_SNES_addr) % 16);
@@ -251,7 +277,8 @@ void main_function(string rom_filename, string sprite_list_filename)
 			sprite_asm_tmp.write(asm_file_contents, sprite_asm_size + 13);
 			sprite_asm_tmp.close();
 
-			system("trasm.exe tmpasm.asm -f");
+			system("trasm.exe tmpasm.asm -f > temp.log");
+			//system("trasm.exe tmpasm.asm -f");
 
 			sprite_bin.open("tmpasm.bin", ios::in | ios::binary);
 			if (!sprite_bin) throw Error("couldn't open tmpasm.bin on second pass");
@@ -280,7 +307,7 @@ void main_function(string rom_filename, string sprite_list_filename)
 			code_offset += 4;
 
 			cout << "init offset: " << init_offset << endl;
-			cout << "code offset: " << code_offset << endl;
+			cout << "main offset: " << code_offset << endl;
 
 			table_row[10] = sprite_location.bank_number;
 			table_row[9] = 0x080;
@@ -292,7 +319,7 @@ void main_function(string rom_filename, string sprite_list_filename)
 			
 			//write jsl locations to rom
 			rom_file.seekp(table_row_start);
-			rom_file.write(table_row, 14);
+			rom_file.write(table_row, 16);
 			
 			//change the bytes that need relocating
 			/*int current_reloc;
@@ -302,6 +329,12 @@ void main_function(string rom_filename, string sprite_list_filename)
 				relocate(bin_buffer, current_reloc, sprite_location);
 			}
 			cout << endl;*/
+			ifstream error_file("TMPASM.ERR");
+			string word;
+			while (error_file>>word){
+                if (word == "Although")
+					throw Error(sprite_asm_filename + " didn't compile correctly.");
+			}
 
 			write_to_rom(rom_file, sprite_location, bin_buffer, sprite_bin_size);
 			
@@ -310,9 +343,97 @@ void main_function(string rom_filename, string sprite_list_filename)
 			sprite_bin.close();
 
 		}
-		else{
+		else if (type == 0) {
 			rom_file.seekp(table_row_start);
 			rom_file.write(table_row, 8);
+		}
+		else if (type == 255){
+			cout << "\ninserting poison mushroom\n";
+			
+			int poison_num = int(unsigned char(table_row[1]));
+			cout << poison_num << endl;
+			
+			//set the tweaker bytes
+			rom_file.seekp(START_1656_TABLE + poison_num);
+			rom_file.write(&table_row[2], 1);
+			rom_file.seekp(START_1662_TABLE + poison_num);
+			rom_file.write(&table_row[3], 1);
+			rom_file.seekp(START_166E_TABLE + poison_num);
+			rom_file.write(&table_row[4], 1);
+			rom_file.seekp(START_167A_TABLE + poison_num);
+			rom_file.write(&table_row[5], 1);
+			rom_file.seekp(START_1686_TABLE + poison_num);
+			rom_file.write(&table_row[6], 1);
+			rom_file.seekp(START_190F_TABLE + poison_num);
+			rom_file.write(&table_row[7], 1);
+
+			//change the asm pointers
+			for (int i=8; i<12; ++i){
+				sprite_cfg >> hex >> value;
+				table_row[i] = char(value);
+			}
+			rom_file.seekp(START_ASM_TABLE + 2*poison_num);
+			rom_file.write(&table_row[8], 2);
+			rom_file.seekp(START_INIT_TABLE + 2*poison_num);
+			rom_file.write(&table_row[10], 2);
+
+			// now deal with the .bin file
+			string mush_bin_file;
+			sprite_cfg >> mush_bin_file;
+			mush_bin_file = PATH + mush_bin_file;
+
+			fstream mush_code(mush_bin_file.c_str(), ios::in | ios::binary);
+			if (!mush_code) throw Error("couldn't open " + mush_bin_file);
+			int code_size = get_file_size(mush_code);
+			Location mush_location = find_free_space(rom_file, code_size);
+			mush_location.print();
+			int code_start = mush_location.full_PC_addr + TAG_SIZE;
+		
+			//put the mushroom code in memory
+			char * mush_buffer = new char[code_size];
+			mush_code.seekg(0, ios::beg);
+			mush_code.read(mush_buffer, code_size);
+
+			//change bytes the are sprite number checks
+			int num_sprite_refs;
+			sprite_cfg >> hex >> num_sprite_refs;
+			for (int i=0; i<num_sprite_refs; ++i){
+				int sprite_ref_location;
+				sprite_cfg >> hex >> sprite_ref_location;
+				mush_buffer[sprite_ref_location] = char(poison_num);
+			}
+
+			//write the bin file to the rom
+			write_to_rom(rom_file, mush_location, mush_buffer, code_size);
+			delete [] mush_buffer;
+
+			//patch original code
+			char mush[4];
+
+			int location, jump_type;
+			sprite_cfg >> jump_type >> location;
+			location += (mush_location.bank_SNES_addr + TAG_SIZE);
+
+			mush[0] = char(jump_type);
+			mush[1] = location & 0x0FF;
+			mush[2] = (location >> 8) & 0x0FF;
+			mush[3] = mush_location.bank_number;	
+			rom_file.seekp(0x0C6CB, ios::beg);
+			rom_file.write(mush, 4);
+
+			sprite_cfg >> jump_type >> location;
+			location += (mush_location.bank_SNES_addr + TAG_SIZE);
+
+			mush[0] = char(jump_type);
+			mush[1] = location & 0x0FF;
+			mush[2] = (location >> 8) & 0x0FF;
+			mush[3] = mush_location.bank_number;	
+			rom_file.seekp(0x0C8D6, ios::beg);
+			rom_file.write(mush, 4);
+
+		}
+		else{
+			throw Error("Invalid type number in " + sprite_cfg_filename);
 		}
 			
 		
@@ -327,7 +448,7 @@ Location find_free_space(fstream & rom_file, int space_needed)
 	space_needed += TAG_SIZE;
 
 	if (space_needed > 0x8000)
-		throw Error("Your file won't fit in a bank");
+		throw Error("Your file won't fit in a bank.  Perhaps a stray org in the .asm file?");
 	int rom_size = get_file_size(rom_file);
 	int number_of_banks = (rom_size - HEADER_SIZE)/BANK_SIZE;
 	if (number_of_banks <= 0x10)
@@ -408,6 +529,14 @@ void clean_rom(fstream & rom_file){
 
 	char bank_buffer[BANK_SIZE];
 
+	//undo poison mushroom changes
+	char mush[4] = {0x0C9, 0x021, 0x0D0, 0x069};
+	char mush_gfx[4] = {0x0AA, 0x0BD, 0x009, 0x0C6};
+	rom_file.seekp(0x0C6CB, ios::beg);
+	rom_file.write(mush, 4);
+	rom_file.seekp(0x0C8D6, ios::beg);
+	rom_file.write(mush_gfx, 4);
+	
 	for (int i = 0x10; i < number_of_banks; ++i){
 
 		//get whole bank into a string
