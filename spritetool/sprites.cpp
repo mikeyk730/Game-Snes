@@ -7,6 +7,8 @@
 #include <fstream>
 #include <cassert>
 
+#include "sprites.h"
+
 using namespace std;
 
 /********************************************************************
@@ -28,7 +30,21 @@ const int HEADER_SIZE = 0x200;
 const int TAG_SIZE = 0xB;		//S T A R # # # # M D K
 const int SPRITE_TABLE_SIZE = 0x1000;
 
-const char * BAD_NUM = "Custom sprite numbers E0-FF are undefined.  Please check your sprite list.  See the readme for more information";
+const string GENERATOR_PATH = ".\\generators\\";
+const string SHOOTER_PATH = ".\\shooters\\";
+const string SPRITE_PATH = ".\\sprites\\";
+const string INIT_LABEL = "INIT";
+const string MAIN_LABEL = "MAIN";
+
+const char * BAD_NUM =
+  "Custom sprite numbers E0-FF are undefined.  Please check your sprite list.\n"
+  "See the readme for more information";
+
+const string WELCOME_MESSAGE = 
+  "Sprite Tool v1.24, by mikeyk\n"
+  "ATTENTION: If you don't know what to do at this screen, read the readme.\n"
+  "If you get an error when running the program, read the readme for tips.\n"
+  "Keep in mind that sprites will not appear correctly in Lunar Magic.";
 
 /********************************************************************
  declarations
@@ -39,14 +55,35 @@ struct Error{
   string s;
 };
 
+//We deal with locations quite often
 class Location{
 public:
+  
   Location(int bank, int offset) :
     m_bank_number(bank),
     m_snes_address(BANK_STARTING_ADDRESS + offset),
     m_pc_address(HEADER_SIZE + BANK_SIZE * m_bank_number + offset)
   { }
+  /*
+  Location(int bank, int off) : bank_number(bank), offset_from_bank_start(off)
+  {
+    bank_SNES_addr = offset_from_bank_start + 0x8000;
+    full_PC_addr = BANK_SIZE*bank_number + HEADER_SIZE + offset_from_bank_start;
+  }
 
+  inline int pc_address() const { return full_PC_addr; }
+  inline int bank() const { return bank_number; }
+  inline int snes_address() const { return bank_SNES_addr; }
+  inline int offset_from_bank_startx() const
+  { return offset_from_bank_start; }*/
+  /*
+private:
+   int full_PC_addr;
+  int bank_SNES_addr;
+  int bank_number;
+  int offset_from_bank_start;
+  */
+  
   inline int pc_address() const { return m_pc_address; }
   inline int bank() const { return m_bank_number; }
   inline int snes_address() const { return m_snes_address; }
@@ -54,10 +91,10 @@ public:
   { return m_snes_address - BANK_STARTING_ADDRESS; }
 
 private:
-  int m_pc_address;
-  
   int m_bank_number;
   int m_snes_address;
+
+  int m_pc_address;
 };
 
 ostream& operator<<(ostream& os, const Location& location)
@@ -112,10 +149,8 @@ string get_filename(const string& prompt)
 
 int main(int argc, char** argv)
 {
-  cout << "\nSprite Tool v1.24, by mikeyk" << endl;
-  cout << "\nATTENTION: If you don't know what to do at this screen, read the readme.\n";
-  cout << "If you get an error when running the program, read the readme for tips.\n";
-  cout << "Keep in mind that sprites will not appear correctly in Lunar Magic.\n\n";
+  cout << endl << WELCOME_MESSAGE << endl << endl;
+
   try{
     fstream rom_file;
     do {
@@ -162,11 +197,13 @@ int main(int argc, char** argv)
   return 0;
 }
 
+
 //mmmmm... one long function.  teacher would be proud :)
 void main_function(fstream & rom_file, ifstream & sprites_in)
-{	
+{
+  SpriteTool st(rom_file, sprites_in);
   //get rid of anything sprite tool may have inserted in the past
-  clean_rom(rom_file);
+  st.clean_rom();
 	
 
   //we will eventually be inserting main.bin and the sprite table
@@ -243,7 +280,7 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
   for(int i = main_code_size; i < total_size; i += 0x10){
     main_buffer[i+0] = 0;
     main_buffer[i+1] = 0;
-    //make the asm pointers go to a RTL
+    //make the asm pointers default to an RTL
     main_buffer[i+8] = 0x21;
     main_buffer[i+9] = 0x080;
     main_buffer[i+10] = 0x01;
@@ -255,7 +292,7 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
   //we are done patching, so the rest of the offsets in the file must be reloc
   // offsets.  we go ahead and apply those.
   //TODO: i could use TRASM and eliminate the need to do this, but then again 
-  // nobody else has to deal with this file, and it's not too hard to maintain
+  // nobody else has to deal with this file, and it's not too hard to maintain.
   int current_reloc;
   cout << "reloc offsets:";
   while (main_cfg >> hex >> current_reloc){
@@ -273,18 +310,15 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
   int sprite_number;
   while (sprites_in >> hex >> sprite_number){
 
-    //if (sprite_number > 0x0C8)
-    //	throw Error("Valid sprite numbers are 00 through C8.  Please check your sprite list");
-
     string PATH;
     if (sprite_number >= 0x0E0)
       throw Error(BAD_NUM);
     else if (sprite_number >= 0x0D0)
-      PATH = ".\\generators\\";
+      PATH = GENERATOR_PATH;
     else if (sprite_number >= 0x0C0)
-      PATH = ".\\shooters\\";
+      PATH = SHOOTER_PATH;
     else
-      PATH = ".\\sprites\\";
+      PATH = SPRITE_PATH;
 
     cout << "\nsprite: " << sprite_number << endl;
 
@@ -415,7 +449,7 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
       if (sprite_bin_size2 != sprite_bin_size)
 	throw Error("second pass yielded a different file size.  wtf, mate??");
 
-      //HACK ALERT!!  Huge hack in 3... 2... 1...
+      //HACK ALERT!!  In 3... 2... 1...
       //if there was a problem in TRASM we don't want to try to insert anything into the rom.
       // Since we can really communicate with TRASM, we have to look at the log file it 
       // generates.  we bail if it contains the word "although"... again, huge hack.
@@ -423,6 +457,10 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
       string word;
       while (error_file>>word){
 	if (word == "Although"){
+	  //MiOr was doing some pretty complicated stuff with asm.  So much that TRASM
+	  // was reporting an error when there really wasn't.  I added the option to
+	  // ignore this warning solely for him.
+	  //TODO: I should make this a command line flag
 	  cout << "\n*****************************" << endl
 	       << "Error detected in assembling " << sprite_asm_filename << endl
 	       << "It is recommended that you abort Sprite Tool at this time." << endl
@@ -439,7 +477,6 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
             
       //it's peanut butter jelly time! we have the binary code to insert and no messy offsets
       // to deal with.  all that's left to do is set up the asm pointers in the table.
-
             
       //open binary file into buffer
       char * bin_buffer = new char[sprite_bin_size];
@@ -449,8 +486,8 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
       //determine where the INIT routine and the MAIN routine actually start
       string bin_contents(bin_buffer, sprite_bin_size);
       int init_offset, code_offset;			
-      init_offset = bin_contents.find("INIT", 0);
-      code_offset = bin_contents.find("MAIN", 0);
+      init_offset = bin_contents.find(INIT_LABEL, 0);
+      code_offset = bin_contents.find(MAIN_LABEL, 0);
 			
       if (init_offset == string::npos)
 	throw Error("dcb \"INIT\" not found in " + sprite_asm_filename);
@@ -490,7 +527,6 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
 
       //write the sprite's binary code to the rom
       write_to_rom(rom_file, sprite_location, bin_buffer, sprite_bin_size);
-
 
       delete [] bin_buffer;
       delete [] asm_file_contents;
@@ -695,9 +731,9 @@ void write_to_rom(fstream & rom_file, Location location, char* buffer, int size)
 }
 
 //remove everything from a previous run of sprite tool
-void clean_rom(fstream & rom_file){
-
-  int rom_size = get_file_size(rom_file);
+void SpriteTool::clean_rom()
+{
+  int rom_size = get_file_size(m_rom_file);
   int number_of_banks = (rom_size - HEADER_SIZE)/BANK_SIZE;
   if (number_of_banks <= 0x10)
     throw Error("Your ROM must be expanded");
@@ -710,16 +746,16 @@ void clean_rom(fstream & rom_file){
   // corruption.
   char mush[4] = {0x0C9, 0x021, 0x0D0, 0x069};
   char mush_gfx[4] = {0x0AA, 0x0BD, 0x009, 0x0C6};
-  rom_file.seekp(0x0C6CB, ios::beg);
-  rom_file.write(mush, 4);
-  rom_file.seekp(0x0C8D6, ios::beg);
-  rom_file.write(mush_gfx, 4);
+  m_rom_file.seekp(0x0C6CB, ios::beg);
+  m_rom_file.write(mush, 4);
+  m_rom_file.seekp(0x0C8D6, ios::beg);
+  m_rom_file.write(mush_gfx, 4);
 	
   //removes all STAR####MDK tags
   for (int i = 0x10; i < number_of_banks; ++i){ 
     //get whole bank into a string
-    rom_file.seekg(i*BANK_SIZE + HEADER_SIZE, ios::beg);
-    rom_file.read(bank_buffer, BANK_SIZE);
+    m_rom_file.seekg(i*BANK_SIZE + HEADER_SIZE, ios::beg);
+    m_rom_file.read(bank_buffer, BANK_SIZE);
     string current_bank_contents(bank_buffer, BANK_SIZE);
 
     //look for data inserted on previous uses
@@ -734,8 +770,8 @@ void clean_rom(fstream & rom_file){
       + int(unsigned char(current_bank_contents[loc-4])) + 8;
     cout << "deleted " << hex << size << " bytes" << endl;
     memset(&bank_buffer[loc-8], 0, size);
-    rom_file.seekp(i*BANK_SIZE + HEADER_SIZE, ios::beg);
-    rom_file.write(bank_buffer, BANK_SIZE);
+    m_rom_file.seekp(i*BANK_SIZE + HEADER_SIZE, ios::beg);
+    m_rom_file.write(bank_buffer, BANK_SIZE);
     --i;		
   }
 }
