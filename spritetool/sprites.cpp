@@ -18,9 +18,11 @@ const int START_190F_TABLE = 0x3F859;
 const int BANK_SIZE = 0x8000;
 const int HEADER_SIZE = 0x200;
 const int TAG_SIZE = 0xB;		//S T A R X X X X M D K
-const int SPRITE_TABLE_SIZE = 0xC90;
-const string PATH = "./sprites/";
-const string LOCAL = "./";
+const int SPRITE_TABLE_SIZE = 0x1000;
+
+const string LOCAL = ".\\";
+
+const char * BAD_NUM = "Custom sprite numbers E0-FF are undefined.  Please check your sprite list.  See the readme for more information";
 
 /********************************************************************
  declarations
@@ -68,10 +70,10 @@ char get_hex_digit(int digit);
 
 int main()
 {
-	cout << "\nSprite Tool public test v1.01, by mikeyk" << endl;
-	cout << "\nATTENTION: Donut lifts, boomerang brothers, and poison mushrooms\n";
-	cout << "are different from other sprites.  Be sure you've looked at the\n";
-	cout << "readme before using them!\n\n";
+	cout << "\nSprite Tool public test v1.22, by mikeyk" << endl;
+	cout << "\nATTENTION: If you don't know what to do at this screen, read the readme.\n";
+	cout << "If you get an error when running the program, read the readme for tips.\n";
+	cout << "Keep in mind that sprites will not appear correctly in Lunar Magic.\n\n";
 	try{
         fstream rom_file;
         do {
@@ -79,7 +81,8 @@ int main()
             string rom_filename = "smw.smc";
             cout << "enter rom filename: ";
             getline(cin, rom_filename);
-            rom_filename = LOCAL + rom_filename;
+            if (rom_filename.size() <= 1 || !(rom_filename[1]==':' || (rom_filename[0]=='\\' && rom_filename[1]=='\\')))
+                rom_filename = LOCAL + rom_filename;
             rom_file.open(rom_filename.c_str(), ios::in | ios::out | ios::binary);
             if (!rom_file){
                 cout << "Error: couldn't open ROM " << rom_filename << endl;
@@ -93,7 +96,8 @@ int main()
             string sprite_list_filename = "sprites.txt";
             cout << "enter sprite list filename: ";
             getline(cin, sprite_list_filename);
-            sprite_list_filename = LOCAL + sprite_list_filename;
+            if (sprite_list_filename.size() <= 1 || !(sprite_list_filename[1]==':' || (sprite_list_filename[0]=='\\' && sprite_list_filename[1]=='\\')))
+                sprite_list_filename = LOCAL + sprite_list_filename;
             sprites_in.open(sprite_list_filename.c_str());
             if (!sprites_in){
                 cout << "Error: couldn't open sprite list " << sprite_list_filename << endl;
@@ -112,17 +116,39 @@ int main()
 	return 0;
 }
 
+void patch_location(fstream & rom_file,
+                    ifstream & main_cfg,
+                    const Location & main_location,
+                    int write_location,
+                    int num_bytes = 5,
+                    bool is_jump = false)
+{
+   	int location;
+	char patch[5] = {0x022, 0x0, 0x0, 0x0, 0x0EA};
+
+    if (is_jump)
+        patch[0] = 0x05C;
+           
+    main_cfg >> hex >> location;
+	location += (main_location.bank_SNES_addr + TAG_SIZE);
+	patch[1] = location & 0x0FF;
+	patch[2] = (location >> 8) & 0x0FF;
+	patch[3] = main_location.bank_number;
+	rom_file.seekp(write_location);
+	rom_file.write(patch, num_bytes);
+}
+
 void main_function(fstream & rom_file, ifstream & sprites_in)
 {
-	//open the rom
-	
 
+    string PATH = ".\\sprites\\";
+	
 	clean_rom(rom_file);
 
 	cout << "\nmain code and table:\n";
 	//find a place in rom to put the main code and sprite table
-	fstream main_code("./main.bin", ios::in | ios::binary);
-	if (!main_code) throw Error("couldn't open ./main.bin");
+	fstream main_code(".\\main.bin", ios::in | ios::binary);
+	if (!main_code) throw Error("couldn't open .\\main.bin");
 	int main_code_size = get_file_size(main_code);
 	int total_size = main_code_size + SPRITE_TABLE_SIZE;
 	Location main_location = find_free_space(rom_file, total_size);
@@ -136,71 +162,48 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
 	for(int i = main_code_size; i < total_size; i += 0x10){
 		main_buffer[i+0] = 0;
 		main_buffer[i+1] = 0;
+        main_buffer[i+8] = 0x21;
+        main_buffer[i+9] = 0x080;
+        main_buffer[i+10] = 0x01;
+        main_buffer[i+11] = 0x21;
+        main_buffer[i+12] = 0x080;
+        main_buffer[i+13] = 0x01;
 	}
 
 	main_code.seekg(0, ios::beg);
 	main_code.read(main_buffer, main_code_size);
 
-	ifstream main_cfg("./main.off");
-	if (!main_cfg) throw Error("couldn't open ./main.off");
+	ifstream main_cfg(".\\main.off");
+	if (!main_cfg) throw Error("couldn't open .\\main.off");
 
 	//patch locations that call sprite tool code
-	int location;
-	char patch[5] = {0x022, 0x0, 0x0, 0x0, 0x0EA};
 	
-	//patch level loading
-	main_cfg >> hex >> location;
-	location += (main_location.bank_SNES_addr + TAG_SIZE);
-	patch[1] = location & 0x0FF;
-	patch[2] = (location >> 8) & 0x0FF;
-	patch[3] = main_location.bank_number;
-	rom_file.seekp(0x12B63);
-	rom_file.write(patch, 5);
-	
-	//patch init routine
-	main_cfg >> hex >> location;
-	location += (main_location.bank_SNES_addr + TAG_SIZE);
-	patch[1] = location & 0x0FF;
-	patch[2] = (location >> 8) & 0x0FF;
-	patch[3] = main_location.bank_number;
-	rom_file.seekp(0x08372);
-	rom_file.write(patch, 5);
+	// 1 - patch level loading
+    patch_location(rom_file, main_cfg, main_location, 0x12B63);
+	// 2 - patch init routine
+	patch_location(rom_file, main_cfg, main_location, 0x08372);
+	// 3 - patch code routine
+	patch_location(rom_file, main_cfg, main_location, 0x087C3);
+	// 4 - patch eraser routine
+	patch_location(rom_file, main_cfg, main_location, 0x3F985);
+	// 5 - patch eraser routine 2
+	patch_location(rom_file, main_cfg, main_location, 0x08351);
+	// 6 - patch verical level loading
+    patch_location(rom_file, main_cfg, main_location, 0x12B4B);
+    // 7 - patch root of sprite loader
+    patch_location(rom_file, main_cfg, main_location, 0x12A66, 4, true);
+    // 8 - patch shooter loader
+    patch_location(rom_file, main_cfg, main_location, 0x12DA0);
+    // 9 - patch generator handler
+    patch_location(rom_file, main_cfg, main_location, 0x13595, 5, true);
+    // 10 - patch shooter handler
+    patch_location(rom_file, main_cfg, main_location, 0x131FE);
+    // 11 - patch table filler
+    patch_location(rom_file, main_cfg, main_location, 0x089A7, 4, true);
 
-	//patch code routine
-	main_cfg >> hex >> location;
-	location += (main_location.bank_SNES_addr + TAG_SIZE);
-	patch[1] = location & 0x0FF;
-	patch[2] = (location >> 8) & 0x0FF;
-	patch[3] = main_location.bank_number;
-	rom_file.seekp(0x087C3);
-	rom_file.write(patch, 5);
-
-	//patch eraser routine
-	main_cfg >> hex >> location;
-	location += (main_location.bank_SNES_addr + TAG_SIZE);
-	patch[1] = location & 0x0FF;
-	patch[2] = (location >> 8) & 0x0FF;
-	patch[3] = main_location.bank_number;
-	rom_file.seekp(0x3F985);
-	rom_file.write(patch, 5);
-
-	//patch eraser routine 2
-	main_cfg >> hex >> location;
-	location += (main_location.bank_SNES_addr + TAG_SIZE);
-	patch[1] = location & 0x0FF;
-	patch[2] = (location >> 8) & 0x0FF;
-	patch[3] = main_location.bank_number;
-	rom_file.seekp(0x08351);
-	rom_file.write(patch, 5);
-
-	//patch verical level loading
-	main_cfg >> hex >> location;
-	location += (main_location.bank_SNES_addr + TAG_SIZE);
-	patch[1] = location & 0x0FF;
-	patch[2] = (location >> 8) & 0x0FF;
-	patch[3] = main_location.bank_number;
-	rom_file.seekp(0x12B4B);
-	rom_file.write(patch, 5);
+    char hammer_patch[2] = {0x0C2, 0x085};
+    rom_file.seekp(0x084B3);
+	rom_file.write(hammer_patch, 2);
 
 	//patch goal tape init to get extra bits in $187B
 	char goal_patch[11] = {0x0BF, 0x010, 0x0AB, 0x07F, 0x0EA, 0x0EA, 0x0EA, 0x0EA, 0x09D, 0x07B, 0x018};
@@ -223,9 +226,18 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
 	int sprite_number;
 	while (sprites_in >> hex >> sprite_number){
 
-		if (sprite_number > 0x0C8)
-			throw Error("Valid sprite numbers are 00 through C8.  Please check your sprite list");
+		//if (sprite_number > 0x0C8)
+		//	throw Error("Valid sprite numbers are 00 through C8.  Please check your sprite list");
+        if (sprite_number >= 0x0E0)
+            throw Error(BAD_NUM);
+        else if (sprite_number >= 0x0D0)
+            PATH = ".\\generators\\";
+        else if (sprite_number >= 0x0C0)
+            PATH = ".\\shooters\\";
+        else
+            PATH = ".\\sprites\\";
         
+
         cout << "\nsprite: " << sprite_number << endl;
 
 		string sprite_cfg_filename;
@@ -247,7 +259,7 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
 		}
 		
 		int type = int(unsigned char(table_row[0]));
-		if (type == 1){
+		if (type == 1 || type == 3){
 			for (int i=14; i<16; ++i){
 				sprite_cfg >> hex >> value;
                 if (!sprite_cfg) throw Error(sprite_cfg_filename + " contains invalid data");
@@ -271,8 +283,8 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
 			sprite_asm_file.read(&asm_file_contents[13], sprite_asm_size);
 			sprite_asm_file.close();
 			
-			fstream sprite_asm_tmp("./tmpasm.asm", ios::out | ios::binary);
-			if (!sprite_asm_tmp) throw Error("couldn't create ./tmpasm.asm");
+			fstream sprite_asm_tmp(".\\tmpasm.asm", ios::out | ios::binary);
+			if (!sprite_asm_tmp) throw Error("couldn't create .\\tmpasm.asm");
 			sprite_asm_tmp.write(asm_file_contents, sprite_asm_size + 13);
 			sprite_asm_tmp.close();
 
@@ -280,8 +292,8 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
 			system("trasm.exe tmpasm.asm -f > temp.log");
 			//system("trasm.exe tmpasm.asm -f");
 
-			fstream sprite_bin("./tmpasm.bin", ios::in | ios::binary);
-			if (!sprite_bin) throw Error("couldn't open ./tmpasm.bin.  Make sure TRASM.EXE is in the same directory and that it can run on your system.");
+			fstream sprite_bin(".\\tmpasm.bin", ios::in | ios::binary);
+			if (!sprite_bin) throw Error("couldn't open .\\tmpasm.bin.  Make sure TRASM.EXE is in the same directory and that it can run on your system.");
 			int sprite_bin_size = get_file_size(sprite_bin);
 			Location sprite_location = find_free_space(rom_file, sprite_bin_size);
 			sprite_bin.close();
@@ -294,8 +306,8 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
 			asm_file_contents[6] = get_hex_digit((TAG_SIZE + sprite_location.bank_number) % 16);
 			asm_file_contents[5] = get_hex_digit(((TAG_SIZE + sprite_location.bank_number) >> 4) % 16);
 
-			sprite_asm_tmp.open("./tmpasm.asm", ios::out | ios::binary);
-			if (!sprite_asm_tmp) throw Error("couldn't create ./tmpasm.asm on second pass");
+			sprite_asm_tmp.open(".\\tmpasm.asm", ios::out | ios::binary);
+			if (!sprite_asm_tmp) throw Error("couldn't create .\\tmpasm.asm on second pass");
 			sprite_asm_tmp.write(asm_file_contents, sprite_asm_size + 13);
 			sprite_asm_tmp.close();
 
@@ -303,8 +315,8 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
 			system("trasm.exe tmpasm.asm -f > temp.log");
 			//system("trasm.exe tmpasm.asm -f");
 
-			sprite_bin.open("./tmpasm.bin", ios::in | ios::binary);
-			if (!sprite_bin) throw Error("couldn't open ./tmpasm.bin on second pass");
+			sprite_bin.open(".\\tmpasm.bin", ios::in | ios::binary);
+			if (!sprite_bin) throw Error("couldn't open .\\tmpasm.bin on second pass");
 			int sprite_bin_size2 = get_file_size(sprite_bin);
 
 			if (sprite_bin_size2 != sprite_bin_size)
@@ -352,7 +364,7 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
 				relocate(bin_buffer, current_reloc, sprite_location);
 			}
 			cout << endl;*/
-			ifstream error_file("./TMPASM.ERR");
+			ifstream error_file(".\\TMPASM.ERR");
 			string word;
 			while (error_file>>word){
                 if (word == "Although")
