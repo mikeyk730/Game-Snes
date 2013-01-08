@@ -12,139 +12,57 @@
 using namespace std;
 
 /********************************************************************
- constants
+  Helpers
 ********************************************************************/
+namespace{
+  struct Error{
+    Error(const string & s_){s=s_;}
+    string s;
+  };
 
-const int START_ASM_TABLE = 0x87CC;
-const int START_INIT_TABLE = 0x837D;
-const int START_1656_TABLE = 0x3F46C;
-const int START_1662_TABLE = 0x3F535;
-const int START_166E_TABLE = 0x3F5FE;
-const int START_167A_TABLE = 0x3F6C7;
-const int START_1686_TABLE = 0x3F790;
-const int START_190F_TABLE = 0x3F859;
-
-const int BANK_SIZE = 0x8000;
-const int BANK_STARTING_ADDRESS = 0x8000;
-const int HEADER_SIZE = 0x200;
-const int TAG_SIZE = 0xB;		//S T A R # # # # M D K
-const int SPRITE_TABLE_SIZE = 0x1000;
-
-const string GENERATOR_PATH = ".\\generators\\";
-const string SHOOTER_PATH = ".\\shooters\\";
-const string SPRITE_PATH = ".\\sprites\\";
-const string INIT_LABEL = "INIT";
-const string MAIN_LABEL = "MAIN";
-
-const char * BAD_NUM =
-  "Custom sprite numbers E0-FF are undefined.  Please check your sprite list.\n"
-  "See the readme for more information";
-
-const string WELCOME_MESSAGE = 
-  "Sprite Tool v1.24, by mikeyk\n"
-  "ATTENTION: If you don't know what to do at this screen, read the readme.\n"
-  "If you get an error when running the program, read the readme for tips.\n"
-  "Keep in mind that sprites will not appear correctly in Lunar Magic.";
-
-/********************************************************************
- declarations
-********************************************************************/
-
-struct Error{
-  Error(const string & s_){s=s_;}
-  string s;
-};
-
-//We deal with locations quite often
-class Location{
-public:
-  
-  Location(int bank, int offset) :
-    m_bank_number(bank),
-    m_snes_address(BANK_STARTING_ADDRESS + offset),
-    m_pc_address(HEADER_SIZE + BANK_SIZE * m_bank_number + offset)
-  { }
-  /*
-  Location(int bank, int off) : bank_number(bank), offset_from_bank_start(off)
+  ostream& operator<<(ostream& os, const Location& location)
   {
-    bank_SNES_addr = offset_from_bank_start + 0x8000;
-    full_PC_addr = BANK_SIZE*bank_number + HEADER_SIZE + offset_from_bank_start;
+    os << hex << "PC: 0x" << location.pc_address() << "  (SNES: "
+       << location.bank() << ":" << location.snes_address() << ")" ;
+    return os;
   }
 
-  inline int pc_address() const { return full_PC_addr; }
-  inline int bank() const { return bank_number; }
-  inline int snes_address() const { return bank_SNES_addr; }
-  inline int offset_from_bank_startx() const
-  { return offset_from_bank_start; }*/
-  /*
-private:
-   int full_PC_addr;
-  int bank_SNES_addr;
-  int bank_number;
-  int offset_from_bank_start;
-  */
+  Location operator+(const Location& orig, int offset)
+  {
+    assert(orig.offset_from_bank_start() + offset < BANK_SIZE);
+    return Location(orig.bank(), orig.offset_from_bank_start() + offset);    
+  }
+
+  //returns the filesize, doesn't preserve the get pointer
+  int get_file_size(fstream & fs)
+  {
+    fs.seekg (0, ios::end);
+    return fs.tellg();
+  }
   
-  inline int pc_address() const { return m_pc_address; }
-  inline int bank() const { return m_bank_number; }
-  inline int snes_address() const { return m_snes_address; }
-  inline int offset_from_bank_start() const
-  { return m_snes_address - BANK_STARTING_ADDRESS; }
-
-private:
-  int m_bank_number;
-  int m_snes_address;
-
-  int m_pc_address;
-};
-
-ostream& operator<<(ostream& os, const Location& location)
-{
-  os << hex << "PC: 0x" << location.pc_address() << "  (SNES: "
-     << location.bank() << ":" << location.snes_address() << ")" ;
-  return os;
-}
-
-void main_function(fstream & rom_file, ifstream & sprites_in);
-Location find_free_space(fstream & rom_file, int space_needed);
-void relocate(char* code_buffer, int reloc_offset, Location inserted_location, int code_offset=0);
-void write_to_rom(fstream & rom_file, Location location, char* buffer, int size);
-void clean_rom(fstream & rom_file);
-void patch_location(fstream & rom_file, ifstream & main_cfg, const Location & main_location,
-		    int write_location, int num_bytes = 5, bool is_jump = false);
-
-/********************************************************************
- helpers
-********************************************************************/
-
-//returns the filesize, doesn't preserve the get pointer
-int get_file_size(fstream & fs){
-  fs.seekg (0, ios::end);
-  return fs.tellg();
-}
-
-char get_hex_digit(int digit){
-  static const char * hex_digits = "0123456789ABCDEF";
-  if (digit < 0 || digit > 15){
-    cout << "Warning: get_hex_digit was passed a value of " << digit << endl;
-    return 0;
+  char get_hex_digit(int digit)
+  {
+    static const char * hex_digits = "0123456789ABCDEF";
+    assert(digit >= 0 && digit <= 15);
+    return hex_digits[digit];
   }
-  return hex_digits[digit];
+  
+  string get_filename(const string& prompt)
+  {
+    string filename;
+    cout << prompt;
+    getline(cin, filename);
+    //if the user didn't specify a full path, prepend the filename with .\ 
+    //this really shouldn't have to be done, but apparently this helped some people
+    if (filename.size() <= 1 || !(filename[1]==':' || (filename[0]=='\\' && filename[1]=='\\')))
+      filename = ".\\" + filename;
+    return filename;
+  }
 }
 
-string get_filename(const string& prompt)
-{
-  string filename;
-  cout << prompt;
-  getline(cin, filename);
-  //if the user didn't specify a full path, prepend the filename with .\ 
-  //this really shouldn't have to be done, but apparently this helped some people
-  if (filename.size() <= 1 || !(filename[1]==':' || (filename[0]=='\\' && filename[1]=='\\')))
-    filename = ".\\" + filename;
-  return filename;
-}
 
 /********************************************************************
-
+   Main
  ********************************************************************/
 
 int main(int argc, char** argv)
@@ -169,9 +87,9 @@ int main(int argc, char** argv)
       }
     } while(!rom_file);
 
-    ifstream sprites_in;
+    ifstream sprite_file;
     do{
-      sprites_in.clear();
+      sprite_file.clear();
       string sprite_list_filename;
       if (argc == 2){
 	argc--;
@@ -179,52 +97,111 @@ int main(int argc, char** argv)
       }
       else
 	sprite_list_filename = get_filename("enter sprite list filename: ");
-      sprites_in.open(sprite_list_filename.c_str());
-      if (!sprites_in){
+      sprite_file.open(sprite_list_filename.c_str());
+      if (!sprite_file){
 	cout << "Error: couldn't open sprite list " << sprite_list_filename << endl;
 	continue;
       }
-    } while(!sprites_in);
+    } while(!sprite_file);
 
-    main_function(rom_file, sprites_in);
+    SpriteTool st(rom_file, sprite_file);
+    //get rid of anything sprite tool may have inserted in the past
+    st.clean_rom();
+    //insert and hook up the sprite execution code
+    st.insert_main_routine();
+    //now we can go through in all the sprites listed in sprites.txt
+    st.insert_sprites();    
 
-    cout<<"\nSprites inserted successfully\n\n";
+    cout << endl
+	 << "Sprites inserted successfully" << endl
+	 << endl;
   }
   catch (Error & err){
-    cout << "\n************ERROR************\n" << err.s << "\n*****************************\n\n";
+    cout << endl
+	 << "************ERROR************" << endl
+	 << err.s << endl
+	 << "*****************************" << endl
+	 << endl;
   }
   system("pause");
   return 0;
 }
 
 
-//mmmmm... one long function.  teacher would be proud :)
-void main_function(fstream & rom_file, ifstream & sprites_in)
-{
-  SpriteTool st(rom_file, sprites_in);
-  //get rid of anything sprite tool may have inserted in the past
-  st.clean_rom();
-	
+/********************************************************************
+   SpriteTool
+ ********************************************************************/
 
+//remove everything from a previous run of sprite tool
+void SpriteTool::clean_rom()
+{
+  cout << "cleaning up data from previous runs:" << endl;
+  int rom_size = get_file_size(m_rom_file);
+  int number_of_banks = (rom_size - HEADER_SIZE)/BANK_SIZE;
+  if (number_of_banks <= 0x10)
+    throw Error("Your ROM must be expanded");
+
+  //revert poison mushroom changes back to the original rom's values
+  //TODO: i probably should do some sort of check first.  if someone has manually
+  // modified the portion of the powerup routine i'm reverting, it could cause 
+  // corruption.
+  char mush[4] = {0x0C9, 0x021, 0x0D0, 0x069};
+  write_to_rom(0x0C6CB, mush, 4);
+  char mush_gfx[4] = {0x0AA, 0x0BD, 0x009, 0x0C6};
+  write_to_rom(0x0C8D6, mush_gfx, 4);
+
+  char empty_buffer[BANK_SIZE];
+  memset(empty_buffer, 0, BANK_SIZE);
+  char bank_buffer[BANK_SIZE];
+  
+  //removes all STAR####MDK tags
+  for (int i = 0x10; i < number_of_banks; ++i){ 
+    //get whole bank into a string
+    m_rom_file.seekg(i*BANK_SIZE + HEADER_SIZE, ios::beg);
+    m_rom_file.read(bank_buffer, BANK_SIZE);
+    string current_bank_contents(bank_buffer, BANK_SIZE);
+
+    //look for data inserted on previous uses
+    size_t offset = current_bank_contents.find(SPRITE_TOOL_LABEL, 0);
+    if( offset == string::npos || offset < 8)
+      continue;
+    if (current_bank_contents.substr(offset-8, 4) != RATS_TAG_LABEL)
+      continue;
+		
+    //delete the amount that the RATS tag is protecting
+    int size = (int(unsigned char(current_bank_contents[offset-3])) << 8)
+      + int(unsigned char(current_bank_contents[offset-4])) + 8;
+    int pc_address = HEADER_SIZE + (i * BANK_SIZE) + offset - 8;
+    write_to_rom(pc_address, empty_buffer, size);
+    cout << hex << "deleted " << size << " bytes from PC 0x" << pc_address << endl;
+
+    //try this bank again
+    --i;		
+  }
+}
+
+
+void SpriteTool::insert_main_routine()
+{
   //we will eventually be inserting main.bin and the sprite table
   // into the rom.  the first thing we need to figure out is where
   // in the rom it will go.  everything else relies on this location
-  cout << "\nmain code and table:\n";
+  cout << "\ninserting main code and table:\n";
   fstream main_code(".\\main.bin", ios::in | ios::binary);
   if (!main_code) throw Error("couldn't open .\\main.bin");
   //figure out how much space is needed
   int main_code_size = get_file_size(main_code);
   int total_size = main_code_size + SPRITE_TABLE_SIZE;
   //find a free spot in the rom
-  Location main_location = find_free_space(rom_file, total_size);
-  cout << main_location << endl;
-  int table_start = main_location.pc_address() + main_code_size + TAG_SIZE;
-  cout << "sprite table start " << table_start << endl;
+  m_main_location = find_free_space(total_size);
+  cout << m_main_location << endl;
+  m_table_start = m_main_location.pc_address() + main_code_size + TAG_SIZE;
+  cout << "sprite table start PC 0x" << hex << m_table_start << endl;
 
-
+  
   //main.off is a file that contains two groups (lines) of offsets.
   // 1) the first group of offsets tell where different subroutines start in main.bin.
-  // they are use in calls to "patch_location" to get smw code to call my code
+  // they are use in calls to "setup_call_to_asm" to get smw code to call my code
   //
   // 2) the second group of offsets are very similar to reloc offsets in blocktool.
   // they make sure calls within my code are linked up properly
@@ -235,38 +212,37 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
   if (!main_cfg) throw Error("couldn't open .\\main.off");
 
   //patch locations that call sprite tool code
-  // 1 - patch level loading
-  patch_location(rom_file, main_cfg, main_location, 0x12B63);
-  // 2 - patch init routine
-  patch_location(rom_file, main_cfg, main_location, 0x08372);
-  // 3 - patch code routine
-  patch_location(rom_file, main_cfg, main_location, 0x087C3);
-  // 4 - patch eraser routine
-  patch_location(rom_file, main_cfg, main_location, 0x3F985);
-  // 5 - patch eraser routine 2
-  patch_location(rom_file, main_cfg, main_location, 0x08351);
-  // 6 - patch verical level loading
-  patch_location(rom_file, main_cfg, main_location, 0x12B4B);
-  // 7 - patch root of sprite loader
-  patch_location(rom_file, main_cfg, main_location, 0x12A66, 4, true);
-  // 8 - patch shooter loader
-  patch_location(rom_file, main_cfg, main_location, 0x12DA0);
-  // 9 - patch generator handler
-  patch_location(rom_file, main_cfg, main_location, 0x13595, 5, true);
-  // 10 - patch shooter handler
-  patch_location(rom_file, main_cfg, main_location, 0x131FE);
-  // 11 - patch table filler
-  patch_location(rom_file, main_cfg, main_location, 0x089A7, 4, true);
+  // patch 1 - level loading
+  setup_call_to_asm(main_cfg, 0x12B63);
+  // patch 2 - init routine
+  setup_call_to_asm(main_cfg, 0x08372);
+  // patch 3 - code routine
+  setup_call_to_asm(main_cfg, 0x087C3);
+  // patch 4 - bit reset routine
+  setup_call_to_asm(main_cfg, 0x3F985);
+  // patch 5 - bit reset routine 2
+  setup_call_to_asm(main_cfg, 0x08351);
+  // patch 6 - verical level loading
+  setup_call_to_asm(main_cfg, 0x12B4B);
+  // patch 7 - root of sprite loader
+  setup_call_to_asm(main_cfg, 0x12A66, 4, true);
+  // patch 8 - shooter loader
+  setup_call_to_asm(main_cfg, 0x12DA0);
+  // patch 9 - generator handler
+  setup_call_to_asm(main_cfg, 0x13595, 5, true);
+  // patch 10 - shooter handler
+  setup_call_to_asm(main_cfg, 0x131FE);
+  // patch 11 - table filler
+  setup_call_to_asm(main_cfg, 0x089A7, 4, true);
 
-  //
+  // 
   char hammer_patch[2] = {0x0C2, 0x085};
-  rom_file.seekp(0x084B3);
-  rom_file.write(hammer_patch, 2);
+  write_to_rom(0x084B3, hammer_patch, 2);
 
-  //patch goal tape init to get extra bits in $187B
-  char goal_patch[11] = {0x0BF, 0x010, 0x0AB, 0x07F, 0x0EA, 0x0EA, 0x0EA, 0x0EA, 0x09D, 0x07B, 0x018};
-  rom_file.seekp(0x0C289);
-  rom_file.write(goal_patch, 11);
+  // patch goal tape init to get extra bits in $187B
+  char goal_patch[11] = {0x0BF, 0x010, 0x0AB, 0x07F, 0x0EA, 0x0EA,
+			 0x0EA, 0x0EA, 0x09D, 0x07B, 0x018};
+  write_to_rom(0x0C289, goal_patch, 11);
 
 
   //create a buffer containing my custom code and the sprite table.  we will write
@@ -297,18 +273,19 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
   cout << "reloc offsets:";
   while (main_cfg >> hex >> current_reloc){
     cout << " " << current_reloc;
-    relocate(main_buffer, current_reloc, main_location);
+    relocate(main_buffer, current_reloc, m_main_location);
   }
   cout << endl;
 
   //write the main code and empty sprite table to rom
-  write_to_rom(rom_file, main_location, main_buffer, total_size);
+  write_to_rom_with_tags(m_main_location.pc_address(), main_buffer, total_size);
   delete [] main_buffer;
-    
+}
 
-  //now we can go through in all the sprites listed in sprites.txt
+
+void SpriteTool::insert_sprites(){
   int sprite_number;
-  while (sprites_in >> hex >> sprite_number){
+  while (m_sprite_list >> hex >> sprite_number){
 
     string PATH;
     if (sprite_number >= 0x0E0)
@@ -320,12 +297,12 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
     else
       PATH = SPRITE_PATH;
 
-    cout << "\nsprite: " << sprite_number << endl;
+    cout << "\ninserting sprite: " << sprite_number << endl;
 
     //open the .cfg file for the sprite
     string sprite_cfg_filename;
-    sprites_in >> sprite_cfg_filename;
-    if (!sprites_in) throw Error("sprite list contains invalid data");
+    m_sprite_list >> sprite_cfg_filename;
+    if (!m_sprite_list) throw Error("sprite list contains invalid data");
     sprite_cfg_filename = PATH + sprite_cfg_filename;
     ifstream sprite_cfg(sprite_cfg_filename.c_str());
     if (!sprite_cfg) throw Error("couldn't open cfg file " + sprite_cfg_filename);
@@ -333,7 +310,7 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
 
     //based on the sprite number, we can get the location of the current sprite's 
     // table entry
-    int table_row_start = table_start + (0x10 * sprite_number);
+    int table_row_start = m_table_start + (0x10 * sprite_number);
 
     //table layout
     // 00: type {0=tweak,1=custom,3=generator/shooter}
@@ -357,8 +334,7 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
     int type = int(unsigned char(table_row[0]));
     //if it's just a tweaked sprite, we just write the table entry to the rom
     if (type == 0) {
-      rom_file.seekp(table_row_start);
-      rom_file.write(table_row, 8);
+      write_to_rom(table_row_start, table_row, 8);
     }
     //real custom sprites are going to be more work
     else if (type == 1 || type == 3){
@@ -392,21 +368,21 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
 
       //On the first pass we'll arbitrarily use $008000 as the starting address
       //We do this by injecting the line "org $008000" into the source file before we assemble
-      char asm_addr_line[13] = {'o','r','g',' ','$','0','0','8','0','0','0', 0x0D, 0x0A};
+      char org_line[13] = {'o','r','g',' ','$','0','0','8','0','0','0', 0x0D, 0x0A};
 			
       //load the entire source file into a buffer
       fstream sprite_asm_file(sprite_asm_filename.c_str(), ios::in | ios::binary);
       if (!sprite_asm_file) throw Error("couldn't open asm file " + sprite_asm_filename);
       int sprite_asm_size = get_file_size(sprite_asm_file);
       char * asm_file_contents = new char[sprite_asm_size];
-      sprite_asm_file.seekp(0, ios::beg);
+      sprite_asm_file.seekg(0, ios::beg);
       sprite_asm_file.read(asm_file_contents, sprite_asm_size);
       sprite_asm_file.close();
 			
       //create tmpasm.asm which is just the original source file with the org line prepended to it
       fstream sprite_asm_tmp(".\\tmpasm.asm", ios::out | ios::binary);
       if (!sprite_asm_tmp) throw Error("couldn't create .\\tmpasm.asm");
-      sprite_asm_tmp.write(asm_addr_line, 13);
+      sprite_asm_tmp.write(org_line, 13);
       sprite_asm_tmp.write(asm_file_contents, sprite_asm_size);
       sprite_asm_tmp.close();
 
@@ -416,25 +392,26 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
 
       //get the size of the binary file
       fstream sprite_bin(".\\tmpasm.bin", ios::in | ios::binary);
-      if (!sprite_bin) throw Error("couldn't open .\\tmpasm.bin.  Make sure TRASM.EXE is in the same directory and that it can run on your system.");
+      if (!sprite_bin) throw Error(NO_BIN_FILE);
       int sprite_bin_size = get_file_size(sprite_bin);
-      //find a location in the rom for the binary file
-      Location sprite_location = find_free_space(rom_file, sprite_bin_size);
       sprite_bin.close();
+      //find a location in the rom for the binary file
+      Location sprite_location = find_free_space(sprite_bin_size);
       cout << sprite_location << endl;
 
       //change the org line to contain the address of where this code is actually going to go
-      asm_addr_line[10] = get_hex_digit((TAG_SIZE + sprite_location.snes_address()) % 16);
-      asm_addr_line[9] = get_hex_digit(((TAG_SIZE + sprite_location.snes_address()) >> 4) % 16);
-      asm_addr_line[8] = get_hex_digit(((TAG_SIZE + sprite_location.snes_address()) >> 8) % 16);
-      asm_addr_line[7] = get_hex_digit(((TAG_SIZE + sprite_location.snes_address()) >> 12) % 16);
-      asm_addr_line[6] = get_hex_digit((TAG_SIZE + sprite_location.bank()) % 16);
-      asm_addr_line[5] = get_hex_digit(((TAG_SIZE + sprite_location.bank()) >> 4) % 16);
+      Location code_start = sprite_location + TAG_SIZE;
+      org_line[10] = get_hex_digit(code_start.snes_address() % 16);
+      org_line[9] = get_hex_digit((code_start.snes_address() >> 4) % 16);
+      org_line[8] = get_hex_digit((code_start.snes_address() >> 8) % 16);
+      org_line[7] = get_hex_digit((code_start.snes_address() >> 12) % 16);
+      org_line[6] = get_hex_digit(code_start.bank() % 16);
+      org_line[5] = get_hex_digit((code_start.bank() >> 4) % 16);
 
       //create tmpasm.asm as before
       sprite_asm_tmp.open(".\\tmpasm.asm", ios::out | ios::binary);
       if (!sprite_asm_tmp) throw Error("couldn't create .\\tmpasm.asm on second pass");
-      sprite_asm_tmp.write(asm_addr_line, 13);
+      sprite_asm_tmp.write(org_line, 13);
       sprite_asm_tmp.write(asm_file_contents, sprite_asm_size);
       sprite_asm_tmp.close();
 
@@ -463,10 +440,7 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
 	  //TODO: I should make this a command line flag
 	  cout << "\n*****************************" << endl
 	       << "Error detected in assembling " << sprite_asm_filename << endl
-	       << "It is recommended that you abort Sprite Tool at this time." << endl
-	       << "Do not continue unless you are absolutely sure of what you are doing." << endl
-	       << "Trying to continue will probably corrupt you ROM!" << endl
-	       << endl << "Do you want to take my advice and quit? (Type yes or no)" << endl;
+	       << ABORT_MESSAGE << endl;
 	  string should_i_abort;
 	  cin >> should_i_abort;
 	  if (should_i_abort != "no" && should_i_abort != "NO" &&
@@ -511,22 +485,10 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
       relocate(table_row, 11, sprite_location, code_offset);
 			
       //write the current sprite's table entry to the rom
-      rom_file.seekp(table_row_start);
-      rom_file.write(table_row, 16);
+      write_to_rom(table_row_start, table_row, 16);
 			
-      //Usinge TRASM now!  No more keeping track of reloc offsets :) 
-      // Seriously, those would have been a *bitch* for sprite development
-      /*//change the bytes that need relocating
-	int current_reloc;
-	cout << "sprite relocs: ";
-	while (sprite_cfg >> hex >> current_reloc){
-	cout << current_reloc <<" ";
-	relocate(bin_buffer, current_reloc, sprite_location);
-	}
-	cout << endl;*/
-
       //write the sprite's binary code to the rom
-      write_to_rom(rom_file, sprite_location, bin_buffer, sprite_bin_size);
+      write_to_rom_with_tags(sprite_location.pc_address(), bin_buffer, sprite_bin_size);
 
       delete [] bin_buffer;
       delete [] asm_file_contents;
@@ -537,24 +499,16 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
     //wow, all this crap just for the poison mushroom?  I should have just made
     // it a custom sprite... apparently this was easier.
     else if (type == 255){
-      cout << "\ninserting poison mushroom\n";
-			
       int poison_num = int(unsigned char(table_row[1]));
-      cout << poison_num << endl;
+      cout << "poison mushroom to replace sprite " << poison_num << endl;
 			
       //set the tweaker bytes
-      rom_file.seekp(START_1656_TABLE + poison_num);
-      rom_file.write(&table_row[2], 1);
-      rom_file.seekp(START_1662_TABLE + poison_num);
-      rom_file.write(&table_row[3], 1);
-      rom_file.seekp(START_166E_TABLE + poison_num);
-      rom_file.write(&table_row[4], 1);
-      rom_file.seekp(START_167A_TABLE + poison_num);
-      rom_file.write(&table_row[5], 1);
-      rom_file.seekp(START_1686_TABLE + poison_num);
-      rom_file.write(&table_row[6], 1);
-      rom_file.seekp(START_190F_TABLE + poison_num);
-      rom_file.write(&table_row[7], 1);
+      write_to_rom(START_1656_TABLE + poison_num, &table_row[2], 1);
+      write_to_rom(START_1662_TABLE + poison_num, &table_row[3], 1);
+      write_to_rom(START_166E_TABLE + poison_num, &table_row[4], 1);
+      write_to_rom(START_167A_TABLE + poison_num, &table_row[5], 1);
+      write_to_rom(START_1686_TABLE + poison_num, &table_row[6], 1);
+      write_to_rom(START_190F_TABLE + poison_num, &table_row[7], 1);
 
       //change the asm pointers
       for (int i=8; i<12; ++i){
@@ -562,10 +516,8 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
 	if (!sprite_cfg) throw Error(sprite_cfg_filename + " contains invalid data");
 	table_row[i] = char(value);
       }
-      rom_file.seekp(START_ASM_TABLE + 2*poison_num);
-      rom_file.write(&table_row[8], 2);
-      rom_file.seekp(START_INIT_TABLE + 2*poison_num);
-      rom_file.write(&table_row[10], 2);
+      write_to_rom(START_ASM_TABLE + 2*poison_num, &table_row[8], 2);
+      write_to_rom(START_INIT_TABLE + 2*poison_num, &table_row[10], 2);
 
       // now deal with the .bin file
       string mush_bin_file;
@@ -576,7 +528,7 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
       fstream mush_code(mush_bin_file.c_str(), ios::in | ios::binary);
       if (!mush_code) throw Error("couldn't open " + mush_bin_file);
       int code_size = get_file_size(mush_code);
-      Location mush_location = find_free_space(rom_file, code_size);
+      Location mush_location = find_free_space(code_size);
       cout << mush_location << endl;
       int code_start = mush_location.pc_address() + TAG_SIZE;
 		
@@ -597,7 +549,7 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
       }
 
       //write the bin file to the rom
-      write_to_rom(rom_file, mush_location, mush_buffer, code_size);
+      write_to_rom_with_tags(mush_location.pc_address(), mush_buffer, code_size);
       delete [] mush_buffer;
 
       //patch original code
@@ -612,8 +564,7 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
       mush[1] = location & 0x0FF;
       mush[2] = (location >> 8) & 0x0FF;
       mush[3] = mush_location.bank();	
-      rom_file.seekp(0x0C6CB, ios::beg);
-      rom_file.write(mush, 4);
+      write_to_rom(0x0C6CB, mush, 4);
 
       sprite_cfg >> jump_type >> location;
       if (!sprite_cfg) throw Error(sprite_cfg_filename + " contains invalid data");
@@ -623,8 +574,7 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
       mush[1] = location & 0x0FF;
       mush[2] = (location >> 8) & 0x0FF;
       mush[3] = mush_location.bank();	
-      rom_file.seekp(0x0C8D6, ios::beg);
-      rom_file.write(mush, 4);
+      write_to_rom(0x0C8D6, mush, 4);
 
     }
     else{
@@ -634,17 +584,17 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
     sprite_cfg.close();
   }
 
-  if (!sprites_in.eof()) throw Error("sprite list contains invalid data");
+  if (!m_sprite_list.eof()) throw Error("sprite list contains invalid data");
 }
 
 
-Location find_free_space(fstream & rom_file, int space_needed)
+Location SpriteTool::find_free_space(int space_needed)
 {
   space_needed += TAG_SIZE;
 
   if (space_needed > 0x8000)
-    throw Error("Your file won't fit in a bank.  Perhaps a stray org in the .asm file?");
-  int rom_size = get_file_size(rom_file);
+    throw Error(TOO_LARGE);
+  int rom_size = get_file_size(m_rom_file);
   int number_of_banks = (rom_size - HEADER_SIZE)/BANK_SIZE;
   if (number_of_banks <= 0x10)
     throw Error("Your ROM must be expanded");
@@ -654,8 +604,8 @@ Location find_free_space(fstream & rom_file, int space_needed)
   for (int i = 0x10; i < number_of_banks; ++i){
 
     //get whole bank into a string
-    rom_file.seekg(i*BANK_SIZE + HEADER_SIZE, ios::beg);
-    rom_file.read(bank_buffer, BANK_SIZE);
+    m_rom_file.seekg(i*BANK_SIZE + HEADER_SIZE, ios::beg);
+    m_rom_file.read(bank_buffer, BANK_SIZE);
     string current_bank_contents(bank_buffer, BANK_SIZE);
 
     //look for free space
@@ -670,109 +620,85 @@ Location find_free_space(fstream & rom_file, int space_needed)
 }
 
 
-void patch_location(fstream & rom_file,
-                    ifstream & main_cfg,
-                    const Location & main_location,
-                    int write_location,
-                    int num_bytes /*= 5*/,
-                    bool is_jump /*= false*/)
+// Main.bin contains all the routines to handle custom sprites.  It has
+// already been inserted into the rom, but it is not linked up with the SMW
+// code at this point.  The purpose of this function is to insert an
+// instruction that will get a particular sprite tool asm routine called.
+//
+// We determine where the routine is in the rom, we go to the supplied PC
+// address, and overwrite the the supplied number of bytes with a call
+// into the routine.
+void SpriteTool::setup_call_to_asm(ifstream & main_cfg, int pc_address,
+				    int num_bytes /*= 5*/, bool is_jump /*= false*/)
 {
-  int location;
-  char patch[5] = {0x022, 0x0, 0x0, 0x0, 0x0EA};
+  //By default the call is a JSL, but it can be specified to be a JMP
+  char instruction[5] = {0x022, 0x0EA, 0x0EA, 0x0EA, 0x0EA};
+  if (is_jump) instruction[0] = 0x05C;
 
-  if (is_jump)
-    patch[0] = 0x05C;
-           
-  main_cfg >> hex >> location;
-  location += (main_location.snes_address() + TAG_SIZE);
-  patch[1] = location & 0x0FF;
-  patch[2] = (location >> 8) & 0x0FF;
-  patch[3] = main_location.bank();
-  rom_file.seekp(write_location);
-  rom_file.write(patch, num_bytes);
+  //We read in the next offset from main.off.  This tells us where the next
+  // routine starts in main.bin.  
+  int offset;
+  main_cfg >> hex >> offset;
+
+  //Since we've kept track of where main.bin was inserted into the rom, we can
+  // figure out the SNES address of the routine we want to call.  We put this
+  // address into the JSL/JMP instruction.
+  int routine_location = (m_main_location.snes_address() + TAG_SIZE) + offset;
+  instruction[1] = routine_location & 0x0FF;
+  instruction[2] = (routine_location >> 8) & 0x0FF;
+  instruction[3] = m_main_location.bank();
+
+  //Lastly, we put the instruction into the rom.  We are now linked up.
+  write_to_rom(pc_address, instruction, num_bytes);
 }
 
+
 //applies reloc offsets
-void relocate(char* code_buffer, int reloc_offset, Location inserted_location, int code_offset)
+void SpriteTool::relocate(char* code_buffer, int reloc_offset,
+			  Location inserted_location, int code_offset)
 {
   int new_value = (unsigned char(code_buffer[reloc_offset+1]) << 8)
     + unsigned char(code_buffer[reloc_offset]);
-  //cout << hex << endl << new_value << endl;
   new_value += (inserted_location.offset_from_bank_start() + TAG_SIZE + code_offset);
-  //cout<<inserted_location.offset_from_bank_start() << endl << new_value << endl;
   code_buffer[reloc_offset] = new_value & 0x0FF;
   code_buffer[reloc_offset+1] = (new_value >> 8) & 0x0FF;
 }
 
-//write some data to the rom with the STAR###MDK tag
-void write_to_rom(fstream & rom_file, Location location, char* buffer, int size)
+
+void SpriteTool::write_to_rom(int pc_address, char* buffer, int size)
 {
-  rom_file.seekp(location.pc_address(), ios::beg);
+  m_rom_file.seekp(pc_address, ios::beg);
+  m_rom_file.write(buffer, size);
+}
+
+
+//write some data to the rom with the STAR###MDK tag
+void SpriteTool::write_to_rom_with_tags(int pc_address, char* buffer, int size)
+{
+  m_rom_file.seekp(pc_address, ios::beg);
 
   //write RATS tag
   char current_byte[1];
+  m_rom_file.write(RATS_TAG_LABEL, 4);
+  
+  //calculate and write size/inverse size
   int full_size = size + 3;
-  rom_file.write("STAR", 4);
   current_byte[0] = char(full_size & 0x0FF);
-  rom_file.write(current_byte, 1);
+  m_rom_file.write(current_byte, 1);
   current_byte[0] = char((full_size>>8) & 0x0FF);
-  rom_file.write(current_byte, 1);
+  m_rom_file.write(current_byte, 1);
   full_size = (full_size ^ 0x0FFFF) + 1;
   current_byte[0] = char(full_size & 0x0FF);
-  rom_file.write(current_byte, 1);
+  m_rom_file.write(current_byte, 1);
   current_byte[0] = char((full_size>>8) & 0x0FF);
-  rom_file.write(current_byte, 1);
-  rom_file.write("MDK", 3);
-  cout << "wrote 8 bytes" << endl;
+  m_rom_file.write(current_byte, 1);
+  
+  //add sprite tool label, so it can be easily identified for clean up
+  m_rom_file.write(SPRITE_TOOL_LABEL, 3);
 	
   //write data
-  rom_file.write(buffer, size);
-  cout << "wrote " << size << " bytes" << endl;
+  m_rom_file.write(buffer, size);
+  cout << "wrote " << size + TAG_SIZE << " bytes" << endl;
 }
 
-//remove everything from a previous run of sprite tool
-void SpriteTool::clean_rom()
-{
-  int rom_size = get_file_size(m_rom_file);
-  int number_of_banks = (rom_size - HEADER_SIZE)/BANK_SIZE;
-  if (number_of_banks <= 0x10)
-    throw Error("Your ROM must be expanded");
-
-  char bank_buffer[BANK_SIZE];
-
-  //undo poison mushroom changes
-  //TODO: i probably should do some sort of check first.  if someone has manually
-  // modified the portion of the powerup routine i'm reverting, it could cause 
-  // corruption.
-  char mush[4] = {0x0C9, 0x021, 0x0D0, 0x069};
-  char mush_gfx[4] = {0x0AA, 0x0BD, 0x009, 0x0C6};
-  m_rom_file.seekp(0x0C6CB, ios::beg);
-  m_rom_file.write(mush, 4);
-  m_rom_file.seekp(0x0C8D6, ios::beg);
-  m_rom_file.write(mush_gfx, 4);
-	
-  //removes all STAR####MDK tags
-  for (int i = 0x10; i < number_of_banks; ++i){ 
-    //get whole bank into a string
-    m_rom_file.seekg(i*BANK_SIZE + HEADER_SIZE, ios::beg);
-    m_rom_file.read(bank_buffer, BANK_SIZE);
-    string current_bank_contents(bank_buffer, BANK_SIZE);
-
-    //look for data inserted on previous uses
-    size_t loc = current_bank_contents.find("MDK", 0);
-    if( loc == string::npos || loc < 8)
-      continue;
-    if (current_bank_contents.substr(loc-8, 4) != "STAR")
-      continue;
-		
-    //delete the amount that the RATS tag is protecting
-    int size = (int(unsigned char(current_bank_contents[loc-3])) << 8)
-      + int(unsigned char(current_bank_contents[loc-4])) + 8;
-    cout << "deleted " << hex << size << " bytes" << endl;
-    memset(&bank_buffer[loc-8], 0, size);
-    m_rom_file.seekp(i*BANK_SIZE + HEADER_SIZE, ios::beg);
-    m_rom_file.write(bank_buffer, BANK_SIZE);
-    --i;		
-  }
-}
 //-mikeyk
