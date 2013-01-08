@@ -42,9 +42,11 @@ class SpriteTool{
   void clean_rom();
   void insert_main_routine();
   void insert_sprites();
+
+  Location find_free_space(int space_needed);  
   
  private:
-  Location find_free_space(int space_needed);
+  void mark_rats_tags(std::string& bank);
   void relocate(char* code_buffer, int reloc_offset,
 		Location inserted_location, int code_offset=0);
   void setup_call_to_asm(std::ifstream& main_cfg, int pc_address,

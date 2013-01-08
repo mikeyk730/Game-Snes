@@ -31,7 +31,7 @@ const char * SPRITE_TOOL_LABEL = "MDK";
 
 
 const char * WELCOME_MESSAGE = 
-  "Sprite Tool v1.25, by mikeyk\n"
+  "Sprite Tool v1.34, by mikeyk\n"
   "ATTENTION: If you don't know what to do at this screen, read the readme.\n"
   "If you get an error when running the program, read the readme for tips.\n"
   "Keep in mind that sprites will not appear correctly in Lunar Magic.";

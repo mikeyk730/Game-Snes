@@ -161,22 +161,37 @@ void SpriteTool::clean_rom()
     m_rom_file.read(bank_buffer, BANK_SIZE);
     string current_bank_contents(bank_buffer, BANK_SIZE);
 
-    //look for data inserted on previous uses
-    size_t offset = current_bank_contents.find(SPRITE_TOOL_LABEL, 0);
-    if( offset == string::npos || offset < 8)
-      continue;
-    if (current_bank_contents.substr(offset-8, 4) != RATS_TAG_LABEL)
-      continue;
+    int bank_offset = 0;
+    while(1){
+        //look for data inserted on previous uses
+        size_t offset = current_bank_contents.find(SPRITE_TOOL_LABEL, bank_offset);
+        if(offset == string::npos) break;
+        
+        bank_offset += 3;
+        if (offset < 8 || current_bank_contents.substr(offset-8, 4) != RATS_TAG_LABEL)
+            continue;
 		
-    //delete the amount that the RATS tag is protecting
-    int size = (int(unsigned char(current_bank_contents[offset-3])) << 8)
-      + int(unsigned char(current_bank_contents[offset-4])) + 8;
-    int pc_address = HEADER_SIZE + (i * BANK_SIZE) + offset - 8;
-    write_to_rom(pc_address, empty_buffer, size);
-    cout << hex << "deleted " << size << " bytes from PC 0x" << pc_address << endl;
-
-    //try this bank again
-    --i;		
+        //delete the amount that the RATS tag is protecting
+        int size = (int(unsigned char(current_bank_contents[offset-3])) << 8)
+        + int(unsigned char(current_bank_contents[offset-4])) + 8;
+        int inverted = (int(unsigned char(current_bank_contents[offset-1])) << 8)
+        + int(unsigned char(current_bank_contents[offset-2]));
+    
+        if ((size - 8 + inverted) == 0x0FFFF){
+            cout << "New tag: ";
+            size++;
+        }
+        else if ((size - 8 + inverted) == 0x10000)
+            cout << "Old tag: ";
+        else
+            cout << "Warning: Bad RATS tag (" << (size - 8 + inverted) << ") : ";
+    
+        int pc_address = HEADER_SIZE + (i * BANK_SIZE) + offset - 8;
+        write_to_rom(pc_address, empty_buffer, size);
+        cout << hex << "deleted " << size << " bytes from PC 0x" << pc_address << endl;
+        --i;		
+        break;
+    }
   }
 }
 
@@ -234,8 +249,12 @@ void SpriteTool::insert_main_routine()
   setup_call_to_asm(main_cfg, 0x131FE);
   // patch 11 - table filler
   setup_call_to_asm(main_cfg, 0x089A7, 4, true);
+  // patch 12 - status handler
+  setup_call_to_asm(main_cfg, 0x08327, 4, true);
+  // patch 13 - save extra bits at load time
+  setup_call_to_asm(main_cfg, 0x12BC9, 4);
 
-  // 
+  // change the init pointer of the hammer bro, since it executes a null routine anyway
   char hammer_patch[2] = {0x0C2, 0x085};
   write_to_rom(0x084B3, hammer_patch, 2);
 
@@ -244,6 +263,9 @@ void SpriteTool::insert_main_routine()
 			 0x0EA, 0x0EA, 0x09D, 0x07B, 0x018};
   write_to_rom(0x0C289, goal_patch, 11);
 
+  // status routine wrapper
+  char status_patch[4] = {0x020, 0x033, 0x081, 0x06B};
+  write_to_rom(0x0D63E, status_patch, 4);
 
   //create a buffer containing my custom code and the sprite table.  we will write
   // this directly to the rom
@@ -588,6 +610,38 @@ void SpriteTool::insert_sprites(){
 }
 
 
+void SpriteTool::mark_rats_tags(string& bank){
+    int offset = 0;
+    while(1){
+        size_t rats_start = bank.find(RATS_TAG_LABEL, offset);
+        if (rats_start == string::npos) break;
+
+        //cout << rats_start << endl;
+        //cout << string(bank.c_str(), rats_start, rats_start+8) << endl;
+
+        offset = rats_start + 4;
+        unsigned int byte1 = (unsigned char(bank[offset]));
+        unsigned int byte2 = (unsigned char(bank[offset+1]));
+        unsigned int byte3 = (unsigned char(bank[offset+2]));
+        unsigned int byte4 = (unsigned char(bank[offset+3]));
+
+        unsigned int size = (byte2 << 8) + byte1;
+        //cout << "RATS:" << hex << size << endl;
+        unsigned int inverted = (byte4 << 8) + byte3;
+        //cout << "RATS:" << hex << inverted << endl;
+        if ((size + inverted) != 0x0FFFF)
+            cout << "Warning: RATS tag failed validation " << (size + inverted) << endl;
+
+        for (int i = offset + 4; i <= offset + 4 + size; ++i){
+            if (i >= BANK_SIZE){
+                cout << "Warning: RATS tag extending past bank end" << endl;
+                break;
+            }
+            bank[i] = 'X';
+        }
+    }
+}
+
 Location SpriteTool::find_free_space(int space_needed)
 {
   space_needed += TAG_SIZE;
@@ -607,6 +661,8 @@ Location SpriteTool::find_free_space(int space_needed)
     m_rom_file.seekg(i*BANK_SIZE + HEADER_SIZE, ios::beg);
     m_rom_file.read(bank_buffer, BANK_SIZE);
     string current_bank_contents(bank_buffer, BANK_SIZE);
+
+    mark_rats_tags(current_bank_contents);
 
     //look for free space
     string free_space(space_needed,'\0');
@@ -682,12 +738,12 @@ void SpriteTool::write_to_rom_with_tags(int pc_address, char* buffer, int size)
   m_rom_file.write(RATS_TAG_LABEL, 4);
   
   //calculate and write size/inverse size
-  int full_size = size + 3;
+  int full_size = size + 2;
   current_byte[0] = char(full_size & 0x0FF);
   m_rom_file.write(current_byte, 1);
   current_byte[0] = char((full_size>>8) & 0x0FF);
   m_rom_file.write(current_byte, 1);
-  full_size = (full_size ^ 0x0FFFF) + 1;
+  full_size = (full_size ^ 0x0FFFF);
   current_byte[0] = char(full_size & 0x0FF);
   m_rom_file.write(current_byte, 1);
   current_byte[0] = char((full_size>>8) & 0x0FF);
