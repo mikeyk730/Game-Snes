@@ -63,12 +63,23 @@ void write_to_rom(fstream & rom_file, Location location, char* buffer, int size)
 void clean_rom(fstream & rom_file);
 char get_hex_digit(int digit);
 
+string get_filename(const string& prompt)
+{
+    string filename;
+    cout << prompt;
+    getline(cin, filename);
+    //if the user didn't specify a full path, prepend the filename with .\ 
+    //this really shouldn't have to be done, but apparently this helped some people
+    if (filename.size() <= 1 || !(filename[1]==':' || (filename[0]=='\\' && filename[1]=='\\')))
+        filename = LOCAL + filename;
+    return filename;
+}
 
 /********************************************************************
  program
 ********************************************************************/
 
-int main()
+int main(int argc, char** argv)
 {
 	cout << "\nSprite Tool public test v1.22, by mikeyk" << endl;
 	cout << "\nATTENTION: If you don't know what to do at this screen, read the readme.\n";
@@ -78,11 +89,13 @@ int main()
         fstream rom_file;
         do {
             rom_file.clear();
-            string rom_filename = "smw.smc";
-            cout << "enter rom filename: ";
-            getline(cin, rom_filename);
-            if (rom_filename.size() <= 1 || !(rom_filename[1]==':' || (rom_filename[0]=='\\' && rom_filename[1]=='\\')))
-                rom_filename = LOCAL + rom_filename;
+            string rom_filename;       
+            if (argc == 3){
+                argc--;
+                rom_filename = string(argv[1]);
+            }
+            else
+                rom_filename = get_filename("enter rom filename: ");
             rom_file.open(rom_filename.c_str(), ios::in | ios::out | ios::binary);
             if (!rom_file){
                 cout << "Error: couldn't open ROM " << rom_filename << endl;
@@ -93,11 +106,13 @@ int main()
         ifstream sprites_in;
         do{
             sprites_in.clear();
-            string sprite_list_filename = "sprites.txt";
-            cout << "enter sprite list filename: ";
-            getline(cin, sprite_list_filename);
-            if (sprite_list_filename.size() <= 1 || !(sprite_list_filename[1]==':' || (sprite_list_filename[0]=='\\' && sprite_list_filename[1]=='\\')))
-                sprite_list_filename = LOCAL + sprite_list_filename;
+            string sprite_list_filename;
+            if (argc == 2){
+                argc--;
+                sprite_list_filename = string(argv[2]);
+            }
+            else
+                sprite_list_filename = get_filename("enter sprite list filename: ");
             sprites_in.open(sprite_list_filename.c_str());
             if (!sprites_in){
                 cout << "Error: couldn't open sprite list " << sprite_list_filename << endl;
@@ -138,43 +153,42 @@ void patch_location(fstream & rom_file,
 	rom_file.write(patch, num_bytes);
 }
 
+//gotta love this design... one long function :)  maybe if i had just
+//made a simple class 
 void main_function(fstream & rom_file, ifstream & sprites_in)
-{
-
-    string PATH = ".\\sprites\\";
-	
+{	
+    //get rid of anything sprite tool may have inserted in the past
 	clean_rom(rom_file);
-
-	cout << "\nmain code and table:\n";
-	//find a place in rom to put the main code and sprite table
+	
+    //we will eventually be inserting main.bin and the sprite table
+    // into the rom.  the first thing we need to figure out is where
+    // in the rom it will go.  everything else relies on this location
+    cout << "\nmain code and table:\n";
 	fstream main_code(".\\main.bin", ios::in | ios::binary);
 	if (!main_code) throw Error("couldn't open .\\main.bin");
-	int main_code_size = get_file_size(main_code);
+    //figure out how much space is needed
+    int main_code_size = get_file_size(main_code);
 	int total_size = main_code_size + SPRITE_TABLE_SIZE;
-	Location main_location = find_free_space(rom_file, total_size);
+	//find a free spot in the rom
+    Location main_location = find_free_space(rom_file, total_size);
 	main_location.print();
 	int table_start = main_location.full_PC_addr + main_code_size + TAG_SIZE;
 	cout << "sprite table start " << table_start << endl;
-	
-	//put the main code and sprite table in memory
-	char * main_buffer = new char[total_size];
-	memset(main_buffer, 0xFF, total_size);
-	for(int i = main_code_size; i < total_size; i += 0x10){
-		main_buffer[i+0] = 0;
-		main_buffer[i+1] = 0;
-        main_buffer[i+8] = 0x21;
-        main_buffer[i+9] = 0x080;
-        main_buffer[i+10] = 0x01;
-        main_buffer[i+11] = 0x21;
-        main_buffer[i+12] = 0x080;
-        main_buffer[i+13] = 0x01;
-	}
 
-	main_code.seekg(0, ios::beg);
-	main_code.read(main_buffer, main_code_size);
+    //main.off is a file that contains two groups of offsets.
+    // the first group of offsets tells where the 
 
+
+    //everytime you re-assemble main.asm into main.bin, you must remember to update this file if any offsets have changed!!
+
+
+    //TODO: i could use TRASM and eliminate the need for the file completely. 
+    // but then again, nobody else has to deal with this file, and it's not too
+    // hard to maintain
 	ifstream main_cfg(".\\main.off");
 	if (!main_cfg) throw Error("couldn't open .\\main.off");
+
+
 
 	//patch locations that call sprite tool code
 	
@@ -210,6 +224,25 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
 	rom_file.seekp(0x0C289);
 	rom_file.write(goal_patch, 11);
 
+	//Now that we know where we can insert this buffer that will hold exactly what 
+	char * main_buffer = new char[total_size];
+	memset(main_buffer, 0xFF, total_size);
+
+    //load in the code from main.bin
+	main_code.seekg(0, ios::beg);
+	main_code.read(main_buffer, main_code_size);
+    //construct a default sprite table
+    for(int i = main_code_size; i < total_size; i += 0x10){
+		main_buffer[i+0] = 0;
+		main_buffer[i+1] = 0;
+        main_buffer[i+8] = 0x21;
+        main_buffer[i+9] = 0x080;
+        main_buffer[i+10] = 0x01;
+        main_buffer[i+11] = 0x21;
+        main_buffer[i+12] = 0x080;
+        main_buffer[i+13] = 0x01;
+	}
+
 	//change the bytes that need relocating
 	int current_reloc;
 	cout << "reloc offsets:";
@@ -222,10 +255,11 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
 	//write the main code and sprite table to rom
 	write_to_rom(rom_file, main_location, main_buffer, total_size);
 	delete [] main_buffer;
-	
+    
 	int sprite_number;
 	while (sprites_in >> hex >> sprite_number){
 
+        string PATH;
 		//if (sprite_number > 0x0C8)
 		//	throw Error("Valid sprite numbers are 00 through C8.  Please check your sprite list");
         if (sprite_number >= 0x0E0)
@@ -246,7 +280,8 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
 		sprite_cfg_filename = PATH + sprite_cfg_filename;
 		ifstream sprite_cfg(sprite_cfg_filename.c_str());
 		if (!sprite_cfg) throw Error("couldn't open cfg file " + sprite_cfg_filename);
-		
+		cout << sprite_cfg_filename << endl;
+
 		//write type, acts like, and tweaker values
 		int table_row_start = table_start + (0x10 * sprite_number);
 		char table_row[0x10];
@@ -266,61 +301,88 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
 				table_row[i] = char(value);
 			}
 
+            //get the path to the source file from the cfg file
 			string sprite_asm_filename;
 			sprite_cfg >> sprite_asm_filename;
             if (!sprite_cfg) throw Error(sprite_cfg_filename + " contains invalid data");
-			cout << sprite_cfg_filename << endl;
-
             sprite_asm_filename = PATH + sprite_asm_filename;
-			fstream sprite_asm_file(sprite_asm_filename.c_str(), ios::in | ios::binary);
+
+            //hmmm... we have a problem.  when it's time to assemble the source file, we need
+            // to know where the resulting binary file will be inserted.  but we CAN'T know 
+            // where the binary will be inserted, because we don't know the filesize of the sucker
+            // until after it is assembled.  call up yossarian, sprite tool is finished!
+            
+            //as a workaround we can make two passes.  during the first pass we assemble the 
+            // source and get the size of the binary.  we can now find a place in the rom to insert
+            // it.  we can't *actually* insert it, because all the subroutine addresses are 
+            // incorrect.  What we can do is make a second pass.  we now know where the code will
+            // be inserted, so we can go back and re-assemble the source with this information.
+            
+            //The down side of doing this is that it is slooooooow.  The calls to TRASM are the
+            // most expensive part, and we're doing it twice.
+
+
+            //We're going to inject the line "org $008000" into the source file before we assemble
+            //On the first pass we'll assemble with $008000 as our starting address
+			char asm_addr_line[13] = {'o','r','g',' ','$','0','0','8','0','0','0', 0x0D, 0x0A};
+			
+            //load the entire source file into a buffer
+            fstream sprite_asm_file(sprite_asm_filename.c_str(), ios::in | ios::binary);
 			if (!sprite_asm_file) throw Error("couldn't open asm file " + sprite_asm_filename);
 			int sprite_asm_size = get_file_size(sprite_asm_file);
-
-			char line_addition[13] = {'o','r','g',' ','$','0','0','8','0','0','0', 0x0D, 0x0A};
-			char * asm_file_contents = new char[sprite_asm_size + 13];
-			memcpy(asm_file_contents, line_addition, 13);
+            char * asm_file_contents = new char[sprite_asm_size];
 			sprite_asm_file.seekp(0, ios::beg);
-			sprite_asm_file.read(&asm_file_contents[13], sprite_asm_size);
+			sprite_asm_file.read(asm_file_contents, sprite_asm_size);
 			sprite_asm_file.close();
 			
+            //
 			fstream sprite_asm_tmp(".\\tmpasm.asm", ios::out | ios::binary);
 			if (!sprite_asm_tmp) throw Error("couldn't create .\\tmpasm.asm");
-			sprite_asm_tmp.write(asm_file_contents, sprite_asm_size + 13);
+			sprite_asm_tmp.write(asm_addr_line, 13);
+            sprite_asm_tmp.write(asm_file_contents, sprite_asm_size);
 			sprite_asm_tmp.close();
 
             cout << "running TRASM.EXE" << endl;
 			system("trasm.exe tmpasm.asm -f > temp.log");
 			//system("trasm.exe tmpasm.asm -f");
 
+            //get the size of the binary file
 			fstream sprite_bin(".\\tmpasm.bin", ios::in | ios::binary);
 			if (!sprite_bin) throw Error("couldn't open .\\tmpasm.bin.  Make sure TRASM.EXE is in the same directory and that it can run on your system.");
 			int sprite_bin_size = get_file_size(sprite_bin);
+            //find a location in the rom for the binary file
 			Location sprite_location = find_free_space(rom_file, sprite_bin_size);
 			sprite_bin.close();
 			sprite_location.print();
 
-			asm_file_contents[10] = get_hex_digit((TAG_SIZE + sprite_location.bank_SNES_addr) % 16);
-			asm_file_contents[9] = get_hex_digit(((TAG_SIZE + sprite_location.bank_SNES_addr) >> 4) % 16);
-			asm_file_contents[8] = get_hex_digit(((TAG_SIZE + sprite_location.bank_SNES_addr) >> 8) % 16);
-			asm_file_contents[7] = get_hex_digit(((TAG_SIZE + sprite_location.bank_SNES_addr) >> 12) % 16);
-			asm_file_contents[6] = get_hex_digit((TAG_SIZE + sprite_location.bank_number) % 16);
-			asm_file_contents[5] = get_hex_digit(((TAG_SIZE + sprite_location.bank_number) >> 4) % 16);
+            // change the org line 
+			asm_addr_line[10] = get_hex_digit((TAG_SIZE + sprite_location.bank_SNES_addr) % 16);
+			asm_addr_line[9] = get_hex_digit(((TAG_SIZE + sprite_location.bank_SNES_addr) >> 4) % 16);
+			asm_addr_line[8] = get_hex_digit(((TAG_SIZE + sprite_location.bank_SNES_addr) >> 8) % 16);
+			asm_addr_line[7] = get_hex_digit(((TAG_SIZE + sprite_location.bank_SNES_addr) >> 12) % 16);
+			asm_addr_line[6] = get_hex_digit((TAG_SIZE + sprite_location.bank_number) % 16);
+			asm_addr_line[5] = get_hex_digit(((TAG_SIZE + sprite_location.bank_number) >> 4) % 16);
 
 			sprite_asm_tmp.open(".\\tmpasm.asm", ios::out | ios::binary);
 			if (!sprite_asm_tmp) throw Error("couldn't create .\\tmpasm.asm on second pass");
-			sprite_asm_tmp.write(asm_file_contents, sprite_asm_size + 13);
+			sprite_asm_tmp.write(asm_addr_line, 13);
+            sprite_asm_tmp.write(asm_file_contents, sprite_asm_size);
 			sprite_asm_tmp.close();
 
             cout << "running TRASM.EXE" << endl;
 			system("trasm.exe tmpasm.asm -f > temp.log");
 			//system("trasm.exe tmpasm.asm -f");
 
+            //make sure the binaries from the two passes had equal size
+            // ...that was our assumption, and it'd better be true.
 			sprite_bin.open(".\\tmpasm.bin", ios::in | ios::binary);
 			if (!sprite_bin) throw Error("couldn't open .\\tmpasm.bin on second pass");
-			int sprite_bin_size2 = get_file_size(sprite_bin);
-
+			int sprite_bin_size2 = get_file_size(sprite_bin);            
 			if (sprite_bin_size2 != sprite_bin_size)
-				throw Error("second pass yielded a different file size.  wtf??");
+				throw Error("second pass yielded a different file size.  wtf, mate??");
+
+
+            //We actually have the code
 
 			//open binary file into buffer
 			char * bin_buffer = new char[sprite_bin_size];
@@ -356,8 +418,10 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
 			rom_file.seekp(table_row_start);
 			rom_file.write(table_row, 16);
 			
-			//change the bytes that need relocating
-			/*int current_reloc;
+            //Usinge TRASM now!  No more keeping track of reloc offsets :) 
+            // Seriously, those would have been a *bitch* for sprite development
+			/*//change the bytes that need relocating
+			int current_reloc;
 			cout << "sprite relocs: ";
 			while (sprite_cfg >> hex >> current_reloc){
 				cout << current_reloc <<" ";
@@ -382,6 +446,9 @@ void main_function(fstream & rom_file, ifstream & sprites_in)
 			rom_file.seekp(table_row_start);
 			rom_file.write(table_row, 8);
 		}
+
+        //Wow, all this crap just for the poison mushroom?  I should have just made
+        // it a custom sprite... apparently all this was easier.
 		else if (type == 255){
 			cout << "\ninserting poison mushroom\n";
 			
@@ -606,41 +673,10 @@ void clean_rom(fstream & rom_file){
 }
 
 char get_hex_digit(int digit){
-	switch (digit){
-		case 0:
-			return '0';
-		case 1:
-			return '1';
-		case 2:
-			return '2';
-		case 3:
-			return '3';
-		case 4:
-			return '4';
-		case 5:
-			return '5';
-		case 6:
-			return '6';
-		case 7:
-			return '7';
-		case 8:
-			return '8';
-		case 9:
-			return '9';
-		case 10:
-			return 'A';
-		case 11:
-			return 'B';
-		case 12:
-			return 'C';
-		case 13:
-			return 'D';
-		case 14:
-			return 'E';
-		case 15:
-			return 'F';
-
-	}
-	return 0;
-
+    static const char * hex_digits = "0123456789ABCDEF";
+    if (digit < 0 || digit > 15){
+        cout << "Warning: get_hex_digit was passed a value of " << digit << endl;
+        return 0;
+    }
+    return hex_digits[digit];
 }
