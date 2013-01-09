@@ -9,16 +9,14 @@
 #include "disasm.h"
 #include "proto.h"
 
-#define NUMINST	255
-
 using namespace std;
 
 unsigned int hex(char *s)
 {
   unsigned int total = 0;
 
-  int l = strlen(s);
-  for(int a=0; a<l; a++)
+  size_t l = strlen(s);
+  for(size_t a=0; a<l; a++)
   {
     int i = 0;
     if ( (s[a] > 47) && (s[a] < 58) ) i = s[a] - 48; /* 0 - 9 */

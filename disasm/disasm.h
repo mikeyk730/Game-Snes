@@ -26,11 +26,9 @@ Corey\ndisasm [options] <filename>\nfor help use: disasm -help\n"
  -cx       commenting level (default is 1)\n \
             x = 0 for no commenting, 1 for short comments, 2 for long comments\n"
 
-#define NUMINST 255
-
 struct link
 {
-  char label[20];
+  char label[50];
   unsigned char bank;
   int address;
   link *next;

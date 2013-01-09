@@ -1,8 +1,12 @@
 #include <cstdio>
 #include <cstring>
 
+#include <string>
+
 #include "disasm.h"
 #include "proto.h"
+
+using namespace std;
 
 void dotype(const Instruction& instr, unsigned char bank)
 {
@@ -10,7 +14,8 @@ void dotype(const Instruction& instr, unsigned char bank)
   unsigned char i, j, k;
   long ll;
   unsigned char h;
-  char r, *msg;
+  char r;
+  string msg;
 
   switch (t)
   {
@@ -21,130 +26,130 @@ void dotype(const Instruction& instr, unsigned char bank)
              if ( (asmbler == 1) && (accum == 0) ) strcat(buff2,"<");
              if (accum == 1) { j = read_char(srcfile); pc++; ll = j * 256 + ll;
                if (!quiet) printf("%.2X ", j); }
-             msg = checksym(bank, ll); if (msg == NULL) if (accum == 0)
+             msg = get_label(instr, bank, ll); if (msg == "") if (accum == 0)
              sprintf(buff1, "$%.2X", ll); else sprintf(buff1, "$%.4X", ll);
-             else sprintf(buff1, "%s", msg); strcat(buff2, buff1);
+             else sprintf(buff1, "%s", msg.c_str()); strcat(buff2, buff1);
              if (!quiet) { printf("   "); if (accum == 0) printf("   "); }
              break;
     case 2 : i = read_char(srcfile); j = read_char(srcfile);
 /* $xxxx */  if (!quiet) printf("%.2X %.2X    ",i,j);
-             msg = checksym(bank, j * 256 + i); 
-             if (msg == NULL) sprintf(buff1, "$%.2X%.2X", j, i); 
-             else sprintf(buff1, "%s",msg);
+             msg = get_label(instr, bank, j * 256 + i); 
+             if (msg == "") sprintf(buff1, "$%.2X%.2X", j, i); 
+             else sprintf(buff1, "%s",msg.c_str());
              strcat(buff2, buff1);
              pc += 2; high = j; low = i; break;
     case 3 : i = read_char(srcfile); j = read_char(srcfile); k = read_char(srcfile);
 /* $xxxxxx */ if (!quiet) printf("%.2X %.2X %.2X ", i, j, k);
              if (asmbler == 1) strcat(buff2, ">");
-             msg = checksym(k, j * 256 + i); if (msg == NULL)
+             msg = get_label(instr, k, j * 256 + i); if (msg == "")
              sprintf(buff1, "$%.2X%.2X%.2X", k, j, i);
-             else sprintf(buff1, "%s", msg);  strcat(buff2, buff1); 
+             else sprintf(buff1, "%s", msg.c_str());  strcat(buff2, buff1); 
              pc += 3; break;
     case 4 : i = read_char(srcfile); if (!quiet) printf("%.2X       ", i);
 /* $xx */    if (asmbler == 1) strcat(buff2, "<");
-             msg = checksym(bank, i); if (msg == NULL)
+             msg = get_label(instr, bank, i); if (msg == "")
              sprintf(buff1, "$%.2X", i);
-             else sprintf(buff1, "%s", msg); strcat(buff2, buff1);
+             else sprintf(buff1, "%s", msg.c_str()); strcat(buff2, buff1);
              pc++; break;
     case 5 : i = read_char(srcfile); if (!quiet) printf("%.2X       ", i);
-/* ($xx),Y */ msg = checksym(bank, i); if (msg == NULL)
+/* ($xx),Y */ msg = get_label(instr, bank, i); if (msg == "")
              sprintf(buff1, "($%.2X),Y", i);
-             else sprintf(buff1, "(%s),Y" ,msg);
+             else sprintf(buff1, "(%s),Y" ,msg.c_str());
              strcat(buff2, buff1); pc++; break;
     case 6 : i = read_char(srcfile); if (!quiet) printf("%.2X       ", i);
-/* [$xx],Y */ msg = checksym(bank, i);  if (msg == NULL)
+/* [$xx],Y */ msg = get_label(instr, bank, i);  if (msg == "")
              sprintf(buff1, "[$%.2X],Y", i);
-             else sprintf(buff1,"[%s],Y",msg);
+             else sprintf(buff1,"[%s],Y",msg.c_str());
              strcat(buff2, buff1); pc++; break; 
     case 7 : i = read_char(srcfile); if (!quiet) printf("%.2X       ", i);
-/* ($xx,X) */ msg = checksym(bank, i); if (msg == NULL)
+/* ($xx,X) */ msg = get_label(instr, bank, i); if (msg == "")
              sprintf(buff1, "($%.2X,X)", i);
-             else sprintf(buff1, "(%s,X)", msg);
+             else sprintf(buff1, "(%s,X)", msg.c_str());
              strcat(buff2, buff1); pc++; break;
     case 8 : i = read_char(srcfile); if (!quiet) printf("%.2X       ", i);
-/* $xx,X */  msg = checksym(bank, i); if (msg == NULL)
+/* $xx,X */  msg = get_label(instr, bank, i); if (msg == "")
              sprintf(buff1, "$%.2X,X", i);
-             else sprintf(buff1, "%s,X", msg);
+             else sprintf(buff1, "%s,X", msg.c_str());
              strcat(buff2, buff1); pc++; break;
     case 9 : i = read_char(srcfile); j = read_char(srcfile);
 /* $xxxx,X */ if (!quiet) printf("%.2X %.2X    ",i,j);
-             msg = checksym(bank, j * 256 + i); if (msg == NULL)
+             msg = get_label(instr, bank, j * 256 + i); if (msg == "")
              sprintf(buff1, "$%.2X%.2X,X", j, i);
-             else sprintf(buff1, "%s,X", msg);
+             else sprintf(buff1, "%s,X", msg.c_str());
              strcat(buff2, buff1); pc += 2; break;
     case 10: i = read_char(srcfile); j = read_char(srcfile); k = read_char(srcfile);
 /* $xxxxxx,X */ if (!quiet) printf("%.2X %.2X %.2X ", i, j, k);
              if (asmbler == 1) strcat(buff2, ">");
-             msg = checksym(k, j * 256 + i); if (msg == NULL)
+             msg = get_label(instr, k, j * 256 + i); if (msg == "")
              sprintf(buff1, "$%.2X%.2X%.2X,X", k, j, i);
-             else sprintf(buff1, "%s,X", msg);
+             else sprintf(buff1, "%s,X", msg.c_str());
              strcat(buff2, buff1); pc += 3; break;
     case 11: i = read_char(srcfile); j = read_char(srcfile);
 /* $xxxx,Y */ if (!quiet) printf("%.2X %.2X    ",i,j);
-             msg = checksym(bank, j * 256 + i); if (msg == NULL)
+             msg = get_label(instr, bank, j * 256 + i); if (msg == "")
              sprintf(buff1, "$%.2X%.2X,Y", j, i);
-             else sprintf(buff1, "%s,Y", msg);
+             else sprintf(buff1, "%s,Y", msg.c_str());
              strcat(buff2, buff1);
              pc += 2; break;
     case 12: i = read_char(srcfile); if (!quiet) printf("%.2X       ", i);
-/* ($xx) */  msg = checksym(bank, i); if (msg == NULL)
-             sprintf(buff1, "($%.2X)", i); else sprintf(buff1, "(%s)", msg);
+/* ($xx) */  msg = get_label(instr, bank, i); if (msg == "")
+             sprintf(buff1, "($%.2X)", i); else sprintf(buff1, "(%s)", msg.c_str());
              strcat(buff2, buff1); pc++; break;
     case 13: i = read_char(srcfile); if (!quiet) printf("%.2X       ", i);
-/* [$xx] */  msg = checksym(bank, i); if (msg == NULL)
-             sprintf(buff1, "[$%.2X]", i); else sprintf(buff1, "[%s]", msg);
+/* [$xx] */  msg = get_label(instr, bank, i); if (msg == "")
+             sprintf(buff1, "[$%.2X]", i); else sprintf(buff1, "[%s]", msg.c_str());
              strcat(buff2, buff1); pc++; break;
     case 14: i = read_char(srcfile); if (!quiet) printf("%.2X       ", i);
-/* $xx,S */  msg = checksym(bank, i); if (msg == NULL)
-             sprintf(buff1, "$%.x,S", i); else sprintf(buff1, "%s,S", msg);
+/* $xx,S */  msg = get_label(instr, bank, i); if (msg == "")
+             sprintf(buff1, "$%.x,S", i); else sprintf(buff1, "%s,S", msg.c_str());
              strcat(buff2, buff1); pc++; break;
     case 15: i = read_char(srcfile); if (!quiet) printf("%.2X       ", i);
-/* ($xx,S),Y */ msg = checksym(bank, i); if (msg == NULL)
+/* ($xx,S),Y */ msg = get_label(instr, bank, i); if (msg == "")
              sprintf(buff1, "($%.2X,S),Y", i);
-             else sprintf(buff1, "(%s,S),Y", msg);
+             else sprintf(buff1, "(%s,S),Y", msg.c_str());
              strcat(buff2, buff1); pc++; break;
     case 16: r = read_char(srcfile); h = r; if (!quiet) printf("%.2X       ", h);
-/* relative */ pc++; msg = checksym(bank, pc+r); if (msg == NULL)
-             sprintf(buff1, "$%.4X", pc+r); else sprintf(buff1, "%s", msg);
+/* relative */ pc++; msg = get_label(instr, bank, pc+r); if (msg == "")
+             sprintf(buff1, "$%.4X", pc+r); else sprintf(buff1, "%s", msg.c_str());
              strcat(buff2, buff1); break;
     case 17: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
 /* relative long */ if (!quiet) printf("%.2X %.2X    ",i,j);
              ll = j * 256 + i; if (ll > 32767) ll = -(65536-ll);
-      msg = checksym((bank*65536+pc+ll)/0x10000, (bank*65536+pc+ll)&0xffff);
-             if (msg == NULL) sprintf(buff1, "$%.6x", bank*65536+pc+ll);
-             else sprintf(buff1, "%s", msg);
+      msg = get_label(instr, (bank*65536+pc+ll)/0x10000, (bank*65536+pc+ll)&0xffff);
+             if (msg == "") sprintf(buff1, "$%.6x", bank*65536+pc+ll);
+             else sprintf(buff1, "%s", msg.c_str());
              strcat(buff2, buff1); break;
     case 18: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
 /* #$xxxx */ if (!quiet) printf("%.2X %.2X    ",i,j);
-             msg = checksym(bank, j * 256 + i); if (msg == NULL)
-            sprintf(buff1, "#$%.2X%.2X", j, i); else sprintf(buff1,"#%s",msg);
+             msg = get_label(instr, bank, j * 256 + i); if (msg == "")
+            sprintf(buff1, "#$%.2X%.2X", j, i); else sprintf(buff1,"#%s",msg.c_str());
              strcat(buff2, buff1); break;
 /*    case 19: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
 /* [$xxxx]  if (!quiet) printf("%.2X %.2X    ",i,j);
-             msg = checksym(bank, j * 256 + i); if (msg == NULL)
+             msg = get_label(instr, bank, j * 256 + i); if (msg == "")
              sprintf(buff1, "[$%.2X%.2X]", j, i);
-             else sprintf(buff1,"[%s]",msg);
+             else sprintf(buff1,"[%s]",msg.c_str());
              strcat(buff2, buff1); break;
 don't really need this anymore.  will just comment it out before deleting
 it */
     case 20: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
 /* ($xxxx) */ if (!quiet) printf("%.2X %.2X    ",i,j);
-             msg = checksym(bank, j * 256 + i); if (msg == NULL)
-         sprintf(buff1, "($%.2X%.2X)", j, i); else sprintf(buff1, "(%s)", msg);
+             msg = get_label(instr, bank, j * 256 + i); if (msg == "")
+         sprintf(buff1, "($%.2X%.2X)", j, i); else sprintf(buff1, "(%s)", msg.c_str());
              strcat(buff2, buff1); break;
     case 21: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
 /* ($xxxx,X) */ if (!quiet) printf("%.2X %.2X    ",i,j);
-             msg = checksym(bank, j * 256 + i); if (msg == NULL)
+             msg = get_label(instr, bank, j * 256 + i); if (msg == "")
              sprintf(buff1, "($%.2X%.2X,X)", j, i);
-             else sprintf(buff1, "(%s,X)", msg);
+             else sprintf(buff1, "(%s,X)", msg.c_str());
              strcat(buff2,buff1); break;
     case 22: i = read_char(srcfile); if (!quiet) printf("%.2X       ", i); pc++;
-/* $xx,Y */  msg = checksym(bank, i); if (msg == NULL)
-             sprintf(buff1, "$%.2X,Y", i); else sprintf(buff1, "%s,Y", msg);
+/* $xx,Y */  msg = get_label(instr, bank, i); if (msg == "")
+             sprintf(buff1, "$%.2X,Y", i); else sprintf(buff1, "%s,Y", msg.c_str());
              strcat(buff2, buff1); break;
     case 23: i = read_char(srcfile); if (!quiet) printf("%.2X       ", i); pc++;
-/* #$xx */   msg = checksym(bank, i); if (msg == NULL)
-             sprintf(buff1, "#$%.2X", i); else sprintf(buff1, "#%s", msg);
+/* #$xx */   msg = get_label(instr, bank, i); if (msg == "")
+             sprintf(buff1, "#$%.2X", i); else sprintf(buff1, "#%s", msg.c_str());
              strcat(buff2, buff1); break;
     case 24: i = read_char(srcfile); if (!quiet) printf("%.2X       ", i); pc++;
 /* REP */    sprintf(buff1,"#$%.2X", i); strcat(buff2, buff1);
@@ -162,9 +167,9 @@ it */
              if ( (asmbler == 1) && (index == 0) ) strcat(buff2,"<");
              if (index == 1) { j = read_char(srcfile); pc++; ll = j * 256 + ll;
                if (!quiet) printf("%.2X ", j); }
-             msg = checksym(bank, ll); if (msg == NULL) if (index == 0)
+             msg = get_label(instr, bank, ll); if (msg == "") if (index == 0)
              sprintf(buff1, "$%.2X", ll); else sprintf(buff1, "$%.4X", ll);
-             else sprintf(buff1, "%s", msg); strcat(buff2, buff1);
+             else sprintf(buff1, "%s", msg.c_str()); strcat(buff2, buff1);
              if (!quiet) { printf("   "); if (index == 0) printf("   "); }
              break;
     case 27: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
