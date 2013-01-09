@@ -36,14 +36,19 @@ void main (int argc, char *argv[])
             disasm.load_data(argv[i]);
         else if (current == "--sym" && ++i < argc)
             disasm.load_symbols(argv[i]);
-         else if (current == "--sym2" && ++i < argc)
+        else if (current == "--sym2" && ++i < argc)
             disasm.load_symbols2(argv[i]);
+        else if (current == "--comment" && ++i < argc)
+            disasm.load_comments(argv[i]);
         else if (current == "--accum" && ++i < argc)
             disasm.load_accum_bytes(argv[i], true);
         else if (current == "--index" && ++i < argc)
             disasm.load_accum_bytes(argv[i], false);
         else if (current == "--hirom")
-            disasm.m_hirom = true;
+            disasm.hirom(true);
+        else if (current == "--2pass")
+            disasm.passes(2);
+
     }
 
     while(1){
@@ -51,8 +56,9 @@ void main (int argc, char *argv[])
         fseek(srcfile, 512, 0);
 
         Request request;
-        if (!request.get(cin, disasm.m_hirom))
+        if (!request.get(cin, disasm.hirom()))
             break;
+        if (request.m_quit) break;
         disasm.handleRequest(request);
 
         printf("\n");

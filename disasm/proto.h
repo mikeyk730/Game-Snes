@@ -11,7 +11,7 @@ extern FILE *srcfile;
 class Instruction;
 
 unsigned int hex(const char *s);
-void spaces(int number);
+std::string spaces(int number);
 char read_char(FILE * stream);
 std::string to_string(int i, int length, bool in_hex=true);
 std::istream& get_address(std::istream& in, unsigned char& bank, unsigned int& addr);
@@ -57,7 +57,8 @@ struct DisassemblerProperties{
     m_start_bank(0x00),
     m_start_addr(0x8000), 
     m_end_bank(0xFF),
-    m_end_addr(0xFFFF)
+    m_end_addr(0xFFFF),
+    m_passes(1)
   {}  
 
   int m_comment_level;
@@ -72,6 +73,8 @@ struct DisassemblerProperties{
   
   unsigned char m_end_bank;
   unsigned int m_end_addr;
+
+  int m_passes;
 };
 
 

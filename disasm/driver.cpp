@@ -13,7 +13,7 @@ void make_sym_file(ifstream& in);
 bool quiet;
 bool test;
 string flags;
-
+/*
 void main (int argc, char *argv[])
 {
   string s_start, s_end;
@@ -71,6 +71,7 @@ void main (int argc, char *argv[])
   
 }
 
+*/
 void doit(int start, int end, ifstream& in)
 {
   int data_start, data_end;

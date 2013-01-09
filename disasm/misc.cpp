@@ -36,9 +36,9 @@ unsigned int hex(const char *s)
     return total;
 }
 
-void spaces(int number)
+std::string spaces(int number)
 {
-  cout << endl << string(number, ' ');
+  return ("\n" + string(number, ' '));
 }
 
 char read_char(FILE * stream)
