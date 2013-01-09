@@ -30,7 +30,7 @@ int full_address(int bank, int pc){
 }
 
 
-unsigned int hex(char *s)
+unsigned int hex(const char *s)
 {
     istringstream ss(s);
     unsigned int total;

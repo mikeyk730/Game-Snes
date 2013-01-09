@@ -80,8 +80,11 @@ void doit(int start, int end, ifstream& in)
       continue;
     
     istringstream line_stream(line);
-    if(!(line_stream >> hex >> data_start >> data_end))
+    if(!(line_stream >> hex >> data_start))
       continue;
+    if(!(line_stream >> hex >> data_end))   
+        data_end = data_start +1;   
+      
 
     --data_end;
 
@@ -110,7 +113,7 @@ void doit(int start, int end, ifstream& in)
 void do_command(int start, int end, bool data)
 {
   stringstream ss;
-  ss << "disasm.exe -skip -c2";
+  ss << "disasm.exe";
   if (quiet)
     ss << " -q";    
   if (data)
@@ -118,7 +121,7 @@ void do_command(int start, int end, bool data)
   ss << flags;
   ss << " -b" << hex << setfill('0') << setw(6) << start
      << " -e" << hex << setfill('0') << setw(6) << end + 1
-     << " -su data.txt -sy symbol.txt mario.smc";
+     << " --data data.txt -sym symbol.txt mario.smc";
   
   if (test)
     cout << ss.str() << endl;

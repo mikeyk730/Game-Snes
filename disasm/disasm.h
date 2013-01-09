@@ -28,16 +28,13 @@ Corey\ndisasm [options] <filename>\nfor help use: disasm -help\n"
 
 extern FILE *srcfile;
 extern int accum, index;  /* 0 = 8 bit, 1 = 16 bit */
-extern unsigned int pc, eend;
-extern unsigned char endbank;
+extern unsigned int pc, pc_end;
+extern unsigned char end_bank;
 extern char buff1[];
 extern char buff2[];
-extern int hirom;	  /* 1 = HiRom */
 extern int comments; /* 0 = No Comments, 1 = Short Comments, 2 = Long Comments */
 extern int quiet;
 extern int high, low, flag;
-extern int asmbler, dcb;
-extern char *sym_filename;
 
 
 #endif

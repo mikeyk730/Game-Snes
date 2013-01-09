@@ -58,31 +58,34 @@ void loaddata(char *fname)
     int full;
     string label;
     istringstream line_stream(line);
-    if(!(line_stream >> hex >> full >> label))
+    if(!(line_stream >> hex >> full))
       continue;
 
     unsigned int addr = (full & 0x0FFFF);
     unsigned char bank = ((full >> 16) & 0x0FF);
 
     //no label, create one
-    if(!(line_stream >> label))
+    if(!(line_stream >> label >> label))
         label = "DATA_" + to_string(bank,2) + "_" + to_string(addr,4);
      
     add_label(bank, addr, label);
   }
 }
 
-string get_label(const Instruction& instr, char bank, int pc)
+string get_label(const Instruction& instr, unsigned char bank, int pc)
 {
   string label;
 
   map<int, string>::iterator it = label_lookup.find(full_address(bank,pc));
   if (it != label_lookup.end())
       label = it->second;
+  
+  //else if (instr.alwaysUseLabel())
+      //return "";
 
   else if(!instr.neverUseLabel() && (instr.alwaysUseLabel() || pc >= 32768) &&
       !instr.neverUseAddrLabel() && bank < 126)
-        label = "ADDR_" + to_string(bank, 2) + "_" + to_string(pc, 4);
+        label = "ADDR_" + to_string(bank, 2) + /*"_" +*/ to_string(pc, 4);
   
   return label;
 }

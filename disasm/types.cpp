@@ -23,7 +23,6 @@ void dotype(const Instruction& instr, unsigned char bank)
     case 1 : i = read_char(srcfile); pc++; if (!quiet) printf("%.2X ", i);
 /* Accum  #$xx or #$xxxx */
              ll = i; strcat(buff2,"#");
-             if ( (asmbler == 1) && (accum == 0) ) strcat(buff2,"<");
              if (accum == 1) { j = read_char(srcfile); pc++; ll = j * 256 + ll;
                if (!quiet) printf("%.2X ", j); }
              msg = get_label(instr, bank, ll); if (msg == "") if (accum == 0)
@@ -40,14 +39,12 @@ void dotype(const Instruction& instr, unsigned char bank)
              pc += 2; high = j; low = i; break;
     case 3 : i = read_char(srcfile); j = read_char(srcfile); k = read_char(srcfile);
 /* $xxxxxx */ if (!quiet) printf("%.2X %.2X %.2X ", i, j, k);
-             if (asmbler == 1) strcat(buff2, ">");
              msg = get_label(instr, k, j * 256 + i); if (msg == "")
              sprintf(buff1, "$%.2X%.2X%.2X", k, j, i);
              else sprintf(buff1, "%s", msg.c_str());  strcat(buff2, buff1); 
              pc += 3; break;
     case 4 : i = read_char(srcfile); if (!quiet) printf("%.2X       ", i);
-/* $xx */    if (asmbler == 1) strcat(buff2, "<");
-             msg = get_label(instr, bank, i); if (msg == "")
+/* $xx */    msg = get_label(instr, bank, i); if (msg == "")
              sprintf(buff1, "$%.2X", i);
              else sprintf(buff1, "%s", msg.c_str()); strcat(buff2, buff1);
              pc++; break;
@@ -79,7 +76,6 @@ void dotype(const Instruction& instr, unsigned char bank)
              strcat(buff2, buff1); pc += 2; break;
     case 10: i = read_char(srcfile); j = read_char(srcfile); k = read_char(srcfile);
 /* $xxxxxx,X */ if (!quiet) printf("%.2X %.2X %.2X ", i, j, k);
-             if (asmbler == 1) strcat(buff2, ">");
              msg = get_label(instr, k, j * 256 + i); if (msg == "")
              sprintf(buff1, "$%.2X%.2X%.2X,X", k, j, i);
              else sprintf(buff1, "%s,X", msg.c_str());
@@ -164,7 +160,6 @@ it */
     case 26: i = read_char(srcfile); pc++; if (!quiet) printf("%.2X ", i);
 /* Index  #$xx or #$xxxx */
              ll = i; strcat(buff2,"#");
-             if ( (asmbler == 1) && (index == 0) ) strcat(buff2,"<");
              if (index == 1) { j = read_char(srcfile); pc++; ll = j * 256 + ll;
                if (!quiet) printf("%.2X ", j); }
              msg = get_label(instr, bank, ll); if (msg == "") if (index == 0)

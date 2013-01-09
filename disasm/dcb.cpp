@@ -9,11 +9,11 @@
 
 using namespace std;
 
-void dodcb(int bank, int pc, int endbank, int eend)
+void Disassembler::dodcb(int bank, int pc, int end_bank, int pc_end)
 {
   char s2[10];
 
-  for(int i=0; bank * 65536 + pc < endbank * 65536 + eend; ++i){
+  for(int i=0; bank * 65536 + pc < end_bank * 65536 + pc_end; ++i){
     if (i%8 == 0){
       cout << endl;
       string label = get_label(Instruction("",0,ALWAYS_USE_LABEL | NO_ADDR_LABEL), bank, pc);
@@ -27,7 +27,7 @@ void dodcb(int bank, int pc, int endbank, int eend)
     sprintf(s2, "%.4X", pc);
     if (strlen(s2) == 5){
       bank++;
-      if (hirom)
+      if (m_hirom)
 	pc -= 0x10000;
       else
 	pc -= 0x8000;
@@ -36,6 +36,6 @@ void dodcb(int bank, int pc, int endbank, int eend)
     //read and print byte
     unsigned char c = read_char(srcfile);
     printf("$%.2X", c);
-    if (i%8 != 7 && (bank * 65536 + pc < endbank * 65536 + eend)) printf(",");
+    if (i%8 != 7 && (bank * 65536 + pc < end_bank * 65536 + pc_end)) printf(",");
   }
 }
