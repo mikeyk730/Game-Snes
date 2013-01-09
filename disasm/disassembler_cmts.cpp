@@ -7,7 +7,7 @@ using namespace std;
 std::string Disassembler::getRAMComment(unsigned char low, unsigned char high)
 {
     string comment;
-    int comment_level = m_properties.m_comment_level;
+    int comment_level = m_request_prop.m_comment_level;
     unsigned int addr = high * 256 + low;
 
     if (comment_level)

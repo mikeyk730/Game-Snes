@@ -47,35 +47,7 @@ private:
     int m_bitmask;
 };
 
-struct DisassemblerProperties{
-  DisassemblerProperties() :
-    m_comment_level(1),
-    m_quiet(false),
-    m_accum_16(false),
-    m_index_16(false),
-    m_stop_at_rts(false),
-    m_start_bank(0x00),
-    m_start_addr(0x8000), 
-    m_end_bank(0xFF),
-    m_end_addr(0xFFFF),
-    m_passes(1)
-  {}  
 
-  int m_comment_level;
-
-  bool m_quiet;
-  bool m_accum_16;
-  bool m_index_16;
-  bool m_stop_at_rts;
-
-  unsigned char m_start_bank; 
-  unsigned int m_start_addr;
-  
-  unsigned char m_end_bank;
-  unsigned int m_end_addr;
-
-  int m_passes;
-};
 
 
 

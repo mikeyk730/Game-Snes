@@ -47,14 +47,22 @@ bool Request::get(istream & in, bool hirom)
             m_properties.m_index_16 = true;
         else if (current == "-r")
             m_properties.m_stop_at_rts = true;
+        else if (current == "-e")
+            m_properties.m_use_extern_symbols = true;
         else if (current == "-p")
             m_properties.m_passes = 2;
-        else if (current == "nmi")
+        else if (current == "nmi"){
             pc = get_start_from_address(0x7fea, hirom);
-        else if (current == "reset")
+            address_count++;
+        }
+        else if (current == "reset"){
             pc = get_start_from_address(0x7ffc, hirom);
-        else if (current == "irq")
+            address_count++;
+        }
+        else if (current == "irq"){
             pc = get_start_from_address(0x7fee, hirom);
+            address_count++;
+        }
         else if (current == "quit" || current == "exit"){
             m_quit = true;
             return false;
