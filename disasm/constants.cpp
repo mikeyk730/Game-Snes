@@ -12,7 +12,6 @@ int comments = 1; /* 0 = No Comments, 1 = Short Comments, 2 = Long Comments */
 int quiet = 0;
 int high, low, flag;
 int asmbler = 0, dcb = 0;
-link *first = NULL;
 char *sym_filename;
 char mylabel[20];
 

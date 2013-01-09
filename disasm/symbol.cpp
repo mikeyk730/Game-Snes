@@ -1,39 +1,27 @@
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
+
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
 #include <iomanip>
+#include <map>
+
 #include "disasm.h"
 #include "proto.h"
 
 using namespace std;
 
-string to_string(int i, int fill, bool in_hex)
-{
-    ostringstream ss;
-    ss.setf(ios::uppercase);
-    
-    if (in_hex)
-        ss << hex << setfill('0') << setw(fill) << i;
-    else
-        ss << dec << setfill('0') << setw(fill) << i;
-
-    return ss.str();
+namespace{
+    map<int, string> label_lookup;
 }
 
-void addlink(const char *label, unsigned char b, int addr)
+void add_label(int bank, int pc, const string& label)
 {
-  link *newlink;
-
-  newlink = (link *)malloc(sizeof(link));
-  strcpy(newlink->label, label);
-  newlink->bank = b;
-  newlink->address = addr;
-  newlink->next = first;
-  first = newlink;
+    int full_addr = full_address(bank,pc);
+    label_lookup.insert(make_pair(full_addr, label));
 }
 
 void loadsymbols(char *fname)
@@ -54,7 +42,7 @@ void loadsymbols(char *fname)
     unsigned int addr = (fulladdr & 0x0FFFF);   
     unsigned char bank = ((fulladdr >> 16) & 0x0FF);
 
-    addlink(label.c_str(), bank, addr);
+    add_label(bank, addr, label);
     //cout << label << int(bank) << addr << endl;
     count++;
   }
@@ -89,7 +77,7 @@ void loaddata(char *fname)
         label = ss.str();
     }
      
-    addlink(label.c_str(), bank, addr);
+    add_label(bank, addr, label);
     count++;
   }
 
@@ -99,11 +87,9 @@ void loaddata(char *fname)
 string get_label(const Instruction& instr, char bank, int pc)
 {
   string the_label;
-
-  for (link *ptr = first; ptr; ptr = ptr->next){
-      if (ptr->bank * 65536 + ptr->address == bank * 65536 + pc)
-        return string(ptr->label);
-  }
+  map<int, string>::iterator it = label_lookup.find(full_address(bank,pc));
+  if (it != label_lookup.end())
+      return it->second;
 
   if(!instr.neverUseLabel() && (instr.alwaysUseLabel() || pc >= 32768) && bank < 126){
     if (!instr.neverUseAddrLabel())

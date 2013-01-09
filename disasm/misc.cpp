@@ -5,11 +5,30 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <sstream>
 
 #include "disasm.h"
 #include "proto.h"
 
 using namespace std;
+
+string to_string(int i, int fill, bool in_hex)
+{
+    ostringstream ss;
+    ss.setf(ios::uppercase);
+    
+    if (in_hex)
+        ss << hex << setfill('0') << setw(fill) << i;
+    else
+        ss << dec << setfill('0') << setw(fill) << i;
+
+    return ss.str();
+}
+
+int full_address(int bank, int pc){
+    return bank * 65536 + pc;
+}
+
 
 unsigned int hex(char *s)
 {

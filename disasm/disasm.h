@@ -26,14 +26,6 @@ Corey\ndisasm [options] <filename>\nfor help use: disasm -help\n"
  -cx       commenting level (default is 1)\n \
             x = 0 for no commenting, 1 for short comments, 2 for long comments\n"
 
-struct link
-{
-  char label[50];
-  unsigned char bank;
-  int address;
-  link *next;
-};
-
 extern FILE *srcfile;
 extern int accum, index;  /* 0 = 8 bit, 1 = 16 bit */
 extern unsigned int pc, eend;
@@ -45,7 +37,6 @@ extern int comments; /* 0 = No Comments, 1 = Short Comments, 2 = Long Comments *
 extern int quiet;
 extern int high, low, flag;
 extern int asmbler, dcb;
-extern link *first;
 extern char *sym_filename;
 extern char mylabel[];
 

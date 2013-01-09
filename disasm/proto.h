@@ -10,12 +10,12 @@ unsigned int hex(char *s);
 void comment(unsigned char low, unsigned char high);
 void spaces(int number);
 void dodcb(int bank, int pc, int endbank, int eend);
-void addlink(const char *label, unsigned char b, int addr);
 void loaddata(char *fname);
 void loadsymbols(char *fname);
 std::string get_label(const Instruction& instr, char bank, int pc);
 char read_char(FILE * stream);
 std::string to_string(int i, int fill, bool in_hex=true);
+int full_address(int bank, int pc);
 
 const int ALWAYS_USE_LABEL = 0x01;
 const int NO_ADDR_LABEL = 0x02;

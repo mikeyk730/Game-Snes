@@ -27,8 +27,7 @@ void main (int argc, char *argv[])
   int i, cc;
   unsigned char code, a, b;
   char s2[80];
-  link *ptr;
-
+  
   flag = 0;
 
   if (argc < 2)
@@ -59,62 +58,34 @@ void main (int argc, char *argv[])
     if ( (argv[i][0] == '/') || (argv[i][0] == '-') )
     {
       argv[i]++;
+      char *s;
       switch(argv[i][0])
       {
         case 'b':
           argv[i]++;
-          ptr = first;
-          while (ptr != NULL)
-          {
-            if (!strcmp(ptr->label, argv[i]))
-            {
-              bank = ptr->bank;
-              pc = ptr->address;
-              flag = 1;
-            }
-            ptr = ptr->next;
-          }
-          if (flag == 0)
-          {
             if (strlen(argv[i]) != 6)
             {
               printf("Beginning address invalid.\n");
               exit(-1);
             }
-            char * s = argv[i] + strlen(argv[i]) - 4;/*last 4 #s .. ie 018000,s=8000 */
+            s = argv[i] + strlen(argv[i]) - 4;/*last 4 #s .. ie 018000,s=8000 */
             sprintf(s2, "%.2s", argv[i]);
             pc = hex(s);
             bank = hex(s2);
-          }
-          flag = 0;
           break;
 
         case 'e':
           argv[i]++;
-          ptr = first;
-          while (ptr != NULL)
-          {
-              if (!strcmp(ptr->label, argv[i])) 
-            {
-                endbank = ptr->bank;
-                eend = ptr->address;
-                flag = 1;
-            }
-            ptr = ptr->next;
-          }
-          if (flag == 0)
-          {
             if (strlen(argv[i]) != 6)
             {
               printf("Ending address invalid.\n");
               exit(-1);
             }
-            char *s = argv[i] + strlen(argv[i]) - 4;/*last 4 #s .. ie 018000,s=8000 */
+            s = argv[i] + strlen(argv[i]) - 4;/*last 4 #s .. ie 018000,s=8000 */
             sprintf(s2, "%.2s", argv[i]);
             endbank = hex(s2);
             eend = hex(s);
-          }
-          flag = 0;
+
           break;
 
         case 'a':
