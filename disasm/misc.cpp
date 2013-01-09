@@ -7,7 +7,6 @@
 #include <string>
 #include <sstream>
 
-
 #include "proto.h"
 
 using namespace std;

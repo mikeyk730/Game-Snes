@@ -1,6 +1,5 @@
 #include <cstdio>
 
-
 #include "proto.h"
 
 void Disassembler::printComment(unsigned char low, unsigned char high)

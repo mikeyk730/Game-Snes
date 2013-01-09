@@ -6,7 +6,6 @@
 #include <iomanip>
 #include <map>
 
-
 #include "proto.h"
 
 using namespace std;

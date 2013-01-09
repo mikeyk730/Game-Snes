@@ -89,11 +89,14 @@ void Disassembler::load_symbols(char *fname)
         int fulladdr;
         string label;
         istringstream line_stream(line);
-        if(!(line_stream >> hex >> fulladdr >> label))
+        if(!(line_stream >> hex >> fulladdr))
             continue;
 
         unsigned int addr = (fulladdr & 0x0FFFF);   
         unsigned char bank = ((fulladdr >> 16) & 0x0FF);
+
+        if(!(line_stream >> label))
+            label = "CODE_" + to_string(bank, 2) + "_" + to_string(addr, 4);
 
         add_label(bank, addr, label);
     }
@@ -194,8 +197,8 @@ void Disassembler::dotype(const Instruction& instr, unsigned char bank)
     sprintf(buff2, "%s ", instr.name(m_properties.m_accum_16).c_str()); 
 
     unsigned int& pc = m_current_addr;
-    bool accum16 = m_properties.m_accum_16;
-    bool index16 = m_properties.m_index_16;
+    bool& accum16 = m_properties.m_accum_16;
+    bool& index16 = m_properties.m_index_16;
 
     unsigned char t = instr.addressMode();
     unsigned char i, j, k;
@@ -370,14 +373,14 @@ void Disassembler::dotype(const Instruction& instr, unsigned char bank)
     if (high)
         printComment(low, high);
     if (flag > 0){
-        cout << "; ";
-        if (flag & 0x10) cout << "Index (16 bit)";
-        if (flag & 0x20) cout << "Accum (16 bit)";
+        cout << ";";
+        if (flag & 0x10) cout << " Index (16 bit)";
+        if (flag & 0x20) cout << " Accum (16 bit)";
     }
     else if (flag < 0){
-        cout << "; ";
-        if ( (-flag) & 0x10) cout << "Index (8 bit)";
-        if ( (-flag) & 0x20) cout << "Accum (8 bit)";
+        cout << ";";
+        if ( (-flag) & 0x10) cout << " Index (8 bit)";
+        if ( (-flag) & 0x20) cout << " Accum (8 bit)";
     }
     cout << endl;
 }
