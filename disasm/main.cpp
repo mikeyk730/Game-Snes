@@ -7,6 +7,8 @@
 #include <map>
 
 #include "proto.h"
+#include "disassembler.h"
+#include "request.h"
 
 using namespace std;
 

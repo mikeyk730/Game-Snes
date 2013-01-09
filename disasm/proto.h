@@ -12,9 +12,9 @@ class Instruction;
 
 unsigned int hex(const char *s);
 void spaces(int number);
-
 char read_char(FILE * stream);
 std::string to_string(int i, int length, bool in_hex=true);
+std::istream& get_address(std::istream& in, unsigned char& bank, unsigned int& addr);
 int full_address(int bank, int pc);
 
 const int ALWAYS_USE_LABEL = 0x01;
@@ -76,53 +76,7 @@ struct DisassemblerProperties{
   unsigned int m_end_addr;
 };
 
-struct Request{
-  Request() : 
-    m_dcb(false)
-  {}
 
-  bool get(std::istream & in, bool hirom);
-
-  bool m_dcb;
-  DisassemblerProperties m_properties;
-};
-
-
-struct Disassembler{
-private:    
-    void initialize_instruction_lookup();
-
-public:
-    Disassembler::Disassembler() :
-    m_hirom(false)
-   { initialize_instruction_lookup(); }
- 
-    void handleRequest(const Request& request);
-
-    void dodcb();
-    void dodisasm();
-
-    void dotype(const Instruction& instr, unsigned char bank);
-
-    void printComment(unsigned char low, unsigned char high);
-
-    void load_data(char *fname);
-    void load_symbols(char *fname);
-    
-    void add_label(int bank, int pc, const std::string& label);
-    std::string get_label(const Instruction& instr, unsigned char bank, int pc);
-
-public:    
-    std::map<unsigned char, Instruction> m_instruction_lookup;
-    std::map<int, std::string> m_label_lookup;
-
-    DisassemblerProperties m_properties;
-
-    bool m_hirom;
-
-    unsigned char m_current_bank;
-    unsigned int m_current_addr;
-};
 
 
 #endif

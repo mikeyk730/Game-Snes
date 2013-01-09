@@ -1,6 +1,6 @@
 #include <cstdio>
 
-#include "Disassembler.h"
+#include "disassembler.h"
 
 void Disassembler::printComment(unsigned char low, unsigned char high)
 {

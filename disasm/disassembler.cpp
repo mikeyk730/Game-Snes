@@ -4,8 +4,34 @@
 #include <fstream>
 
 #include "proto.h"
+#include "disassembler.h"
+#include "request.h"
 
 using namespace std;
+
+namespace{
+   const unsigned int BANK_SIZE = 0x08000;
+}
+
+Disassembler::Disassembler() :
+m_hirom(false)
+{ 
+    initialize_instruction_lookup(); 
+    memset(m_data,0,0x80000);
+}
+
+void Disassembler::fix_address(unsigned char& bank, unsigned int& pc)
+{
+    char s2[10];
+    sprintf(s2, "%.4X", pc);
+    if (strlen(s2) == 5){
+        bank++; 
+        if (m_hirom)
+            pc -= 0x10000;
+        else
+            pc -= 0x8000;
+    }
+}
 
 void Disassembler::handleRequest(const Request& request)
 {
@@ -15,29 +41,21 @@ void Disassembler::handleRequest(const Request& request)
     m_current_addr = m_properties.m_start_addr;
 
     fseek(srcfile, 512, 0);
-    for(int cc=0; cc<m_current_bank; cc++)  /* skip over each bank */
-        if (m_hirom)
-            fseek(srcfile, 65536, 1);
-        else
-            fseek(srcfile, 32768, 1);
-
     if (m_hirom)
-        fseek(srcfile, m_current_addr, 1);
+        fseek(srcfile, m_current_bank * 65536 + m_current_addr, 1);
     else
-        fseek(srcfile, m_current_addr - 0x8000, 1);
+        fseek(srcfile, m_current_bank * 32768 + m_current_addr - 0x8000, 1);
 
-
-
-    if (request.m_dcb)
+    if (request.m_type == Request::Dcb)
         dodcb();
-    else
+    else if (request.m_type == Request::Asm)
         dodisasm();
+    else
+        do_smart();
 }
 
 void Disassembler::dodisasm()
 {
-    char s2[80];
-
     unsigned int& pc = m_current_addr;
     unsigned char& bank = m_current_bank;
 
@@ -52,14 +70,7 @@ void Disassembler::dodisasm()
         if (!feof(srcfile)){
 
             //adjust pc address
-            sprintf(s2, "%.4X", pc);
-            if (strlen(s2) == 5){
-                bank++;
-                if (m_hirom)
-                    pc -= 0x10000;
-                else
-                    pc -= 0x8000;
-            }
+            fix_address(bank,pc);
 
             string label = get_label(Instruction("",0,ALWAYS_USE_LABEL), bank, pc);
             cout << left << setw(20) << label << " ";
@@ -111,17 +122,26 @@ void Disassembler::load_data(char *fname)
         if (line.length() < 1 || line[0] == ';')
             continue;
 
-        int full;
         string label;
         istringstream line_stream(line);
-        if(!(line_stream >> hex >> full))
-            continue;
 
-        unsigned int addr = (full & 0x0FFFF);
-        unsigned char bank = ((full >> 16) & 0x0FF);
+        unsigned char bank, end_bank;
+        unsigned int addr, end_addr;        
+        if(!get_address(line_stream, bank, addr))
+            continue;
+        
+        if(!get_address(line_stream, end_bank, end_addr)){
+            end_addr = addr + 1;
+            end_bank = bank;
+        }
+        
+        unsigned int index = (bank * BANK_SIZE + addr - 0x08000);
+        unsigned int size = (end_bank * BANK_SIZE + end_addr - 0x08000) - index;
+        //cout << size << " data bytes" << endl;
+        memset(&m_data[index], 1, size);
 
         //no label, create one
-        if(!(line_stream >> label >> label))
+        if(!(line_stream >> label))
             label = "DATA_" + to_string(bank,2) + "_" + to_string(addr,4);
 
         add_label(bank, addr, label);
@@ -149,40 +169,76 @@ string Disassembler::get_label(const Instruction& instr, unsigned char bank, int
     return label;
 }
 
+void Disassembler::do_smart()
+{
+    unsigned char bank = m_properties.m_start_bank;
+    unsigned int pc = m_properties.m_start_addr;
+    unsigned char end_bank = m_properties.m_end_bank;
+    unsigned int pc_end = m_properties.m_end_addr;
+
+    unsigned int end_address = end_bank * 65536 + pc_end;
+    for(int i = bank * BANK_SIZE + pc - 0x08000;
+        bank * 65536 + pc < end_address;){
+
+            Request request(m_properties);
+            request.m_properties.m_start_bank = bank;
+            request.m_properties.m_start_addr = pc;
+            //cout << "start " << hex << bank * 65536 + pc ;
+
+            if (m_data[i] == 1){
+                request.m_type = Request::Dcb;
+                do{
+                    ++i;
+                    fix_address(bank,++pc);
+                } while((m_data[i] == 1) && (bank * 65536 + pc < end_address));
+            }
+            else{
+                request.m_type = Request::Asm;
+                do{
+                    ++i;
+                    fix_address(bank,++pc);
+                } while((m_data[i] == 0) && (bank * 65536 + pc < end_address));
+            }
+
+            request.m_properties.m_end_bank = bank;
+            request.m_properties.m_end_addr = pc;
+            //cout << " end " << hex << bank * 65536 + pc << endl;
+            handleRequest(request);
+            cout << endl;
+        }
+}
 
 void Disassembler::dodcb()
 {
-    char s2[10];
-
-    int bank = m_properties.m_start_bank;
-    int pc = m_properties.m_start_addr;
-    int end_bank = m_properties.m_end_bank;
-    int pc_end = m_properties.m_end_addr;
+    unsigned char bank = m_properties.m_start_bank;
+    unsigned int pc = m_properties.m_start_addr;
+    unsigned char end_bank = m_properties.m_end_bank;
+    unsigned int pc_end = m_properties.m_end_addr;
 
     for(int i=0; bank * 65536 + pc < end_bank * 65536 + pc_end; ++i){
+        string label = get_label(Instruction("",0,ALWAYS_USE_LABEL | NO_ADDR_LABEL), bank, pc);
+
+        if (i%8 != 0 && label != "") {
+            cout << endl << endl;
+            i=0;
+        }
+
         if (i%8 == 0){
-            string label = get_label(Instruction("",0,ALWAYS_USE_LABEL | NO_ADDR_LABEL), bank, pc);
             cout << setw(20) << left << label << " ";
             if (!m_properties.m_quiet) cout << string(14, ' ');
             cout << "dcb ";
         }
+        else cout << ",";
 
         //adjust address if necessary
         pc++;
-        sprintf(s2, "%.4X", pc);
-        if (strlen(s2) == 5){
-            bank++;
-            if (m_hirom)
-                pc -= 0x10000;
-            else
-                pc -= 0x8000;
-        }
+        fix_address(bank,pc);
 
         //read and print byte
         unsigned char c = read_char(srcfile);
         printf("$%.2X", c);
-        if (i%8 != 7 && (bank * 65536 + pc < end_bank * 65536 + pc_end)) printf(",");
-        else cout << endl;
+        if (i%8 == 7 || !(bank * 65536 + pc < end_bank * 65536 + pc_end))
+            cout << endl;
     }
 }
 

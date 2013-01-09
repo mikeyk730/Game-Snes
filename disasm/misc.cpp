@@ -28,6 +28,16 @@ int full_address(int bank, int pc){
     return bank * 65536 + pc;
 }
 
+istream& get_address(istream& in, unsigned char& bank, unsigned int& addr)
+{
+    unsigned int full;
+    if(!(in >> hex >> full))
+        return in;
+
+    addr = (full & 0x0FFFF);
+    bank = ((full >> 16) & 0x0FF);
+    return in;
+}
 
 unsigned int hex(const char *s)
 {

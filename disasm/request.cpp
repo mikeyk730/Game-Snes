@@ -1,5 +1,6 @@
 #include <sstream>
 
+#include "request.h"
 #include "proto.h"
 
 using namespace std;
@@ -33,8 +34,10 @@ bool Request::get(istream & in, bool hirom)
     string current; 
     if (!(ss >> current)) return false;
     do{
-        if (current == "data" || current == "d")
-            m_dcb = true;
+        if (current == "data" || current == "dcb")
+            m_type = Dcb;
+        if (current == "asm")
+            m_type = Asm;
         else if (current == "quiet" || current == "q")
             m_properties.m_quiet = true;
         else if (current == "accum16" || current == "a")
