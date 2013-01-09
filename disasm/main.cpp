@@ -36,12 +36,6 @@ void main (int argc, char *argv[])
     exit(-1);
   }
 
-  if (!strcmp(argv[1], "-help"))
-  {
-    printf(USAGE);
-    printf(HELP);
-    exit(-1);
-  }
 
   srcfile = fopen(argv[argc-1],"rb");
   if (srcfile == NULL)
@@ -116,7 +110,13 @@ void main (int argc, char *argv[])
           break;
 
         case 'h':
-          hirom = 1;
+          if (argv[i][1] == 'i')
+            hirom = 1;
+          else{
+            printf(USAGE);
+            printf(HELP);
+            exit(-1);
+          }
           break;
 
         case 'n':
@@ -237,57 +237,53 @@ void main (int argc, char *argv[])
   printf("\n\n");
 
   while( (!feof(srcfile)) && (bank * 65536 + pc < endbank * 65536 + eend)
-    && (rts >= 0) )
-  {
+	 && (rts >= 0) ){
+
     code = read_char(srcfile);
     Instruction instr = instruction_lookup[code];
     
-    if (!feof(srcfile))
-    {
+    if (!feof(srcfile)){
+
+      //adjust pc address
       sprintf(s2, "%.4X", pc);
-      if (strlen(s2) == 5)
-      {
-        bank++;
-        if (hirom)
-          pc -= 0x10000;
-        else
-          pc -= 0x8000;
+      if (strlen(s2) == 5){
+	bank++;
+	if (hirom)
+	  pc -= 0x10000;
+	else
+	  pc -= 0x8000;
       }
 
-      string the_label = get_label(Instruction("",0,ALWAYS_USE_LABEL), bank, pc);
-      if (the_label != "")
-        cout << left << setw(20) << the_label;
-      else if (!quiet)
-        printf("%.2X%.4X", bank, pc);
+      string label = get_label(Instruction("",0,ALWAYS_USE_LABEL), bank, pc);
+      if (label != "") cout << left << setw(20) << label;
 
-      if (!quiet)
-        printf(" %.2X ", code);
-      else printf("	"); /* print tab (it's there!) */
+      if (!quiet) cout << to_string(code, 2) << " ";
 
       sprintf(buff2, "%s ", instr.name().c_str());
-      if (rts)
-        if (instr.name() == "RTS" || instr.name() == "RTI" ||
-           instr.name() == "RTL" )
-          rts = -1;
+      if (rts){
+	if (instr.name() == "RTS" || instr.name() == "RTI" || instr.name() == "RTL" )
+	  rts = -1;
+      }
       pc++;
       high = 0; low = 0; flag = 0;
       dotype(instr, bank);
       if (!quiet) printf("  ");
       printf("%s", buff2);
       if (!quiet) printf("     ");
-    if (instr.name() == "RTS" || instr.name() == "RTI" || instr.name() == "RTL" )
-        printf(" ;\n");//<------------------------------------------------>");
+      if (instr.name() == "RTS" || instr.name() == "RTI" || instr.name() == "RTL" )
+	printf("\t\t; Return\n");
       if (high) comment(low, high);
-      if (flag > 0)
-      {
-	printf("	;");
-        if (flag & 0x10) printf(" Index (16 bit)");
-        if (flag & 0x20) printf(" Accum (16 bit)");
-      } else if (flag < 0)
-      {
-	printf("	;");
-        if ( (-flag) & 0x10) printf(" Index (8 bit)");
-        if ( (-flag) & 0x20) printf(" Accum (8 bit)");
+      if (flag > 0){
+
+    	printf("\t;");
+	if (flag & 0x10) printf(" Index (16 bit)");
+	if (flag & 0x20) printf(" Accum (16 bit)");
+      }
+      else if (flag < 0){
+
+	printf("\t;");
+	if ( (-flag) & 0x10) printf(" Index (8 bit)");
+	if ( (-flag) & 0x20) printf(" Accum (8 bit)");
       }
       printf("\n");
     }

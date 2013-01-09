@@ -38,6 +38,6 @@ extern int quiet;
 extern int high, low, flag;
 extern int asmbler, dcb;
 extern char *sym_filename;
-extern char mylabel[];
+
 
 #endif

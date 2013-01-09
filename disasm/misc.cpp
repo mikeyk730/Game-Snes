@@ -12,15 +12,15 @@
 
 using namespace std;
 
-string to_string(int i, int fill, bool in_hex)
+string to_string(int i, int length, bool in_hex)
 {
     ostringstream ss;
     ss.setf(ios::uppercase);
     
     if (in_hex)
-        ss << hex << setfill('0') << setw(fill) << i;
+        ss << hex << setfill('0') << setw(length) << i;
     else
-        ss << dec << setfill('0') << setw(fill) << i;
+        ss << dec << setfill('0') << setw(length) << i;
 
     return ss.str();
 }
@@ -32,26 +32,15 @@ int full_address(int bank, int pc){
 
 unsigned int hex(char *s)
 {
-  unsigned int total = 0;
-
-  size_t l = strlen(s);
-  for(size_t a=0; a<l; a++)
-  {
-    int i = 0;
-    if ( (s[a] > 47) && (s[a] < 58) ) i = s[a] - 48; /* 0 - 9 */
-    if ( (s[a] > 64) && (s[a] < 71) ) i = s[a] - 55; /* A - F */
-    if ( (s[a] > 96) && (s[a] < 103)) i = s[a] - 87; /* a - f */
-    if (s[a] > 47) /* if valid character */
-      total = total * 16 + i;
-  }
-  return total;
+    istringstream ss(s);
+    unsigned int total;
+    ss >> hex >> total;
+    return total;
 }
 
 void spaces(int number)
 {
-  int i;
-  printf("\n");
-  for(i=0; i<number; i++) printf(" ");
+  cout << endl << string(number, ' ');
 }
 
 char read_char(FILE * stream)

@@ -14,7 +14,7 @@ void loaddata(char *fname);
 void loadsymbols(char *fname);
 std::string get_label(const Instruction& instr, char bank, int pc);
 char read_char(FILE * stream);
-std::string to_string(int i, int fill, bool in_hex=true);
+std::string to_string(int i, int length, bool in_hex=true);
 int full_address(int bank, int pc);
 
 const int ALWAYS_USE_LABEL = 0x01;

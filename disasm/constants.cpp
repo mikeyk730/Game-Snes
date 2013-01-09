@@ -13,5 +13,4 @@ int quiet = 0;
 int high, low, flag;
 int asmbler = 0, dcb = 0;
 char *sym_filename;
-char mylabel[20];
 
