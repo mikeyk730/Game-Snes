@@ -34,6 +34,8 @@ void main (int argc, char *argv[])
         string current(argv[i]);
         if (current == "--data" && ++i < argc)
             disasm.load_data(argv[i]);
+        else if (current == "--ptr" && ++i < argc)
+            disasm.load_data(argv[i], true);
         else if (current == "--sym" && ++i < argc)
             disasm.load_symbols(argv[i]);
         else if (current == "--ram" && ++i < argc)

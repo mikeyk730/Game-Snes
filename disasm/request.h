@@ -12,6 +12,7 @@ struct DisassemblerProperties{
     m_index_16(false),
     m_stop_at_rts(false),
     m_use_extern_symbols(false),
+    m_print_data_addr(false),
     m_start_bank(0x00),
     m_start_addr(0x8000), 
     m_end_bank(0xFF),
@@ -26,6 +27,7 @@ struct DisassemblerProperties{
   bool m_index_16;
   bool m_stop_at_rts;
   bool m_use_extern_symbols;
+  bool m_print_data_addr;
 
   unsigned char m_start_bank; 
   unsigned int m_start_addr;
@@ -43,7 +45,7 @@ struct Request{
     m_quit(false)
   {}
 
-  enum Type { Asm, Dcb, Smart};
+  enum Type { Asm, Dcb, Ptr, PtrLong, Smart};
 
   bool get(std::istream & in, bool hirom);
 

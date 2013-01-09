@@ -7,20 +7,36 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "driver", "driver.vcproj", "
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "split", "..\split\split.vcproj", "{59E61EF3-A3B7-4E5E-A898-5DBA5B2F92CC}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hex_count", "..\hex_count\hex_count.vcproj", "{B32D1040-7620-4B75-B42F-43C6197ABC7B}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
 		Release = Release
 	EndGlobalSection
 	GlobalSection(ProjectConfiguration) = postSolution
-		{F7EE283F-C3CC-4E46-9D2D-8CFA8963DDAE}.Debug.ActiveCfg = Debug|Win32
-		{F7EE283F-C3CC-4E46-9D2D-8CFA8963DDAE}.Debug.Build.0 = Debug|Win32
+		{F7EE283F-C3CC-4E46-9D2D-8CFA8963DDAE}.Debug.ActiveCfg = Release|Win32
+		{F7EE283F-C3CC-4E46-9D2D-8CFA8963DDAE}.Debug.Build.0 = Release|Win32
 		{F7EE283F-C3CC-4E46-9D2D-8CFA8963DDAE}.Release.ActiveCfg = Release|Win32
 		{F7EE283F-C3CC-4E46-9D2D-8CFA8963DDAE}.Release.Build.0 = Release|Win32
-		{FA26E0BD-D466-4818-937F-30147B7D0541}.Debug.ActiveCfg = Debug|Win32
-		{FA26E0BD-D466-4818-937F-30147B7D0541}.Debug.Build.0 = Debug|Win32
+		{FA26E0BD-D466-4818-937F-30147B7D0541}.Debug.ActiveCfg = Release|Win32
+		{FA26E0BD-D466-4818-937F-30147B7D0541}.Debug.Build.0 = Release|Win32
 		{FA26E0BD-D466-4818-937F-30147B7D0541}.Release.ActiveCfg = Release|Win32
 		{FA26E0BD-D466-4818-937F-30147B7D0541}.Release.Build.0 = Release|Win32
+		{59E61EF3-A3B7-4E5E-A898-5DBA5B2F92CC}.Debug.ActiveCfg = Release|Win32
+		{59E61EF3-A3B7-4E5E-A898-5DBA5B2F92CC}.Debug.Build.0 = Release|Win32
+		{59E61EF3-A3B7-4E5E-A898-5DBA5B2F92CC}.Release.ActiveCfg = Release|Win32
+		{59E61EF3-A3B7-4E5E-A898-5DBA5B2F92CC}.Release.Build.0 = Release|Win32
+		{B32D1040-7620-4B75-B42F-43C6197ABC7B}.Debug.ActiveCfg = Release|Win32
+		{B32D1040-7620-4B75-B42F-43C6197ABC7B}.Debug.Build.0 = Release|Win32
+		{B32D1040-7620-4B75-B42F-43C6197ABC7B}.Release.ActiveCfg = Release|Win32
+		{B32D1040-7620-4B75-B42F-43C6197ABC7B}.Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection

@@ -49,6 +49,8 @@ bool Request::get(istream & in, bool hirom)
             m_properties.m_stop_at_rts = true;
         else if (current == "-e")
             m_properties.m_use_extern_symbols = true;
+        else if (current == "-d")
+            m_properties.m_print_data_addr = true;
         else if (current == "-p")
             m_properties.m_passes = 2;
         else if (current == "nmi"){

@@ -20,7 +20,13 @@ m_passes_to_make(1),
 m_flag(0)
 { 
     initialize_instruction_lookup(); 
-    memset(m_data,0,0x80000);
+    m_data = new unsigned char[0x400000];
+    memset(m_data,0,0x400000);
+}
+
+Disassembler::~Disassembler()
+{
+    delete [] m_data;
 }
 
 std::string Disassembler::getInstructionName(const Instruction& instr){
@@ -37,8 +43,9 @@ std::string Disassembler::getInstructionName(const Instruction& instr){
         else
             name += ".B";
     else if (instr.addressMode() == 2 || instr.addressMode() == 9 || 
-        instr.addressMode() == 11)
-        name += ".W";
+        instr.addressMode() == 11){
+        if(name != ".dw") name += ".W";
+        }
     else if (instr.addressMode() == 3 || instr.addressMode() == 10)
         name += ".L";
     
@@ -107,15 +114,19 @@ void Disassembler::handleRequest(const Request& request, bool user_request)
             fseek(srcfile, m_current_bank * 32768 + m_current_addr - 0x8000, 1);
 
         if (request.m_type == Request::Dcb)
-            dodcb();
+            doDcb();
+        else if (request.m_type == Request::Ptr)
+            doPtr();
+        else if (request.m_type == Request::PtrLong)
+            doPtr(true);
         else if (request.m_type == Request::Asm)
-            dodisasm();
+            doDisasm();
         else{
             cout << "; ============ PASS " << m_current_pass << " ===============" << endl;
             if (finalPass()){
                 cout << ".INCLUDE \"snes.cfg\"" << endl;
             }
-            do_smart();
+            doSmart();
             m_current_pass++;
             if (m_current_pass > m_passes_to_make)               
                 break;
@@ -124,7 +135,7 @@ void Disassembler::handleRequest(const Request& request, bool user_request)
     
     if (user_request){
         if (!m_unresolved_symbol_lookup.empty()){
-            cout << "Unresolved symbols: " << endl; 
+            cerr << "Unresolved symbols: " << endl; 
             for (map<int,string>::iterator it = m_unresolved_symbol_lookup.begin(), 
                 end_it = m_unresolved_symbol_lookup.end(); it != end_it; ++it){
                     cout << to_string(it->first, 6) << " " << it->second << endl;
@@ -138,7 +149,7 @@ void Disassembler::handleRequest(const Request& request, bool user_request)
 }
 
 
-void Disassembler::dodisasm()
+void Disassembler::doDisasm()
 {
     unsigned int& pc = m_current_addr;
     unsigned char& bank = m_current_bank;
@@ -165,7 +176,7 @@ void Disassembler::dodisasm()
                 if (!m_request_prop.m_quiet) cout << to_string(code, 2) << " ";
             }
 
-            dotype(instr);
+            doType(instr);
 
             if (m_request_prop.m_stop_at_rts &&
                 (instr.name() == "RTS" || instr.name() == "RTI" || instr.name() == "RTL"))
@@ -285,7 +296,7 @@ void Disassembler::load_symbols2(char *fname)
     cerr << "; Reading symbols... done." << endl;
 }
 
-void Disassembler::load_data(char *fname)
+void Disassembler::load_data(char *fname, bool is_ptr_data)
 {
     fstream in(fname);
     string line;
@@ -304,35 +315,54 @@ void Disassembler::load_data(char *fname)
             end_addr = addr + 1;
             end_bank = bank;            
         }
-        
+
         unsigned int index = (bank * BANK_SIZE + addr - 0x08000);
         unsigned int size = (end_bank * BANK_SIZE + end_addr - 0x08000) - index;
-        
-        if(size > 0x10000){
+
+        if(size > 0x80000){
             cerr << "Error in data: " << line << endl;
             cerr << hex << size << " data bytes" << endl;
             exit(-1);
+        }        
+
+        if (m_data[index] != 0){
+            cerr << "Address " << to_string(bank,2) << to_string(addr,4) 
+                << " already flagged as data.  Type: " << int(m_data[index]) << endl;
+            continue;
         }
 
-        memset(&m_data[index], 1, size);
+        int flag_byte = 1;
+        if (is_ptr_data && !(line_stream >> flag_byte)){
+            cout << "couldn't read pointer size in: " << line << endl;
+            exit(-1);
+        }
+
+        memset(&m_data[index], flag_byte, size);
 
         //no label, create one
-        if(!(line_stream >> label))
-            label = "DATA_" + to_string(bank,2) + "_" + to_string(addr,4);
+        if(!(line_stream >> label)){
+            string prefix = "DATA_";
+            if (flag_byte == 2) prefix = "Ptrs";
+            else if (flag_byte == 3) prefix = "PtrsLong";
+            label = prefix + to_string(bank,2) + to_string(addr,4);
+        }
 
         add_label(bank, addr, label);
     }
 }
 
-void Disassembler::add_label(int bank, int pc, const string& label, bool used)
+bool Disassembler::add_label(int bank, int pc, const string& label, bool used)
 {
     int full_addr = full_address(bank,pc);
     if (used)
         m_used_label_lookup.insert(make_pair(full_addr, label));
     else{
-        if(!m_label_lookup.insert(make_pair(full_addr, label)).second)
+        if(!m_label_lookup.insert(make_pair(full_addr, label)).second){
             cerr << "failed to add symbol >" << label << "<" << endl;
+            return false;
+        }
     }
+    return true;
 }
 
 string Disassembler::get_label(const Instruction& instr, unsigned char bank, int pc)
@@ -377,7 +407,7 @@ string Disassembler::get_label(const Instruction& instr, unsigned char bank, int
     return label;
 }
 
-void Disassembler::do_smart()
+void Disassembler::doSmart()
 {
     unsigned char bank = m_request_prop.m_start_bank;
     unsigned int pc = m_request_prop.m_start_addr;
@@ -400,6 +430,20 @@ void Disassembler::do_smart()
                     fix_address(bank,++pc);
                 } while((m_data[i] == 1) && (bank * 65536 + pc < end_address));
             }
+            else if (m_data[i] == 2){
+                request.m_type = Request::Ptr;
+                do{
+                    ++i;
+                    fix_address(bank,++pc);
+                } while((m_data[i] == 2) && (bank * 65536 + pc < end_address));
+            }
+            else if (m_data[i] == 3){
+                request.m_type = Request::PtrLong;
+                do{
+                    ++i;
+                    fix_address(bank,++pc);
+                } while((m_data[i] == 3) && (bank * 65536 + pc < end_address));
+            }
             else{
                 request.m_type = Request::Asm;
                 do{
@@ -416,15 +460,16 @@ void Disassembler::do_smart()
         }
 }
 
-void Disassembler::dodcb()
+void Disassembler::doDcb(int bytes_per_line)
 {
     unsigned char bank = m_request_prop.m_start_bank;
     unsigned int pc = m_request_prop.m_start_addr;
     unsigned char end_bank = m_request_prop.m_end_bank;
     unsigned int pc_end = m_request_prop.m_end_addr;
-
+    string comment;
     for(int i=0; bank * 65536 + pc < end_bank * 65536 + pc_end; ++i){
-        string label = get_label(Instruction("",0,LINE_LABEL | NO_ADDR_LABEL), bank, pc);
+        int output_flag = (m_request_prop.m_print_data_addr) ? 0 : NO_ADDR_LABEL;
+        string label = get_label(Instruction("",0,LINE_LABEL | output_flag), bank, pc);
 
         if (label != "") label += ":";
 
@@ -433,17 +478,21 @@ void Disassembler::dodcb()
             if (pc == 0x8000) 
                 cout << endl << ".BANK " << int(bank) << endl;
 
-            if (i%8 != 0 && label != "") {
+            if (i%bytes_per_line != 0 && label != "") {
                 cout << endl << endl;
                 i=0;
             }
-            if (i%8 == 0){
+            if (i%bytes_per_line == 0){
                 cout << setw(19) << left << label << " ";
                 if (!m_request_prop.m_quiet) cout << string(14, ' ');
                 cout << ".db ";
+                comment.clear();
             }
             else cout << ",";
         }
+
+        string comment_buffer = get_comment(bank, pc);
+        if (!comment_buffer.empty()) comment += (";" + comment_buffer + " ");
 
         //adjust address if necessary
         pc++;
@@ -451,15 +500,54 @@ void Disassembler::dodcb()
 
         //read and print byte
         unsigned char c = read_char(srcfile);
+
         if (finalPass()) printf("$%.2X", c);
-        if (i%8 == 7 || !(bank * 65536 + pc < end_bank * 65536 + pc_end))
-            if (finalPass()) cout << endl;
+        if ((i+1)%bytes_per_line == 0 || !(bank * 65536 + pc < end_bank * 65536 + pc_end)){
+            if (finalPass()){
+                if(!comment.empty())
+                    cout << "     " << comment;
+                cout << endl;
+            }
+        }
     }
 }
 
+void Disassembler::doPtr(bool long_ptrs)
+{
+    /*if (long_ptrs){
+        doDcb(3);
+        return;
+    }*/
 
+    unsigned char& bank = m_current_bank;
+    unsigned int& pc = m_current_addr;
+    unsigned char end_bank = m_request_prop.m_end_bank;
+    unsigned int pc_end = m_request_prop.m_end_addr;
 
-void Disassembler::dotype(const Instruction& instr)
+    for(int i=0; bank * 65536 + pc < end_bank * 65536 + pc_end; ++i){
+        //adjust pc address
+        fix_address(bank,pc);
+
+        int output_flag = (m_request_prop.m_print_data_addr) ? 0 : NO_ADDR_LABEL;
+        string label = get_label(Instruction("",0,LINE_LABEL | output_flag), bank, pc);
+        if (label != "") label += ":";
+
+        if (finalPass()){
+            if (pc == 0x8000) cout << ".BANK " << int(bank) << endl;
+            cout << left << setw(20) << label;
+            if (!m_request_prop.m_quiet) cout << "   ";
+        }
+
+        if(long_ptrs)
+            doType(m_instruction_lookup[0x101], true);
+        else
+            doType(m_instruction_lookup[0x100], true);
+       
+    }
+}
+
+ 
+void Disassembler::doType(const Instruction& instr, bool is_data)
 {
     int high = 0, low = 0;
 
@@ -480,7 +568,7 @@ void Disassembler::dotype(const Instruction& instr)
 
     setProcessFlags();
     string comment = get_comment(bank, pc);
-    ++pc;
+    if (!is_data) ++pc;
     sprintf(buff2, "%s ", getInstructionName(instr).c_str()); 
 
     switch (t)
@@ -636,6 +724,21 @@ void Disassembler::dotype(const Instruction& instr)
     case 27: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
         /* MVN / MVP */ if (printInstructionBytes()) printf("%.2X %.2X    ", i, j);
         sprintf(buff1, "$%.2X,$%.2X", i, j); strcat(buff2, buff1); break;
+
+    case 30 : i = read_char(srcfile); j = read_char(srcfile); k = read_char(srcfile);
+        /* $xxxx, .db :$xxxx */ 
+        if (printInstructionBytes()) 
+            printf("%.2X %.2X %.2X ", i, j, k);
+        msg = get_label(instr, k, j * 256 + i); 
+        if (msg == "")
+            sprintf(buff1, "$%.2X%.2X%.2X .db :$%.2X%.2X%.2X", k, j, i, k, j, i);
+        else 
+            sprintf(buff1, "%s .db :$%s", msg.c_str(), msg.c_str());  
+        strcat(buff2, buff1); 
+        pc += 3; 
+        break;
+
+
     default: sprintf(buff2, "???"); break;
     }
 
@@ -650,10 +753,10 @@ void Disassembler::dotype(const Instruction& instr)
         if (m_flag & 0x02) comment += "Accum (8 bit) ";
     }
 
-    if (instr.name() == "RTS" || instr.name() == "RTI" || instr.name() == "RTL" )        
-        comment += "; Return\n";
-    else if (high)
+    if (high)
         comment += getRAMComment(low, high);
+    if (instr.isCodeBreak())      
+        comment += /*"; Return\n";*/ "\n";
 
 
     //print instruction and comment
@@ -922,4 +1025,7 @@ void Disassembler::initialize_instruction_lookup()
   m_instruction_lookup.insert(make_pair(0x02, Instruction("COP", 0)));
   m_instruction_lookup.insert(make_pair(0x54, Instruction("MVN", 27)));
   m_instruction_lookup.insert(make_pair(0x44, Instruction("MVP", 27)));
+
+  m_instruction_lookup.insert(make_pair(0x100, Instruction(".dw", 2)));
+  m_instruction_lookup.insert(make_pair(0x101, Instruction(".dw", 30)));
 }

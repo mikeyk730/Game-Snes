@@ -14,6 +14,10 @@ std::string Disassembler::getRAMComment(unsigned char low, unsigned char high)
     {
         switch (addr)
         {
+            /*
+        case 0x1DF9: case 0x1DFA: case 0x1DFB: case 0x1DFC: 
+            comment = "/ Play sound effect";
+            break;*/
         case 0x2100: comment = "Screen Display Register";
             if (comment_level > 1) { comment += spaces(10);
             comment += ";a0000bbbb a: 0=screen on, 1=screen off  b = brightness";

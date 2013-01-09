@@ -16,26 +16,28 @@ private:
 
 public:
     Disassembler();
+    ~Disassembler();
  
     void handleRequest(const Request& request, bool user_request = true);
 
-    void dodcb();
-    void dodisasm();
-    void do_smart();
+    void doDcb(int bytes_per_line = 8);
+    void doPtr(bool long_ptrs = false);
+    void doDisasm();
+    void doSmart();
 
-    void dotype(const Instruction& instr);
+    void doType(const Instruction& instr, bool is_data = false);
     void setProcessFlags();
 
     std::string getRAMComment(unsigned char low, unsigned char high);
 
-    void load_data(char *fname);
+    void load_data(char *fname, bool is_ptr_data = false);
     void load_comments(char* fname);
     void load_symbols(char *fname, bool ram = false);
     void load_symbols2(char *fname);
     void load_accum_bytes(char *fname, bool accum);
 
     bool is_comment(const std::string& line);    
-    void add_label(int bank, int pc, const std::string& label, bool used=false);
+    bool add_label(int bank, int pc, const std::string& label, bool used=false);
     std::string get_label(const Instruction& instr, unsigned char bank, int pc);
 
     std::istream& get_address(std::istream& in, unsigned char& bank, unsigned int& addr);
@@ -51,7 +53,7 @@ public:
     bool printInstructionBytes() const { return (!m_request_prop.m_quiet && finalPass()); }
 
 private:    
-    std::map<unsigned char, Instruction> m_instruction_lookup;
+    std::map<int, Instruction> m_instruction_lookup;
     std::map<int, std::string> m_label_lookup;
     std::map<int, std::string> m_ram_lookup;
     std::map<int, std::string> m_used_label_lookup;
@@ -61,7 +63,7 @@ private:
     std::map<int, int> m_accum_lookup;
     std::map<int, int> m_index_lookup;
 
-    unsigned char m_data[0x80000];
+    unsigned char *m_data;
 
     DisassemblerProperties m_request_prop;
 

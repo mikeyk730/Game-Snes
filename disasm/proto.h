@@ -40,6 +40,10 @@ public:
     inline bool isBranch() const { return (m_bitmask & IS_BRANCH); }
     inline bool neverUseAddrLabel() const { return (m_bitmask & NO_ADDR_LABEL); }
     inline bool isLineLabel() const { return (m_bitmask & LINE_LABEL); }
+    bool isCodeBreak() const{
+        return (m_name == "RTS" || m_name == "RTI" || m_name == "RTL"
+            || m_name == "JMP" || m_name == "BRA");
+    }
 
 private:
     std::string m_name;
