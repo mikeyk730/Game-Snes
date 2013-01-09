@@ -1,18 +1,10 @@
+#include <cstdio>
+#include <cstring>
+
+#include "disasm.h"
+#include "proto.h"
+
 #define NUMINST	255
-
-void find(unsigned char c);
-extern unsigned char inst[];
-extern struct link *first;
-extern char *sym_filename;
-extern unsigned char types[];
-extern unsigned char type;
-extern char mne[];
-extern char *mnes[];
-
-
-
-
-
 
 void find(unsigned char c)
 {
@@ -25,7 +17,7 @@ void find(unsigned char c)
 
 unsigned int hex(char *s)
 {
-  int a, b, i, l = strlen(s);
+  int a, i, l = strlen(s);
   unsigned int total = 0;
 
   for(a=0; a<l; a++)
@@ -45,4 +37,11 @@ void spaces(int number)
   int i;
   printf("\n");
   for(i=0; i<number; i++) printf(" ");
+}
+
+char read_char(FILE * stream)
+{
+    char c;
+    fread (&c, 1, 1, stream);
+    return c;
 }

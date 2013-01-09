@@ -1,6 +1,7 @@
-#include "proto.h"
+#include <cstdio>
 
-extern int comments;
+#include "disasm.h"
+#include "proto.h"
 
 void comment(unsigned char low, unsigned char high)
 {

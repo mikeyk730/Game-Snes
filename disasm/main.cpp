@@ -1,16 +1,16 @@
-#include <stdio.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+
 #include "disasm.h"
 #include "proto.h"
-
-extern void find(unsigned char c);
 
 void main (int argc, char *argv[])
 {
   int i, cc;
   unsigned char code, a, b;
   char *s, s2[80];
-  double goin;
-  struct link *ptr;
+  link *ptr;
 
   flag = 0;
 
@@ -27,7 +27,7 @@ void main (int argc, char *argv[])
     exit(-1);
   }
 
-  srcfile = fopen(argv[argc-1],"r");
+  srcfile = fopen(argv[argc-1],"rb");
   if (srcfile == NULL)
   {
     printf("Could not open %s for reading.\n", argv[argc-1]);
@@ -48,7 +48,7 @@ void main (int argc, char *argv[])
           ptr = first;
           while (ptr != NULL)
           {
-            if (!strcasecmp(ptr->label, argv[i]))
+            if (!strcmp(ptr->label, argv[i]))
             {
               bank = ptr->bank;
               pc = ptr->address;
@@ -76,7 +76,7 @@ void main (int argc, char *argv[])
           ptr = first;
           while (ptr != NULL)
           {
-            if (!strcasecmp(ptr->label, argv[i]))
+              if (!strcmp(ptr->label, argv[i])) 
             {
                 endbank = ptr->bank;
                 eend = ptr->address;
@@ -130,7 +130,7 @@ void main (int argc, char *argv[])
             fseek(srcfile, 0xffea, 1);
           else
             fseek(srcfile, 0x7fea, 1);
-          a = fgetc(srcfile); b = fgetc(srcfile);
+          a = read_char(srcfile); b = read_char(srcfile);
           if (feof(srcfile))
           {
             printf("Error -- could not locate NMI vector\n");
@@ -148,7 +148,7 @@ void main (int argc, char *argv[])
             fseek(srcfile, 0xfffc, 1);
           else
             fseek(srcfile, 0x7ffc, 1);
-          a = fgetc(srcfile); b = fgetc(srcfile);
+          a = read_char(srcfile); b = read_char(srcfile);
           if (feof(srcfile))
           {
            printf("Error -- could not locate RESET vector\n");
@@ -166,7 +166,7 @@ void main (int argc, char *argv[])
             fseek(srcfile, 0xffee, 1);
           else
             fseek(srcfile, 0x7fee, 1);
-          a = fgetc(srcfile); b = fgetc(srcfile);
+          a = read_char(srcfile); b = read_char(srcfile);
           if (feof(srcfile))
           {
            printf("Error -- could not locate IRQ vector\n");
@@ -215,13 +215,12 @@ void main (int argc, char *argv[])
   else
     fseek(srcfile, pc - 0x8000, 1);
 
-  printf("; Disassembled by:\n");
-  printf("; 65816 SNES Disassembler   v2.0a (C)opyright 1994  by John Corey\n");
-  printf("; Begin: $%.2x%.4x  End: ", bank, pc);
+  printf("; Disassembly of %s by mikeyk\n", argv[argc-1]);
+  printf("; Begin: $%.2X%.4X  End: ", bank, pc);
   if (rts)
     printf("RTS/RTL/RTI\n");
   else
-    printf("$%.2x%.4x\n", endbank, eend);
+    printf("$%.2X%.4X\n", endbank, eend);
 
   printf("; Hirom: ");
   if (hirom) printf("Yes"); else printf("No ");
@@ -244,11 +243,11 @@ void main (int argc, char *argv[])
   while( (!feof(srcfile)) && (bank * 65536 + pc < endbank * 65536 + eend)
     && (rts >= 0) )
   {
-    code = getc(srcfile);
+    code = read_char(srcfile);
     find(code);
     if (!feof(srcfile))
     {
-      sprintf(s2, "%.4x", pc);
+      sprintf(s2, "%.4X", pc);
       if (strlen(s2) == 5)
       {
         bank++;
@@ -262,10 +261,11 @@ void main (int argc, char *argv[])
       if (s != NULL)
         printf("%s", s);
       else if (!quiet)
-        printf("%.2x%.4x", bank, pc);
+        printf("%.2X%.4X", bank, pc);
+      //printf("L%.4X", pc);
 
       if (!quiet)
-        printf(" %.2x ", code);
+        printf(" %.2X ", code);
       else printf("	"); /* print tab (it's there!) */
 
       sprintf(buff2, "%s ", mne);

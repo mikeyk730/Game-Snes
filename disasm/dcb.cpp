@@ -1,8 +1,8 @@
-#include <stdio.h>
-#include "proto.h"
+#include <cstdio>
+#include <cstring>
 
-extern FILE *srcfile;
-extern int hirom;
+#include "disasm.h"
+#include "proto.h"
 
 void dodcb(int bank, int pc, int endbank, int eend)
 {
@@ -12,9 +12,9 @@ void dodcb(int bank, int pc, int endbank, int eend)
 
   while (bank * 65536 + pc < endbank * 65536 + eend)
   {
-    c = fgetc(srcfile);
+    c = read_char(srcfile);
     pc++;
-      sprintf(s2, "%.4x", pc);
+      sprintf(s2, "%.4X", pc);
       if (strlen(s2) == 5)
       {
         bank++;
@@ -25,7 +25,7 @@ void dodcb(int bank, int pc, int endbank, int eend)
       }
 
     if (!i) printf("\n	dcb ");
-    printf("$%.2x", c);
+    printf("$%.2X", c);
     i++;
     if (i < 8) printf(",");
     else i = 0;

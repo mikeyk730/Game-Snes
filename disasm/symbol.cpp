@@ -1,22 +1,18 @@
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+#include <iostream>
+
+#include "disasm.h"
 #include "proto.h"
-#include <stdio.h>
 
-extern
-struct link
-{
-  char label[20];
-  unsigned char bank;
-  int address;
-  struct link *next;
-} dummy;
-extern struct link *first;
-
+using namespace std;
 
 void addlink(char *label, unsigned char b, int addr)
 {
-  struct link *newlink;
+  link *newlink;
 
-  newlink = (struct link *)malloc(sizeof(dummy));
+  newlink = (link *)malloc(sizeof(link));
   strcpy(newlink->label, label);
   newlink->bank = b;
   newlink->address = addr;
@@ -67,9 +63,9 @@ void loadsymbols(char *fname)
   printf("; Loaded %d symbols from %s\n", i, fname);
 }
 
-void *checksym(char bank, int pc)
+char *checksym(char bank, int pc)
 {
-  struct link *ptr;
+  link *ptr;
   char *msg = NULL;
 
   ptr = first;
@@ -78,6 +74,13 @@ void *checksym(char bank, int pc)
     if (ptr->bank * 65536 + ptr->address == bank * 65536 + pc)
        msg = ptr->label;
     ptr = ptr->next;
+  }
+
+  //todo: want to know what bank, and the instruction
+  if(msg == NULL && /*pc >= 32768 && bank > 9 && */ bank < 126){
+    sprintf(mylabel, "ADDR_%.2X_%.4X", bank, pc);
+    mylabel[12] = '\0';
+    msg = mylabel;
   }
 
   return msg;
