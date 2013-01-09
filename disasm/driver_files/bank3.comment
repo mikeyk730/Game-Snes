@@ -1,0 +1,1403 @@
+03E400 \ Unreachable
+03E402 / Decrease Mario's Status
+03B665 \
+03B667  |
+03B668  |
+03B66A  | $00 = (Mario X position + #$02) Low byte
+03B66C  |
+03B66E  |
+03B670 / $08 = (Mario X position + #$02) High byte
+03B672 \ $06 = Clipping width X (#$0C)
+03B674 /
+03B676 \ If mario small or ducking, X = #$01
+03B678  | else, X = #$00
+03B67A  |
+03B67C  |
+03B67E  |
+03B680 /
+03B681 \ If on Yoshi, X += #$02
+03B684  |
+03B686  |
+03B687 /
+03B688 \ $03 = Clipping height
+03B68C /
+03B68E \
+03B690  |
+03B691  |
+03B695  | $01 = (Mario Y position + displacement) Low byte
+03B697  |
+03B699  |
+03B69B / $09 = (Mario Y position + displacement) High byte
+03B6A1 Y = Sprite index
+03B6A2 \ X = Clipping table index
+03B6A5  |
+03B6A7 /
+03B6A8 \
+03B6AA  | Load low byte of X displacement
+03B6AE  |
+03B6B0  | $0F = High byte of X displacement
+03B6B2  |
+03B6B3  |
+03B6B6  | $04 = (Sprite X position + displacement) Low byte
+03B6B8  |
+03B6BB  |
+03B6BD / $0A = (Sprite X position + displacement) High byte
+03B6BF \ $06 = Clipping width
+03B6C3 /
+03B6C5 \
+03B6C7  | Load low byte of Y displacement
+03B6CB  |
+03B6CD  | $0F = High byte of Y displacement
+03B6CF  |
+03B6D0  |
+03B6D3  | $05 = (Sprite Y position + displacement) Low byte
+03B6D5  |
+03B6D8  |
+03B6DA / $0B = (Sprite Y position + displacement) High byte
+03B6DC \ $07 = Clipping height
+03B6E0 /
+03B6E2 X = Sprite index
+03B6E7 Y = Sprite index
+03B6E8 \ X = Clipping table index
+03B6EB  |
+03B6ED /
+03B6EE \
+03B6F0  | Load low byte of X displacement
+03B6F4  |
+03B6F6  | $0F = High byte of X displacement
+03B6F8  |
+03B6F9  |
+03B6FC  | $00 = (Sprite X position + displacement) Low byte
+03B6FE  |
+03B701  |
+03B703 / $08 = (Sprite X position + displacement) High byte
+03B705 \ $02 = Clipping width
+03B709 /
+03B70B \
+03B70D  | Load low byte of Y displacement
+03B711  |
+03B713  | $0F = High byte of Y displacement
+03B715  |
+03B716  |
+03B719  | $01 = (Sprite Y position + displacement) Low byte
+03B71B  |
+03B71E  |
+03B720 / $09 = (Sprite Y position + displacement) High byte
+03B722 \ $03 = Clipping height
+03B726 /
+03B728 X = Sprite index
+03C05F No Yoshi wing ability
+0381D3 \ Sprite status = Killed
+0381D5 /
+038AD4 \ Return if no free slots
+038AD8 /
+038ADF \ Sprite status = Normal
+038AE1 /
+0390A2 \ If not at max X speed, accelerate
+0390A4  |
+0390A7  |
+0390A9  |
+0390AA  |
+0390AD /
+039468 Goto next state
+03946B \ If stall timer us up,
+03946E  | reset it to #$2F...
+039470  |
+039472  | ...and goto next state
+039474 /
+0394D2 \ Set $02 based on sprite number
+0394D4  |
+0394D6  |
+0394D8  |
+0394DA  |
+0394DC /
+0394DF Draw 4 tiles:
+0394E7 \ Set X
+0394E9 /
+0394EC \ Set Y
+0394EE  |
+0394EF  |
+0394F2 /
+0394F5 \ Set tile
+0394F8 /
+0394FB \ Set gfs properties
+0394FE /
+039501 \ We wrote 4 times, so increase index by 4
+039502  |
+039503  |
+039504 /
+03950A \ Wrote 5 16x16 tiles...
+03950C  |
+03950E /
+03A6E2 \ Sprite status = Killed by spin jump
+03A6E4 /
+03A7FB \ Sprite status = Normal
+03A7FD /
+03A8E8 \ Sprite status = Normal
+03A8EA /
+03B02B \ Sprite status = Normal
+03B02D /
+03B155 \ Sprite status = Killed
+03B157 /
+03C067 \ Sprite status = Normal
+03C069 /
+03C2D9 \ Find free sprite slot (#$0B-#$00)
+03C2DA  |
+03C2DC  |
+03C2DF  |
+03C2E1  |
+03C2E2  |
+03C2E4  |
+03C2E5 /
+03C2E6 \ Sprite status = Normal
+03C2E8 /
+03C2EB \ Sprite = 1Up
+03C2ED /
+03C2EF \ Sprite X position = Mario X position
+03C2F1  |
+03C2F3  |
+03C2F5 /
+03C2F8 \ Sprite Y position = Matio Y position
+03C2FA  |
+03C2FC  |
+03C2FE /
+03C301 Load sprite tables
+03C305 \ Disable interaction timer = #$10
+03C307 /
+03C312 \ Return if no interaction
+03C316 /
+03C318 \ Replace, Sprite = Mushroom
+03C31A /
+03C31C Reset sprite tables
+03C320 \ Disable interaction timer = #$20
+03C322 /
+03C325 \ Sprite Y position = Mario Y position - $000F
+03C327  |
+03C328  |
+03C32A  |
+03C32C  |
+03C32F  |
+03C331 /
+03C334 \ Sprite direction = dirction of Mario's X speed
+03C336  |
+03C338  |
+03C33A  |
+03C33B /
+03C33E \ Set upward speed
+03C340 /
+03C7D0 \ Sprite status = Normal
+03C7D2 /
+03CBB3 \ Return if no free slots
+03CBB7 /
+03CBB9 \ Sprite = Football
+03CBBB /
+03CBC5 \ Sprite status = Normal
+03CBC7 /
+03CCE8 \ Sprite status = Normal
+03CCEA /
+03827C X = Sprite index
+03842D X = Sprite index
+03843C Y = Index into sprite OAM
+0384CE Y = Index into sprite OAM
+0386AB Y = Index into sprite OAM
+0388A7 Y = Index into sprite OAM
+038968 Y = Index into sprite OAM
+038DAC Y = Index into sprite OAM
+038F88 Y = Index into sprite OAM
+03900D Y = Index into sprite OAM
+039218 Y = Index into sprite OAM
+039288 Y = Index into sprite OAM
+039790 Y = Index into sprite OAM
+03A071 Y = Index into sprite OAM
+03AAF3 X = Sprite index
+03AFE0 Y = Index into sprite OAM
+03B261 Y = Index into sprite OAM
+03C244 Y = Index into sprite OAM
+03C4A5 Y = Index into sprite OAM
+03938B $9C = tile to generate
+03938D \ $9A = Sprite X position
+03938F  | for block creation
+039391  |
+039394 /
+039396 \ $98 = Sprite Y position
+039398  | for block creation
+03939A  |
+03939D /
+03939F Generate the tile
+0393A3 Return
+03C000 $9C = tile to generate
+03C002 \ $9A = Sprite X position + #$08
+03C004  | for block creation
+03C005  |
+03C007  |
+03C009  |
+03C00C  |
+03C00E /
+03C010 \ $98 = Sprite Y position + #$08
+03C012  | for block creation
+03C013  |
+03C015  |
+03C017  |
+03C01A  |
+03C01C /
+03C01E Generate the tile
+038398 Wrapper
+03B307 Wrapper
+03C023 Wrapper
+03C263 Wrapper
+03CC09 Wrapper
+05CC00 Wrapper
+0C938D Wrapper
+0C939A Wrapper
+0C93A5 Wrapper
+0CAB13 Wrapper
+039906 \ Zero out extended sprite table
+039AFA  |
+039AFD  |
+039AFF  |
+039B00  |
+039B02 / Return if no free slots
+039B08 \ Extended sprite = Reznor fireball
+03C456 \ Find a free extended sprite slot
+03C458  |
+03C45B  |
+03C45D  |
+03C45E  |
+03C460 / Return if no free slots
+03C461 \ Extended sprite = Bone
+03C463 /
+039886 (0-1FF: 000 = 6 0'clock, 080 = 9 o'clock,
+03988A 100 = 12 o'clock, 180 = 3 o'clock)
+03D70D \ Return if less than 2 reznors killed
+03D710  |
+03D711  |
+03D714  |
+03D717  |
+03D71A  |
+03D71C /
+03B84F \ Entry point of routine determines value of $03
+03B851  |
+03B853  |
+03B855  |
+03B857  |
+03B859  |
+03B85B  |
+03B85D /
+03B85F \ if sprite is not off screen, return
+03B862 /
+03B864 \  vertical level
+03B866  |
+03B868 /
+03B86A \
+03B86C  |
+03B86D  | if the sprite has gone off the bottom of the level...
+03B86F  | (if adding 0x50 to the sprite y position would make the high byte >= 2)
+03B872  |
+03B874  |
+03B876 /    ...erase the sprite
+03B878 \ if "process offscreen" flag is set, return
+03B87B  |
+03B87D /
+03B8AC \ If sprite status < 8, permanently erase sprite
+03B8AF  |
+03B8B1 /
+03B8C3 \ If "process offscreen" flag is set, return
+03B8C6  |
+03B8C8 /
+03B8CA \ Return every other frame
+03B8CC  |
+03B8CD /
+03B901 / Return
+03809E / Change music
+0380E9 \ Play sound effect
+0380EB /
+0381DE \ Play sound effect
+0381E0 /
+038233 \ Play sound effect
+038235 /
+0388FF \ Play sound effect
+038901 /
+038ADA \ Play sound effect
+038ADC /
+038D7D \ Play sound effect
+038D7F /
+0392B8 \ Play sound effect
+0392BA /
+039D55 \ Play sound effect
+039D57 /
+039D94 \ Branch if Mario has star
+039D97 /
+038551 \ Branch if at max speed
+038553  |
+038556 /
+038558 \ Otherwise, accelerate
+038559  |
+03855C /
+038551 \ Branch if at max speed
+038553  |
+038556 /
+038558 \ Otherwise, accelerate
+038559  |
+03855C /
+039FFA \ Play sound effect
+039FFC /
+03A5D0 \ Play sound effect
+03A5D2 /
+038031 \ Branch if not touching object
+038034  |
+038036 /
+038048 \ Branch if not on ground
+03804B  |
+03804D /
+038797 \ Branch if not on ground
+03879A  |
+03879C /
+0389A8 \ Branch if not on ground
+0389AB  |
+0389AD /
+038A5F \ Branch if not on ground
+038A62  |
+038A64 /
+038A83 \ Branch if not touching object
+038A86  |
+038A88 /
+038A99 \ Branch if not on ground
+038A9C  |
+038A9E /
+038FCE \ Branch if not touching object
+038FD1  |
+038FD3 /
+039C7A \ Branch if not touching object
+039C7D  |
+039C7F /
+039CA8 \ Branch if not on ground
+039CAB  |
+039CAD /
+039CF1 \ Branch if not touching object
+039CF4  |
+039CF6 /
+03B2C3 \ Branch if not on ground
+03B2C6  |
+03B2C8 /
+03B2E3 \ Branch if not touching object
+03B2E6  |
+03B2E8 /
+03C366 \ Branch if not on ground
+03C369  |
+03C36B /
+03A603 \ Play sound effect
+03A605 /
+03A703 / Change music
+03A7A9 / Change music
+03A7C3 / Change music
+03A7F6 \ Play sound effect
+03A7F8 /
+03A88E / Change music
+03A8B2 \ Play sound effect
+03A8B4 /
+03A8E3 \ Play sound effect
+03A8E5 /
+03AB8C \ Play sound effect
+03AB8E /
+03ABF5 / Change music
+03AC54 / Change music
+03B0B8 \ Play sound effect
+03B0BA /
+03B129 \ Play sound effect
+03B12B /
+03B1A3 \ Play sound effect
+03B1A5 /
+03B1B1 \ Play sound effect
+03B1B3 /
+03C037 \ Play sound effect
+03C039 /
+03C06C \ Play sound effect
+03C06E /
+03C209 \ Play sound effect
+03C20B /
+03C342 \ Play sound effect
+03C344 /
+03C830 \ Play sound effect
+03C832 /
+03CE9B / Change music
+03B760 Reset sprite offscreen flag, vertical
+03B763 Reset sprite offscreen flag, horizontal
+03B766 \
+03B768  | Set horizontal offscreen if necessary
+03B76A  |
+03B76D  |
+03B76F  |
+03B771 /
+03B774 \
+03B777  | Mark sprite invalid if far enough off screen
+03B778  |
+03B77C  |
+03B77D  |
+03B77F  |
+03B780  |
+03B783  |
+03B788  |
+03B789  |
+03B78B  |
+03B78E / 
+03B790 \ set up loop:
+03B792  | 
+03B795  | if not smushed (1662 & 0x20), go through loop twice
+03B797  | else, go through loop once
+03B799 /                       
+03B79A \                       
+03B79C  | set vertical offscree
+03B79D  |                      
+03B7A0  |                      
+03B7A1  | (vert screen boundry)
+03B7A3  |                      
+03B7A5  |                      
+03B7A6  |                      
+03B7A9  |                      
+03B7AB  |                      
+03B7AD  |                      
+03B7AF  |                      
+03B7B1  | (vert offscreen)     
+03B7B4  |                      
+03B7B7  |                      
+03B7BA  |                      
+03B7BB /                       
+03B7BD get offset to sprite OAM                          
+03B7C0 \
+03B7C2  |                                                    
+03B7C3  |                                                   
+03B7C5 / $00 = sprite x position relative to screen boarder
+03B7C7 \                                                    
+03B7C9  |                                                    
+03B7CA  |                                                   
+03B7CC / $01 = sprite y position relative to screen boarder
+03B7CF \ Return from *main gfx routine* subroutine...
+03B7D0  |    ...(not just this subroutine)
+03B7D1 /
+038086 Return
+03809E / Play sound effect
+0380A1 Return
+0380D4 Return
+0380EB / Play sound effect
+0380F9 Return
+03818A Return
+0381AD Return
+0381BB Return
+0381D2 Return
+0381E0 / Play sound effect
+0381E3 Return
+0381F4 Return
+038235 / Play sound effect
+038238 Return
+03827F Return
+03839F Return
+0383C1 Return
+038453 Return
+038489 Return
+0384C3 Return
+0384F4 Return
+03852A Return
+038586 Return
+0385F3 Return
+038675 Return
+0386FE Return
+03871A Return
+038733 Return
+03876D Return
+03881D Return
+03882A Return
+03889F Return
+0388DF Return
+038901 / Play sound effect
+038904 Return
+038935 Return
+0389E2 Return
+0389EB Return
+0389FE Return
+038A20 Return
+038A3B Return
+038A68 Return
+038ABE Return
+038AC6 Return
+038ADC / Play sound effect
+038B24 Return
+038BA9 Return
+038C2E Return
+038CE3 Return
+038D0B Return
+038D65 Return
+038D7F / Play sound effect
+038DBA Return
+038DEF Return
+038DFE Return
+038E70 Return
+038EA7 Return
+038EE9 Return
+038F06 Return
+038F6C Return
+038FF1 Return
+03901F Return
+03905C Return
+0390EA Return
+03912D Return
+039213 Return
+039261 Return
+03926B Return
+03926E Return
+0392BA / Play sound effect
+03932B Return
+039386 Return
+03938A Return
+0393A3 Return
+039440 Return
+039457 Return
+039462 Return
+03946A Return
+039474 Return
+039483 Return
+03949E Return
+0394B0 Return
+039512 Return
+039533 Return
+0395C0 Return
+0395C9 Return
+0395DD Return
+0395EE / Play sound effect
+0395F1 Return
+039620 / Play sound effect
+039623 Return
+03963C / Play sound effect
+03964B Return
+0396F5 Return
+03972A Return
+039755 Return
+03975D Return
+039772 Return
+039775 Return
+03977D Return
+0397F8 Return
+039871 Return
+039885 Return
+0398E8 / Play sound effect
+0398EB Return
+039A68 / Play sound effect
+039ABD / Play sound effect
+039AF7 Return
+039B02 Return
+039B05 / Play sound effect
+039B50 Return
+039BE2 Return
+039C33 Return
+039C3E Return
+039C46 Return
+039CA3 Return
+039D00 Return
+039D57 / Play sound effect
+039D9D Return
+039DEE Return
+039DFD Return
+039EA8 Return
+039F31 Return
+039F56 Return
+039F8A Return
+039F9A Return
+039FA3 Return
+039FB0 Return
+039FC7 Return
+039FD5 Return
+039FEC Return
+039FFC / Play sound effect
+03A044 Return
+03A061 Return
+03A081 Return
+03A0F0 Return
+03A117 Return
+03A125 Return
+03A12E Return
+03A137 Return
+03A140 Return
+03A149 Return
+03A152 Return
+03A15B Return
+03A164 Return
+03A16D Return
+03A176 Return
+03A17F Return
+03A188 Return
+03A191 Return
+03A19A Return
+03A1A3 Return
+03A1AC Return
+03A1B5 Return
+03A1C2 Return
+03A1CB Return
+03A1D4 Return
+03A1DD Return
+03A1E6 Return
+03A1F1 Return
+03A1FA Return
+03A203 Return
+03A20C Return
+03A215 Return
+03A222 Return
+03A22B Return
+03A234 Return
+03A23D Return
+03A246 Return
+03A24F Return
+03A258 Return
+03A264 Return
+03A340 Return
+03A436 Return
+03A464 Return
+03A47B Return
+03A481 Return
+03A48F Return
+03A4D1 Return
+03A4EA Return
+03A4FC Return
+03A52C Return
+03A5BC Return
+03A5D2 / Play sound effect
+03A5D7 Return
+03A605 / Play sound effect
+03A60D Return
+03A61C Return
+03A64C Return
+03A6BF Return
+03A6C7 Return
+03A6EF Return
+03A703 / Play sound effect
+03A71E Return
+03A7A9 / Play sound effect
+03A7AC Return
+03A7C3 / Play sound effect
+03A7DE Return
+03A7F5 Return
+03A7F8 / Play sound effect
+03A83D / Play sound effect
+03A840 Return
+03A86D Return
+03A88E / Play sound effect
+03A89C Return
+03A8AD Return
+03A8B4 / Play sound effect
+03A8BD Return
+03A8E2 Return
+03A8E5 / Play sound effect
+03A92D Return
+03AB14 Return
+03AB61 Return
+03AB8E / Play sound effect
+03AB9E Return
+03ABBD Return
+03ABEA Return
+03ABF5 / Play sound effect
+03AC02 Return
+03AC4C Return
+03AC54 / Play sound effect
+03AC62 Return
+03AC92 Return
+03AD73 Return
+03ADB2 Return
+03ADCB Return
+03ADD8 Return
+03AE13 Return
+03AE24 Return
+03AE31 Return
+03AE5A Return
+03AEC7 Return
+03AECF Return
+03AED7 Return
+03AF33 Return
+03B012 Return
+03B02A Return
+03B073 Return
+03B0BA / Play sound effect
+03B0DB Return
+03B0F2 Return
+03B12B / Play sound effect
+03B160 Return
+03B1A5 / Play sound effect
+03B1B3 / Play sound effect
+03B1D4 Return
+03B2A6 Return
+03B306 Return
+03B30E Return
+03B3EE Return
+03B43B Return
+03B442 Return
+03B48B Return
+03B56B Return
+03B69E Return
+03B6E4 Return
+03B72A Return
+03B75B Return
+03B7CE Return
+03B7D1 /   Return
+03B816 Return
+03B828 Return
+03B83A Return
+03B8C2 Return
+03B901 Return
+03C022 Return
+03C02A Return
+03C039 / Play sound effect
+03C06E / Play sound effect
+03C09A Return
+03C0B1 Return
+03C111 Return
+03C175 Return
+03C1EB Return
+03C20B / Play sound effect
+03C25A Return
+03C26A Return
+03C2D8 Return
+03C2E5 Return
+03C30E Return
+03C344 / Play sound effect
+03C347 Return
+03C38F Return
+03C3AD Return
+03C3B2 Return
+03C44D Return
+03C460 Return
+03C48E Return
+03C4D7 Return
+03C4F9 Return
+03C625 Return
+03C7A6 Return
+03C7CF Return
+03C80F Return
+03C815 Return
+03C832 / Play sound effect
+03C83C Return
+03C852 / Play sound effect
+03C858 / Play sound effect
+03C888 Return
+03C899 / Play sound effect
+03C89F / Play sound effect
+03C8F0 Return
+03C968 Return
+03C9B8 Return
+03CBAC Return
+03CC08 Return
+03CC13 Return
+03CC37 Return
+03CCDF Return
+03CD20 Return
+03CD36 Return
+03CDD9 Return
+03CDEE Return
+03CDFC Return
+03CE0D Return
+03CE26 / Play sound effect
+03CE29 Return
+03CE35 / Play sound effect
+03CE41 Return
+03CE48 / Play sound effect
+03CE55 Return
+03CE80 / Play sound effect
+03CE9B / Play sound effect
+03CEA6 Return
+03CEC3 / Play sound effect
+03CECD / Play sound effect
+03CEEC Return
+03CEF1 Return
+03D4DE Return
+03D6AB Return
+03D754 / Play sound effect
+03D758 Return
+03D765 Return
+03D77E Return
+03D7EB Return
+03D990 Return
+03D9DD Return
+03DDE4 Return
+03DE38 Return
+03DE4D Return
+03DEBA Return
+03DFAD Return
+03DFC3 Return
+03E018 / Play sound effect
+03E05B Return
+039517 Draw Rex gfx							       
+03951A \ If Rex status != 8...						       
+03951D  |   ... not (killed with spin jump [4] or star [2])		       
+03951F /    ... return							       
+039521 \ If sprites locked...						       
+039523 /    ... return							       
+039525 \ If Rex not defeated (timer to show remains > 0)...		       
+039528 /    ... goto RexAlive						       
+03952A \ 								       
+03952D  |   If Rex remains don't disappear next frame...			       
+03952E /    ... return							       
+039530 This is the last frame to show remains, so set Rex status = 0
+039534 Only process Rex while on screen		   
+039537 Increment number of frames Rex has been on sc
+03953A \ Calculate which frame to show:		   
+03953D  | 					   
+03953E  | 					   
+03953F  | Number of hits determines if smushed	   
+039541  |						   
+039543  | Update every 8 cycles if smushed	   
+039545  |						   
+039546  | Show smushed frame			   
+039548  |						   
+03954A  | 					   
+03954B  | Update every 16 cycles if normal	   
+03954D / Write frame to show			   
+039550 \  If sprite is not on ground...		   
+039553  |    ...(4 = on ground) ...		   
+039555 /     ...goto IN_AIR			   
+039557 \  Y speed = 10				   
+039559 /						   
+03955B Load, y = Rex direction, as index for speed  
+03955E \ If hits on Rex == 0...			   
+039560 /    ...goto DONT_ADJUST_SPEED		   
+039562 \ Increment y twice...			   
+039563 /    ...in order to get speed for smushed Rex
+039564 \ Load x speed from ROM...		   
+039567 /    ...and store it			   
+039569 \ If time to show half-smushed Rex > 0...	   
+03956C /    ...goto HALF_SMUSHED			   
+03956E Update position based on speed values	   
+039572 \ If Rex is touching the side of an object...
+039575  |					       
+039577  |					       
+039579  |					       
+03957C  |    ... change Rex direction	       
+03957E /					       
+039581 Interact with other sprites	       
+039585 Check for mario/Rex contact
+039589 (carry set = mario/Rex contact)	       
+03958B \ If mario star timer > 0 ...	       
+03958E /    ... goto HAS_STAR		       
+039590 \ If Rex invincibility timer > 0 ...     
+039593 /    ... goto NO_CONTACT		       
+039595 \ Rex invincibility timer = $08	       
+039597 /					       
+03959A \  If mario's y speed < 10 ...	       
+03959C  |   ... Rex will hurt mario	       
+03959E /    				       
+0395A0 Give mario points			       
+0395A3 Set mario speed			       
+0395A7 Display contact graphic		       
+0395AB \  If mario is spin jumping...	       
+0395AE  |    ... or on yoshi ...		       
+0395B1 /     ... goto SPIN_KILL		       
+0395B3 Increment Rex hit counter		       
+0395B5 \  If Rex hit counter == 2	       
+0395B7  |   				       
+0395B9  |				       
+0395BB  |    ... time to show defeated Rex = $20
+0395BD /
+0395C1 \ Time to show semi-squashed Rex = $0C
+0395C3 /					    
+0395C6 Change clipping area for squashed Rex 
+0395CA \ If mario is invincible...	 
+0395CD  |  ... or mario on yoshi...	 
+0395D0 /   ... return			 
+0395D2 \  Set new Rex direction		 
+0395D5  |  				 
+0395D6 /					 
+0395D9 Hurt mario			 
+0395DE \ Rex status = 4 (being killed by spin jump)  
+0395E0 /   					    
+0395E3 \ Set spin jump animation timer		    
+0395E5 /						    
+0395E8 Show star animation			    
+0395EC \
+0395F2 \ Rex status = 2 (being killed by star)			  
+0395F4 /								  
+0395F7 \ Set y speed						  
+0395F9 /								  
+0395FB Get new Rex direction					  
+0395FE \ Set x speed based on Rex direction			  
+039601 /								  
+039603 Increment number consecutive enemies killed		  
+039606 \								  
+039609  | If consecutive enemies stomped >= 8, reset to 8		  
+03960B  |								  
+03960D  |								  
+03960F /   							  
+039612 Give mario points						  
+039616 \ 							  
+039619  | If consecutive enemies stomped < 8 ...			  
+03961B  |								  
+03961D  |    ... play sound effect				  
+039620 /	
+039623 Final return 
+039630 Increase consecutive enemies stomped		      
+039633  							    
+039634  							    
+039635 \ If consecutive enemies stomped >= 8 ...		      
+039637 /    ... don't play sound 			      
+039639 \ 
+03963F \							      
+039640  | If consecutive enemies stomped >= 8, reset to 8      
+039642  |						      
+039644 /							      
+039646 Give mario points					      
+03964A  							    
+03967E \ If time to show Rex remains > 0...							 
+039681  |												 
+039683  |    ...set Rex frame = 5 (fully squashed)						 
+039685 /												 
+039688 \ If time to show half smushed Rex > 0...							 
+03968B  |												 
+03968D  |    ...set Rex frame = 2 (half smushed)							 
+03968F /												 
+039692 Y = index to sprite tile map, $00 = sprite x, $01 = sprite y
+039695 \												 
+039698  | $03 = index to frame start (frame to show * 2 tile per frame)				 
+039699 /												 
+03969B \ $02 = sprite direction									 
+03969E /												 
+0396A0 Push sprite index										 
+0396A1 Loop counter = (number of tiles per frame) - 1						 
+0396A3 Push current tile number									 
+0396A4 \ X = index to horizontal displacement							 
+0396A5 / get index of tile (index to first tile of frame + current tile number)			 
+0396A7 Push index of current tile								 
+0396A8 \ If facing right...									 
+0396AA  |												 
+0396AC  |    											 
+0396AD /    ...use row 2 of horizontal tile displacement table					 
+0396AF \ 											 
+0396B0  | Tile x position = sprite x location ($00) + tile displacement				 
+0396B2  |												 
+0396B3  |												 
+0396B6 /												 
+0396B9 \ Pull, X = index to vertical displacement and tilemap					 
+0396BA  | Tile y position = sprite y location ($01) + tile displacement				 
+0396BC  |												 
+0396BD  |												 
+0396C0 /												 
+0396C3 \ Store tile										 
+0396C6 / 											 
+0396C9 \												 
+0396CB  | Get tile properties using sprite direction						 
+0396CE  | Level properties
+0396D0 / Store tile properties									 
+0396D3 \ Get index to sprite property map ($460)...						 
+0396D4  |    ...we use the sprite OAM index...							 
+0396D5  |    ...and divide by 4 because a 16x16 tile is 4 8x8 tiles				 
+0396D6  | If index of frame start is > 0A 							 
+0396D8  |												 
+0396DA  |
+0396DB  |     ...show only an 8x8 tile			  
+0396DD  |							  
+0396DF  | Else show a full 16 x 16 tile			  
+0396E1 /							  
+0396E4 \ Pull, X = current tile of the frame we're drawing 
+0396E5  | Increase index to sprite tile map ($300)...	  
+0396E6  |    ...we wrote 4 times...			  
+0396E7  |    ...so increment 4 times			 
+0396E8  |
+0396E9  | Go to next tile of frame and loop		  
+0396EA / 						  
+0396EC Pull, X = sprite index				  
+0396ED \ FF because we already wrote size to $0460    		  
+0396EF  | A = number of tiles drawn - 1			  
+0396F1 / Don't draw if offscreen				  
+03B8FB \ If sprite is on screen, A = 0 
+03B8FE  |
+03B901 / Return 
+039C34 \ Branch if sprite isn't "Invisible solid block"
+039C36  |
+039C38 /
+039C3A \ Call "Invisible solid block" routine
+039C3E / Return 
+039CBA \ Set fire breathing timer
+039CBC /
+039CD3 \ If not facing mario, change directions
+039CD6  |
+039CD7 /
+039CDE \ Set x speed for rhino based on direction and sprite number
+039CE1  |
+039CE3  |
+039CE5  |
+039CE7  |
+039CE8  |
+039CE9  |
+039CEC /
+038770 Graphics routine		      
+038773 \ 			      
+038776  | If status != 8, return	      
+038778 /				      
+03877A Handle off screen situation     
+03877D \ Set x speed based on direction
+038780  |			      
+038783 /				      
+038785 \ If sprites locked, return     
+038787 /                               
+03878F Update position based on speed values
+038793 Interact with other sprites
+0387B2 \								  
+0387B5 | If Mega Mole is in contact with an object...		  
+0387B8 |								  
+0387BA |								  
+0387BC |    ... and timer hasn't been set (time until flip == 0)...
+0387BE |								  
+0387C0 |    ... set time until flip				  
+0387C2 /								  
+0387C5 \ Flip the temp direction status				  
+0387C8 |								  
+0387CA /								  
+0387CD \ If time until flip == 0...				  
+0387CF |								  
+0387D1 |    ...update the direction status used by the gfx routine 
+0387D4 /                                                           
+0387D7 Check for mario/Mega Mole contact
+0387DB (Carry set = contact)
+0387EA \ Set "on sprite" flag				    
+0387EC /							    
+0387EF \ Set riding Mega Mole				    
+0387F1 / 						    
+0387F4 Y speed = 0					    
+0387F6 \							    
+0387F8 | Mario's y position += C6 or D6 depending if on yoshi
+0387FB |							    
+0387FD |							    
+0387FF |							    
+038800 |							    
+038802 |							    
+038804 |							    
+038807 |							    
+038809 /							    
+03880B \ 						    
+03880D | $1491 == 01 or FF, depending on direction	    
+038810 | Set mario's new x position			    
+038812 |							    
+038813 |							    
+038814 |							    
+038816 |							    
+038818 |							    
+038819 |							    
+03881B  /							  
+03881E \ If riding Mega Mole...				    
+038821 |   ...or Mega Mole being eaten...		    
+038824 /   ...return					    
+038826 Hurt mario					    
+03882A Final return 
+038842 \ $02 = direction						     
+038845 / 							     
+038847 \ 							     
+038849 |								     
+03884A |								     
+03884B |								     
+03884C |								     
+03884D |								     
+038850 |								     
+038852 |								     
+038853 |								     
+038854 | $03 = index to frame start (0 or 4)			     
+038856 /								     
+038857 Run loop 4 times, cuz 4 tiles per frame			     
+038859 Push, current tile					     
+03885A \								     
+03885C | If facing right, index to frame end += 4		     
+03885E |								     
+03885F |								     
+038860 |								     
+038861 /								     
+038862 \ Tile x position = sprite x location ($00) + tile displacement
+038864 |								     
+038865 |								     
+038868 /								     
+03886B \ Pull, X = index to frame end				     
+03886C |								     
+03886E | Tile y position = sprite y location ($01) + tile displacement
+03886F |						   
+038872 /						   
+038875 \ Set current tile			   
+038876 | X = index of frame start + current tile	   
+038877 |						   
+038878 |						   
+03887A |						   
+03887B |						   
+03887E /						   
+038881 Tile properties xyppccct, format		   
+038883 \ If direction == 0...			   
+038885 |						   
+038887 /    ...flip tile				   
+038889 Add in tile priority of level		   
+03888B Store tile properties			   
+03888E \ Pull, current tile			   
+03888F | Increase index to sprite tile map ($300)...
+038890 |    ...we wrote 4 bytes   
+038891 |    ...so increment 4 times
+038892 |    
+038893 | Go to next tile of frame and loop	   
+038894 /                                            
+038896 Pull, X = sprite index			   
+038897 \ Will write 02 to $0460 (all 16x16 tiles)
+038899 | A = number of tiles drawn - 1		   
+03889B / Don't draw if offscreen			   
+03989F Break bridge when necessary
+0398A3 \ Set radius for Reznor sign rotation
+0398A5  |
+0398A7 /
+0398AB \ X position of Reznor sign
+0398AD  |
+0398AF /
+0398B2 \ Y position of Reznor sign
+0398B4  |
+0398B6 /
+0398BE Applies position changes to Reznor sign
+0398C2 Pull, X = sprite index
+0398C5 \ Rotate 1 frame around the circle (clockwise)
+0398C7  | $37,36 = 0 to 1FF, denotes circle position
+0398C8  |
+0398CB  |
+0398CE /
+0398D6 \ Branch if timer to trigger level isn't set
+0398D9 /
+0398DE Prevent mario from walking at level end
+0398E1 \ Set time before return to overworld
+0398E3 /
+0398E6 \
+0398E8 / Change music
+0398EC \
+0398EF  |
+0398F0  |
+0398F3  |
+0398F6  |
+0398F9  |
+0398FB  |
+0398FD  | Set time to trigger level if all Reznors are dead
+0398FF /
+039906 \ Zero out 170B table 
+039908  |
+03990A  |
+03990D  |
+03990E /
+03991A \ Load Y with Reznor number (0-3)				 
+03991B  |							 
+03991D /								 
+03991E \								 
+039920  |							 
+039921  |							 
+039924  | $01,00 = 0-1FF, position Reznors on the circle		 
+039926  |							 
+039928  |							 
+03992B  |							 
+03992D /								 
+03992F \   Index (16 bit) Accum (16 bit) 
+039931  | Make Reznors turn clockwise rather than counter clockwise
+039933  | ($01,00 = -1 * $01,00)					 							 
+039936  |							 
+039937 /                                                          
+0399A4 X = sprite index
+0399E9 \ If a Reznor is dead, make it's platform standable
+0399EC  |
+0399EE  |
+0399F2 /
+0399F5 \ Don't try to spit fire if turning
+0399F7  |
+0399F9  |
+0399FC /
+039A0B \ Set time to show firing graphic = 0A
+039A0D /
+039A19 Firing
+039A1C Turning
+039A21 \ if direction has changed since last frame...		  
+039A24  |							  
+039A25  |							  
+039A28  |							  
+039A29  |							  
+039A2C  |							  
+039A2D  |							  
+039A30  |							  
+039A32  | ...set time to show turning graphic = 0A		  
+039A34 /								  
+039A37 \ If disable interaction timer > 0, just draw Reznor	  
+039A3A /								  
+039A3C \ Interact with mario					  
+039A40 / If no contact, just draw Reznor				  
+039A42 \ Disable interaction timer = 08				  
+039A44 / (eg. after hitting Reznor, or getting bounced by platform)
+039A47 \ Compare y positions to see if mario hit Reznor		  
+039A49  |							  
+039A4A  |							  
+039A4C  |							  
+039A4E /								  
+039A50 \ See if mario hit side of the platform			  
+039A52  |							  
+039A54  |							  
+039A56 /								  
+039A58 ??Something about boosting mario on platform??
+039A5A  								  
+039A5D \ Time to bounce platform = 0F				  
+039A5F /								  
+039A62 \ Set mario's y speed to rebound down off platform	  
+039A64 /								  
+039A66 \
+039A6D \ Set mario to bounce back				  
+039A70  | (hit side of platform?)				  
+039A73  |							  
+039A75 /                                                           
+039A77 Hurt Mario
+039A7B Set normal image
+039A90 \ Set turning image
+039A92 /
+039A95 \ Shoot fire if "time to show firing image" == 20	       
+039A98  |						       
+039A9A  | (shows image for 20 frames after the fireball is shot)
+039A9C  |						       
+039A9E /							       
+039AA1 \ Set firing image				       
+039AA3 /							       
+039AA6 Draw Reznor                                              
+039AAD \ If sprites locked, or mario already killed the Reznor on the platform, return		  
+039AAF  |											  
+039AB2 /												  
+039AB4 \ If time to bounce platform != 0C, return						  
+039AB7  | (causes delay between start of boucing platform and killing Reznor)			  
+039AB9 /												  
+039ABB \
+039AC0 Prevent from throwing fire after death							  
+039AC3 Record a hit on Reznor									  
+039AC6 \ Load Y with a free sprite index for dead Reznor						  
+039ACA / Return if no free index									  
+039ACC \ Set status to being killed								  
+039ACE /												  
+039AD1 \ Sprite to use for dead Reznor								  
+039AD3 /												  
+039AD6 \ Transfer x position to dead Reznor							  
+039AD8  |											  
+039ADB  |											  
+039ADE /												  
+039AE1 \ Transfer y position to dead Reznor							  
+039AE3  |											  
+039AE6  |											  
+039AE9 /												  
+039AEC \ 											  
+039AED  | Before: X must have index of sprite being generated					  
+039AEE /  Routine clears all old sprite values and loads in new values for the 6 main sprite tables
+039AF2 \ Set y speed for Reznor's bounce off the platform					  
+039AF4 /												  
+039AF6 pull, X = sprite index                                                                      
+039AF8 \ find a free extended sprite slot, return if all full
+039B02 / Return 
+039B03 \
+039B08 \ Extended sprite = fireball
+039B0A /
+039B75 \ if the reznor is dead, only draw the platform			 
+039B78 /									 
+039B7A after: Y = index to sprite tile map, $00 = sprite x, $01 = sprite y
+039B7D \ $03 = index to frame start (frame to show * 4 tiles per frame)	 
+039B80  | 								 
+039B81  |								 
+039B82 /									 
+039B84 \ $02 = direction index						 
+039B87  |								 
+039B88  |								 
+039B89 /                                                                  
+039BB1 \ set tile					 
+039BB4 /							 
+039BB7 \ set palette/properties				 
+039BBA  | if turning, don't flip				 
+039BBC  | 						 
+039BBE  | if direction = 0, don't flip			 
+039BC0  |						 
+039BC2  |						 
+039BC4 /							 
+039BC7 \ pull, X = current tile of the frame we're drawing
+039BC8  | Increase index to sprite tile map ($300)...	 
+039BC9  |    ...we wrote 4 bytes...			 
+039BCA  |    ...so increment 4 times			 
+039BCB  |    						 
+039BCC  | Go to next tile of frame and loop		 
+039BCD / 						 
+039BCF \							 
+039BD0  | Y = 02 (All 16x16 tiles)			 
+039BD2  | A = number of tiles drawn - 1			 
+039BD4 / Don't draw if offscreen                          
+039C19 \ Tile of reznor platform...    
+039C1B  | ...store left side	      
+039C1E /  ...store right side	      
+039C21 \ Palette of reznor platform... 
+039C23  |			      
+039C26  | ...flip right side	      
+039C28 /				      
+039C2B \				      
+039C2D  | A = number of tiles drawn - 1
+039C2F / Don't draw if offscreen       
+03C34C Draw sprite uing the routine for sprites <= 53
+03C350 \ Return if sprites locked			
+03C352 /						
+03C354 \ Always face mario				
+03C357  |						
+03C358 /						
+03C35B Only process while onscreen			
+03C35E Interact with mario				
+03C362 Update position based on speed values      
+03C11E \ If sprites locked...
+03C120  | ...or battle is over (set to FF when over)...
+03C123 / ...return
+03C125 \ If platform at a maximum tilt, (stationary timer > 0)
+03C128  |
+03C12A / decrement stationary timer
+03C12D \ Return every other time through...
+03C12F  |
+03C131  | ...return if stationary
+03C134 /
+03C136 $1907 holds the total number of tilts made
+03C139 \ X=1 if platform tilted up to the right (/)...
+03C13B / ...else X=0
+03C13C $1907 holds the current phase: 0/ 1\ 2/ 3\ 4// 5\\
+03C13F \ If this is phase 4 or 5...
+03C141  | ...cause a steep tilt by setting X=X+2
+03C143  |
+03C144 /
+03C145 $36 is tilt of platform: //D8 /E8 -0- 18\ 28\\
+03C147 \ Get new tilt of platform by adding value
+03C148  |
+03C14C /
+03C14F $37 is boolean tilt of platform: 0\ /1
+03C151 \ if tilted up to left,  $37=0
+03C155  | if tilted up to right, $37=1
+03C157 /
+03C15A \ Return if platform not at a maximum tilt
+03C15E /
+03C160 Increment total number of tilts made
+03C163 \ Set timer to stay stationary
+03C165 /
+03C168 Increment phase
+03C16B \ If phase > 5, phase = 0
+03C16E  |
+03C170  |
+03C172 /
+038046 Sprite Y Speed = 0
+0381D8 Sprite X Speed = 0
+03879E Sprite Y Speed = 0
+0387B0 Sprite Y Speed = 0
+038A66 Sprite Y Speed = 0
+038AA4 Sprite X Speed = 0
+03924C Sprite Y Speed = 0
+03926C Sprite Y Speed = 0
+039D41 Sprite X Speed = 0
+039F98 Sprite Y Speed = 0
+03A454 Sprite X Speed = 0
+03A465 Sprite Y Speed = 0
+03A467 Sprite X Speed = 0
+03A6C5 Sprite X Speed = 0
+03A711 Sprite X Speed = 0
+03A713 Sprite Y Speed = 0
+03A84B Sprite Y Speed = 0
+03A877 Sprite X Speed = 0
+03A879 Sprite Y Speed = 0
+03A8A4 Sprite X Speed = 0
+03A8A6 Sprite Y Speed = 0
+03ABC1 Sprite X Speed = 0
+03ABC3 Sprite Y Speed = 0
+03AD18 Sprite X Speed = 0
+03AD5A Sprite Y Speed = 0
+03B2CA Sprite Y Speed = 0
+03B7FB Sprite Y Speed = 0
+03C36D Sprite Y Speed = 0
+03C8E2 Sprite Y Speed = 0
+03CE22 Sprite Y Speed = 0
+

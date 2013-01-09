@@ -1,0 +1,152 @@
+03B72B CheckForContact
+03B664 GetMarioClipping
+03B69F GetSpriteClippingA
+03B6E5 GetSpriteClippingB
+03B760 GetDrawInfoBnk3
+03B817 SubHorzPosBnk3
+03B829 SubVertPosBnk3
+039517 RexMainRt
+03967E RexGfxRt
+039533 RexReturn
+039534 RexAlive
+0395F2 RexStarKill
+0395DE RexSpinKill
+0395C1 SmushRex
+0395CA RexWins
+0395A0 MarioBeatsRex
+039628 RexPoints
+0395DD NoRexContact
+03B8FB IsSprOffScreenBnk3
+0396AF RexFaceLeft
+0396E1 Rex8x8Tile
+0396A3 RexGfxLoopStart
+039688 RexGfxAlive
+039692 RexNotHalfSmushed
+039C3F DinoMainRt
+039C47 DinoMainSubRt
+039D51 DinoFlameTimerSet
+039DB6 DinoFlameClipping
+039DEF DinoSetGfxFrame
+039E49 DinoGfxRt
+03883F MegaMoleGfxRt
+0387FF MegaMoleNoYoshi
+0387A3 MegaMoleInAir
+0387B2 MegaMoleOnGround
+0387AB MegaMoleWasInAir
+03881E MegaMoleContact
+038859 MegaMoleGfxLoopSt
+038862 MegaMoleFaceLeft
+038889 MegaMoleGfxNoFlip
+03989A ReznorNotLocked
+0398A3 ReznorSignCode
+0398EC ReznorNoLevelEnd
+0399F5 ReznorAlive
+039A10 NoSetRznrFireTime
+039A37 NoSetRenrTurnTime
+039A6D HitPlatSide
+039A58 HitPlatBottom
+039A77 HitReznor
+039A7B DrawReznor
+039AF8 ReznorFireRt
+039B75 ReznorGfxRt
+039BEB ReznorPlatGfxRt
+039BDF DrawReznorPlats
+039BC4 NoReznorGfxFlip
+039B8E RznrGfxLoopStart
+039B03 FoundRznrFireSlot
+039ABB KillReznor
+039A90 ReznorTurning
+039A95 ReznorNoTurning
+039AA1 ReznorFiring
+039AA6 ReznorNoFiring
+03A118 Bnk3CallSprMain
+039872 ReznorInit
+039C34 InvisBlk+DinosMain
+039569 RexInAir
+039572 RexHalfSmushed
+039564 RexNoAdjustSpeed
+03B8C3 VerticalLevelBnk3
+03B84F SubOffscreen3Bnk3
+03B853 SubOffscreen2Bnk3
+03B857 SubOffscreen1Bnk3
+03B85D SubOffscreen0Bnk3
+03B8C2 Return03B8C2
+03B8AC OffScrEraseSprBnk3
+03B8BF OffScrKillSprBnk3
+03C1F5 LightSwitch
+03C30F InvisMushroom
+03C34C Ninji
+038012 Football
+03C4DC DarkRoomWithLight
+03C816 Firework
+03AC97 PrincessPeach
+038087 BigBooBoss
+038454 GreyFallingPlat
+0384CA Blurp
+03852F PorcuPuffer
+0385F6 FlyingTurnBlocks
+0386FF GrayLavaPlatform
+038770 MegaMole
+0388A3 Swooper
+038958 SlidingKoopa
+038A3C BowserStatue
+038C2F CarrotTopLift
+038D6F InfoBox
+038DBB TimedLift
+038E79 GreyCastleBlock
+038EEC StatueFireball
+039214 FallingSpike
+039065 FishinBoo
+038F75 ReflectingFireball
+038F7A BooStream
+039284 CreateEatBlock
+039423 WoodenSpike
+0396F6 Fishbone
+039890 Reznor
+039F38 Blargg
+03B163 BowserBowlingBall
+03B2A9 MechaKoopa
+03A259 BowserFight
+03978C FishboneGfx
+038B3D BowserStatueGfx
+038D24 CarrotTopLiftGfx
+038E12 TimedPlatformGfx
+038F1B StatueFireballGfx
+039180 FishinBooGfx
+03C26B ChainsawGfx
+03B4AC BowserSceneGfx
+03B44F BowserItemBoxGfx
+03B3F7 MechaKoopaKeyGfx
+03B355 MechaKoopaGfx
+03B221 BowserBallGfx
+03D71E BreakBridge
+03938B GenTileFromSpr1
+03C000 GenTileFromSpr2
+03C334 PopupMushroom
+03C2E6 Generate1Up
+03C2D9 TriggerInivis1Up
+0394CF WoodSpikeGfx
+0394E1 WoodSpikeGfxLoopSt
+039465 SetTimerNextState
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

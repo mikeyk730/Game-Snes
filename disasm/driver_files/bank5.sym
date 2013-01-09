@@ -1,0 +1,26 @@
+05B160 SubSideExit
+058000 TilesetMAP16Loc
+0583ac LoadLevel
+0583b8 LoadAgain
+0583d2 LevLoadNotEmpty
+058412 LoadLevelDone
+058417 VerticalTable
+058437 LevMainScrnTbl
+058457 LevSubScrnTbl
+058477 LevCGADSUBtable
+058497 SpecialLevTable
+0584b7 LevXYPPCCCTtbl
+0584d7 TimerTable
+0584db LevelMusicTable
+058530 LevelModeEven
+0585c7 HeaderVHscroll
+0585ff LoadLevelData
+0586c5 LoadNoHiCoord
+0586cf LevLoadJsrNrm
+0586d2 LevLoadContinue
+0586e2 LevelDataEnd
+0586e3 LevLoadExtObj
+0586ea LevLoadNrmObj
+058776 MAP16AppTable
+05b6f8 B5L3TMAP1
+

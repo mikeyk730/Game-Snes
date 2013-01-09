@@ -1,0 +1,2118 @@
+00950A Change to #$30 to enter debug region below
+009510 \ Unreachable
+009512  | Debug: Boss defeated scene select
+009514  |
+009516  |
+009519  |
+00951A  |
+00951C  |
+00951E  |
+009520  |
+009523  |
+009525  |
+009528 /
+00A249 \ Unreachable
+00A24C  | Debug: Slow motion
+00A24E  |
+00A251  |
+00A253  |
+00A255  |
+00A257  |
+00A259 /
+00A274 \ Unreachable
+00A276  | Debug: Beat level with Start+Select
+00A278  |
+00A27A /
+00C576 Change to BEQ to reach debug routine below
+00C578 \ Unreachable
+00C57A  | Debug: Cycle through powerups
+00C57B  |
+00C57D  |
+00C57F  |
+00C581  |
+00C583 /
+00CC84 Change to BEQ to enable debug code below
+00CC86 \ Unreachable
+00CC87  | Debug: Free roaming mode
+00CC89  |
+00CC8B  |
+00CC8E  |
+00CC90  |
+00CC92  |
+00CC93  |
+00CC94  |
+00CC96  |
+00CC99  |
+00CC9B  |
+00CC9D  |
+00CC9F  |
+00CCA1  |
+00CCA3  |
+00CCA5  |
+00CCA6  | Accum (16 bit)
+00CCA8  |
+00CCAA  |
+00CCAB  |
+00CCAE  |
+00CCB0  | Accum (8 bit)
+00CCB2 / Return
+00D27C \ Unreachable
+00D27E  |
+00D27F  |
+00D281  |
+00D282  |
+00D284  |
+00D286 / Return
+00FA10 \ Unreachable
+00FC23 \ Unreachable
+00FC25 / Status = Carried
+00CDC9 \ Check Yoshi wing ability address for #$01,
+00CDCC / but this is an impossible value
+00CDCE \ Unreachable/unused code
+00CDD0  | Lets Mario (any power) shoot fireballs while on Yoshi
+00CDD2  |
+00CDD4  |
+00CDD6  |
+00CDD9 /
+00D8CD \ Branch if not flying
+00D8CF /
+00D8D1 X = #$00
+00D8D3 \ Branch if not on Yoshi
+00D8D6 /
+00D8D8 \ Branch if not winged Yoshi
+00D8DB  |
+00D8DC /
+00D8DE \ Branch if not Caped Mario
+00D8E0  |
+00D8E2 /
+00D8E4 X= #$01
+00D8E7 \ Branch if not Caped Mario
+00D8E9  |
+00D8EB /
+00D8ED \ Branch if $72 != 0C
+00D8EF  |
+00D8F1 /
+00EF87 \ If Yoshi has stomp ability,
+00EF8A  |
+00EF8C  | Run routine
+00EF90  | Play sound effect
+00EF92 /
+00F833 \ If winged Yoshi...
+00F836  |
+00F83A  | ...or climbing
+00F84F \ Branch if 141E >= #$02
+00F852  |
+00F854 /
+00FC38 No Yoshi wings
+00FA8F Loop over sprites:
+00FA91 \ If sprite status < 8,
+00FA94  | skip the current sprite
+00FA96 /
+00FA98 \ If Mario carries a sprite past the goal,
+00FA9A  |
+00FA9C  |
+00FA9D  | he gets a powerup
+00FAA0  |
+00FAA1 /
+00FAA3 \ Branch if goal tape
+00FAA6  |
+00FAA8 /
+00FAAA \ If sprite on screen...
+00FAAD  |
+00FAB0  |
+00FAB2  | ...and "don't turn into coin" not set,
+00FAB5  |
+00FAB7  |
+00FAB9  | Set coin animation timer = #$10
+00FABB  |
+00FABE  | Sprite status = Level end, turn to coins
+00FAC0  |
+00FAC3 /
+00FAC5 \ If "don't erase" not set,
+00FAC8  |
+00FACA  |
+00FACC  | Erase sprite
+00FACE /
+00FAD1 \ Goto next sprite
+00FAD2 /
+00FAD4 \
+00FAD6  | Clear out all extended sprites
+00FAD8  |
+00FADB  |
+00FADC /
+00FB00 X = Mario's power up status
+00FB02 \ If Mario has star, X = #$04.  However this never happens as $1490 is cleared earlier
+00FB05  | Otherwise Mario could get a star from carrying a sprite past the goal.
+00FB07 / <--Unreachable, unused
+00FB09 \ If Mario on Yoshi, X = #$05
+00FB0C  |
+00FB0E /
+00FB10 \ If Spring Board, X += #$07
+00FB13  |
+00FB15 /
+00FB17 \ If P Switch, X += #$07
+00FB19 /
+00FB1B \ If Key, X += #$0E
+00FB1D /
+00FB1F \ If Baby Yoshi, X += #$15
+00FB21 /
+00FB69 \ Sprite status = Goal tape power up
+00FB6B /
+00FC8F \ X = First free sprite slot, #$03 if none free
+00FC93  |
+00FC94  |
+00FC96 /
+00EFB6 \ Play sound effect
+00EFB8 /
+00F252 \ Block to generate = Used block
+00FBE4 Y = Index into sprite OAM
+00FC98 \ Status = Normal
+00FC9A /
+00FC9D \ Sprite = Yoshi
+00FC9F /
+00FCA1 \ Yoshi X position = Mario X position
+00FCA3  |
+00FCA5  |
+00FCA7 /
+00FCAA \ Yoshi's Y position = Mario Y position - #$10
+00FCAC  | Mario Y position = Mario Y position - #$10
+00FCAD  |
+00FCAF  |
+00FCB1  |
+00FCB3  |
+00FCB5  |
+00FCB7  |
+00FCB9 /
+00FCBC Reset sprite tables
+00FCC5 \ Set Yoshi palette
+00FCC8 /
+00BFC5 $9C - Tile generated
+00BFC9 01 - empty space
+00BFCB 02 - empty space
+00BFCD 03 - vine
+00BFCF 04 - tree background, for berries
+00BFD1 05 - always turning block
+00BFD3 06 - coin
+00BFD5 07 - Mushroom scale base
+00BFD7 08 - mole hole
+00BFD9 09 - invisible solid
+00BFDB 0a - multiple coin turnblock
+00BFDD 0b - multiple coin q block
+00BFDF 0c - turn block
+00BFE1 0d - used block
+00BFE3 0e - music block
+00BFE5 0f - music
+00BFE7 10 - all way music block
+00BFE9 11 - sideways turn block
+00BFEB 12 - tranlucent
+00BFED 13 - on off
+00BFEF 14 - side of pipe, left
+00BFF1 15 - side of pipe, right
+00BFF3 16 - used
+00BFF5 17 - O block from 1up game
+00BFF7 18 - invisible block containing wings
+00BFF9 19 - cage
+00BFFB 1a - cage
+00BFFD 1b - 
+00F252 \ Block to generate = #$0D
+00F254 /
+00F281 \ Block to generate = #$02
+00F283 /
+00F2CD \ Block to generate = #$02
+00F2CF /
+00F36B \ Block to generate = #$01
+00F36D /
+009329 00 -
+00932B 01 -
+00932D 02 -
+00932F 03 -
+009331 04 -
+009333 05 -
+009335 06 -
+009337 07 -
+009339 08 -
+00933B 09 -
+00933D 0A -
+00933F 0B -
+009341 0C -
+009343 0D -
+009345 0E -
+009347 0F -
+009349 10 -
+00934B 11 -
+00934D 12 -
+00934F 13 -
+009351 14 -
+009353 15 -
+009355 16 -
+009357 17 -
+009359 18 -
+00935B 19 -
+00935D 1A -
+00935F 1B -
+009361 1C -
+009363 1D -
+009365 1E -
+009367 1F -
+009369 20 -
+00936B 21 -
+00936D 22 -
+00936F 23 -
+009371 24 -
+009373 25 -
+009375 26 -
+009377 27 -
+009379 28 -
+00937B 29 -
+0084C8 Wrapper
+009B80 Wrapper
+009BA8 Wrapper
+00A594 Wrapper
+00FA10 \ Unused code:
+00FA12  | Clear out sprite status table
+00FA15  |
+00FA16  |
+00FA18 /
+00C6F0 \ Branch if Mario has upward speed
+00C6F2 /
+00CDF6 \ Branch if anything besides L/R being held
+00CDF8  |
+00CDFA  |
+00CDFC /
+00CDFE \ Branch if L/R not being held
+00CE00  |
+00CE02  |
+00CE04  |
+00CE06 /
+00FAD6 \ Clear extended sprite
+00FAD8 /
+00FD19 \ Find a free extended sprite slot
+00FD1B  |
+00FD1E  |
+00FD20  |
+00FD21  |
+00FD23 / Return if no free slots
+00FD26 \ Extended sprite = Water buble
+00FD28 /
+00FE16 \ Extended sprite = Water bubble
+00FE18 /
+00FEA8 \ Find a free fireball slot (08-09)
+00FEAA  |
+00FEAD  |
+00FEAF  |
+00FEB0  |
+00FEB2  |
+00FEB4 / Return if no free slots
+00FEB4 Return
+00FEBF \ Extended sprite = Mario fireball
+00FEC1 /
+0096C6 \ Set title screen music
+0096C8 /
+00D22D \ Set holding X/Y on controller
+00D22F /
+00FBD6 \ Use Palette A
+00FBD8 /
+00C599 0 - Reset                       
+00C59B 1 - Power down                  
+00C59D 2 - Mushroom power up           
+00C59F 3 - Cape power up               
+00C5A1 4 - Flower power up             
+00C5A3 5 - Door/Horizontal pipe exit   
+00C5A5 6 - Vertical pipe exit          
+00C5A7 7 - Shot out of diagonal pipe   
+00C5A9 8 - Yoshi wings exit            
+00C5AB 9 - Mario Death                 
+00C5AD A - Enter Castle                
+00C5AF B - freeze forever              
+00C5B1 C - random movement??           
+00C5B3 D - freeze forever              
+0080E8 \ this address (0E:8000) is the start of the SPC engine
+0080EA  | instrument settings/sound effect data
+0080ED  | AND the code used for all music banks.
+0080fd \    Index (8 bit)
+008104  |[SPC Sample Pointers/Data ROM Address, this is]
+00810e \
+008113  |Loads the Bank 1 music data (Map) to 00-02
+008115  | ($0E:98B1)
+008148 \
+00814A  |Loads the Bank 2 music address(Levels)
+00814D  | (0E:AED6)
+00814F  |
+008152  |
+008154 /
+008159 \
+00815B  |Bank 3 music(Ending) ROM address
+00815E  |
+008160  | ($03:E400)
+008163  |
+008165 /
+00db96 Mario is in Water flag
+00dbba Mario X
+00dbc3 Mario's Direction
+00dbcd Store A in Mario image
+00dbf2 \
+00dbf4  |If up or down isn't pressed, branch to $DC16
+00dbf6 /
+00dbf8 \ If up is pressed, branch to $DC03
+00dbfa /
+00dc00 Mario isn't climbing
+00dc02 Return
+00800A \
+00800D  |Clear APU I/O ports 1-4
+008010  |
+008013 /
+008018 /
+0081AC /
+008286 / Set brightness to $0DAE
+0082B3 / Set brightness to $0DAE
+009385 /Disable Screen
+00A30B /
+00A317 /
+00A31C /
+00A322 /
+00A32A /
+00A341 /
+00A347 /
+00A350 /
+00A358 /
+00A35E /
+00A363 /
+00A370 /
+00A378 /
+00A37E /
+00A383 /
+00A640 \ Branch if Mario doesn't have star
+00A643 /
+00A65D Zero out star timer
+00C500 \ Branch if sprites locked
+00C502 /
+00C527 / Change music
+00C54C / Change music
+00C557 \ Play sound effect
+00C559 /
+00C720 \ Play sound effect
+00C722 /
+00C732 \ Play sound effect
+00C734 /
+00C75F \ Play sound effect
+00C761 /
+00C798 \ Play sound effect
+00C79A /
+00C7AC \ Play sound effect
+00C7AE /
+00C7D1 \ Play sound effect
+00C7D3 /
+00C90F \ Play sound effect
+00C911 /
+00C9BE / Change music
+00CCC6 \ Branch if sprites locked
+00CCC8 /
+00CE3F \ Play sound effect
+00CE41 /
+00D07B \ Play sound effect
+00D07D /
+00D0DF / Change music
+00D256 /
+00D2A5 \ Play sound effect
+00D2A7 /
+00D649 \ Play sound effect
+00D64B /
+00D65E \ Play sound effect
+00D660 /
+00D8A8 \ Play sound effect
+00D8AA /
+00DAA9 \ Play sound effect
+00DAAB /
+00DBA5 \ Play sound effect
+00DBA7 /
+00DBB2 \ Play sound effect
+00DBB4 /
+00E2CF \ Branch if Mario doesn't have star
+00E2D2 /
+00E2E0 Decrease star timer
+00E305 / Change music
+00EA8D \ Play sound effect
+00EA8F /
+00EC10 \ Play sound effect
+00EC12 /
+00EEC4 / Change music
+00F1C9 \ Branch if Mario has star
+00F1CC /
+00F5B7 \ Return if animation sequence activated
+00F5B9 /
+00F5BB \ If flashing...
+00F5BE  | ...or have star...
+00F5C1  | ...or level ending...
+00F5C4 / ...return
+00F5D5 \ If Mario is small, kill him
+00F5D7 /
+00F5D9 \ Branch if not Caped Mario
+00F5DB /
+00F5DD \ Branch if not soaring
+00F5E0 /
+00F5E2 \ Break Mario out of soaring
+00F5E4  | (Play sound effect)
+00F5E7  | (Set spin jump flag)
+00F5E9  |
+00F5EC  | (Set flashing timer)
+00F5EE /
+00F5F3 \ Play sound effect
+00F5F5 /
+00F5FC \ Set power down animation
+00F5FE /
+00F600 Mario status = Small
+00F606 \ Mario Y speed = #$90
+00F608 /
+00F60A \
+00F60C / Change music
+00F614 \ Animation sequence = Kill Mario
+00F616 /
+00D212 \
+00D214  | If not relativly centered on the pipe...
+00D216  |
+00D218  |
+00D21B  |
+00D21D  |
+00D21F  |
+00D220  | ...adjust Mario's X postion
+00D222  |
+00D223  |
+00D226 /
+00D228 \ Mario's image = going down pipe
+00D22A /
+00D231 \ Set behind scenery flag
+00D233 /
+00D24E \ If Mario has no speed...
+00D250  |
+00D252  |
+00D254  | ...play sound effect
+00D259 \ Set X speed
+00D25C /
+00D25E \ Set Y speed
+00D261 /
+00D263 Mario flying = false
+00D26A \ In new level, reset values
+00D26D /
+00F618 Spin jump flag = 0
+00F61D Set hurt frame timer
+00F620 set lock sprite timer
+00F622 Cape status = 0
+008000 Disable interrupts
+008001 Clear NMI and V/H Count, disable joypad
+008004 Disable HDMA
+008007 Disable DMA
+008016 \ Turn off screen
+008018 / 
+00801b \ Turn off emulation mode
+00801c / 
+00801d 16 bit A,X,Y, Decimal mode off
+00801f \ Set direct page
+008022 / 
+008023 \ Set stack location
+008026 / 
+008027 \ 
+00802a  |
+00802e  |
+008031  |
+008034  |
+008037  |
+00803b  |
+00803c  |Create routine in RAM
+008040  |
+008041  |
+008044  |
+008045  |
+008046  |
+008047  |
+008048  |
+00804a  |
+00804c  |
+00804e / 
+008052 SPC700 Bank 02 + Main code upload handler
+008055 Set game mode to 0
+008058 Set secondary game mode to 0
+008064 \ Set OAM Size and Data Area Designation to x03
+008066 / 
+008069 Skip the following loop
+00806b  |Loop until the interrupt routine sets $10
+00806d / to a non-zero value.
+00806f Enable interrupts
+008070 Increase frame number
+008072 The actual game
+008075 \ Wait for interrupt
+008077 / 
+008089 Load byte to start transfer
+0080e8 \ this address (0E:8000) is the start of the OW music bank
+0080ea  |AND the code for both music banks.
+0080ed  |
+0080ef  |
+0080f2  |
+0080f4 / 
+0080fd \ 
+0080ff  |
+008102  |Loads The Address 0F:8000 to 00-02
+008104  |[SPC700 Bank 1 (level) music ROM Address, this is]
+008107  |
+008109 / 
+00810e \ 
+008110  |
+008113  |Same as above, but for the Bank 2 music data
+008115  | ($0E:B198)
+008118  |
+00811a / 
+00816a Looks like this might be the NMI routine here. That is correct.
+00816b I thought it was, just from the address, but I wasn't too sure.
+008174 8 bit A,X,Y
+008176 Load "NMI Enable."  This has the effect of clearing the Interrupt, so that
+008179 \ 
+00817c  |
+00817e  |
+008181  |Update SPC700 I/O port 2
+008184  |
+008186  |
+008189  |
+00818c  |
+00818f \ 
+008192  |
+008195  |
+008198  |Update SPC700 I/O ports 0, 1 and 3
+00819b  |
+00819e  |
+0081a1  |
+0081a4  |
+0081a7 / 
+0081aa \ Screen off, brightness=0
+0081ac / 
+0081af Zero The HDMA reg
+0081c6 \ 
+0081c9  |If in a "Special level",
+0081cb  |jump to $82C4
+0081ce \ Get the CGADSUB byte...
+0081d0  |Get the Add/Subtract Select and Enable part...
+0081d2 / ...and store it to the A/SSaE register...
+0081d5 \ 8x8 tiles, Graphics mode 1
+0081d7 / 
+0081da \ If there isn't any lag,
+0081dc / branch to $81E7
+0081de \ 
+0081e1  |If not on a special level, branch to NMINotSpecialLv
+0081e2 / 
+0081f7 \ 
+0081fa  |If the current cutscene isn't the ending,
+0081fc / branch to $8209
+0081fe \ 
+008201  |Related to reloading the palettes when switching
+008203  |to another background during the credits.
+008207 / 
+008246 \ 
+008248  |Set BG 1 Horizontal Scroll Offset
+00824b  |to X position of screen boundry 
+00824d / 
+008250 \ 
+008252  |
+008253  |Set BG 1 Vertical Scroll Offset
+008256  |to Y position of screen boundry + Layer 1 disposition
+008259  |
+00825b  |
+00825e / 
+008261 \ 
+008263  |Set BG 2 Horizontal Scroll Offset
+008266  |to X position of Layer 2
+008268 / 
+00826b \ 
+00826d  |Set BG 2 Vertical Scroll Offset
+008270  |to Y position of Layer 2
+008272 / 
+008275 \ If in a normal (not special) level, branch
+008278 / 
+00827c \ 
+00827f  |If not playing ending movie, branch to $82A1
+008281 / 
+008283 \ 
+008286 / Set brightness to $0DAE
+008289 \ 
+00828c / Set HDMA channel enable to $0D9F
+008292 \ 
+008294  |(i.e. below the status bar)
+008297  |
+00829a / 
+0082a4 \ 
+0082a7  |Set Layer 3 horizontal and vertical
+0082aa  |scroll to x00
+0082ad / 
+0082b0 \ 
+0082b3 / Set brightness to $0DAE
+0082b6 \ 
+0082b9 / Set HDMA channel enable to $0D9F
+0082bc \ Pull all
+0082be  |
+0082bf  |
+0082c0  |
+0082c1  |
+0082c2 / 
+0082c3 And return
+0082c4 \ If there is lag,
+0082c6 / branch to $82F7
+0082ca \ If Mario Start! graphics shouldn't be loaded,
+0082cd / branch to $82D4
+008374 Set Interrupt flag so routine can start
+008375 \ Save A/X/Y/P/B
+008376  |P = Processor Flags, B = bank number for all $xxxx operations
+008378  |Set B to 0$0
+008379  |
+00837a  |
+00837b  |
+00837c  |
+00837d / 
+008380 Read the IRQ register, 'unapply' the interrupt
+008383 If "Timer IRQ" is clear, skip the next code block
+00838a If Bit 7 (negative flag) is set, branch to a different IRQ mode
+00838c Enable NMI Interrupt and Automatic Joypad reading
+008394 \ Adjust scroll settings for layer 3
+008396  |
+008399  |
+00839b  |
+00839e  |
+0083a0  |
+0083a3  |
+0083a5 / 
+0083a8 \Set the layer BG sizes, L3 priority, and BG mode
+0083aa /(Effectively, this is the screen mode)
+0083ad \Write CGADSUB
+0083af /
+0083b2 \ Pull everything back
+0083b4  |
+0083b5  |
+0083b6  |
+0083b7  |
+0083b8 /
+0083b9 And Return
+0083ba Get bit 6 of $0D9B
+0083bd If clear, skip the next code section
+0083bf \Skip if $11 = 0
+0083c1 /
+0083c3 #$81 -> NMI / Controller Enable reg
+0083d0 $11++
+0083d2 \ Set up the IRQ routine for layer 3
+0083d5  |-\ 
+0083d7  |  |Vertical Counter trigger at 174 - $1888
+0083d8  |-/ Oddly enough, $1888 seems to be 16-bit, but the
+0083db  |Store to Vertical Counter Timer
+0083de / Make the high byte of said timer 0
+0083e1 A = NMI enable, V count enable, joypad automatic read enable, H count disable
+0083e3 if $1493 = 0 skip down
+0083e8 \ If $1495 is <#$40
+0083eb  |
+0083ed / Skip down
+0083f1 Jump up to IRQNMIEnding
+0083f3 A -> NMI/Joypad Auto-Read/HV-Count Control Register
+0083f9 \Not often you see NOP, I think there was a JSL here at one point maybe
+0083fa /
+0083fb \Write Screen register
+0083fd /
+008400 \ Write L1 Horizontal scroll
+008402  |
+008405  |
+008407 / 
+00840a \ Write L1 Vertical Scroll
+00840c  |
+00840f  |
+008411 / 
+008414 And exit IRQ
+008416 \
+008418 /Write L1 GFX source address
+00841b \Write L1/L2 Tilemap address
+00841d /
+008420 \ Write L1 Horizontal scroll
+008422  |
+008425  |
+008427 /
+00842a \ $1C + $1888 -> L1 Vert scroll
+00842c  |$1888 = Some sort of vertioffset
+00842d  |
+008430 /
+008433 \Other half of L1 vert scroll
+008435 /
+008438 Return
+008439 <<- Could this be just to waste time?
+00843b So... LDY gets set with 20 if there is a H-Blank...?
+00843e if in H-Blank, make Y #$20 and try again
+008440 Now wait until not in H-Blank
+008445  |Y = 0
+008446 / ...wait a second... why didn't they just do LDY #$00? ...waste more time?
+008448 return
+00844e OAM address
+008454 Dest. address = $2104 (data write to OAM)
+00845a Source address = $00:0200
+008460 $0220 bytes to transfer
+008465 Start DMA
+00846a \ 
+00846c  |
+00846f  |Change the OAM read/write address to #$8000 + $3F
+008471 / 
+008474 Return
+0084d0 Not used?
+0084d3 Title screen
+0084d6 OW border
+0084dc CONTINUE/END
+0084e2 1 PLAYER GAME/2 PLAYER GAME
+0084e5 OW scroll arrows
+0084e8 Remove OW scroll arrows
+0084ee CONTINUE AND SAVE
+0084f4 Cutscene 1 text: Line 7
+0084f7 Cutscene 1 text: Line 6
+0084fa Cutscene 1 text: Line 5
+0084fd Cutscene 1 text: Line 4
+008500 Cutscene 1 text: Line 3
+008503 Cutscene 1 text: Line 2
+008506 Cutscene 1 text: Line 1
+008509 Cutscene 2 text: Line 8
+00850c Cutscene 2 text: Line 7
+00850f Cutscene 2 text: Line 6
+008515 ...etc...
+008599 Cutscene border, cave ground
+0085a5 Ending: THE END
+0085a8 Ending: Enemies: Lakitu
+0085ab Ending: Enemies: Hammer Bro.
+0085ae Ending: Enemies: Pokey
+0085b1 Ending: Enemies: Rex
+0085b4 Ending: Enemies: Dino-Rhino
+0085b7 Ending: Enemies: Blargg
+0085ba Ending: Enemies: Urchin
+0085bd Ending: Enemies: Boo
+0085c0 Ending: Enemies: Dry Bones
+0085c3 Ending: Enemies: Grinder
+0085c6 Ending: Enemies: Reznor
+0085c9 Ending: Enemies: Mechakoopa
+0085cc Ending: Enemies: Bowser
+0085d2 12 = Image loader
+0085d4 \ 
+0085d7  |
+0085d9  |Load pointer
+0085dc  |
+0085de  |
+0085e1 / 
+0085f7 Do not reload the same thing next frame
+008601 Set "VRAM Address Increment Value" to x00
+008604 Set "Address for VRAM Read/Write (Low Byte)" to x00
+008607 \ Set "Address for VRAM Read/Write (High Byte)" to x50
+008609 / 
+008617 DMA something to VRAM, my guess is a tilemap...
+008625 \Change CRAM address
+008628  |
+00862a /
+00862d And Repeat the DMA
+008638 \but change desination address to $2119
+00863a /
+00863d Start DMA
+008640 $3B = 0 (not sure what $3B is)
+008642 and JSL to a RAM routine
+008646 Jump to the next part of this routine
+008650 \ 
+008653  |
+008655  |
+008658  |
+008659  |
+00865c  |
+00865f  |
+008662  |
+008665  |
+008668  |
+00866b  |
+00866c  |
+00866f  |
+008672  |
+008675  |Read controller data
+008678  |
+00867b  |
+00867d  |
+008680  |
+008681  |
+008684  |
+008687  |
+00868a  |
+00868d  |
+008690  |
+008693  |
+008694  |
+008697  |
+00869a  |
+00869d / 
+0086a0 \ 
+0086a3  |If $0DA0 is positive, set X to $0DA0
+0086a5  |Otherwise, set X to current character
+0086a8 \ 
+0086ab  |
+0086ad  |
+0086b0  |
+0086b2  |
+0086b5  |Update controller data bytes
+0086b7  |
+0086ba  |
+0086bc  |
+0086bf  |
+0086c1  |
+0086c4 / 
+0086c6 Return
+0086df "Push" Y
+0086e4 16 bit A
+0086e6 A = Game mode
+0086e9 Multiply game mode by 2
+0086f1 A is 16-bit
+0086f5 "Pull" Y
+0086f7 Jump to the game mode's routine, which has been loaded into $00-02
+0086ff 16 bit A,X,Y
+008701 \ A = Tileset/byte 3 (TB3)
+008704 / Store A in $03
+008706 \ Multiply A by 2
+008707  |Add TB3 to A
+008709 / Set Y to A
+00871e 16 bit X,Y
+008723 Set index to 0
+008726 \ Read line header byte 1
+008728  |If the byte & %10000000 is true,
+00872a  |Set A,X,Y to 8 bit and return
+00872c  |
+00872d Store byte in $04
+00872f Move onto the next byte
+008730 Read line header byte 2
+008732 Store byte in $03
+008734 Move onto the next byte
+008735 Read line header byte 3
+008737 \ 
+008739  |Store direction bit in $07
+00873a / 
+00873c \ Set B address (DMA) to x18
+00873e / 
+008741 Re-read line header byte 3
+008743 \ 
+008745  |
+008746  |Store RLE bit << 3 in $05
+008747  |
+008748 / 
+008751 16 bit A
+008770 8 bit A
+0087af \ 
+0087b2  |If Layer 1 has to be updated,
+0087b4  |jump to $88DD
+0087b7 \ 
+0087b9  |
+0087bb  |If on a vertical level,
+0087bd  |jump to $8849
+0087c0 \ Set "VRAM Address Increment Value" to x81
+0087c2 / 
+0087dc \ Enable DMA channel 1
+0087de / 
+008800 \ Enable DMA channel 1
+008803 / 
+00881e \ Enable DMA channel 1
+008820 / 
+008841 \ Enable DMA channel 1
+008843 / 
+008a79 Set "Screen Initial Settings" to x00
+008a7c Turn off mosaic
+008aae \ Set Mode7 "Screen Over" to %10000000, disable Mode7 flipping
+008ab0 / 
+008ab3 Return
+008cff More DMA
+008d01 Increment when $2119 accessed
+008d04 \VRAM address = #$502E
+008d06  |
+008d09  |
+008d0b /
+008d13 Load up the DMA regs
+008d16 DMA Source = 8C:8118 (...)
+008d17 Dest = $2118, Transfer: #$08 bytes
+008d1b Do the DMA
+008d1e \ Set VRAM mode = same as above
+008d20  |Address = #$5042
+008d23  |
+008d25  |
+008d28  |
+008d2a / 
+008d2d \ Set up more DMA
+008d2f  |Dest = $2100
+008d32  |Fixed source address = $89:1801 (Lunar Address: 7E:1801)
+008d35  |#$808C bytes to transfer
+008d36 /Type = One reg write once
+008d3a Start DMA
+008d3d \prep VRAM for another write
+008d3f  |
+008d42  |
+008d44  |
+008d47  |
+008d49 /
+008d4c \ Load up DMA again
+008d4e  |Dest = $2118
+008d51  |Source Address = $39:8CC1
+008d54  |Size = #$0100 bytes
+008d55 /Type = Two reg write once
+008d57 \Start Transfer
+008d59 /
+008d5c \
+008d5e  |Set up VRAM once more
+008d61  |
+008d63  |
+008d66  |
+008d68 /
+008d6b \Last DMA...
+008d6d  |Reg = $2118 Type = Two reg write once
+008d70  |Source Address = $08:8CF7
+008d73  |Size = #$9C00 bytes (o_o)
+008d74 /
+008d76 \Transfer
+008d78 /
+008d7b \Copy some data into RAM
+008d7d  |
+008d7f  |
+008d82  |
+008d85  |
+008d86  |
+008d87  |
+008d88 /
+008d8c #$28 -> Timer frame counter
+008d8f Return
+008dac Set VRAM Address Increment Value to x00
+008daf \ 
+008db1  |Set Address for VRAM Read/Write to x5042
+008db4  |
+008db6 / 
+008db9 \ 
+008dbb  |Load settings from DMAdata_StBr1 into DMA channel 1
+008dbe  |
+008dc1  |
+008dc2 / 
+008dc4 \ Activate DMA channel 1
+008dc6 / 
+008dc9 Set VRAM Address Increment Value to x00
+008dcc \ 
+008dce  |Set Address for VRAM Read/Write to x5063
+008dd1  |
+008dd3 / 
+008dd6 \ 
+008dd8  |Load settings from DMAdata_StBr2 into DMA channel 1
+008ddb  |
+008dde  |
+008ddf / 
+008de1 \ Activate DMA channel 1
+008de3 / 
+008de6 Return
+008de7 DMA settings for copying the top half
+008deb of the status bar to VRAM
+008dee DMA settings for copying the bottom half
+008df2 of the status bar to VRAM
+008e1a \ 
+008e1d  |If level is ending or sprites are locked,
+008e1f / branch to $8E6F
+008e32 \ 
+008e35  |If time is 0,
+008e38  |branch to $8E6F
+008e3b / 
+008e4c \ 
+008e4f  |
+008e51  |
+008e54  |If time is 99,
+008e57  |speed up the music
+008e59  |
+008e5b  |
+008e5d  |
+008e60 \ 
+008e63  |
+008e66  |If time is 0,
+008e69  |JSL to $00F606
+008e6b  |
+008e6f \ 
+008e72  |
+008e75  |Copy time to $0F25-$0F27
+008e78  |
+008e7b  |
+008e7e / 
+008e9e 16 bit A
+008eae 8 bit A
+008ebf 8 bit A
+008ec6 \ Store high byte of Mario's score in $00
+008ec9 / 
+008ecb Store x00 in $01
+008ecd \ Store mid byte of Mario's score in $03
+008ed0 /
+008ed2 \ Store low byte of Mario's score in $02
+008ed5 /
+008ede \ 
+008ee0  |
+008ee3  |
+008ee5  |Replace all leading zeroes in the score with spaces
+008ee7  |
+008eea  |
+008eeb  |
+008eed  |
+008eef Get current player
+008ef2 If player is Mario, branch to $8F1D
+008ef4 \ Store high byte of Luigi's score in $00
+008ef7 / 
+008ef9 Store x00 in $01
+008efb \ Store mid byte of Luigi's score in $03
+008efe / 
+008f00 \ Store low byte of Luigi's score in $02
+008f03 / 
+008f0c \ 
+008f0e  |
+008f11  |
+008f13  |Replace all leading zeroes in the score with spaces
+008f15  |
+008f18  |
+008f19  |
+008f1b / 
+008f1d \ If Coin increase isn't x00,
+008f20 / branch to $8F3B
+008f22 Decrease "Coin increase"
+008f25 Increase coins by 1
+008f28 \ 
+008f2b  |If coins<100, branch to $8F3B
+008f2d / 
+008f2f Increase lives by 1
+008f32 \ 
+008f35  |Decrease coins by 100
+008f36  |
+008f38 / 
+008f3b \ If amount of lives is negative,
+008f3e / branch to $8F49
+008f40 \ If amount of lives is less than 98,
+008f42 / branch to $8F49
+008f44 \ Set amount of lives to 98
+008f46 / 
+008f49 \ 
+008f4c  |Get amount of lives in decimal
+008f4d / 
+008f50 \ 
+008f51  |If 10s is 0, replace with space
+008f53  |
+008f55 \ Write lives to status bar
+008f58 / 
+008f5b \ Get bonus stars
+008f5e / 
+008f61 \ If bonus stars is less than 100,
+008f63 / branch to $8F73
+008f65 \ Start bonus game when the level ends
+008f67 / 
+008f6a \ 
+008f6d  |Subtract bonus stars by 100
+008f6e  |
+008f70 / 
+008f73 \ Get amount of coins in decimal
+008f76 / 
+008f79 \
+008f7a  |If 10s is 0, replace with space
+008f7c  |
+008f7e \ Write coins to status bar
+008f81 / 
+008f84 8 bit A
+008f86 Load Character into X
+009012 8 bit A
+009017 16 bit A
+009032 8 bit A
+009042 8 bit A
+009045  |
+009047  |
+009049  |Sets A to 10s of original A
+00904b  |Sets X to 1s of original A
+00904d  |
+00904e  |
+009050 / 
+0091bd \ 
+0091c0  |Set timer to 000
+0091c3 / 
+009235 Set "Address for CG-RAM Write" to 0
+009260 Disable all HDMA channels
+009263 16 bit A
+009265 \ 
+009268  |
+00926a  |Clear "HDMA table for windowing effects"
+00926d  |...hang on again.  It clears one set of RAM here, but not the same
+009270  |
+009271  |
+009272 / 
+009274 \ Set A to 8bit and return
+009276 / 
+009291 out?
+009294 *note to self: ctrl+insert, not shift+insert*
+009296 ...  This is, uh, strange.  It pastes $00FF into the $04A0,x table
+009299 instead of $FF00 o_O
+0092a0  Enable channel 7 in HDMA, disable all other HDMA channels
+0092a2  $7E:0D9F - H-DMA Channel Enable RAM Mirror
+0092a8 these are somewhat the same subroutine, but also not >_>
+009322 Load game mode
+00937d Disable NMI ,VIRQ, HIRQ, Joypads
+009380 Turn off all HDMA
+009383 \
+009385 /Disable Screen
+009388 And return
+009389 Nintendo Presents X locations
+00938d Nintendo Presents tilemap
+00939a \ Load Nintendo Presents logo
+00939c  |
+00939e  |
+0093a1  |
+0093a4  |   <-Y position of logo
+0093a6  |
+0093a9  |
+0093ac  |
+0093af  |
+0093b1  |
+0093b4  |
+0093b5  |
+0093b6  |
+0093b7  |
+0093b8  |
+0093b9 / 
+0093bb \ Related to making the sprites 16x16?
+0093bd / 
+0093c0 \ Play "Bing" sound?
+0093c2 / 
+0093c5 \ Set timer to x40
+0093c7 / 
+0093ca \ Set brightness to max
+0093cc / 
+0093d4 Sprite palette setting = 0
+0093d7 Load the palette
+0093da \ Black background
+0093dd /
+0093e3 Set menu pointer position to 0
+0093e6 Enable sprites, disable layers
+0093e8 Set Layer 3 to subscreen
+0093ef CGADSUB = 20
+0093f1 Apply above settings
+0093f4 Move on to Game Mode 01
+0093f7 \ Enable NMI and joypad, Disable V-count and H-cout
+0093f9 / 
+0093fd \ Set CGADSUB settings to A
+009400 / 
+009402 Set "Background and Object Enable" to X
+009405 Set "Sub Screen Designation" Y
+009408 \ Set "Window Mask Designation" for main and sub screen to x00
+00940b / 
+00940e Return
+00940f Decrease timer
+009412 \ If timer is 0:
+009414  |Jump to sub $B888
+009417  |Move on to Game Mode 02
+00941a Return
+009446 \ 
+009448  |Store x80 in $00,
+00944a  |Store x70 in $01
+00944c / 
+009450 Background colors to use for cutscenes
+009454 Purpose of first byte is unknown
+009458 Castle palette to use for cutscenes
+00945c Purpose of first byte is unknown
+009471 Cutscene number
+0097be Set brightness to full (RAM mirror)
+0097c7 \
+0097c9 |Not sure what these bytes are used for yet, unless they're just more 
+0097cb /scratch (I find that unlikely)
+0098a9 \ 
+0098ac  |If "Special level" is even,
+0098ad / branch to $98E1
+0098b6 16 bit A
+0098e1 16 bit A
+009922 8 bit A
+009a74 \Read old-style controller register for player 1
+009a77 /LSR A, but then discard (Is this for carry flag or something?)
+009a78 \Load And Rotate left A (player 2 old-style controller regs)
+009a7b /
+009a7c AND A with #$03
+009a7e If A AND #$03 = 0 Then STA $0DA0 (A=0)
+009a8a *yawn*
+009a91 Zero the timer
+009a97 \ Load title screen Layer 3 image
+009a99  |
+009a9b / 
+009aa4 todo: NOTE TO SELF: Check this routine out after making Bank4.asm
+009aa8 \ Set special level to x01
+009aaa / 
+009ad0 Blinking cursor frame counter (file select, save prompt, etc)
+009c6c Zero controller RAM mirror
+009c6f (Unknown byte) -> X
+009c72 Decrement $1DF5 (unknown byte)
+009c75 if !=  0 branch forward
+009c77 Load $00/9C20,$1DF4
+009c7a And store to $1DF5
+009c7e $1DF4+=2
+009c82 With the +=2 above, this is effectively LDA $9C20,$1DF4
+009c89 If = #$FF, switch to game mode #$02...
+009c8e ...And finish
+009c91 Write to controller RAM byte 01
+009c9a Write to byte 01, Just-pressed variant
+009c9c Jump to another section of this routine
+009c9f IIRC, this contains a lot of STZ instructions
+009ca5 Zero something related to PPU
+009cad Disable all HDMA
+009cb2 #$E9 -> Uknown RAM byte
+009cb8 -> here
+009cbb Increase the Game mode and return (at jump point)
+009cd1 16 bit A
+009d24 \ Draw 1 PLAYER GAME/2 PLAYER GAME text
+009d26  |Increase Game Mode
+009d29 / 
+009d30 Store A in BG color
+009d33 Store Y in CGADSUB
+009d35 8 bit A
+009d41 X =  read index
+009d45 Y = write index
+009d47 Layer 3-related table
+009d4e If not at end of loop, continue
+009d5d  $05 = $05 / 2
+009f10 \
+009f13 |Write overworld settings to OW L1 table
+009f16 /
+009f22 <- This probably means that the table above ends at 1FB7
+009f37 \If 0DB1 = 0 Then Exit Ssub
+009f3a /Decrease it either way.
+009f3c #$01 -> $0DB1
+009f42 \ 
+009f45  |Increase $0DB0 (mosaic size) by $9F31,y
+009f46  |
+009f49 / 
+009f4c Load Brightness byte from RAM
+009f4f \Add $9F2F,Y
+009f50 /
+009f53 Store back to brightness RAM byte
+009f5b Game Mode += 1
+009f5e \ 
+009f61  |$0DAF = $0DAF XOR 1
+009f63 / 
+009f66 \ 
+009f68  |Set mosaic size to $0DB0, enable mosaic on Layer 1 and 2.
+009f6b / 
+009f6e I think we're done here
+009f6f Decrement something...  Seems like it might be a timing counter
+009f72 If positive, return from subroutine.
+009f74 Remain in this mode
+009f77 $0DAF -> Y,
+009f7a BRA to the fade control routine
+009fb8 \ 
+009fbb  |Get (Tileset*3), store in $00
+009fbc  |
+009fbd  |
+009fc0 / 
+00a153 \ Load overworld border
+00a155  |
+00a157 / 
+00a1a6 16 bit X,Y
+00a1a8 8 bit A
+00a1aa \ 
+00a1ad  |Clear RAM addresses $1A-$D7
+00a1af  |
+00a1b0 / 
+00a1b2 \ 
+00a1b5  |Clear RAM addresses $13D3-$1BA1
+00a1b8  |
+00a1b9 / 
+00a1bb 16 bit X,Y
+00a1bd Return
+00a1c1 Increase alternate frame counter
+00a1c7 (Bank 4.asm)
+00a300 16 bit A
+00a302 We're using DMA channel 2
+00a309 \ Set Address for CG-RAM Write to x86
+00a30b / 
+00a314 \ Get location of palette from $0D82-$0D83
+00a317 / 
+00a31a \ Palette is stored in bank x00
+00a31c / 
+00a31f \ x14 bytes will be transferred
+00a322 / 
+00a325 Transfer the colors
+00a328 \ Set VRAM Address Increment Value to x80
+00a32a / 
+00a33f \ Set bank to x7E
+00a341 / 
+00a344 \ x20 bytes will be transferred
+00a347 / 
+00a34a Transfer
+00a34d \ Set Address for VRAM Read/Write to x6000
+00a350 / 
+00a355 \ Get address of graphics to copy
+00a358 / 
+00a35b \ x40 bytes will be transferred
+00a35e / 
+00a361 \ Transfer
+00a363 / 
+00a366 \ Move to next address
+00a367 / 
+00a368 \ Repeat last segment while X<$0D84
+00a36b / 
+00a36d \ Set Address for VRAM Read/Write to x6100
+00a370 / 
+00a375 \ Get address of graphics to copy
+00a378 / 
+00a37b \ x40 bytes will be transferred
+00a37e / 
+00a381 \ Transfer
+00a383 / 
+00a386 \ Move to next address
+00a387 / 
+00a388 \ Repeat last segment while X<$0D84
+00a38b / 
+00a38d 8 bit A
+00a38f Return
+00a43e 16 bit A
+00a47c 8 bit A
+00a59c gah, stupid keyboard >_<
+00a5ab ->here
+00a5b4 Working on this routine
+00a7c2 16 bit A
+00a82a 8 bit A
+00a8c3 Forest
+00a8c7 Castle
+00a8cb Mushroom
+00a8cf Underground
+00a8d3 Water
+00a8d7 Pokey
+00a8db Underground 2
+00a8df Ghost House
+00a8e3 Banzai Bill
+00a8e7 Yoshi's House
+00a8eb Dino-Rhino
+00a8ef Switch Palace
+00a8f3 Mechakoopa
+00a8f7 Wendy/Lemmy
+00a8fb Ninji
+00a8ff Unused
+00a92b Normal 1
+00a92f Castle 1
+00a933 Rope 1
+00a937 Underground 1
+00a93b Switch Palace 1
+00a93f Ghost House 1
+00a943 Rope 2
+00a947 Normal 2
+00a94b Rope 3
+00a94f Underground 2
+00a953 Switch Palace 2
+00a957 Castle 2
+00a95b Cloud/Forest
+00a95f Ghost House 2
+00a963 Underground 2
+00a993 \ 
+00a996  |Set "Address for VRAM Read/Write" to x4000
+00a998 / 
+00a9c4 \ 
+00a9c7  |Set "Address for VRAM Read/Write" to x6000
+00a9c9 / 
+00a9da Decompression as well?
+00a9dc VRAM transfer control port
+00a9e1 $192B = current sprite GFX list index
+00a9e4 \
+00a9e5  }4A -> Y
+00a9e6 /
+00a9e7  |
+00a9ea  |
+00a9ec  |
+00a9ed  |
+00a9ee /
+00a9f0 #$03 -> A -> $0F
+00a9f4 $0F -> X
+00a9f6 #$00 -> $2116
+00a9f9 My guess: Locations in VRAM to upload GFX to
+00a9fc Set VRAM address to $??00
+00a9ff Y is possibly which GFX file
+00aa01 to upload to a section in VRAM, used in
+00aa04 the subroutine $00:BA28
+00aa06 don't upload when it''s not needed
+00aa08 JSR to a JSL...
+00aa0b Decrement $0F
+00aa0d if >= #$00, continue transfer
+00aa0f \
+00aa11  |Update $0101-$0104 to reflect the new sprite GFX
+00aa13  |That's loaded now.
+00aa16  |
+00aa17 /
+00aa19 LDA Tileset
+00aa1e Branch to a routine that uploads file #$80 to every slot in FG/BG
+00aa22 this routine is pretty close to the above
+00aa25 one, I'm guessing this does
+00aa26 object/BG GFX.
+00aa27 4A -> Y
+00aa28 FG/BG GFX table
+00aa2f FG/Bg to upload -> $04 - $07
+00aa33 #$03 -> $0F
+00aa35 $0F -> X
+00aa3a Load + Store VRAM upload positions
+00aa42 Check to see if the file to be uploaded already
+00aa45 exists in the slot in VRAM - if so,
+00aa47 don't bother uploading it again.
+00aa49 Upload the GFX file
+00aa4c Next GFX file
+00aa5a Return from uploading the GFX
+00aa5b If zero flag set, don't update the tileset
+00aa62 my guess is that it gets called in the same set of routines
+00aa76 handle the post-special world graphics and koopa color swap.
+00aa80 A = 16bit
+00aa85 LDX Tileset
+00aa88 CPX #$11
+00aa8a If Tileset < #$11 skip to lower area
+00aa8c if Y = #$08 skip to JSR
+00aa90 If Y = #$1E then
+00aa92 JMP otherwise
+00aa94 don't JMP
+00ab09 \Completely pointless code.
+00ab0b /(Why not just NOPing it out, Nintendo?)
+00ab0f \ Okay, so take [$00], store
+00ab11  |it to VRAM, then bitwise
+00ab14  |OR the high and low bytes together
+00ab15  |store in both bytes of A
+00ab17 /and store to $1BB2,x
+00ab1a \Increment $7E:0000 by 2
+00ab1c /
+00ab1e \And continue on another 7 times (or 8 times total)
+00ab1f /
+00ab21 hm..  It's like a FOR Y{FOR X{ } } thing ...yeah...
+00ab25 A normal byte becomes 2 anti-compressed bytes.
+00ab28 I'm going up, to try and find out what's supposed to set $00-$02 for this routine.
+00ab2a AHA, check $00/BA28.  It writes a RAM address to $00-$02, $7EAD00
+00ab2c So...  Now to find otu what sets *That*
+00ab2d ...this place gives me headaches... Can't we work on some other code? :(
+00ab30 Sure, go ahead.  anyways, this seems to upload the decompressed GFX
+00ab32 while scrambling it afterwards (o_O).
+00ab34 Okay... WHAT THE HELL?
+00ab37 I'll have nightmares about this routine for a few years. :(
+00ab3a Ouch.
+00abed 16 bit A, X and Y
+00abef \ 
+00abf2  |Set color 1 in all object palettes to white
+00abf4  |
+00abf7 / 
+00abfa \ 
+00abfd  |Set color 1 in all sprite palettes to white
+00abff  |
+00ac02 / 
+00ac05 \ 
+00ac08  |
+00ac0a  |Load colors 8-16 in the first two object palettes from 00/B170
+00ac0d  |(Layer 3 palettes)
+00ac0f  |
+00ac12  |
+00ac14  |
+00ac17  |
+00ac19 / 
+00ac1c \ 
+00ac1f  |
+00ac21  |Load colors 2-7 in palettes 4-D from 00/B250
+00ac24  |(Object and sprite palettes)
+00ac26  |
+00ac29  |
+00ac2b  |
+00ac2e  |
+00ac30 / 
+00ac33 \ 
+00ac36  |
+00ac39  |Load background color
+00ac3a  |
+00ac3b  |
+00ac3e / 
+00ac41 \Store base address in $00, ...
+00ac44 /
+00ac46 \...get current object palette, ...
+00ac49 /
+00ac4c \ 
+00ac4d  |
+00ac50  |...use it to figure out where to load from, ...
+00ac53  |
+00ac54  |...add it to the base address...
+00ac56 / ...and store it in $00
+00ac58 \ 
+00ac5b  |
+00ac5d  |
+00ac60  |Load colors 2-7 in object palettes 2 and 3 from the address in $00
+00ac62  |
+00ac65  |
+00ac67 / 
+00ac6a \Store base address in $00, ...
+00ac6d /
+00ac6f \...get current sprite palette, ...
+00ac72 /
+00ac75 \ 
+00ac76  |
+00ac79  |...use it to figure out where to load from, ...
+00ac7c  |
+00ac7d  |...add it to the base address...
+00ac7f / ...and store it in $00
+00ac81 \ 
+00ac84  |
+00ac86  |
+00ac89  |Load colors 2-7 in sprite palettes 6 and 7 from the address in $00
+00ac8b  |
+00ac8e  |
+00ac90 / 
+00ac93 \Store bade address in $00, ...
+00ac96 /
+00ac98 \...get current background palette, ...
+00ac9b /
+00ac9e \ 
+00ac9f  |
+00aca2  |...use it to figure out where to load from, ...
+00aca5  |
+00aca6  |...add it to the base address...
+00aca8 / ...and store it in $00
+00acaa \ 
+00acad  |
+00acaf  |
+00acb2  |Load colors 2-7 in object palettes 0 and 1 from the address in $00
+00acb4  |
+00acb7  |
+00acb9 / 
+00acbc \ 
+00acbf  |
+00acc1  |
+00acc4  |
+00acc6  |Load colors 9-F in object palettes 2-4 from 00/B674
+00acc9  |
+00accb  |
+00acce  |
+00acd0 / 
+00acd3 \ 
+00acd6  |
+00acd8  |
+00acdb  |
+00acdd  |Load colors 9-F in sprite palettes 1-3 from 00/B674
+00ace0  |
+00ace2  |
+00ace5  |
+00ace7 / 
+00acea 8 bit A, X and Y
+00b88a \ 
+00b88d  |Store the address 08/BFC0 at $8A-$8C
+00b88f  |
+00b891 / 
+00b893 \ 
+00b896  |Store the address 7E/2000 at $00-$02
+00b898  |
+00b89a / 
+00b89f \ 
+00b8a1  |
+00b8a3  |Store the address 7E/ACFE at $8D-$8F
+00b8a5  |
+00b8a8 / 
+00b8e0 \ 
+00b8e3  |
+00b8e6  |If the next byte is xFF, return.
+00b8e8  |Compressed graphics files ends with xFF IIRC
+00b8ea  |
+00b8ec / 
+00b983 Read the byte
+00b985 \ Go to next byte
+00b987  |
+00b988  |   \ 
+00b98a  |    |Handle bank crossing
+00b98d  |   / 
+00b98f / 
+00ca61 16 bit A
+00ca63 \ 
+00ca66  |Load xCB12 into $04 and $06
+00ca68 / 
+00ca6a 8 bit A
+00ca6c Return
+00ca88 16 bit A
+00ca8a Keep lower byte of A
+00ca8d \ 
+00ca8e  |Set Y to ((2A-1)*2)
+00ca8f  |
+00ca90 / 
+00ca91 8 bit A
+00ceb1 Related to cape animation?
+00ceb6 Cape image
+00ceb9 If Mario isn't in air, branch to $CEDE
+00cebb branch to $CEDE
+00cebf \ If Mario is falling (and thus not on ground)
+00cec1 / branch down
+00cec3 \ If making a "run jump",
+00cec5 / branch to $CEFD
+00cec7 \ If Mario is in water,
+00cec9  |branch to $CEFD
+00cecb / otherwise, branch to $CEE4
+00cecd \ 
+00cece  |if X >= #$04 and != #$FF then jump down <- counting the INX
+00ced0 / 
+00ced2 X = #$05
+00ced4 Branch to $CF04
+00ced6 \ If X is less than #$0B,
+00ced8 / branch to $CF0A
+00ceda X = #$07
+00cedc Mario is not in the air, branch to $CF0A
+00cede \ If Mario X speed isn't 0,
+00cee0 / branch to $CEF0
+00cee2 Otherwise Y = #$08
+00cee4 A = X = #13DF
+00cee5 If $13DF (now A) = 0 branch to $CF04
+00cee7 \ 
+00cee8  |If X - 1 < #$03 Then Branch $CF04
+00ceea / 
+00ceec X = #$02
+00ceee Branch to $CF04
+00cef0 \ 
+00cef2  |A = abs(A)
+00cef4  |
+00cef5 \ 
+00cef6  |Divide a by 8
+00cef7 / 
+00cef8 Y = A
+00cef9 A = Mario animation speed? (I didn't know it was a table...)
+00cefc Load Y with this table
+00cefd \ 
+00cefe  |
+00cf00  |If X is < #$02 and != #$FF <- counting the INX
+00cf02  |then X = #$05
+00cf04 \ 
+00cf06  |If X is greater than or equal to #$07 then X = #$03
+00cf08  |
+00cf0a And X goes right back into $13DF (cape image) after being modified
+00cf0d Now Y goes back into A
+00cf0e \ 
+00cf10  |If mario is in water then A = 2A
+00cf12  |
+00cf13 A -> $14A2 (do we know this byte yet?) no.
+00cf16 A = Spin Jump Flag
+00cf1c If $140D OR $14A6 = 0 then branch to $CF4E
+00cf1e 0 -> Ducking while jumping flag
+00cf20 \ 
+00cf22  |X = Y = Alternate frame counter AND #$06
+00cf24  |
+00cf25 / 
+00cf26 \ If on ground branch down
+00cf28 / 
+00cf2a \ If Mario moving upwards branch down
+00cf2c / 
+00cf2e Y = Y + 1
+00cf2f \ After loading from this table,
+00cf32 / Store A in cape image
+00cf35 A = Mario's powerup status
+00cf37 \ 
+00cf39  |If not small, increase X
+00cf3a \ Load from another table
+00cf3d / store to Mario's Direction
+00cf3f \ 
+00cf41  |
+00cf43  |If Mario has cape, JSR
+00cf45  |to possibly the graphics handler
+00cf48 \ Load from a table again
+00cf4b / And jump
+00cf4e \ If $13ED is #$01 - #$7F then
+00cf51  |branch to $CF85
+00cf53  |
+00cf62 \ Select Case $148F
+00cf64  |Case 0:A = #$3C
+00cf67  |Case Else: A = #$1D
+00cf69  |End Select
+00cf6b \ If Ducking while jumping
+00cf6d / Branch to $CF85
+00cf6f \ If (Unknown) = 0
+00cf72 / Branch to $CF7E
+00cf74 A = #$3F
+00cf76 \ If Mario isn't in air, 
+00cf78  |branch to $CF85
+00cf7a  |Otherwise, set A to #$16 and
+00cf7c / branch to $CF85
+00cf7e A = #$0E
+00cf80 \ If Time to show Mario's current pose is 00,
+00cf83  | Don't jump to $D01A
+00cf85  |
+00cf88 A = #$1D
+00cf8a \ If $1499 != 0 then Jump to $D01A
+00cf8d / 
+00cf8f A = #$0F
+00cf91 \ If $1499 != 0 then Jump to $D01A
+00cf94 / 
+00cf96 A = #$00
+00cf98 X = $18C2 (Unknown)
+00cf9b If X != 0 then branch down
+00cf9d \ If Mario is flying branch down
+00cf9f / 
+00cfa1 \ If $14A0 != 0 then
+00cfa4 / Skip down
+00cfa6 Spaghetticode(tm)
+00cfae \ If Mario isn't holding something,
+00cfb1  |branch to $D01A
+00cfb3  |Otherwise, set A to #$09 and
+00cfb5 / branch to $D01A
+00cfbc \ 
+00cfbe  |
+00cfc0  |Set A to absolute value of Mario's X speed
+00cfc2  |
+00cfc3 Copy A to X
+00cfc4 If Mario isn't standing still, branch to $CFD4
+00cfc6 "Push" A
+00cfc7 \ 
+00cfc9  |If player isn't pressing up,
+00cfcb  |branch to $D002
+00cfcd  |Otherwise, store x03 in $13DE and
+00cfcf  |branch to $D002
+00cfd2 / 
+00cfd4 \ If level isn't slippery,
+00cfd6 / branch to $CFE3
+00cfe3 A = $13DB
+00cfe6 \ If Mario is hurt (flashing),
+00cfe9 / branch to $D003
+00cfeb A = A - 1
+00cfec \If bit 7 is clear,
+00cfee  | Load amount of walking frames
+00cff0  | for current powerup
+00cff3 \ >>-This code puts together an index to a table further down-<<
+00cff4  |-\ Above Line: "Push" frame amount
+00cff5  |  |A = X / 8
+00cff6  |  |
+00cff7  |-/ 
+00cff8  |ORA with $13E5
+00cffb  |And store A to Y
+00cffc  |
+00cfff / 
+00d002 \ Switch in frame amount and store it to $13DB
+00d003 / 
+00d006 \ Add walking animation type
+00d007 / (Walking, running...)
+00d00a \ 
+00d00d  |
+00d00f  |If Mario is carrying something, add #$07
+00d010  |
+00d012  |
+00d014 \ 
+00d016  |If X is greater than #$2F, add #$04
+00d018 / <-Carry is always set here, adding #$01 to (#$03 + A)
+00d01a \ If Mario isn't rotated 45 degrees (triangle
+00d01d / block), branch to $D030
+00d01f \ Y AND #$01 -> Mario's Direction RAM Byte
+00d020  |
+00d022 / 
+00d024 \ 
+00d026  |If Y < 6 then
+00d028  |    A = #13DB + $11
+00d02a  |Else
+00d02d  |    A = #$10
+00d02e  |End If
+00d030 Store in Current animation frame
+00d033 And Finish
+00d04b 16 bit A
+00d04d \ 
+00d04f  |
+00d050  |
+00d053  |Set cape<->sprite collision coordinates
+00d056  |
+00d058  |
+00d059  |
+00d05c / 
+00d05f 8 bit A
+00d061 Return
+00d0aa haha, I read this as "FEAR" at first
+00d0b6 Set powerup to 0
+00d0b8 \ 
+00d0ba / Set Mario image to death image
+00d0bd \ 
+00d0bf  |Decrease "Death fall timer" every four frames
+00d0c1  |
+00d0c3  |
+00d0c6 \ If Death fall timer isn't #$00,
+00d0c9 / branch to $D108
+00d0d5 Set reserve item to 0
+00d0d8 Decrease amount of lifes
+00d0db If not Game Over, branch to $D0E6
+00d0e2 Set X (Death message) to x14 (Game Over)
+00d0e6 Set Y (game mode) to x0B (Fade to overworld)
+00d0e8 \ 
+00d0eb  |If time isn't zero,
+00d0ee  |branch to $D104
+00d0f1 / 
+00d0f3 Set X (Death message) to x1D (Time Up)
+00d0f5 Store X in Death message
+00d0f8 \ Set Death message animation to xC0
+00d0fa /(Must be divisable by 4)
+00d0fd \ Set Death message timer to xFF
+00d0ff /
+00d102 Set Y (game mode) to x15 (Fade to Game Over)
+00d104 Store Y in Game Mode
+00d108 \ If Death fall timer >= x26,
+00d10a / return
+00d10c Set Mario X speed to 0
+00d114 \ 
+00d116  |
+00d117  |Flip death image every four frames
+00d118  |
+00d11a / 
+00d930 \ If Mario's Y speed is negative (up),
+00d932 / branch to $D948
+00dc2d \ Store Mario's Y speed in $8A
+00dc2f / 
+00ec5b Current MAP16 tile number
+00ec83 Current MAP16 tile number
+00ec98 Current MAP16 tile number
+00ed06 Current MAP16 tile number
+00ed09 \ If block is turn block, branch to $ED3B
+00ed0b / 
+00ee06 $ED3B
+00ee1d \ If Mario isn't on a sprite platform,
+00ee20 / branch to $EE2D
+00ee22 \ If Mario is moving up,
+00ee24 / branch to $EE2D
+00ee2d \ 
+00ee2f  |If Mario is on an edge or in air,
+00ee31  |branch to $EE39
+00ee33 / 
+00ee35 \ Set "In air" to x24 (falling)
+00ee37 / 
+00ee3a Current MAP16 tile number
+00ee3d Tileset
+00ee40 \ If tileset is "Rope 1",
+00ee42 / branch to $EE48
+00ee44 \ If tileset isn't "Rope 3",
+00ee46 / branch to $EE57
+00ee48 \ 
+00ee49  |If the current tile isn't Rope 3's "Conveyor rope",
+00ee4a  |branch to $EE57
+00ee4c  |
+00ee4e / 
+00ee5c Current MAP16 tile number
+00ee5f \ If block isn't "Turn block",
+00ee61 / branch to $EE78
+00ee78 \ If block isn't "Brown block",
+00ee7a / branch to $EE7F
+00ee85 \ If Mario isn't moving up,
+00ee87 / branch to $EE8F
+00eeae \ If switch block is already active,
+00eeb1 / branch to $EED1
+00eeb3 \ Activate switch block
+00eeb4 / 
+00eec7 \ 
+00eec9 / Set music to xFF
+00f548 Load MAP16 tile number
+00f54b \ If block isn't "Invisible POW ? block",
+00f54d / branch to PSwitchNotInvQBlk
+00f55a \ If block is "Coin",
+00f55c / branch to PSwitchCoinBrown
+00f62d Zero RAM mirrors for controller Input
+00fa45 \ Set "Time to shake ground" to x20
+00fa47 / 
+00fa4a \ 
+00fa4c  |Set sprite x02 to x60 (Flat palace switch)
+00fa4e / 
+00fa51 \ Set sprite's status to x08
+00fa53 / 
+00fa56 \ 
+00fa58  |Set sprite X (low) to $9A & 0xF0
+00fa5a / 
+00fa5d \ Set sprite X (high) to $9B
+00fa5f / 
+00fa62 \ 
+00fa64  |
+00fa66  |Set sprite Y (low) to ($98 & 0xF0) + 0x10
+00fa67  |
+00fa69 / 
+00fa6c \ 
+00fa6e  |Set sprite Y (high) to $99 + carry
+00fa70 / (Carry carried over from previous addition)
+00fa7a \ Set sprite's "Spin Jump Death Frame Counter" to x5F
+00fa7c / 
+00fa7f Return
+
+00AA6A Return
+00AB01 Return
+00AB41 Return
+00ABC3 Return
+00ABD2 Return
+00ACEC Return
+00ACFE Return
+00AD1D Return
+00ADA5 Return
+00ADD8 Return
+00AE14 Return
+00AE40 Return
+00AE64 Return
+00AFA2 Return
+00AFBF Return
+00B005 Return
+00B03D Return
+00B090 Return
+00B8EC /    Return
+00B991 Return
+00BA4C Return
+00BFBB Return
+00C062 Return
+00C1AB Return
+00C29D Return
+00C3D0 Return
+00C452 Return
+00C527 / Play sound effect
+00C54C / Play sound effect
+00C559 / Play sound effect
+00C592 Return
+00C722 / Play sound effect
+00C734 / Play sound effect
+00C761 / Play sound effect
+00C79A / Play sound effect
+00C7AE / Play sound effect
+00C7D3 / Play sound effect
+00C7F8 Return
+00C911 / Play sound effect
+00C914 Return
+00C96A Return
+00C9BE / Play sound effect
+00C9C1 Return
+00CA30 Return
+00CA3D Return
+00CA43 Return
+00CA49 Return
+00CA60 Return
+00CA6C Return
+00CB11 Return
+00CC5B Return
+00CCB2 Return
+00CCDF Return
+00CD94 Return
+00CDDC Return
+00CE41 / Play sound effect
+00D033 And Finish   Return
+00D061 Return
+00D07D / Play sound effect
+00D080 Return
+00D0AD Return
+00D0DF / Play sound effect
+00D107 Return
+00D13F Return
+00D15E Return
+00D18C Return
+00D256 / Play sound effect
+00D27B Return
+00D286 Return
+00D2A7 / Play sound effect
+00D64B / Play sound effect
+00D660 / Play sound effect
+00D7A4 Return
+00D8AA / Play sound effect
+00D94E Return
+00D967 Return
+00D97F Return
+00DA8C Return
+00DAA8 Return
+00DAAB / Play sound effect
+00DAB6 Return
+00DB95 Return
+00DBA7 / Play sound effect
+00DBB4 / Play sound effect
+00DC02 Return
+00DC2C Return
+00DC4E Return
+00DC77 Return
+00E305 / Play sound effect
+00E384 Return
+00E45C Return
+00E4B8 Return
+00E9A0 Return
+00EA8F / Play sound effect
+00EAA5 Return
+00EAB8 Return
+00EB21 Return
+00EB41 Return
+00EB76 Return
+00EC12 / Play sound effect
+00ED41 / Play sound effect
+00ED47 / Play sound effect
+00EE39 Return
+00EEC4 / Play sound effect
+00EF92 / Play sound effect
+00EF98 Return
+00EFAD Return
+00EFB8 / Play sound effect
+00EFBB Return
+00EFE7 Return
+00F004 Return
+00F026 / Play sound effect
+00F04C Return
+00F05B Return
+00F15E Return
+00F175 Return
+00F1F8 Return
+00F238 / Play sound effect
+00F28B Return
+00F2BF Return
+00F2C8 Return
+00F2EA / Play sound effect
+00F2ED Return
+00F308 Return
+00F35A / Play sound effect
+00F376 Return
+00F3B1 Return
+00F3C3 Return
+00F43B / Play sound effect
+00F442 Return
+00F44C Return
+00F464 Return
+00F4A5 Return
+00F4E6 Return
+00F559 Return
+00F576 Return
+00F583 Return
+00F594 Return
+00F5B6 Return
+00F5E4 / Play sound effect
+00F5F5 / Play sound effect
+00F60C / Play sound effect
+00F628 Return
+00F635 Return
+00F69E Return
+00F7F3 Return
+00F7F9 Return
+00F8AA Return
+00F8DE Return
+00F91B / Play sound effect
+00F94D Return
+00F9C8 Return
+00F9F4 Return
+00FA18 Return
+00FA44 Return
+00FA7F Return
+00FADE Return
+00FB7F / Play sound effect
+00FB8C Return
+00FBA3 Return
+00FBB3 Return
+00FBEF Return
+00FC22 Return
+00FC72 Return
+00FC79 Return
+00FC7C / Play sound effect
+00FCEB Return
+00FCF4 Return
+00FD07 Return
+00FD23 Return
+00FD59 Return
+00FD6A Return
+00FD9C Return
+00FE0D Return
+00FE71 Return
+00FE93 Return
+00FEB4 Return
+00FEB7 / Play sound effect
+00FF06 Return
+00FF31 Return
+00FF60 Return
+00FF92 Return
+00C08C \ X = index of tile to generate
+00C08E  |
+00C091 /
+00C094 \ Reset #$01 bit
+00C096  |
+00C098 /
+00C09A \ Store tile
+00C09E /
+00C0D9 \ X = index of tile to generate
+00C0DB  |
+00C0DC  |
+00C0DF  |
+00C0E2 /
+00C0E5 \ Set #$01 bit
+00C0E7  |
+00C0E9 /
+00C0EB \ Store tile
+00C0EF /
+00F23F \ Set data bank = $02
+00F241  |
+
+
+
