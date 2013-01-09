@@ -1,6 +1,6 @@
 #include <cstdio>
 
-#include "disasm.h"
+
 #include "proto.h"
 
 void Disassembler::printComment(unsigned char low, unsigned char high)
@@ -10,7 +10,7 @@ void Disassembler::printComment(unsigned char low, unsigned char high)
 
 if (comment_level)
 {
-  printf("	; ");
+  printf("; ");
   switch (addr)
   {
     case 0x2100: printf("Screen Display Register");

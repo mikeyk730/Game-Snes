@@ -30,44 +30,47 @@ bool Request::get(istream & in, bool hirom)
     unsigned char bank = 0;
 
     istringstream ss(line);
-    string current;    
-    while(ss >> current){
-        if (current == "-d")
+    string current; 
+    if (!(ss >> current)) return false;
+    do{
+        if (current == "data" || current == "d")
             m_dcb = true;
-        else if (current == "-q")
+        else if (current == "quiet" || current == "q")
             m_properties.m_quiet = true;
-        else if (current == "-a")
+        else if (current == "accum16" || current == "a")
             m_properties.m_accum_16 = true;
-        else if (current == "-x")
+        else if (current == "index16" || current == "i")
             m_properties.m_index_16 = true;
-        else if (current == "--rts")
+        else if (current == "rts" || current == "r")
             m_properties.m_stop_at_rts = true;
-        else if (current == "--nmi")
+        else if (current == "nmi")
             pc = get_start_from_address(0x7fea, hirom);
-        else if (current == "--reset")
+        else if (current == "reset")
             pc = get_start_from_address(0x7ffc, hirom);
-        else if (current == "--irq")
+        else if (current == "irq")
             pc = get_start_from_address(0x7fee, hirom);
-        else if(current.length() > 2 && current[0] == '-'){
-            if(current[1] == 'c'){
-                const char* s = &(current.c_str()[2]);
+        else if(current.length() > 2){
+            if(current[0] == 'c'){
+                const char* s = &(current.c_str()[1]);
                 m_properties.m_comment_level = hex(s);
             }
-            else if(current[1] == 'b'){
-                const char* s = &(current.c_str()[2]);
+            else if(current[0] == 'b'){
+                const char* s = &(current.c_str()[1]);
                 int full = hex(s);
                 pc = (full & 0x0FFFF);
                 bank = ((full >> 16) & 0x0FF);
             }
-            else if(current[1] == 'e'){
-                const char* s = &(current.c_str()[2]);
+            else if(current[0] == 'e'){
+                const char* s = &(current.c_str()[1]);
                 int full = hex(s);
                 m_properties.m_end_addr = (full & 0x0FFFF);
                 m_properties.m_end_bank = ((full >> 16) & 0x0FF);
             }      
         }
-    }
+    } while(ss >> current);
 
     m_properties.m_start_addr = pc;
     m_properties.m_start_bank = bank;
+
+    return true;
 }

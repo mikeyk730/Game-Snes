@@ -27,7 +27,7 @@ void main (int argc, char *argv[])
     else if (string(argv[argc]) == "-t")
       test = true;
     else if (argv[argc][0] == '-')
-      flags += " " + string(argv[argc]);
+      flags += " " + string(argv[argc]+1);
     else if (s_end == "")      
       s_end = string(argv[argc]);
     else if (s_start == "")
@@ -112,21 +112,26 @@ void doit(int start, int end, ifstream& in)
 
 void do_command(int start, int end, bool data)
 {
-  stringstream ss;
-  ss << "disasm.exe";
-  if (quiet)
-    ss << " -q";    
-  if (data)
-    ss << " -d";
-  ss << flags;
-  ss << " -b" << hex << setfill('0') << setw(6) << start
-     << " -e" << hex << setfill('0') << setw(6) << end + 1
-     << " --data data.txt -sym symbol.txt mario.smc";
-  
-  if (test)
-    cout << ss.str() << endl;
-  else
-    system(ss.str().c_str());
+    static bool first = true;
+
+    stringstream ss;
+    /*if (first){
+        ss << "disasm.exe" << flags << " --data data.txt --sym symbol.txt mario.smc" << endl;
+        first = false;
+    }*/
+
+    ss << "b" << hex << setfill('0') << setw(6) << start
+        << " e" << hex << setfill('0') << setw(6) << end + 1
+        << flags;
+    if (quiet)
+        ss << " quiet";    
+    if (data)
+        ss << " data";
+
+    if (test)
+        cout << ss.str() << endl;
+    else
+        system(ss.str().c_str());
 
 }
 

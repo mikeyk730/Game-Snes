@@ -7,7 +7,7 @@
 #include <string>
 #include <sstream>
 
-#include "disasm.h"
+
 #include "proto.h"
 
 using namespace std;

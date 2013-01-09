@@ -6,10 +6,12 @@
 #include <iomanip>
 #include <map>
 
-#include "disasm.h"
+
 #include "proto.h"
 
 using namespace std;
+
+FILE *srcfile;
 
 void main (int argc, char *argv[])
 {
@@ -39,7 +41,6 @@ void main (int argc, char *argv[])
 
     while(1){
 
-        flag = 0;
         fseek(srcfile, 512, 0);
 
         Request request;
@@ -47,7 +48,7 @@ void main (int argc, char *argv[])
             break;
         disasm.handleRequest(request);
 
-        printf("\n\n");
+        printf("\n");
 
     }
 }

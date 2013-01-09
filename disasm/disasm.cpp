@@ -14,135 +14,115 @@ void Disassembler::handleRequest(const Request& request)
     m_current_bank = m_properties.m_start_bank;
     m_current_addr = m_properties.m_start_addr;
 
-        fseek(srcfile, 512, 0);
-        for(int cc=0; cc<m_current_bank; cc++)  /* skip over each bank */
-            if (m_hirom)
-                fseek(srcfile, 65536, 1);
-            else
-                fseek(srcfile, 32768, 1);
-
+    fseek(srcfile, 512, 0);
+    for(int cc=0; cc<m_current_bank; cc++)  /* skip over each bank */
         if (m_hirom)
-            fseek(srcfile, m_current_addr, 1);
+            fseek(srcfile, 65536, 1);
         else
-            fseek(srcfile, m_current_addr - 0x8000, 1);
+            fseek(srcfile, 32768, 1);
+
+    if (m_hirom)
+        fseek(srcfile, m_current_addr, 1);
+    else
+        fseek(srcfile, m_current_addr - 0x8000, 1);
 
 
 
-   if (request.m_dcb)
-       dodcb();
-   else
-       dodisasm();
+    if (request.m_dcb)
+        dodcb();
+    else
+        dodisasm();
 }
 
 void Disassembler::dodisasm()
 {
     char s2[80];
 
-      unsigned int& pc = m_current_addr;
-      unsigned char& bank = m_current_bank;
-      
-      unsigned int pc_end = m_properties.m_end_addr;
-      unsigned char end_bank = m_properties.m_end_bank;
+    unsigned int& pc = m_current_addr;
+    unsigned char& bank = m_current_bank;
+
+    unsigned int pc_end = m_properties.m_end_addr;
+    unsigned char end_bank = m_properties.m_end_bank;
 
     while( (!feof(srcfile)) && (bank * 65536 + pc < end_bank * 65536 + pc_end) ){
 
-            unsigned char code = read_char(srcfile);
-            Instruction instr = m_instruction_lookup[code];
+        unsigned char code = read_char(srcfile);
+        Instruction instr = m_instruction_lookup[code];
 
-            if (!feof(srcfile)){
+        if (!feof(srcfile)){
 
-                //adjust pc address
-                sprintf(s2, "%.4X", pc);
-                if (strlen(s2) == 5){
-                    bank++;
-                    if (m_hirom)
-                        pc -= 0x10000;
-                    else
-                        pc -= 0x8000;
-                }
-
-                string label = get_label(Instruction("",0,ALWAYS_USE_LABEL), bank, pc);
-                cout << left << setw(20) << label;
-
-                if (!m_properties.m_quiet) cout << to_string(code, 2) << " ";
-
-                sprintf(buff2, "%s ", instr.name(m_properties.m_accum_16).c_str());
-
-                pc++;
-                high = 0; low = 0; flag = 0;
-                dotype(instr, bank);
-                if (!m_properties.m_quiet) printf("  ");
-                cout << buff2;
-                if (!m_properties.m_quiet) printf("     ");
-                if (instr.name() == "RTS" || instr.name() == "RTI" || instr.name() == "RTL" ){
-                    printf("\t\t; Return\n");
-                    if(m_properties.m_stop_at_rts) break;
-                }
-                if (high) printComment(low, high);
-                if (flag > 0){
-
-                    printf("\t;");
-                    if (flag & 0x10) printf(" Index (16 bit)");
-                    if (flag & 0x20) printf(" Accum (16 bit)");
-                }
-                else if (flag < 0){
-
-                    printf("\t;");
-                    if ( (-flag) & 0x10) printf(" Index (8 bit)");
-                    if ( (-flag) & 0x20) printf(" Accum (8 bit)");
-                }
-                printf("\n");
+            //adjust pc address
+            sprintf(s2, "%.4X", pc);
+            if (strlen(s2) == 5){
+                bank++;
+                if (m_hirom)
+                    pc -= 0x10000;
+                else
+                    pc -= 0x8000;
             }
-            if (feof(srcfile)) printf("; End of file.\n");
+
+            string label = get_label(Instruction("",0,ALWAYS_USE_LABEL), bank, pc);
+            cout << left << setw(20) << label << " ";
+
+            if (!m_properties.m_quiet) cout << to_string(code, 2) << " ";
+
+            pc++;
+            dotype(instr, bank);
+
+            if (m_properties.m_stop_at_rts &&
+                (instr.name() == "RTS" || instr.name() == "RTI" || instr.name() == "RTL"))
+                break;            
         }
+        if (feof(srcfile)) printf("; End of file.\n");
+    }
 }
 
 void Disassembler::load_symbols(char *fname)
 {
-  fstream in(fname);
-  string line;
-  while (getline(in, line)){
-    //skip comments
-      if (line.length() < 1 || line[0] == ';')
-      continue;
+    fstream in(fname);
+    string line;
+    while (getline(in, line)){
+        //skip comments
+        if (line.length() < 1 || line[0] == ';')
+            continue;
 
-    int fulladdr;
-    string label;
-    istringstream line_stream(line);
-    if(!(line_stream >> hex >> fulladdr >> label))
-      continue;
-    
-    unsigned int addr = (fulladdr & 0x0FFFF);   
-    unsigned char bank = ((fulladdr >> 16) & 0x0FF);
+        int fulladdr;
+        string label;
+        istringstream line_stream(line);
+        if(!(line_stream >> hex >> fulladdr >> label))
+            continue;
 
-    add_label(bank, addr, label);
-  }
+        unsigned int addr = (fulladdr & 0x0FFFF);   
+        unsigned char bank = ((fulladdr >> 16) & 0x0FF);
+
+        add_label(bank, addr, label);
+    }
 }
 
 void Disassembler::load_data(char *fname)
 {
-  fstream in(fname);
-  string line;
-  while (getline(in, line)){
-    //skip comments
-      if (line.length() < 1 || line[0] == ';')
-      continue;
+    fstream in(fname);
+    string line;
+    while (getline(in, line)){
+        //skip comments
+        if (line.length() < 1 || line[0] == ';')
+            continue;
 
-    int full;
-    string label;
-    istringstream line_stream(line);
-    if(!(line_stream >> hex >> full))
-      continue;
+        int full;
+        string label;
+        istringstream line_stream(line);
+        if(!(line_stream >> hex >> full))
+            continue;
 
-    unsigned int addr = (full & 0x0FFFF);
-    unsigned char bank = ((full >> 16) & 0x0FF);
+        unsigned int addr = (full & 0x0FFFF);
+        unsigned char bank = ((full >> 16) & 0x0FF);
 
-    //no label, create one
-    if(!(line_stream >> label >> label))
-        label = "DATA_" + to_string(bank,2) + "_" + to_string(addr,4);
-     
-    add_label(bank, addr, label);
-  }
+        //no label, create one
+        if(!(line_stream >> label >> label))
+            label = "DATA_" + to_string(bank,2) + "_" + to_string(addr,4);
+
+        add_label(bank, addr, label);
+    }
 }
 
 void Disassembler::add_label(int bank, int pc, const string& label)
@@ -153,227 +133,253 @@ void Disassembler::add_label(int bank, int pc, const string& label)
 
 string Disassembler::get_label(const Instruction& instr, unsigned char bank, int pc)
 {
-  string label;
+    string label;
 
-  map<int, string>::iterator it = m_label_lookup.find(full_address(bank,pc));
-  if (it != m_label_lookup.end())
-      label = it->second;
+    map<int, string>::iterator it = m_label_lookup.find(full_address(bank,pc));
+    if (it != m_label_lookup.end())
+        label = it->second;
 
-  else if(!instr.neverUseLabel() && (instr.alwaysUseLabel() || pc >= 32768) &&
-      !instr.neverUseAddrLabel() && bank < 126)
+    else if(!instr.neverUseLabel() && (instr.alwaysUseLabel() || pc >= 32768) &&
+        !instr.neverUseAddrLabel() && bank < 126)
         label = "ADDR_" + to_string(bank, 2) + /*"_" +*/ to_string(pc, 4);
-  
-  return label;
+
+    return label;
 }
 
 
 void Disassembler::dodcb()
 {
-  char s2[10];
+    char s2[10];
 
-  int bank = m_properties.m_start_bank;
-  int pc = m_properties.m_start_addr;
-  int end_bank = m_properties.m_end_bank;
-  int pc_end = m_properties.m_end_addr;
+    int bank = m_properties.m_start_bank;
+    int pc = m_properties.m_start_addr;
+    int end_bank = m_properties.m_end_bank;
+    int pc_end = m_properties.m_end_addr;
 
-  for(int i=0; bank * 65536 + pc < end_bank * 65536 + pc_end; ++i){
-    if (i%8 == 0){
-      cout << endl;
-      string label = get_label(Instruction("",0,ALWAYS_USE_LABEL | NO_ADDR_LABEL), bank, pc);
-      cout << setw(20) << left << label;
-      if (!m_properties.m_quiet) cout << string(14, ' ');
-      cout << "dcb ";
+    for(int i=0; bank * 65536 + pc < end_bank * 65536 + pc_end; ++i){
+        if (i%8 == 0){
+            string label = get_label(Instruction("",0,ALWAYS_USE_LABEL | NO_ADDR_LABEL), bank, pc);
+            cout << setw(20) << left << label << " ";
+            if (!m_properties.m_quiet) cout << string(14, ' ');
+            cout << "dcb ";
+        }
+
+        //adjust address if necessary
+        pc++;
+        sprintf(s2, "%.4X", pc);
+        if (strlen(s2) == 5){
+            bank++;
+            if (m_hirom)
+                pc -= 0x10000;
+            else
+                pc -= 0x8000;
+        }
+
+        //read and print byte
+        unsigned char c = read_char(srcfile);
+        printf("$%.2X", c);
+        if (i%8 != 7 && (bank * 65536 + pc < end_bank * 65536 + pc_end)) printf(",");
+        else cout << endl;
     }
-
-    //adjust address if necessary
-    pc++;
-    sprintf(s2, "%.4X", pc);
-    if (strlen(s2) == 5){
-      bank++;
-      if (m_hirom)
-	pc -= 0x10000;
-      else
-	pc -= 0x8000;
-    }
-
-    //read and print byte
-    unsigned char c = read_char(srcfile);
-    printf("$%.2X", c);
-    if (i%8 != 7 && (bank * 65536 + pc < end_bank * 65536 + pc_end)) printf(",");
-  }
 }
 
 
 
 void Disassembler::dotype(const Instruction& instr, unsigned char bank)
 {
+    int high = 0, low = 0, flag = 0;
 
-  unsigned int& pc = m_current_addr;
-  bool accum16 = m_properties.m_accum_16;
-  bool index16 = m_properties.m_index_16;
+    char buff1[80];
+    char buff2[80];
+    sprintf(buff2, "%s ", instr.name(m_properties.m_accum_16).c_str()); 
 
-  unsigned char t = instr.addressMode();
-  unsigned char i, j, k;
-  long ll;
-  unsigned char h;
-  char r;
-  string msg;
+    unsigned int& pc = m_current_addr;
+    bool accum16 = m_properties.m_accum_16;
+    bool index16 = m_properties.m_index_16;
 
-  switch (t)
-  {
+    unsigned char t = instr.addressMode();
+    unsigned char i, j, k;
+    long ll;
+    unsigned char h;
+    char r;
+    string msg;
+
+    switch (t)
+    {
     case 0 : if (!m_properties.m_quiet) printf("         "); break;
     case 1 : i = read_char(srcfile); pc++; if (!m_properties.m_quiet) printf("%.2X ", i);
-/* Accum  #$xx or #$xxxx */
-             ll = i; strcat(buff2,"#");
-             if (accum16 == 1) { j = read_char(srcfile); pc++; ll = j * 256 + ll;
-               if (!m_properties.m_quiet) printf("%.2X ", j); }
-             msg = get_label(instr, bank, ll); if (msg == "") if (accum16 == 0)
-             sprintf(buff1, "$%.2X", ll); else sprintf(buff1, "$%.4X", ll);
-             else sprintf(buff1, "%s", msg.c_str()); strcat(buff2, buff1);
-             if (!m_properties.m_quiet) { printf("   "); if (accum16 == 0) printf("   "); }
-             break;
+        /* Accum  #$xx or #$xxxx */
+        ll = i; strcat(buff2,"#");
+        if (accum16 == 1) { j = read_char(srcfile); pc++; ll = j * 256 + ll;
+        if (!m_properties.m_quiet) printf("%.2X ", j); }
+        msg = get_label(instr, bank, ll); if (msg == "") if (accum16 == 0)
+            sprintf(buff1, "$%.2X", ll); else sprintf(buff1, "$%.4X", ll);
+        else sprintf(buff1, "%s", msg.c_str()); strcat(buff2, buff1);
+        if (!m_properties.m_quiet) { printf("   "); if (accum16 == 0) printf("   "); }
+        break;
     case 2 : i = read_char(srcfile); j = read_char(srcfile);
-/* $xxxx */  if (!m_properties.m_quiet) printf("%.2X %.2X    ",i,j);
-             msg = get_label(instr, bank, j * 256 + i); 
-             if (msg == "") sprintf(buff1, "$%.2X%.2X", j, i); 
-             else sprintf(buff1, "%s",msg.c_str());
-             strcat(buff2, buff1);
-             pc += 2; high = j; low = i; break;
+        /* $xxxx */  if (!m_properties.m_quiet) printf("%.2X %.2X    ",i,j);
+        msg = get_label(instr, bank, j * 256 + i); 
+        if (msg == "") sprintf(buff1, "$%.2X%.2X", j, i); 
+        else sprintf(buff1, "%s",msg.c_str());
+        strcat(buff2, buff1);
+        pc += 2; high = j; low = i; break;
     case 3 : i = read_char(srcfile); j = read_char(srcfile); k = read_char(srcfile);
-/* $xxxxxx */ if (!m_properties.m_quiet) printf("%.2X %.2X %.2X ", i, j, k);
-             msg = get_label(instr, k, j * 256 + i); if (msg == "")
-             sprintf(buff1, "$%.2X%.2X%.2X", k, j, i);
-             else sprintf(buff1, "%s", msg.c_str());  strcat(buff2, buff1); 
-             pc += 3; break;
+        /* $xxxxxx */ if (!m_properties.m_quiet) printf("%.2X %.2X %.2X ", i, j, k);
+        msg = get_label(instr, k, j * 256 + i); if (msg == "")
+            sprintf(buff1, "$%.2X%.2X%.2X", k, j, i);
+        else sprintf(buff1, "%s", msg.c_str());  strcat(buff2, buff1); 
+        pc += 3; break;
     case 4 : i = read_char(srcfile); if (!m_properties.m_quiet) printf("%.2X       ", i);
-/* $xx */    msg = get_label(instr, bank, i); if (msg == "")
-             sprintf(buff1, "$%.2X", i);
-             else sprintf(buff1, "%s", msg.c_str()); strcat(buff2, buff1);
-             pc++; break;
+        /* $xx */    msg = get_label(instr, bank, i); if (msg == "")
+        sprintf(buff1, "$%.2X", i);
+        else sprintf(buff1, "%s", msg.c_str()); strcat(buff2, buff1);
+        pc++; break;
     case 5 : i = read_char(srcfile); if (!m_properties.m_quiet) printf("%.2X       ", i);
-/* ($xx),Y */ msg = get_label(instr, bank, i); if (msg == "")
-             sprintf(buff1, "($%.2X),Y", i);
-             else sprintf(buff1, "(%s),Y" ,msg.c_str());
-             strcat(buff2, buff1); pc++; break;
+        /* ($xx),Y */ msg = get_label(instr, bank, i); if (msg == "")
+        sprintf(buff1, "($%.2X),Y", i);
+        else sprintf(buff1, "(%s),Y" ,msg.c_str());
+        strcat(buff2, buff1); pc++; break;
     case 6 : i = read_char(srcfile); if (!m_properties.m_quiet) printf("%.2X       ", i);
-/* [$xx],Y */ msg = get_label(instr, bank, i);  if (msg == "")
-             sprintf(buff1, "[$%.2X],Y", i);
-             else sprintf(buff1,"[%s],Y",msg.c_str());
-             strcat(buff2, buff1); pc++; break; 
+        /* [$xx],Y */ msg = get_label(instr, bank, i);  if (msg == "")
+        sprintf(buff1, "[$%.2X],Y", i);
+        else sprintf(buff1,"[%s],Y",msg.c_str());
+        strcat(buff2, buff1); pc++; break; 
     case 7 : i = read_char(srcfile); if (!m_properties.m_quiet) printf("%.2X       ", i);
-/* ($xx,X) */ msg = get_label(instr, bank, i); if (msg == "")
-             sprintf(buff1, "($%.2X,X)", i);
-             else sprintf(buff1, "(%s,X)", msg.c_str());
-             strcat(buff2, buff1); pc++; break;
+        /* ($xx,X) */ msg = get_label(instr, bank, i); if (msg == "")
+        sprintf(buff1, "($%.2X,X)", i);
+        else sprintf(buff1, "(%s,X)", msg.c_str());
+        strcat(buff2, buff1); pc++; break;
     case 8 : i = read_char(srcfile); if (!m_properties.m_quiet) printf("%.2X       ", i);
-/* $xx,X */  msg = get_label(instr, bank, i); if (msg == "")
-             sprintf(buff1, "$%.2X,X", i);
-             else sprintf(buff1, "%s,X", msg.c_str());
-             strcat(buff2, buff1); pc++; break;
+        /* $xx,X */  msg = get_label(instr, bank, i); if (msg == "")
+        sprintf(buff1, "$%.2X,X", i);
+        else sprintf(buff1, "%s,X", msg.c_str());
+        strcat(buff2, buff1); pc++; break;
     case 9 : i = read_char(srcfile); j = read_char(srcfile);
-/* $xxxx,X */ if (!m_properties.m_quiet) printf("%.2X %.2X    ",i,j);
-             msg = get_label(instr, bank, j * 256 + i); if (msg == "")
-             sprintf(buff1, "$%.2X%.2X,X", j, i);
-             else sprintf(buff1, "%s,X", msg.c_str());
-             strcat(buff2, buff1); pc += 2; break;
+        /* $xxxx,X */ if (!m_properties.m_quiet) printf("%.2X %.2X    ",i,j);
+        msg = get_label(instr, bank, j * 256 + i); if (msg == "")
+            sprintf(buff1, "$%.2X%.2X,X", j, i);
+        else sprintf(buff1, "%s,X", msg.c_str());
+        strcat(buff2, buff1); pc += 2; break;
     case 10: i = read_char(srcfile); j = read_char(srcfile); k = read_char(srcfile);
-/* $xxxxxx,X */ if (!m_properties.m_quiet) printf("%.2X %.2X %.2X ", i, j, k);
-             msg = get_label(instr, k, j * 256 + i); if (msg == "")
-             sprintf(buff1, "$%.2X%.2X%.2X,X", k, j, i);
-             else sprintf(buff1, "%s,X", msg.c_str());
-             strcat(buff2, buff1); pc += 3; break;
+        /* $xxxxxx,X */ if (!m_properties.m_quiet) printf("%.2X %.2X %.2X ", i, j, k);
+        msg = get_label(instr, k, j * 256 + i); if (msg == "")
+            sprintf(buff1, "$%.2X%.2X%.2X,X", k, j, i);
+        else sprintf(buff1, "%s,X", msg.c_str());
+        strcat(buff2, buff1); pc += 3; break;
     case 11: i = read_char(srcfile); j = read_char(srcfile);
-/* $xxxx,Y */ if (!m_properties.m_quiet) printf("%.2X %.2X    ",i,j);
-             msg = get_label(instr, bank, j * 256 + i); if (msg == "")
-             sprintf(buff1, "$%.2X%.2X,Y", j, i);
-             else sprintf(buff1, "%s,Y", msg.c_str());
-             strcat(buff2, buff1);
-             pc += 2; break;
+        /* $xxxx,Y */ if (!m_properties.m_quiet) printf("%.2X %.2X    ",i,j);
+        msg = get_label(instr, bank, j * 256 + i); if (msg == "")
+            sprintf(buff1, "$%.2X%.2X,Y", j, i);
+        else sprintf(buff1, "%s,Y", msg.c_str());
+        strcat(buff2, buff1);
+        pc += 2; break;
     case 12: i = read_char(srcfile); if (!m_properties.m_quiet) printf("%.2X       ", i);
-/* ($xx) */  msg = get_label(instr, bank, i); if (msg == "")
-             sprintf(buff1, "($%.2X)", i); else sprintf(buff1, "(%s)", msg.c_str());
-             strcat(buff2, buff1); pc++; break;
+        /* ($xx) */  msg = get_label(instr, bank, i); if (msg == "")
+        sprintf(buff1, "($%.2X)", i); else sprintf(buff1, "(%s)", msg.c_str());
+        strcat(buff2, buff1); pc++; break;
     case 13: i = read_char(srcfile); if (!m_properties.m_quiet) printf("%.2X       ", i);
-/* [$xx] */  msg = get_label(instr, bank, i); if (msg == "")
-             sprintf(buff1, "[$%.2X]", i); else sprintf(buff1, "[%s]", msg.c_str());
-             strcat(buff2, buff1); pc++; break;
+        /* [$xx] */  msg = get_label(instr, bank, i); if (msg == "")
+        sprintf(buff1, "[$%.2X]", i); else sprintf(buff1, "[%s]", msg.c_str());
+        strcat(buff2, buff1); pc++; break;
     case 14: i = read_char(srcfile); if (!m_properties.m_quiet) printf("%.2X       ", i);
-/* $xx,S */  msg = get_label(instr, bank, i); if (msg == "")
-             sprintf(buff1, "$%.x,S", i); else sprintf(buff1, "%s,S", msg.c_str());
-             strcat(buff2, buff1); pc++; break;
+        /* $xx,S */  msg = get_label(instr, bank, i); if (msg == "")
+        sprintf(buff1, "$%.x,S", i); else sprintf(buff1, "%s,S", msg.c_str());
+        strcat(buff2, buff1); pc++; break;
     case 15: i = read_char(srcfile); if (!m_properties.m_quiet) printf("%.2X       ", i);
-/* ($xx,S),Y */ msg = get_label(instr, bank, i); if (msg == "")
-             sprintf(buff1, "($%.2X,S),Y", i);
-             else sprintf(buff1, "(%s,S),Y", msg.c_str());
-             strcat(buff2, buff1); pc++; break;
+        /* ($xx,S),Y */ msg = get_label(instr, bank, i); if (msg == "")
+        sprintf(buff1, "($%.2X,S),Y", i);
+        else sprintf(buff1, "(%s,S),Y", msg.c_str());
+        strcat(buff2, buff1); pc++; break;
     case 16: r = read_char(srcfile); h = r; if (!m_properties.m_quiet) printf("%.2X       ", h);
-/* relative */ pc++; msg = get_label(instr, bank, pc+r); if (msg == "")
-             sprintf(buff1, "$%.4X", pc+r); else sprintf(buff1, "%s", msg.c_str());
-             strcat(buff2, buff1); break;
+        /* relative */ pc++; msg = get_label(instr, bank, pc+r); if (msg == "")
+        sprintf(buff1, "$%.4X", pc+r); else sprintf(buff1, "%s", msg.c_str());
+        strcat(buff2, buff1); break;
     case 17: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
-/* relative long */ if (!m_properties.m_quiet) printf("%.2X %.2X    ",i,j);
-             ll = j * 256 + i; if (ll > 32767) ll = -(65536-ll);
-      msg = get_label(instr, (bank*65536+pc+ll)/0x10000, (bank*65536+pc+ll)&0xffff);
-             if (msg == "") sprintf(buff1, "$%.6x", bank*65536+pc+ll);
-             else sprintf(buff1, "%s", msg.c_str());
-             strcat(buff2, buff1); break;
+        /* relative long */ if (!m_properties.m_quiet) printf("%.2X %.2X    ",i,j);
+        ll = j * 256 + i; if (ll > 32767) ll = -(65536-ll);
+        msg = get_label(instr, (bank*65536+pc+ll)/0x10000, (bank*65536+pc+ll)&0xffff);
+        if (msg == "") sprintf(buff1, "$%.6x", bank*65536+pc+ll);
+        else sprintf(buff1, "%s", msg.c_str());
+        strcat(buff2, buff1); break;
     case 18: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
-/* #$xxxx */ if (!m_properties.m_quiet) printf("%.2X %.2X    ",i,j);
-             msg = get_label(instr, bank, j * 256 + i); if (msg == "")
+        /* #$xxxx */ if (!m_properties.m_quiet) printf("%.2X %.2X    ",i,j);
+        msg = get_label(instr, bank, j * 256 + i); if (msg == "")
             sprintf(buff1, "#$%.2X%.2X", j, i); else sprintf(buff1,"#%s",msg.c_str());
-             strcat(buff2, buff1); break;
-/*    case 19: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
-/* [$xxxx]  if (!m_properties.m_quiet) printf("%.2X %.2X    ",i,j);
-             msg = get_label(instr, bank, j * 256 + i); if (msg == "")
-             sprintf(buff1, "[$%.2X%.2X]", j, i);
-             else sprintf(buff1,"[%s]",msg.c_str());
-             strcat(buff2, buff1); break;
-don't really need this anymore.  will just comment it out before deleting
-it */
+        strcat(buff2, buff1); break;
+        /*    case 19: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
+        /* [$xxxx]  if (!m_properties.m_quiet) printf("%.2X %.2X    ",i,j);
+        msg = get_label(instr, bank, j * 256 + i); if (msg == "")
+        sprintf(buff1, "[$%.2X%.2X]", j, i);
+        else sprintf(buff1,"[%s]",msg.c_str());
+        strcat(buff2, buff1); break;
+        don't really need this anymore.  will just comment it out before deleting
+        it */
     case 20: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
-/* ($xxxx) */ if (!m_properties.m_quiet) printf("%.2X %.2X    ",i,j);
-             msg = get_label(instr, bank, j * 256 + i); if (msg == "")
-         sprintf(buff1, "($%.2X%.2X)", j, i); else sprintf(buff1, "(%s)", msg.c_str());
-             strcat(buff2, buff1); break;
+        /* ($xxxx) */ if (!m_properties.m_quiet) printf("%.2X %.2X    ",i,j);
+        msg = get_label(instr, bank, j * 256 + i); if (msg == "")
+            sprintf(buff1, "($%.2X%.2X)", j, i); else sprintf(buff1, "(%s)", msg.c_str());
+        strcat(buff2, buff1); break;
     case 21: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
-/* ($xxxx,X) */ if (!m_properties.m_quiet) printf("%.2X %.2X    ",i,j);
-             msg = get_label(instr, bank, j * 256 + i); if (msg == "")
-             sprintf(buff1, "($%.2X%.2X,X)", j, i);
-             else sprintf(buff1, "(%s,X)", msg.c_str());
-             strcat(buff2,buff1); break;
+        /* ($xxxx,X) */ if (!m_properties.m_quiet) printf("%.2X %.2X    ",i,j);
+        msg = get_label(instr, bank, j * 256 + i); if (msg == "")
+            sprintf(buff1, "($%.2X%.2X,X)", j, i);
+        else sprintf(buff1, "(%s,X)", msg.c_str());
+        strcat(buff2,buff1); break;
     case 22: i = read_char(srcfile); if (!m_properties.m_quiet) printf("%.2X       ", i); pc++;
-/* $xx,Y */  msg = get_label(instr, bank, i); if (msg == "")
-             sprintf(buff1, "$%.2X,Y", i); else sprintf(buff1, "%s,Y", msg.c_str());
-             strcat(buff2, buff1); break;
+        /* $xx,Y */  msg = get_label(instr, bank, i); if (msg == "")
+        sprintf(buff1, "$%.2X,Y", i); else sprintf(buff1, "%s,Y", msg.c_str());
+        strcat(buff2, buff1); break;
     case 23: i = read_char(srcfile); if (!m_properties.m_quiet) printf("%.2X       ", i); pc++;
-/* #$xx */   msg = get_label(instr, bank, i); if (msg == "")
-             sprintf(buff1, "#$%.2X", i); else sprintf(buff1, "#%s", msg.c_str());
-             strcat(buff2, buff1); break;
+        /* #$xx */   msg = get_label(instr, bank, i); if (msg == "")
+        sprintf(buff1, "#$%.2X", i); else sprintf(buff1, "#%s", msg.c_str());
+        strcat(buff2, buff1); break;
     case 24: i = read_char(srcfile); if (!m_properties.m_quiet) printf("%.2X       ", i); pc++;
-/* REP */    sprintf(buff1,"#$%.2X", i); strcat(buff2, buff1);
-             if (i & 0x20) { accum16 = 1; flag = i; }
-             if (i & 0x10) { index16 = 1; flag = i; }
-             break;
+        /* REP */    sprintf(buff1,"#$%.2X", i); strcat(buff2, buff1);
+        if (i & 0x20) { accum16 = 1; flag = i; }
+        if (i & 0x10) { index16 = 1; flag = i; }
+        break;
     case 25: i = read_char(srcfile); if (!m_properties.m_quiet) printf("%.2X       ", i); pc++;
-/* SEP */    sprintf(buff1, "#$%.2X", i); strcat(buff2, buff1);
-             if (i & 0x20) { accum16 = 0; flag = -i; }
-             if (i & 0x10) { index16 = 0; flag = -i; }
-             break;
+        /* SEP */    sprintf(buff1, "#$%.2X", i); strcat(buff2, buff1);
+        if (i & 0x20) { accum16 = 0; flag = -i; }
+        if (i & 0x10) { index16 = 0; flag = -i; }
+        break;
     case 26: i = read_char(srcfile); pc++; if (!m_properties.m_quiet) printf("%.2X ", i);
-/* Index  #$xx or #$xxxx */
-             ll = i; strcat(buff2,"#");
-             if (index16 == 1) { j = read_char(srcfile); pc++; ll = j * 256 + ll;
-               if (!m_properties.m_quiet) printf("%.2X ", j); }
-             msg = get_label(instr, bank, ll); if (msg == "") if (index16 == 0)
-             sprintf(buff1, "$%.2X", ll); else sprintf(buff1, "$%.4X", ll);
-             else sprintf(buff1, "%s", msg.c_str()); strcat(buff2, buff1);
-             if (!m_properties.m_quiet) { printf("   "); if (index16 == 0) printf("   "); }
-             break;
+        /* Index  #$xx or #$xxxx */
+        ll = i; strcat(buff2,"#");
+        if (index16 == 1) { j = read_char(srcfile); pc++; ll = j * 256 + ll;
+        if (!m_properties.m_quiet) printf("%.2X ", j); }
+        msg = get_label(instr, bank, ll); if (msg == "") if (index16 == 0)
+            sprintf(buff1, "$%.2X", ll); else sprintf(buff1, "$%.4X", ll);
+        else sprintf(buff1, "%s", msg.c_str()); strcat(buff2, buff1);
+        if (!m_properties.m_quiet) { printf("   "); if (index16 == 0) printf("   "); }
+        break;
     case 27: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
-/* MVN / MVP */ if (!m_properties.m_quiet) printf("%.2X %.2X    ", i, j);
-             sprintf(buff1, "$%.2X,$%.2X", i, j); strcat(buff2, buff1); break;
+        /* MVN / MVP */ if (!m_properties.m_quiet) printf("%.2X %.2X    ", i, j);
+        sprintf(buff1, "$%.2X,$%.2X", i, j); strcat(buff2, buff1); break;
     default: sprintf(buff2, "???"); break;
-  }
+    }
+
+    //print instruction
+    if (!m_properties.m_quiet) cout << "  ";    
+    cout << setw(25) << left << buff2 << " ";
+
+    //print comment
+    if (instr.name() == "RTS" || instr.name() == "RTI" || instr.name() == "RTL" )
+        cout << "; Return" << endl;
+    if (high)
+        printComment(low, high);
+    if (flag > 0){
+        cout << "; ";
+        if (flag & 0x10) cout << "Index (16 bit)";
+        if (flag & 0x20) cout << "Accum (16 bit)";
+    }
+    else if (flag < 0){
+        cout << "; ";
+        if ( (-flag) & 0x10) cout << "Index (8 bit)";
+        if ( (-flag) & 0x20) cout << "Accum (8 bit)";
+    }
+    cout << endl;
 }
 
 

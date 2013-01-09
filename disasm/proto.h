@@ -1,10 +1,12 @@
 #ifndef PROTO_H
 #define PROTO_H
 
-#include "disasm.h"
 #include <string>
 #include <iostream>
 #include <map>
+
+#define HELP "help!\n"
+extern FILE *srcfile;
 
 class Instruction;
 
