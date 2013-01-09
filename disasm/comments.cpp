@@ -3,56 +3,57 @@
 #include "disasm.h"
 #include "proto.h"
 
-void comment(unsigned char low, unsigned char high)
+void Disassembler::printComment(unsigned char low, unsigned char high)
 {
+  int comment_level = m_properties.m_comment_level;
   unsigned int addr = high * 256 + low;
 
-if (comments)
+if (comment_level)
 {
   printf("	; ");
   switch (addr)
   {
     case 0x2100: printf("Screen Display Register");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
         printf(";a0000bbbb a: 0=screen on, 1=screen off  b = brightness");
       } break;
     case 0x2101: printf("OAM Size and Data Area Designation");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
         printf(";aaabbccc a = Size  b = Name Selection  c = Base Selection");
       } break;
     case 0x2102: printf("Address for Accessing OAM"); break;
     case 0x2104: printf("OAM Data Write"); break;
     case 0x2105: printf("BG Mode and Tile Size Setting");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
         printf(";abcdefff abcd = BG tile size (4321), 0 = 8x8, 1 = 16x16");
         spaces(10);  printf(";e = BG 3 High Priority  f = BG Mode");
     } break;
     case 0x2106: printf("Mosaic Size and BG Enable");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
         printf(";aaaabbbb a = Mosaic Size  b = Mosaic BG Enable");
       } break;
     case 0x2107: printf("BG 1 Address and Size");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
     printf(";aaaaaabb a = Screen Base Address (Upper 6-bit)  b = Screen Size");
     } break;
     case 0x2108: { printf("BG 2 Address and Size");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
     printf(";aaaaaabb a = Screen Base Address (Upper 6-bit).  b = Screen Size");
     } break;
     case 0x2109: printf("BG 3 Address and Size");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
     printf(";aaaaaabb a = Screen Base Address (Upper 6-bit)  b = Screen Size");
     } break;
     case 0x210A: printf("BG 4 Address and Size");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
     printf(";aaaaaabb a = Screen Base Address (Upper 6-bit)  b = Screen Size");
     } break;
     case 0x210b: printf("BG 1 & 2 Tile Data Designation");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
     printf(";aaaabbbb a = BG 2 Tile Base Address  b = BG 1 Tile Base Address");
     } break;
     case 0x210c: printf("BG 3 & 4 Tile Data Designation");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
     printf(";aaaabbbb a = BG 4 Tile Base Address  b = BG 3 Tile Base Address");
     } break;
     case 0x210d: printf("BG 1 Horizontal Scroll Offset"); break;
@@ -69,7 +70,7 @@ if (comments)
     case 0x2118: printf("Data for VRAM Write (Low Byte)"); break;
     case 0x2119: printf("Data for VRAM Write (High Byte)"); break;
     case 0x211a: printf("Initial Setting for Mode 7");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
     printf(";aa0000bc a = Screen Over  b = Vertical Flip  c = Horizontal Flip");
       } break;
     case 0x211b: printf("Mode 7 Matrix Parameter A"); break;
@@ -81,15 +82,15 @@ if (comments)
     case 0x2121: printf("Address for CG-RAM Write"); break;
     case 0x2122: printf("Data for CG-RAM Write"); break;
     case 0x2123: printf("BG 1 and 2 Window Mask Settings");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
     printf(";aaaabbbb a = BG 2 Window Settings  b = BG 1 Window Settings");
       } break;
     case 0x2124: printf("BG 3 and 4 Window Mask Settings");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
     printf(";aaaabbbb a = BG 4 Window Settings  b = BG 3 Window Settings");
       } break;
     case 0x2125: printf("OBJ and Color Window Settings");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
     printf(";aaaabbbb a = Color Window Settings  b = OBJ Window Settings");
       } break;
     case 0x2126: printf("Window 1 Left Position Designation"); break;
@@ -97,46 +98,46 @@ if (comments)
     case 0x2128: printf("Window 2 Left Postion Designation"); break;
     case 0x2129: printf("Window 2 Right Postion Designation"); break;
     case 0x212a: printf("BG 1, 2, 3 and 4 Window Logic Settings");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
       printf(";aabbccdd a = BG 4  b = BG 3  c = BG 2  d = BG 1");
       } break;
     case 0x212b: printf("Color and OBJ Window Logic Settings");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
         printf(";0000aabb a = Color Window  b = OBJ Window");
       } break;
     case 0x212c: printf("Background and Object Enable");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
    printf(";000abcde a = Object  b = BG 4  c = BG 3  d = BG 2  e = BG 1");
       } break;
     case 0x212d: printf("Sub Screen Designation");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
     printf(";000abcde a = Object  b = BG 4  c = BG 3  d = BG 2  e = BG 1");
       } break;
     case 0x212e: printf("Window Mask Designation for Main Screen");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
     printf(";000abcde a = Object  b = BG 4  c = BG 3  d = BG 2  e = BG 1");
       } break;
     case 0x212f: printf("Window Mask Designation for Sub Screen");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
     printf(";000abcde a = Object  b = BG 4  c = BG 3  d = BG 2  e = BG 1");
       } break;
     case 0x2130: printf("Initial Settings for Color Addition");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
     printf(";aabb00cd a = Main Color Window On/Off b = Sub Color Window On/Off");
     spaces(10); printf(";c = Fixed Color Add/Subtract Enable  d = Direct Select");
       } break;
     case 0x2131: printf("Add/Subtract Select and Enable");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
     printf(";abcdefgh  a = 0 = Addition, 1 = Subtraction  b = 1/2 Enable");
     spaces(10);
     printf(";cdefgh = Enables  c = Back, d = Object, efgh = BG 4, 3, 2, 1");
       } break;
     case 0x2132: printf("Fixed Color Data");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
       printf(";abcddddd a = Blue  b = Green  c = Red  dddd = Color Data");
       } break;
     case 0x2133: printf("Screen Initial Settings");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
     printf(";ab00cdef a = External Sync  b = ExtBG Mode  c = Pseudo 512 Mode");
     spaces(10); printf(";d = Vertical Size  e = Object-V Select  f = Interlace");
       } break;
@@ -154,7 +155,7 @@ if (comments)
     case 0x2140: case 0x2141: case 0x2142: case 0x2143:
       printf("APU I/O Port"); break;
     case 0x4200: printf("NMI, V/H Count, and Joypad Enable");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
     printf(";a0bc000d a = NMI  b = V-Count  c = H-Count  d = Joypad");
      } break;
     case 0x4201: printf("Programmable I/O Port Output"); break;
@@ -168,25 +169,25 @@ if (comments)
     case 0x4209: printf("V-Count Timer (Upper 8 Bits)"); break;
     case 0x420a: printf("V-Count Timer MSB (Bit 0)"); break;
     case 0x420b: printf("Regular DMA Channel Enable");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
     printf(";abcdefgh  a = Channel 7 .. h = Channel 0: 0 = Enable  1 = Disable");
       } break;
     case 0x420c: printf("H-DMA Channel Enable");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
     printf(";abcdefgh  a = Channel 7 .. h = Channel 0: 0 = Enable  1 = Disable");
       } break;
     case 0x420d: printf("Cycle Speed Designation");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
         printf(";0000000a a: 0 = 2.68 MHz, 1 = 3.58 MHz"); } break;
     case 0x4210: printf("NMI Enable");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
         printf(";a0000000 a: 0 = Disabled, 1 = Enabled"); } break;
     case 0x4211: printf("IRQ Flag By H/V Count Timer");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
       printf(";a0000000 a: 0 = H/V Timer Disabled, 1 = H/V Timer is Time Up");
       } break;
     case 0x4212: printf("H/V Blank Flags and Joypad Status");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
     printf(";ab00000c a = V Blank  b = H Blank  c = Joypad Ready to Be Read");
       } break;
     case 0x4213: printf("Programmable I/O Port Input"); break;
@@ -196,17 +197,17 @@ if (comments)
     case 0x4217: printf("Product/Remainder Result (High Byte)"); break;
     case 0x4218: case 0x421a: case 0x421c: case 0x421e:
       printf("Joypad %d Data (Low Byte)",(addr-0x4217)/2+1);
-        if (comments > 1) { spaces(10);
+        if (comment_level > 1) { spaces(10);
         printf(";abcd0000 a = Button A  b = X  c = L  d = R"); } break;
     case 0x4219: case 0x421b: case 0x421d: case 0x421f:
       printf("Joypad %d Data (High Byte)",(addr-0x4218)/2+1);
-        if (comments > 1) { spaces(10);
+        if (comment_level > 1) { spaces(10);
     printf(";abcdefgh a = B b = Y c = Select d = Start efgh = Up/Dn/Lt/Rt");
       } break;
     case 0x4300: case 0x4310: case 0x4320: case 0x4330: case 0x4340:
     case 0x4350: case 0x4360: case 0x4370:
       printf("Parameters for DMA Transfer");
-      if (comments > 1) { spaces(10);
+      if (comment_level > 1) { spaces(10);
     printf(";ab0cdeee a = Direction  b = Type  c = Inc/Dec  d = Auto/Fixed");
     spaces(10); printf(";e = Word Size Select");
       } break;
