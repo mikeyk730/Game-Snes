@@ -4,8 +4,9 @@
 #include "disasm.h"
 #include "proto.h"
 
-void dotype(unsigned char t)
+void dotype(const Instruction& instr, unsigned char bank)
 {
+  unsigned char t = instr.addressMode();
   unsigned char i, j, k;
   long ll;
   unsigned char h;

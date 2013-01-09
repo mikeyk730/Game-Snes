@@ -1,28 +1,26 @@
 #include <cstdio>
 #include <cstring>
 
+#include <iomanip>
+#include <iostream>
+#include <map>
+#include <string>
+
 #include "disasm.h"
 #include "proto.h"
 
 #define NUMINST	255
 
-void find(unsigned char c)
-{
-  int i = 0;
-  while( (i < NUMINST) && (c != inst[i]) ) i++;
-  if (i == NUMINST) { type = -1; return; }
-  strcpy(mne, mnes[i]);
-  type = types[i];
-}
+using namespace std;
 
 unsigned int hex(char *s)
 {
-  int a, i, l = strlen(s);
   unsigned int total = 0;
 
-  for(a=0; a<l; a++)
+  int l = strlen(s);
+  for(int a=0; a<l; a++)
   {
-    i = 0;
+    int i = 0;
     if ( (s[a] > 47) && (s[a] < 58) ) i = s[a] - 48; /* 0 - 9 */
     if ( (s[a] > 64) && (s[a] < 71) ) i = s[a] - 55; /* A - F */
     if ( (s[a] > 96) && (s[a] < 103)) i = s[a] - 87; /* a - f */

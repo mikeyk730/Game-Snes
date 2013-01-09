@@ -28,12 +28,6 @@ Corey\ndisasm [options] <filename>\nfor help use: disasm -help\n"
 
 #define NUMINST 255
 
-extern unsigned char inst[];
-
-extern char *mnes[];
-
-extern unsigned char types[];
-
 struct link
 {
   char label[20];
@@ -42,18 +36,16 @@ struct link
   link *next;
 };
 
-extern unsigned char type;
-extern char mne[];
 extern FILE *srcfile;
 extern int accum, index;  /* 0 = 8 bit, 1 = 16 bit */
 extern unsigned int pc, eend;
-extern unsigned char bank, endbank;
+extern unsigned char endbank;
 extern char buff1[];
 extern char buff2[];
 extern int hirom;	  /* 1 = HiRom */
 extern int comments; /* 0 = No Comments, 1 = Short Comments, 2 = Long Comments */
 extern int quiet;
-extern int high, low, flag, rts;
+extern int high, low, flag;
 extern int asmbler, dcb;
 extern link *first;
 extern char *sym_filename;
