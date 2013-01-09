@@ -14,10 +14,28 @@ namespace{
 }
 
 Disassembler::Disassembler() :
-m_hirom(false)
+m_hirom(false),
+m_pass(1),
+m_flag(0)
 { 
     initialize_instruction_lookup(); 
     memset(m_data,0,0x80000);
+}
+
+std::string Disassembler::getInstructionName(const Instruction& instr){
+    string name = instr.name();
+
+    if (instr.addressMode() == 1 && m_properties.m_accum_16 == true)
+        name += ".W";
+    else if (instr.addressMode() == 26 && m_properties.m_index_16 == true)
+        name += ".W";
+    else if (instr.addressMode() == 2 || instr.addressMode() == 9 || 
+        instr.addressMode() == 11 || instr.addressMode() == 18)
+        name += ".W";
+    else if (instr.addressMode() == 3 || instr.addressMode() == 10)
+        name += ".L";
+    
+    return name;
 }
 
 void Disassembler::fix_address(unsigned char& bank, unsigned int& pc)
@@ -33,25 +51,47 @@ void Disassembler::fix_address(unsigned char& bank, unsigned int& pc)
     }
 }
 
+istream& Disassembler::get_address(istream& in, unsigned char& bank, unsigned int& addr)
+{
+    unsigned int full;
+    if(!(in >> hex >> full))
+        return in;
+
+    addr = (full & 0x0FFFF);
+    bank = ((full >> 16) & 0x0FF);
+
+    if (addr < 0x8000)
+        addr += 0x8000;
+
+    //cout << hex << int(bank) << " " << addr << endl;
+    return in;
+}
+
 void Disassembler::handleRequest(const Request& request)
 {
-    m_properties = request.m_properties;
+    do{
+        m_properties = request.m_properties;
 
-    m_current_bank = m_properties.m_start_bank;
-    m_current_addr = m_properties.m_start_addr;
+        m_current_bank = m_properties.m_start_bank;
+        m_current_addr = m_properties.m_start_addr;
 
-    fseek(srcfile, 512, 0);
-    if (m_hirom)
-        fseek(srcfile, m_current_bank * 65536 + m_current_addr, 1);
-    else
-        fseek(srcfile, m_current_bank * 32768 + m_current_addr - 0x8000, 1);
+        fseek(srcfile, 512, 0);
+        if (m_hirom)
+            fseek(srcfile, m_current_bank * 65536 + m_current_addr, 1);
+        else
+            fseek(srcfile, m_current_bank * 32768 + m_current_addr - 0x8000, 1);
 
-    if (request.m_type == Request::Dcb)
-        dodcb();
-    else if (request.m_type == Request::Asm)
-        dodisasm();
-    else
-        do_smart();
+        if (request.m_type == Request::Dcb)
+            dodcb();
+        else if (request.m_type == Request::Asm)
+            dodisasm();
+        else{
+            cout << "; ============ PASS " << m_pass << " ===============" << endl;
+            do_smart();
+            m_pass++;
+            
+        }
+    } while(request.m_type == Request::Smart && m_pass < 3);
 }
 
 void Disassembler::dodisasm()
@@ -72,13 +112,12 @@ void Disassembler::dodisasm()
             //adjust pc address
             fix_address(bank,pc);
 
-            string label = get_label(Instruction("",0,ALWAYS_USE_LABEL), bank, pc);
+            string label = get_label(Instruction("",0,LINE_LABEL), bank, pc);
             cout << left << setw(20) << label << " ";
 
             if (!m_properties.m_quiet) cout << to_string(code, 2) << " ";
 
-            pc++;
-            dotype(instr, bank);
+            dotype(instr);
 
             if (m_properties.m_stop_at_rts &&
                 (instr.name() == "RTS" || instr.name() == "RTI" || instr.name() == "RTL"))
@@ -88,14 +127,64 @@ void Disassembler::dodisasm()
     }
 }
 
-void Disassembler::load_symbols(char *fname)
+void Disassembler::load_accum_bytes(char *fname, bool accum)
 {
     fstream in(fname);
     string line;
     while (getline(in, line)){
-        //skip comments
-        if (line.length() < 1 || line[0] == ';')
-            continue;
+        if (is_comment(line)) continue;
+        istringstream line_stream(line);
+
+        string type;
+        int fulladdr, bytes;
+        if(!(line_stream >> hex >> fulladdr >> type >> dec >> bytes)) continue;
+        
+        if(type == "A" || type == "AI" || type == "IA")
+            m_accum_lookup.insert(make_pair(fulladdr, bytes));
+        if(type == "I" || type == "AI" || type == "IA")
+            m_index_lookup.insert(make_pair(fulladdr, bytes));
+    }
+}
+
+void Disassembler::setProcessFlags()
+{    
+    m_flag = 0;
+
+    unsigned char bank = m_current_bank;
+    unsigned int pc = m_current_addr;
+
+    bool flip = false;
+
+    map<int, int>::iterator it = m_accum_lookup.find(full_address(bank,pc));
+    if (it != m_accum_lookup.end()){
+        m_properties.m_accum_16 = ((it->second) == 16);
+        m_flag |= 0x20;
+        flip |= ((it->second) != 16);
+    }
+
+    map<int, int>::iterator it2 = m_index_lookup.find(full_address(bank,pc));
+    if (it2 != m_index_lookup.end()){
+        m_properties.m_index_16 = ((it2->second) == 16);    
+        m_flag |= 0x10;
+        flip |= ((it2->second) != 16);
+    }
+
+    if (flip) m_flag *= -1;
+
+}
+
+bool Disassembler::is_comment(const string& line)
+{
+    return (line.length() < 1 || line[0] == ';');
+}
+
+void Disassembler::load_symbols(char *fname)
+{
+    cout << "; Reading symbols" << endl;
+    fstream in(fname);
+    string line;
+    while (getline(in, line)){
+        if (is_comment(line)) continue;
 
         int fulladdr;
         string label;
@@ -107,10 +196,24 @@ void Disassembler::load_symbols(char *fname)
         unsigned char bank = ((fulladdr >> 16) & 0x0FF);
 
         if(!(line_stream >> label))
-            label = "CODE_" + to_string(bank, 2) + "_" + to_string(addr, 4);
+            label = "CODE_" + to_string(bank, 2) + /*"_" +*/ to_string(addr, 4);
 
         add_label(bank, addr, label);
     }
+    cout << "; Reading symbols... done." << endl;
+}
+
+void Disassembler::load_symbols2(char *fname)
+{
+    cerr << "using method 2" << endl;
+    cerr << "; Reading symbols" << endl;
+    fstream in(fname);
+    int fulladdr;
+    while (in >> hex >> fulladdr){
+        string label = "CODE_" + to_string(fulladdr, 6);
+        m_label_lookup.insert(make_pair(fulladdr, label));
+    }
+    cerr << "; Reading symbols... done." << endl;
 }
 
 void Disassembler::load_data(char *fname)
@@ -118,9 +221,7 @@ void Disassembler::load_data(char *fname)
     fstream in(fname);
     string line;
     while (getline(in, line)){
-        //skip comments
-        if (line.length() < 1 || line[0] == ';')
-            continue;
+        if (is_comment(line)) continue;
 
         string label;
         istringstream line_stream(line);
@@ -132,11 +233,12 @@ void Disassembler::load_data(char *fname)
         
         if(!get_address(line_stream, end_bank, end_addr)){
             end_addr = addr + 1;
-            end_bank = bank;
+            end_bank = bank;            
         }
         
         unsigned int index = (bank * BANK_SIZE + addr - 0x08000);
         unsigned int size = (end_bank * BANK_SIZE + end_addr - 0x08000) - index;
+        
         //cout << size << " data bytes" << endl;
         memset(&m_data[index], 1, size);
 
@@ -148,24 +250,41 @@ void Disassembler::load_data(char *fname)
     }
 }
 
-void Disassembler::add_label(int bank, int pc, const string& label)
+void Disassembler::add_label(int bank, int pc, const string& label, bool used)
 {
     int full_addr = full_address(bank,pc);
-    m_label_lookup.insert(make_pair(full_addr, label));
+    if (used)
+        m_used_label_lookup.insert(make_pair(full_addr, label));
+    else
+        m_label_lookup.insert(make_pair(full_addr, label));
 }
 
 string Disassembler::get_label(const Instruction& instr, unsigned char bank, int pc)
 {
+    //right now we're only looking at one bank
+    if (m_current_bank != bank)
+        return "";
+
     string label;
 
-    map<int, string>::iterator it = m_label_lookup.find(full_address(bank,pc));
-    if (it != m_label_lookup.end())
-        label = it->second;
+    if (m_pass == 2){
+        map<int, string>::iterator it = m_used_label_lookup.find(full_address(bank,pc));
+        if (it != m_used_label_lookup.end())
+            label = it->second;
+    }
+    else{
+        map<int, string>::iterator it = m_label_lookup.find(full_address(bank,pc));
+        if (it != m_label_lookup.end()){
+            label = it->second;
+            add_label(bank, pc, label, true);
+        }
 
-    else if(!instr.neverUseLabel() && (instr.alwaysUseLabel() || pc >= 32768) &&
-        !instr.neverUseAddrLabel() && bank < 126)
-        label = "ADDR_" + to_string(bank, 2) + /*"_" +*/ to_string(pc, 4);
-
+        else if( ( (pc >= 0x8000 && !instr.neverUseAddrLabel()) ||
+            (pc < 0x8000 && instr.isBranch()) ) && bank < 0xFE){
+                label = "ADDR_" + to_string(bank, 2) + /*"_" +*/ to_string(pc, 4);
+                if (!instr.isLineLabel()) add_label(bank, pc, label, true);
+            }
+    }
     return label;
 }
 
@@ -216,7 +335,7 @@ void Disassembler::dodcb()
     unsigned int pc_end = m_properties.m_end_addr;
 
     for(int i=0; bank * 65536 + pc < end_bank * 65536 + pc_end; ++i){
-        string label = get_label(Instruction("",0,ALWAYS_USE_LABEL | NO_ADDR_LABEL), bank, pc);
+        string label = get_label(Instruction("",0,LINE_LABEL | NO_ADDR_LABEL), bank, pc);
 
         if (i%8 != 0 && label != "") {
             cout << endl << endl;
@@ -244,14 +363,14 @@ void Disassembler::dodcb()
 
 
 
-void Disassembler::dotype(const Instruction& instr, unsigned char bank)
+void Disassembler::dotype(const Instruction& instr)
 {
-    int high = 0, low = 0, flag = 0;
+    int high = 0, low = 0;
 
     char buff1[80];
     char buff2[80];
-    sprintf(buff2, "%s ", instr.name(m_properties.m_accum_16).c_str()); 
 
+    unsigned char& bank = m_current_bank;
     unsigned int& pc = m_current_addr;
     bool& accum16 = m_properties.m_accum_16;
     bool& index16 = m_properties.m_index_16;
@@ -263,6 +382,10 @@ void Disassembler::dotype(const Instruction& instr, unsigned char bank)
     char r;
     string msg;
 
+    setProcessFlags();
+    ++pc;
+    sprintf(buff2, "%s ", getInstructionName(instr).c_str()); 
+
     switch (t)
     {
     case 0 : if (!m_properties.m_quiet) printf("         "); break;
@@ -271,10 +394,13 @@ void Disassembler::dotype(const Instruction& instr, unsigned char bank)
         ll = i; strcat(buff2,"#");
         if (accum16 == 1) { j = read_char(srcfile); pc++; ll = j * 256 + ll;
         if (!m_properties.m_quiet) printf("%.2X ", j); }
-        msg = get_label(instr, bank, ll); if (msg == "") if (accum16 == 0)
-            sprintf(buff1, "$%.2X", ll); else sprintf(buff1, "$%.4X", ll);
-        else sprintf(buff1, "%s", msg.c_str()); strcat(buff2, buff1);
-        if (!m_properties.m_quiet) { printf("   "); if (accum16 == 0) printf("   "); }
+        if (accum16 == 0)
+            sprintf(buff1, "$%.2X", ll); 
+        else 
+            sprintf(buff1, "$%.4X", ll);
+        strcat(buff2, buff1);
+        if (!m_properties.m_quiet) { printf("   "); 
+        if (accum16 == 0) printf("   "); }
         break;
     case 2 : i = read_char(srcfile); j = read_char(srcfile);
         /* $xxxx */  if (!m_properties.m_quiet) printf("%.2X %.2X    ",i,j);
@@ -363,17 +489,14 @@ void Disassembler::dotype(const Instruction& instr, unsigned char bank)
         strcat(buff2, buff1); break;
     case 18: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
         /* #$xxxx */ if (!m_properties.m_quiet) printf("%.2X %.2X    ",i,j);
-        msg = get_label(instr, bank, j * 256 + i); if (msg == "")
-            sprintf(buff1, "#$%.2X%.2X", j, i); else sprintf(buff1,"#%s",msg.c_str());
+        sprintf(buff1, "#$%.2X%.2X", j, i);
         strcat(buff2, buff1); break;
-        /*    case 19: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
-        /* [$xxxx]  if (!m_properties.m_quiet) printf("%.2X %.2X    ",i,j);
+    case 19: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
+        /* [$xxxx] */ if (!m_properties.m_quiet) printf("%.2X %.2X    ",i,j);
         msg = get_label(instr, bank, j * 256 + i); if (msg == "")
-        sprintf(buff1, "[$%.2X%.2X]", j, i);
+            sprintf(buff1, "[$%.2X%.2X]", j, i);
         else sprintf(buff1,"[%s]",msg.c_str());
         strcat(buff2, buff1); break;
-        don't really need this anymore.  will just comment it out before deleting
-        it */
     case 20: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
         /* ($xxxx) */ if (!m_properties.m_quiet) printf("%.2X %.2X    ",i,j);
         msg = get_label(instr, bank, j * 256 + i); if (msg == "")
@@ -390,32 +513,32 @@ void Disassembler::dotype(const Instruction& instr, unsigned char bank)
         sprintf(buff1, "$%.2X,Y", i); else sprintf(buff1, "%s,Y", msg.c_str());
         strcat(buff2, buff1); break;
     case 23: i = read_char(srcfile); if (!m_properties.m_quiet) printf("%.2X       ", i); pc++;
-        /* #$xx */   msg = get_label(instr, bank, i); if (msg == "")
-        sprintf(buff1, "#$%.2X", i); else sprintf(buff1, "#%s", msg.c_str());
+        /* #$xx */   
+        sprintf(buff1, "#$%.2X", i);
         strcat(buff2, buff1); break;
     case 24: i = read_char(srcfile); if (!m_properties.m_quiet) printf("%.2X       ", i); pc++;
         /* REP */    sprintf(buff1,"#$%.2X", i); strcat(buff2, buff1);
-        if (i & 0x20) { accum16 = 1; flag = i; }
-        if (i & 0x10) { index16 = 1; flag = i; }
+        if (i & 0x20) { accum16 = 1; m_flag = i; }
+        if (i & 0x10) { index16 = 1; m_flag = i; }
         break;
     case 25: i = read_char(srcfile); if (!m_properties.m_quiet) printf("%.2X       ", i); pc++;
         /* SEP */    sprintf(buff1, "#$%.2X", i); strcat(buff2, buff1);
-        if (i & 0x20) { accum16 = 0; flag = -i; }
-        if (i & 0x10) { index16 = 0; flag = -i; }
+        if (i & 0x20) { accum16 = 0; m_flag = -i; }
+        if (i & 0x10) { index16 = 0; m_flag = -i; }
         break;
     case 26: i = read_char(srcfile); pc++; if (!m_properties.m_quiet) printf("%.2X ", i);
         /* Index  #$xx or #$xxxx */
         ll = i; strcat(buff2,"#");
         if (index16 == 1) { j = read_char(srcfile); pc++; ll = j * 256 + ll;
         if (!m_properties.m_quiet) printf("%.2X ", j); }
-        msg = get_label(instr, bank, ll); if (msg == "") if (index16 == 0)
+        if (index16 == 0)
             sprintf(buff1, "$%.2X", ll); else sprintf(buff1, "$%.4X", ll);
-        else sprintf(buff1, "%s", msg.c_str()); strcat(buff2, buff1);
+        strcat(buff2, buff1);
         if (!m_properties.m_quiet) { printf("   "); if (index16 == 0) printf("   "); }
         break;
     case 27: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
         /* MVN / MVP */ if (!m_properties.m_quiet) printf("%.2X %.2X    ", i, j);
-        sprintf(buff1, "$%.2X,$%.2X", i, j); strcat(buff2, buff1); break;
+        sprintf(buff1, "%.2X,%.2X", i, j); strcat(buff2, buff1); break;
     default: sprintf(buff2, "???"); break;
     }
 
@@ -426,18 +549,18 @@ void Disassembler::dotype(const Instruction& instr, unsigned char bank)
     //print comment
     if (instr.name() == "RTS" || instr.name() == "RTI" || instr.name() == "RTL" )
         cout << "; Return" << endl;
+    if (m_flag > 0){
+        cout << "; ";
+        if (m_flag & 0x10) cout << "Index (16 bit) ";
+        if (m_flag & 0x20) cout << "Accum (16 bit) ";
+    }
+    else if (m_flag < 0){
+        cout << "; ";
+        if ( (-m_flag) & 0x10) cout << "Index (8 bit) ";
+        if ( (-m_flag) & 0x20) cout << "Accum (8 bit) ";
+    }
     if (high)
         printComment(low, high);
-    if (flag > 0){
-        cout << ";";
-        if (flag & 0x10) cout << " Index (16 bit)";
-        if (flag & 0x20) cout << " Accum (16 bit)";
-    }
-    else if (flag < 0){
-        cout << ";";
-        if ( (-flag) & 0x10) cout << " Index (8 bit)";
-        if ( (-flag) & 0x20) cout << " Accum (8 bit)";
-    }
     cout << endl;
 }
 
@@ -480,16 +603,16 @@ void Disassembler::initialize_instruction_lookup()
   m_instruction_lookup.insert(make_pair(0x0A, Instruction("ASL", 0)));
   m_instruction_lookup.insert(make_pair(0x16, Instruction("ASL", 8)));
   m_instruction_lookup.insert(make_pair(0x1E, Instruction("ASL", 9)));
-  m_instruction_lookup.insert(make_pair(0x90, Instruction("BCC", 16, ALWAYS_USE_LABEL)));
-  m_instruction_lookup.insert(make_pair(0xB0, Instruction("BCS", 16, ALWAYS_USE_LABEL)));
-  m_instruction_lookup.insert(make_pair(0xF0, Instruction("BEQ", 16, ALWAYS_USE_LABEL)));
-  m_instruction_lookup.insert(make_pair(0x30, Instruction("BMI", 16, ALWAYS_USE_LABEL)));
-  m_instruction_lookup.insert(make_pair(0xD0, Instruction("BNE", 16, ALWAYS_USE_LABEL)));
-  m_instruction_lookup.insert(make_pair(0x10, Instruction("BPL", 16, ALWAYS_USE_LABEL)));
-  m_instruction_lookup.insert(make_pair(0x80, Instruction("BRA", 16, ALWAYS_USE_LABEL)));
+  m_instruction_lookup.insert(make_pair(0x90, Instruction("BCC", 16, IS_BRANCH)));
+  m_instruction_lookup.insert(make_pair(0xB0, Instruction("BCS", 16, IS_BRANCH)));
+  m_instruction_lookup.insert(make_pair(0xF0, Instruction("BEQ", 16, IS_BRANCH)));
+  m_instruction_lookup.insert(make_pair(0x30, Instruction("BMI", 16, IS_BRANCH)));
+  m_instruction_lookup.insert(make_pair(0xD0, Instruction("BNE", 16, IS_BRANCH)));
+  m_instruction_lookup.insert(make_pair(0x10, Instruction("BPL", 16, IS_BRANCH)));
+  m_instruction_lookup.insert(make_pair(0x80, Instruction("BRA", 16, IS_BRANCH)));
   m_instruction_lookup.insert(make_pair(0x82, Instruction("BRL", 17)));
-  m_instruction_lookup.insert(make_pair(0x50, Instruction("BVC", 16, ALWAYS_USE_LABEL)));
-  m_instruction_lookup.insert(make_pair(0x70, Instruction("BVS", 16, ALWAYS_USE_LABEL)));
+  m_instruction_lookup.insert(make_pair(0x50, Instruction("BVC", 16, IS_BRANCH)));
+  m_instruction_lookup.insert(make_pair(0x70, Instruction("BVS", 16, IS_BRANCH)));
   m_instruction_lookup.insert(make_pair(0x89, Instruction("BIT", 1)));
   m_instruction_lookup.insert(make_pair(0x2C, Instruction("BIT", 2)));
   m_instruction_lookup.insert(make_pair(0x24, Instruction("BIT", 4)));
@@ -550,14 +673,14 @@ void Disassembler::initialize_instruction_lookup()
   m_instruction_lookup.insert(make_pair(0xFE, Instruction("INC", 9)));
   m_instruction_lookup.insert(make_pair(0xE8, Instruction("INX", 0)));
   m_instruction_lookup.insert(make_pair(0xC8, Instruction("INY", 0)));
-  m_instruction_lookup.insert(make_pair(0x5C, Instruction("JMP", 3, ALWAYS_USE_LABEL)));
-  m_instruction_lookup.insert(make_pair(0xDC, Instruction("JML", 20, ALWAYS_USE_LABEL)));
-  m_instruction_lookup.insert(make_pair(0x4C, Instruction("JMP", 2, ALWAYS_USE_LABEL)));
-  m_instruction_lookup.insert(make_pair(0x6C, Instruction("JMP", 20, ALWAYS_USE_LABEL)));
-  m_instruction_lookup.insert(make_pair(0x7C, Instruction("JMP", 21, ALWAYS_USE_LABEL)));
-  m_instruction_lookup.insert(make_pair(0x22, Instruction("JSL", 3, ALWAYS_USE_LABEL)));
-  m_instruction_lookup.insert(make_pair(0x20, Instruction("JSR", 2, ALWAYS_USE_LABEL)));
-  m_instruction_lookup.insert(make_pair(0xFC, Instruction("JSR", 21, ALWAYS_USE_LABEL)));
+  m_instruction_lookup.insert(make_pair(0x5C, Instruction("JMP", 3)));
+  m_instruction_lookup.insert(make_pair(0xDC, Instruction("JML", 20)));
+  m_instruction_lookup.insert(make_pair(0x4C, Instruction("JMP", 2)));
+  m_instruction_lookup.insert(make_pair(0x6C, Instruction("JMP", 20)));
+  m_instruction_lookup.insert(make_pair(0x7C, Instruction("JMP", 21)));
+  m_instruction_lookup.insert(make_pair(0x22, Instruction("JSL", 3)));
+  m_instruction_lookup.insert(make_pair(0x20, Instruction("JSR", 2)));
+  m_instruction_lookup.insert(make_pair(0xFC, Instruction("JSR", 21)));
   m_instruction_lookup.insert(make_pair(0xA9, Instruction("LDA", 1)));
   m_instruction_lookup.insert(make_pair(0xAD, Instruction("LDA", 2)));
   m_instruction_lookup.insert(make_pair(0xAF, Instruction("LDA", 3)));
@@ -626,7 +749,7 @@ void Disassembler::initialize_instruction_lookup()
   m_instruction_lookup.insert(make_pair(0x2A, Instruction("ROL", 0)));
   m_instruction_lookup.insert(make_pair(0x36, Instruction("ROL", 8)));
   m_instruction_lookup.insert(make_pair(0x3E, Instruction("ROL", 9)));
-  m_instruction_lookup.insert(make_pair(0x6E, Instruction("ROR", 1)));
+  m_instruction_lookup.insert(make_pair(0x6E, Instruction("ROR", 2)));
   m_instruction_lookup.insert(make_pair(0x66, Instruction("ROR", 4)));
   m_instruction_lookup.insert(make_pair(0x6A, Instruction("ROR", 0)));
   m_instruction_lookup.insert(make_pair(0x76, Instruction("ROR", 8)));

@@ -36,6 +36,12 @@ void main (int argc, char *argv[])
             disasm.load_data(argv[i]);
         else if (current == "--sym" && ++i < argc)
             disasm.load_symbols(argv[i]);
+         else if (current == "--sym2" && ++i < argc)
+            disasm.load_symbols2(argv[i]);
+        else if (current == "--accum" && ++i < argc)
+            disasm.load_accum_bytes(argv[i], true);
+        else if (current == "--index" && ++i < argc)
+            disasm.load_accum_bytes(argv[i], false);
         else if (current == "--hirom")
             disasm.m_hirom = true;
     }

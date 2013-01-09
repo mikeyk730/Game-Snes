@@ -67,7 +67,7 @@ void main (int argc, char *argv[])
   //cout << hex << start << " to " << end << endl;
 
     ifstream in("data.txt");
-    doit(start, end, in);
+    do_command(start, end);
   
 }
 
@@ -128,10 +128,10 @@ void do_command(int start, int end, bool data)
     if (data)
         ss << " data";
 
-    if (test)
+    //if (test)
         cout << ss.str() << endl;
-    else
-        system(ss.str().c_str());
+    //else
+      //  system(ss.str().c_str());
 
 }
 
