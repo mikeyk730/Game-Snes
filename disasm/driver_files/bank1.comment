@@ -469,12 +469,12 @@
 0197A2 \ Set direction
 0197A4 /
 01FAC3 00 - Morton
-01FAC5 01 - Roy   
+01FAC5 01 - Roy
 01FAC7 02 - Ludwig
-01FAC9 03 - Iggy  
-01FACB 04 - Larry 
-01FACD 05 - Lemmy 
-01FACF 06 - Wendy 
+01FAC9 03 - Iggy
+01FACB 04 - Larry
+01FACD 05 - Lemmy
+01FACF 06 - Wendy
 018898 \ Process every 4 frames
 018899  |
 01889B  |
@@ -1175,21 +1175,21 @@
 018049 Return
 01804D Return
 01804a \ Set A to -A
-01804c / 
+01804c /
 018072 Return
 01808B Return
 018092 Reset carrying enemy flag
 0180CA Return
 0180D1 Return
 0180cb \ A = Current sprite is offscreen
-0180ce / 
+0180ce /
 0180d2 In all sprite routines, X = current sprite
 0180d4 $1692 = Current Sprite memory settings
-0180d7 \ 
+0180d7 \
 0180d8  |Add $07:F0B4,$1692 to sprite index.  i.e. minimum one tile allotted to each sprite
 0180dc  |the bytes read go straight to the OAM indexes
 0180dd  |
-0180e1 / 
+0180e1 /
 0180e2 Current sprite's OAM index
 0180e5 If  (something related to current sprite) is 0
 0180e8 do not decrement these counters
@@ -1234,7 +1234,7 @@
 018149 9 - Stationary (Carryable, flipped, stunned)
 01814B A - Kicked
 01814D B - Carried
-01814F C - Fleeing?
+01814F C - Power up from carrying a sprite past the goal tape
 018156 Return
 01816C Return
 018171 Return
@@ -1454,7 +1454,7 @@
 0183D9 Return
 0183DF Return
 0183da \ Set current sprite's "disable contact with other sprites" timer to x28
-0183dc / 
+0183dc /
 01841A Return
 018434 Return
 01843A Return
@@ -1741,23 +1741,23 @@
 018906 / branch to $8952
 01890f \ If sprites are locked,
 018911 / branch to $891F
-018916 \ 
+018916 \
 018919  |Increase sprite's image by x05
 01891a  |
-01891c / 
+01891c /
 018925 Sprite X Speed = 0
 018927 \ If sprite is on edge (on ground),
 01892A  |Sprite Y Speed = 0
-01892c / 
-018931 \ 
+01892c /
+018931 \
 018933  |If sprite isn't Blue shelless Koopa,
 018935 / branch to $893C
 018951 Return
-01895e \ 
+01895e \
 018960  |If sprite is Blue shelless Koopa,
 018962  |Set Y speed to xE0
 018964  |
-018966 / 
+018966 /
 0189BE Sprite X Speed = 0
 0189FC Return
 018A68 Return
@@ -2188,37 +2188,37 @@
 01AC2D  |
 01AC2F  |
 01AC31 /
-01AC33 \ if sprite is not off screen, return                                      
-01AC36 /                                                                          
-01AC38 \  vertical level                                   
-01AC3A |                                                                          
-01AC3C /                                                                          
-01AC3E \                                                                          
-01AC40 |                                                                          
-01AC41 | if the sprite has gone off the bottom of the level...                    
-01AC43 | (if adding 0x50 to the sprite y position would make the high byte >= 2)  
-01AC46 |                                                                          
-01AC48 |                                                                          
-01AC4A /    ...erase the sprite                                                   
-01AC4C \ if "process offscreen" flag is set, return                               
-01AC4F |                                                                          
-01AC51 /                                                                          
+01AC33 \ if sprite is not off screen, return                                   
+01AC36 /                                                                       
+01AC38 \  vertical level                                
+01AC3A |                                                                       
+01AC3C /                                                                       
+01AC3E \                                                                       
+01AC40 |                                                                       
+01AC41 | if the sprite has gone off the bottom of the level...                 
+01AC43 | (if adding 0x50 to the sprite y position would make the high byte >= 2)
+01AC46 |                                                                       
+01AC48 |                                                                       
+01AC4A /    ...erase the sprite                                                
+01AC4C \ if "process offscreen" flag is set, return                            
+01AC4F |                                                                       
+01AC51 /                                                                       
 01AC8E \ If sprite status < 8, permanently erase sprite
 01AC91  |
 01AC93 /
 01ACA1 Erase sprite
-01ACA5 \ If "process offscreen" flag is set, return               
-01ACA8 |                                                          
-01ACAA /                                                          
-01ACAC \                                                          
-01ACAE |                                                          
-01ACAF /                                                          
-01ACB1 \                                                          
-01ACB3  | If the sprite has gone off the side of the level...     
-01ACB5  |                                                         
-01ACB8  |                                                         
-01ACBA  |                                                         
-01ACBC /  ...erase the sprite     
+01ACA5 \ If "process offscreen" flag is set, return            
+01ACA8 |                                                       
+01ACAA /                                                       
+01ACAC \                                                       
+01ACAE |                                                       
+01ACAF /                                                       
+01ACB1 \                                                       
+01ACB3  | If the sprite has gone off the side of the level...  
+01ACB5  |                                                      
+01ACB8  |                                                      
+01ACBA  |                                                      
+01ACBC /  ...erase the sprite  
 01AD06 Return
 01AD2F Return
 01AD41 Return
@@ -2332,7 +2332,7 @@
 01C4FA Return
 01C50F Return
 01C538 \ Index created from...
-01C539  | ... powerup touched (upper 2 bits) 
+01C539  | ... powerup touched (upper 2 bits)
 01C53B  |
 01C53C  |
 01C53D  | ... Mario's status (lower 3 bits)
@@ -2340,7 +2340,7 @@
 01C540 \ Put appropriate item in item box
 01C543  |
 01C545 /
-01C548 \ 
+01C548 \
 01C54A / Play sound effect
 01C54D \ Call routine to change Mario's status
 01C550 /
@@ -2352,7 +2352,7 @@
 01C55E 5 - 1Up
 01C561 \ Set growing action
 01C563 /
-01C565 \ 
+01C565 \
 01C567  | Set animation timer
 01C56A / Set lock sprites timer
 01C56C JMP to next instruction?
@@ -2373,7 +2373,7 @@
 01C6A0 Return
 01C6A1 \ Setup flashing palette for star
 01C6A3  |
-01C6A5  | 
+01C6A5  |
 01C6A7  |
 01C6A8  |
 01C6AA  |
@@ -2684,20 +2684,296 @@
 01FFBE Return
 01abd8 Load current sprite's Y speed
 01abda If speed is 0, branch to $AC09
-01abdc \ 
+01abdc \
 01abdd  |Multiply speed by 16
 01abde  |
-01abdf / 
-01abe0 \ 
+01abdf /
+01abe0 \
 01abe1  |Increase (unknown sprite table) by that value
-01abe4 / 
+01abe4 /
 01abeb Load current sprite's Y speed
-01abed \ 
+01abed \
 01abee  |Multiply speed by 16
 01abef  |
-01abf0 / 
+01abf0 /
 01abfa \ Add value to current sprite's Y position
-01abfc / 
+01abfc /
 01d7b0 Sprites calling this routine must be modified
 01d7b1 to set $151C,x and $1528,x to a location in
 01d7b3 LineTable instead of $07/F9DB+something
+018153   | By changing the sprite's index into the level tables
+018450   | depending on initial X position
+018451   |
+018452   |
+018453   |
+018454   |
+018456  /
+018459  \ Store appropriate palette to RAM
+01845A   |
+01845D  /
+0189EE  \ Branch if Blue shelless
+0189F0   |
+0189F2  /
+018AB1  \ Return if Coin sprite
+018AB4   |
+018AB6  /
+018C30  \ Sprite = Spiny
+018C32  /
+018C34  Reset sprite tables
+018C68  \ Branch if not touching object
+018C6D  /
+018C68  \ If touching object,
+018C6D   |
+018C71  \ If flying left Green Koopa...
+018C73   |
+018C75   |
+018C77   | Update X position
+018C7A   |
+018C7C   | Y speed = #$FC or #$04,
+018C7F   | depending on 1570,x
+018C81   |
+018C83   |
+018C85   |
+018C87  / Update Y position
+018FF2  \ Store gfx properties into palette byte
+018FF5  /
+018FFE  \ Set X speed
+019001  /
+019003  \ Set Y speed
+019006  /
+019008  \ Update position
+01900B  /
+019011  Interact with Mario and sprites
+019310  Bug: Sprites can walk on sloping lava.  See lavafix.asm
+019330  \ Sprite status = ???
+019323  \ Branch if sprite == Yoshi
+019325   |
+019327  /
+019330  \ Sprite status = #$05 ???
+01938E  \ Return if sprite status == Killed
+019391   |
+019393  /
+019395  \ Return if sprite status == #$05
+019397  /
+019399  \ Return if sprite status == Carried
+01939B  /
+0193BF  \ Return if sprite status == Killed
+0193C2   |
+0193C4  /
+0193C6  \ Return if sprite status == #$05
+0193C8  /
+0193CA  \ Return if sprite status == Carried
+0193CC  /
+0197F0  \ If Goomba, Y += #$13
+0197F2   |
+0197F4   |
+0197F6   |
+0197F7   |
+0197F8   |
+0197FA  /
+019A09  \ Sprite Y speed = #$00 or #$18
+019A0B   | Depending on 15B8,x ???
+019A0E   |
+019A10   |
+019A12  /
+019A55  /
+019A57  Call generic gfx routine
+019A5D  \ Load tile based on timer
+019A60   |
+019A61   |
+019A62   |
+019A63   |
+019A65   |
+019A66   |
+019A67   |
+019A6A   /
+019A6B  Overwrite tile
+019A6E  \ Overwrite properties
+019A71   |
+019A73  /
+019B34  \ Branch if not Pipe Lakitu
+019B36  /
+019B34  \ If Pipe Lakitu,
+019B36   |
+019B44  \ Set to flip tiles vertically
+019B47   |
+019B49  /
+019B4C  \ If sprite is behind scenery,
+019B4E   |
+019B4F   |
+019B52   |
+019B54   | temorarily set layer priority for gfx routine
+019B56   |
+019B58   | Draw sprite
+019B5B   |
+019B5C  /
+019B6E  \ If sprite is behind scenery,
+019B70   |
+019B71   |
+019B74   |
+019B76   | temorarily set layer priority for gfx routine
+019B78   |
+019B7C   | Draw sprite
+019B7F   |
+019B80  /
+019F79  \ Branch if Yoshi going down pipe
+019F7C  /
+019F7E  \ Branch if Mario facing camera
+019F81  /
+01A169  \ If sprite status == Carried,
+01A16C   |
+01A16E   |
+01A170   | Sprite direction = Opposite direction of Mario
+01A172   |
+01A174  /
+01A25D  \ Branch if sprite status != Stunned
+01A260   |
+01A262  /
+01A28B  \ Clear sprite status
+01A28D  /
+01A397  \ Branch if sprite status == Stunned
+01A39A   |
+01A39C  /
+01A47B  Y = Sprite index
+01A4BA  \ Branch if sprite 2 status == Normal
+01A4BD   |
+01A4BF  /
+01A4C1  \ Branch if sprite 2 status == Carryable
+01A4C3  /
+01A4C5  \ Branch if sprite 2 status == Kicked
+01A4C7  /
+01A4C9  \ Branch if sprite 2 status == Carried
+01A4CB  /
+01A4CE  \ Branch if sprite status == Normal
+01A4D1   |
+01A4D3  /
+01A4D5  \ Branch if sprite status == Carryable
+01A4D7  /
+01A4D9  \ Branch if sprite status == Kicked
+01A4DB  /
+01A4DD  \ Branch if sprite status == Carried
+01A4DF  /
+01A4F2  \ Branch if sprite status == Normal
+01A4F5   |
+01A4F7  /
+01A4F9  \ Branch if sprite status == Carryable
+01A4FB  /
+01A4FD  \ Branch if sprite status == Kicked
+01A4FF  /
+01A501  \ Branch if sprite status == Carried
+01A503  /
+01A506  \ Branch if sprite status == Normal
+01A509   |
+01A50B  /
+01A50D  \ Branch if sprite status == Carryable
+01A50F  /
+01A511  \ Branch if sprite status == Kicked
+01A513  /
+01A515  \ Branch if sprite status == Carried
+01A517  /
+01A51A  \ Branch if sprite status == Normal
+01A51D   |
+01A51F  /
+01A521  \ Branch if sprite status == Carryable
+01A523  /
+01A527  /
+01A52B  /
+01A585  Y = Sprite index
+01A7C5  Y = Sprite index
+01AB1F  \ Set ground shake timer
+01AB21  /
+01AC82   |
+01AC84   | Sprite to respawn = MagiKoopa
+01AC86   |
+01AC89   | Set timer until respawn
+01AC8B  /
+01AC95  \ Branch if should permanently erase sprite
+01AC98   |
+01AC9A  /
+01AC9C  \ Allow sprite to be reloaded by level loading routine
+01AC9E  /
+01ACC8  \ Return if Green Net Koopa
+01ACCA   |
+01ACCC   |
+01ACCE   |
+01ACD0  /
+01AE28  \ Set to permanently erase sprite
+01AE2A  /
+01AF12  \ Set ground shake timer
+01AF14  /
+01AFCC  \ If touching ceiling,
+01AFCF   |
+01AFD1   | Y speed = #$10
+01AFD3  /
+01C089  \ Save extra bits into $187B,x
+01C08C  /
+01C08F  \ Clear extra bits out of position
+01C091  /
+01C0E7  \ $141C = #01 if Goal Tape triggers secret exit
+01C0EA   |
+01C0EB   |
+01C0EC  /
+01CC95   |
+01CC96   |
+01CC97   |
+01CC98   |
+01CC99   |
+01CC9A   |
+01CC9B   |
+01D28B  \ Set ground shake timer
+01D28D  /
+01D294  \ Lock Mario in place
+01D296  /
+01E732  \ If sprite num >= #$0F, tile = #$C7 (todo: is this used?)
+01E738  If #$04 <= sprite num < #$0F, tile = #$4D (todo: when is this used??)
+01E732  \ If sprite num >= #$0F, tile = #$C7 (is this used?)
+01E738  If #$04 <= sprite num < #$0F, tile = #$4D (Koopas)
+01E7D0  \ Set time until respawn
+01E7D2   |
+01E7D5   | Sprite to respawn = Lakitu
+01E7D7  /
+01EAA9  \ Branch if Mario X speed == 0
+01EAAB  /
+01EAAD  \ If Mario X speed is positive,
+01EAAF   | invert it
+01EAB1  /
+01EAB2  \ Y = Upper 4 bits of X speed
+01EAB3   |
+01EAB4   |
+01EAB5   |
+01EAB6  /
+01EABB  \ If time to change frame...
+01EABE   |
+01EAC0   | Set time to display new frame (based on Mario's X speed)
+01EAC3   |
+01EAC6   | Set index to new frame, $18AD = ($18AD-1) % 3
+01EAC9   |
+01EACB   |
+01EACD  /
+01EAD0  \ Y = frame to show
+01EAD3   |
+01EAD6  /
+01EBDC  \ Branch if normal Yoshi status
+01EBDF   |
+01EBE1  /
+01EBE3  Mario won't have Yoshi when returning to OW
+01EC45  \ Set image to appropriate frame
+01EC48  /
+01FF98  \ $14B4,$14B5 = Sprite X position + #$08
+01FF9A   |
+01FF9B   |
+01FF9D   |
+01FFA0   |
+01FFA3   |
+01FFA5  /
+01FFA8  \ $14B6,$14B7 = Sprite Y position + #$0F
+01FFAA   |
+01FFAB   |
+01FFAD   |
+01FFB0   |
+01FFB3   |
+01FFB5  /
+01A525  \ Branch if sprite status == Kicked
+01A529  \ Branch if sprite status == Carried
+01AC80  \ If MagiKoopa...
+01844E  \ $151C,x = Blue/Silver,

@@ -525,3 +525,21 @@
 05DBC8 Return
 05DC39 Return
 05DC45 Return
+05C9C6  \ Set ground shake timer 
+05C9C8  / 
+05D8C2  \ 
+05D8C7   |Load Layer 1 pointer into $65-$67 
+05D8CC   | 
+05D8D1  \ 
+05D8D6   |Load Layer 2 pointer into $68-$6A 
+05D8DB   | 
+05D8C2  \ 
+05D8C7   |Load Layer 1 pointer into $65-$67 
+05D8CC   | 
+05D8D1  \ 
+05D8D6   |Load Layer 2 pointer into $68-$6A 
+05D8DB   | 
+05D8EB  \ 
+05D8F0   | 
+05D8EB  \ 
+05D8F0   | 

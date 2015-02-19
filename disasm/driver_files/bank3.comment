@@ -439,37 +439,37 @@
 03B788  |
 03B789  |
 03B78B  |
-03B78E / 
+03B78E /
 03B790 \ set up loop:
-03B792  | 
+03B792  |
 03B795  | if not smushed (1662 & 0x20), go through loop twice
 03B797  | else, go through loop once
-03B799 /                       
-03B79A \                       
+03B799 /                    
+03B79A \                    
 03B79C  | set vertical offscree
-03B79D  |                      
-03B7A0  |                      
+03B79D  |                   
+03B7A0  |                   
 03B7A1  | (vert screen boundry)
-03B7A3  |                      
-03B7A5  |                      
-03B7A6  |                      
-03B7A9  |                      
-03B7AB  |                      
-03B7AD  |                      
-03B7AF  |                      
-03B7B1  | (vert offscreen)     
-03B7B4  |                      
-03B7B7  |                      
-03B7BA  |                      
-03B7BB /                       
-03B7BD get offset to sprite OAM                          
+03B7A3  |                   
+03B7A5  |                   
+03B7A6  |                   
+03B7A9  |                   
+03B7AB  |                   
+03B7AD  |                   
+03B7AF  |                   
+03B7B1  | (vert offscreen)  
+03B7B4  |                   
+03B7B7  |                   
+03B7BA  |                   
+03B7BB /                    
+03B7BD get offset to sprite OAM                       
 03B7C0 \
-03B7C2  |                                                    
-03B7C3  |                                                   
+03B7C2  |                                                 
+03B7C3  |                                                
 03B7C5 / $00 = sprite x position relative to screen boarder
-03B7C7 \                                                    
-03B7C9  |                                                    
-03B7CA  |                                                   
+03B7C7 \                                                 
+03B7C9  |                                                 
+03B7CA  |                                                
 03B7CC / $01 = sprite y position relative to screen boarder
 03B7CF \ Return from *main gfx routine* subroutine...
 03B7D0  |    ...(not just this subroutine)
@@ -821,194 +821,194 @@
 03DFC3 Return
 03E018 / Play sound effect
 03E05B Return
-039517 Draw Rex gfx							       
-03951A \ If Rex status != 8...						       
-03951D  |   ... not (killed with spin jump [4] or star [2])		       
-03951F /    ... return							       
-039521 \ If sprites locked...						       
-039523 /    ... return							       
-039525 \ If Rex not defeated (timer to show remains > 0)...		       
-039528 /    ... goto RexAlive						       
-03952A \ 								       
-03952D  |   If Rex remains don't disappear next frame...			       
-03952E /    ... return							       
+039517 Draw Rex gfx							    
+03951A \ If Rex status != 8...						    
+03951D  |   ... not (killed with spin jump [4] or star [2])		    
+03951F /    ... return							    
+039521 \ If sprites locked...						    
+039523 /    ... return							    
+039525 \ If Rex not defeated (timer to show remains > 0)...		    
+039528 /    ... goto RexAlive						    
+03952A \ 								    
+03952D  |   If Rex remains don't disappear next frame...			    
+03952E /    ... return							    
 039530 This is the last frame to show remains, so set Rex status = 0
-039534 Only process Rex while on screen		   
+039534 Only process Rex while on screen		
 039537 Increment number of frames Rex has been on sc
-03953A \ Calculate which frame to show:		   
-03953D  | 					   
-03953E  | 					   
-03953F  | Number of hits determines if smushed	   
-039541  |						   
-039543  | Update every 8 cycles if smushed	   
-039545  |						   
-039546  | Show smushed frame			   
-039548  |						   
-03954A  | 					   
-03954B  | Update every 16 cycles if normal	   
-03954D / Write frame to show			   
-039550 \  If sprite is not on ground...		   
-039553  |    ...(4 = on ground) ...		   
-039555 /     ...goto IN_AIR			   
-039557 \  Y speed = 10				   
-039559 /						   
-03955B Load, y = Rex direction, as index for speed  
-03955E \ If hits on Rex == 0...			   
-039560 /    ...goto DONT_ADJUST_SPEED		   
-039562 \ Increment y twice...			   
+03953A \ Calculate which frame to show:		
+03953D  | 					
+03953E  | 					
+03953F  | Number of hits determines if smushed	
+039541  |						
+039543  | Update every 8 cycles if smushed	
+039545  |						
+039546  | Show smushed frame			
+039548  |						
+03954A  | 					
+03954B  | Update every 16 cycles if normal	
+03954D / Write frame to show			
+039550 \  If sprite is not on ground...		
+039553  |    ...(4 = on ground) ...		
+039555 /     ...goto IN_AIR			
+039557 \  Y speed = 10				
+039559 /						
+03955B Load, y = Rex direction, as index for speed
+03955E \ If hits on Rex == 0...			
+039560 /    ...goto DONT_ADJUST_SPEED		
+039562 \ Increment y twice...			
 039563 /    ...in order to get speed for smushed Rex
-039564 \ Load x speed from ROM...		   
-039567 /    ...and store it			   
-039569 \ If time to show half-smushed Rex > 0...	   
-03956C /    ...goto HALF_SMUSHED			   
-03956E Update position based on speed values	   
+039564 \ Load x speed from ROM...		
+039567 /    ...and store it			
+039569 \ If time to show half-smushed Rex > 0...	
+03956C /    ...goto HALF_SMUSHED			
+03956E Update position based on speed values	
 039572 \ If Rex is touching the side of an object...
-039575  |					       
-039577  |					       
-039579  |					       
-03957C  |    ... change Rex direction	       
-03957E /					       
-039581 Interact with other sprites	       
+039575  |					    
+039577  |					    
+039579  |					    
+03957C  |    ... change Rex direction	    
+03957E /					    
+039581 Interact with other sprites	    
 039585 Check for mario/Rex contact
-039589 (carry set = mario/Rex contact)	       
-03958B \ If mario star timer > 0 ...	       
-03958E /    ... goto HAS_STAR		       
-039590 \ If Rex invincibility timer > 0 ...     
-039593 /    ... goto NO_CONTACT		       
-039595 \ Rex invincibility timer = $08	       
-039597 /					       
-03959A \  If mario's y speed < 10 ...	       
-03959C  |   ... Rex will hurt mario	       
-03959E /    				       
-0395A0 Give mario points			       
-0395A3 Set mario speed			       
-0395A7 Display contact graphic		       
-0395AB \  If mario is spin jumping...	       
-0395AE  |    ... or on yoshi ...		       
-0395B1 /     ... goto SPIN_KILL		       
-0395B3 Increment Rex hit counter		       
-0395B5 \  If Rex hit counter == 2	       
-0395B7  |   				       
-0395B9  |				       
+039589 (carry set = mario/Rex contact)	    
+03958B \ If mario star timer > 0 ...	    
+03958E /    ... goto HAS_STAR		    
+039590 \ If Rex invincibility timer > 0 ...  
+039593 /    ... goto NO_CONTACT		    
+039595 \ Rex invincibility timer = $08	    
+039597 /					    
+03959A \  If mario's y speed < 10 ...	    
+03959C  |   ... Rex will hurt mario	    
+03959E /    				    
+0395A0 Give mario points			    
+0395A3 Set mario speed			    
+0395A7 Display contact graphic		    
+0395AB \  If mario is spin jumping...	    
+0395AE  |    ... or on yoshi ...		    
+0395B1 /     ... goto SPIN_KILL		    
+0395B3 Increment Rex hit counter		    
+0395B5 \  If Rex hit counter == 2	    
+0395B7  |   				    
+0395B9  |				    
 0395BB  |    ... time to show defeated Rex = $20
 0395BD /
 0395C1 \ Time to show semi-squashed Rex = $0C
-0395C3 /					    
-0395C6 Change clipping area for squashed Rex 
-0395CA \ If mario is invincible...	 
-0395CD  |  ... or mario on yoshi...	 
-0395D0 /   ... return			 
-0395D2 \  Set new Rex direction		 
-0395D5  |  				 
-0395D6 /					 
-0395D9 Hurt mario			 
-0395DE \ Rex status = 4 (being killed by spin jump)  
-0395E0 /   					    
-0395E3 \ Set spin jump animation timer		    
-0395E5 /						    
-0395E8 Show star animation			    
+0395C3 /					 
+0395C6 Change clipping area for squashed Rex
+0395CA \ If mario is invincible...	
+0395CD  |  ... or mario on yoshi...	
+0395D0 /   ... return			
+0395D2 \  Set new Rex direction		
+0395D5  |  				
+0395D6 /					
+0395D9 Hurt mario			
+0395DE \ Rex status = 4 (being killed by spin jump)
+0395E0 /   					 
+0395E3 \ Set spin jump animation timer		 
+0395E5 /						 
+0395E8 Show star animation			 
 0395EC \
-0395F2 \ Rex status = 2 (being killed by star)			  
-0395F4 /								  
-0395F7 \ Set y speed						  
-0395F9 /								  
-0395FB Get new Rex direction					  
-0395FE \ Set x speed based on Rex direction			  
-039601 /								  
-039603 Increment number consecutive enemies killed		  
-039606 \								  
-039609  | If consecutive enemies stomped >= 8, reset to 8		  
-03960B  |								  
-03960D  |								  
-03960F /   							  
-039612 Give mario points						  
-039616 \ 							  
-039619  | If consecutive enemies stomped < 8 ...			  
-03961B  |								  
-03961D  |    ... play sound effect				  
+0395F2 \ Rex status = 2 (being killed by star)			
+0395F4 /								
+0395F7 \ Set y speed						
+0395F9 /								
+0395FB Get new Rex direction					
+0395FE \ Set x speed based on Rex direction			
+039601 /								
+039603 Increment number consecutive enemies killed		
+039606 \								
+039609  | If consecutive enemies stomped >= 8, reset to 8		
+03960B  |								
+03960D  |								
+03960F /   							
+039612 Give mario points						
+039616 \ 							
+039619  | If consecutive enemies stomped < 8 ...			
+03961B  |								
+03961D  |    ... play sound effect				
 039620 /	
-039623 Final return 
-039630 Increase consecutive enemies stomped		      
-039633  							    
-039634  							    
-039635 \ If consecutive enemies stomped >= 8 ...		      
-039637 /    ... don't play sound 			      
-039639 \ 
-03963F \							      
-039640  | If consecutive enemies stomped >= 8, reset to 8      
-039642  |						      
-039644 /							      
-039646 Give mario points					      
-03964A  							    
-03967E \ If time to show Rex remains > 0...							 
-039681  |												 
-039683  |    ...set Rex frame = 5 (fully squashed)						 
-039685 /												 
-039688 \ If time to show half smushed Rex > 0...							 
-03968B  |												 
-03968D  |    ...set Rex frame = 2 (half smushed)							 
-03968F /												 
+039623 Final return
+039630 Increase consecutive enemies stomped		   
+039633  							 
+039634  							 
+039635 \ If consecutive enemies stomped >= 8 ...		   
+039637 /    ... don't play sound 			   
+039639 \
+03963F \							   
+039640  | If consecutive enemies stomped >= 8, reset to 8   
+039642  |						   
+039644 /							   
+039646 Give mario points					   
+03964A  							 
+03967E \ If time to show Rex remains > 0...							
+039681  |												
+039683  |    ...set Rex frame = 5 (fully squashed)						
+039685 /												
+039688 \ If time to show half smushed Rex > 0...							
+03968B  |												
+03968D  |    ...set Rex frame = 2 (half smushed)							
+03968F /												
 039692 Y = index to sprite tile map, $00 = sprite x, $01 = sprite y
-039695 \												 
-039698  | $03 = index to frame start (frame to show * 2 tile per frame)				 
-039699 /												 
-03969B \ $02 = sprite direction									 
-03969E /												 
-0396A0 Push sprite index										 
-0396A1 Loop counter = (number of tiles per frame) - 1						 
-0396A3 Push current tile number									 
-0396A4 \ X = index to horizontal displacement							 
-0396A5 / get index of tile (index to first tile of frame + current tile number)			 
-0396A7 Push index of current tile								 
-0396A8 \ If facing right...									 
-0396AA  |												 
-0396AC  |    											 
-0396AD /    ...use row 2 of horizontal tile displacement table					 
-0396AF \ 											 
-0396B0  | Tile x position = sprite x location ($00) + tile displacement				 
-0396B2  |												 
-0396B3  |												 
-0396B6 /												 
-0396B9 \ Pull, X = index to vertical displacement and tilemap					 
-0396BA  | Tile y position = sprite y location ($01) + tile displacement				 
-0396BC  |												 
-0396BD  |												 
-0396C0 /												 
-0396C3 \ Store tile										 
-0396C6 / 											 
-0396C9 \												 
-0396CB  | Get tile properties using sprite direction						 
+039695 \												
+039698  | $03 = index to frame start (frame to show * 2 tile per frame)				
+039699 /												
+03969B \ $02 = sprite direction									
+03969E /												
+0396A0 Push sprite index										
+0396A1 Loop counter = (number of tiles per frame) - 1						
+0396A3 Push current tile number									
+0396A4 \ X = index to horizontal displacement							
+0396A5 / get index of tile (index to first tile of frame + current tile number)			
+0396A7 Push index of current tile								
+0396A8 \ If facing right...									
+0396AA  |												
+0396AC  |    											
+0396AD /    ...use row 2 of horizontal tile displacement table					
+0396AF \ 											
+0396B0  | Tile x position = sprite x location ($00) + tile displacement				
+0396B2  |												
+0396B3  |												
+0396B6 /												
+0396B9 \ Pull, X = index to vertical displacement and tilemap					
+0396BA  | Tile y position = sprite y location ($01) + tile displacement				
+0396BC  |												
+0396BD  |												
+0396C0 /												
+0396C3 \ Store tile										
+0396C6 / 											
+0396C9 \												
+0396CB  | Get tile properties using sprite direction						
 0396CE  | Level properties
-0396D0 / Store tile properties									 
-0396D3 \ Get index to sprite property map ($460)...						 
-0396D4  |    ...we use the sprite OAM index...							 
-0396D5  |    ...and divide by 4 because a 16x16 tile is 4 8x8 tiles				 
-0396D6  | If index of frame start is > 0A 							 
-0396D8  |												 
+0396D0 / Store tile properties									
+0396D3 \ Get index to sprite property map ($460)...						
+0396D4  |    ...we use the sprite OAM index...							
+0396D5  |    ...and divide by 4 because a 16x16 tile is 4 8x8 tiles				
+0396D6  | If index of frame start is > 0A 							
+0396D8  |												
 0396DA  |
-0396DB  |     ...show only an 8x8 tile			  
-0396DD  |							  
-0396DF  | Else show a full 16 x 16 tile			  
-0396E1 /							  
-0396E4 \ Pull, X = current tile of the frame we're drawing 
-0396E5  | Increase index to sprite tile map ($300)...	  
-0396E6  |    ...we wrote 4 times...			  
-0396E7  |    ...so increment 4 times			 
+0396DB  |     ...show only an 8x8 tile			
+0396DD  |							
+0396DF  | Else show a full 16 x 16 tile			
+0396E1 /							
+0396E4 \ Pull, X = current tile of the frame we're drawing
+0396E5  | Increase index to sprite tile map ($300)...	
+0396E6  |    ...we wrote 4 times...			
+0396E7  |    ...so increment 4 times			
 0396E8  |
-0396E9  | Go to next tile of frame and loop		  
-0396EA / 						  
-0396EC Pull, X = sprite index				  
-0396ED \ FF because we already wrote size to $0460    		  
-0396EF  | A = number of tiles drawn - 1			  
-0396F1 / Don't draw if offscreen				  
-03B8FB \ If sprite is on screen, A = 0 
+0396E9  | Go to next tile of frame and loop		
+0396EA / 						
+0396EC Pull, X = sprite index				
+0396ED \ FF because we already wrote size to $0460    		
+0396EF  | A = number of tiles drawn - 1			
+0396F1 / Don't draw if offscreen				
+03B8FB \ If sprite is on screen, A = 0
 03B8FE  |
-03B901 / Return 
+03B901 / Return
 039C34 \ Branch if sprite isn't "Invisible solid block"
 039C36  |
 039C38 /
 039C3A \ Call "Invisible solid block" routine
-039C3E / Return 
+039C3E / Return
 039CBA \ Set fire breathing timer
 039CBC /
 039CD3 \ If not facing mario, change directions
@@ -1022,119 +1022,119 @@
 039CE8  |
 039CE9  |
 039CEC /
-038770 Graphics routine		      
-038773 \ 			      
-038776  | If status != 8, return	      
-038778 /				      
-03877A Handle off screen situation     
+038770 Graphics routine		   
+038773 \ 			   
+038776  | If status != 8, return	   
+038778 /				   
+03877A Handle off screen situation  
 03877D \ Set x speed based on direction
-038780  |			      
-038783 /				      
-038785 \ If sprites locked, return     
-038787 /                               
+038780  |			   
+038783 /				   
+038785 \ If sprites locked, return  
+038787 /                            
 03878F Update position based on speed values
 038793 Interact with other sprites
-0387B2 \								  
-0387B5 | If Mega Mole is in contact with an object...		  
-0387B8 |								  
-0387BA |								  
+0387B2 \								
+0387B5 | If Mega Mole is in contact with an object...		
+0387B8 |								
+0387BA |								
 0387BC |    ... and timer hasn't been set (time until flip == 0)...
-0387BE |								  
-0387C0 |    ... set time until flip				  
-0387C2 /								  
-0387C5 \ Flip the temp direction status				  
-0387C8 |								  
-0387CA /								  
-0387CD \ If time until flip == 0...				  
-0387CF |								  
-0387D1 |    ...update the direction status used by the gfx routine 
-0387D4 /                                                           
+0387BE |								
+0387C0 |    ... set time until flip				
+0387C2 /								
+0387C5 \ Flip the temp direction status				
+0387C8 |								
+0387CA /								
+0387CD \ If time until flip == 0...				
+0387CF |								
+0387D1 |    ...update the direction status used by the gfx routine
+0387D4 /                                                        
 0387D7 Check for mario/Mega Mole contact
 0387DB (Carry set = contact)
-0387EA \ Set "on sprite" flag				    
-0387EC /							    
-0387EF \ Set riding Mega Mole				    
-0387F1 / 						    
-0387F4 Y speed = 0					    
-0387F6 \							    
+0387EA \ Set "on sprite" flag				 
+0387EC /							 
+0387EF \ Set riding Mega Mole				 
+0387F1 / 						 
+0387F4 Y speed = 0					 
+0387F6 \							 
 0387F8 | Mario's y position += C6 or D6 depending if on yoshi
-0387FB |							    
-0387FD |							    
-0387FF |							    
-038800 |							    
-038802 |							    
-038804 |							    
-038807 |							    
-038809 /							    
-03880B \ 						    
-03880D | $1491 == 01 or FF, depending on direction	    
-038810 | Set mario's new x position			    
-038812 |							    
-038813 |							    
-038814 |							    
-038816 |							    
-038818 |							    
-038819 |							    
-03881B  /							  
-03881E \ If riding Mega Mole...				    
-038821 |   ...or Mega Mole being eaten...		    
-038824 /   ...return					    
-038826 Hurt mario					    
-03882A Final return 
-038842 \ $02 = direction						     
-038845 / 							     
-038847 \ 							     
-038849 |								     
-03884A |								     
-03884B |								     
-03884C |								     
-03884D |								     
-038850 |								     
-038852 |								     
-038853 |								     
-038854 | $03 = index to frame start (0 or 4)			     
-038856 /								     
-038857 Run loop 4 times, cuz 4 tiles per frame			     
-038859 Push, current tile					     
-03885A \								     
-03885C | If facing right, index to frame end += 4		     
-03885E |								     
-03885F |								     
-038860 |								     
-038861 /								     
+0387FB |							 
+0387FD |							 
+0387FF |							 
+038800 |							 
+038802 |							 
+038804 |							 
+038807 |							 
+038809 /							 
+03880B \ 						 
+03880D | $1491 == 01 or FF, depending on direction	 
+038810 | Set mario's new x position			 
+038812 |							 
+038813 |							 
+038814 |							 
+038816 |							 
+038818 |							 
+038819 |							 
+03881B  /							
+03881E \ If riding Mega Mole...				 
+038821 |   ...or Mega Mole being eaten...		 
+038824 /   ...return					 
+038826 Hurt mario					 
+03882A Final return
+038842 \ $02 = direction						  
+038845 / 							  
+038847 \ 							  
+038849 |								  
+03884A |								  
+03884B |								  
+03884C |								  
+03884D |								  
+038850 |								  
+038852 |								  
+038853 |								  
+038854 | $03 = index to frame start (0 or 4)			  
+038856 /								  
+038857 Run loop 4 times, cuz 4 tiles per frame			  
+038859 Push, current tile					  
+03885A \								  
+03885C | If facing right, index to frame end += 4		  
+03885E |								  
+03885F |								  
+038860 |								  
+038861 /								  
 038862 \ Tile x position = sprite x location ($00) + tile displacement
-038864 |								     
-038865 |								     
-038868 /								     
-03886B \ Pull, X = index to frame end				     
-03886C |								     
+038864 |								  
+038865 |								  
+038868 /								  
+03886B \ Pull, X = index to frame end				  
+03886C |								  
 03886E | Tile y position = sprite y location ($01) + tile displacement
-03886F |						   
-038872 /						   
-038875 \ Set current tile			   
-038876 | X = index of frame start + current tile	   
-038877 |						   
-038878 |						   
-03887A |						   
-03887B |						   
-03887E /						   
-038881 Tile properties xyppccct, format		   
-038883 \ If direction == 0...			   
-038885 |						   
-038887 /    ...flip tile				   
-038889 Add in tile priority of level		   
-03888B Store tile properties			   
-03888E \ Pull, current tile			   
+03886F |						
+038872 /						
+038875 \ Set current tile			
+038876 | X = index of frame start + current tile	
+038877 |						
+038878 |						
+03887A |						
+03887B |						
+03887E /						
+038881 Tile properties xyppccct, format		
+038883 \ If direction == 0...			
+038885 |						
+038887 /    ...flip tile				
+038889 Add in tile priority of level		
+03888B Store tile properties			
+03888E \ Pull, current tile			
 03888F | Increase index to sprite tile map ($300)...
-038890 |    ...we wrote 4 bytes   
+038890 |    ...we wrote 4 bytes
 038891 |    ...so increment 4 times
-038892 |    
-038893 | Go to next tile of frame and loop	   
-038894 /                                            
-038896 Pull, X = sprite index			   
+038892 | 
+038893 | Go to next tile of frame and loop	
+038894 /                                         
+038896 Pull, X = sprite index			
 038897 \ Will write 02 to $0460 (all 16x16 tiles)
-038899 | A = number of tiles drawn - 1		   
-03889B / Don't draw if offscreen			   
+038899 | A = number of tiles drawn - 1		
+03889B / Don't draw if offscreen			
 03989F Break bridge when necessary
 0398A3 \ Set radius for Reznor sign rotation
 0398A5  |
@@ -1168,27 +1168,27 @@
 0398FB  |
 0398FD  | Set time to trigger level if all Reznors are dead
 0398FF /
-039906 \ Zero out 170B table 
+039906 \ Zero out 170B table
 039908  |
 03990A  |
 03990D  |
 03990E /
-03991A \ Load Y with Reznor number (0-3)				 
-03991B  |							 
-03991D /								 
-03991E \								 
-039920  |							 
-039921  |							 
-039924  | $01,00 = 0-1FF, position Reznors on the circle		 
-039926  |							 
-039928  |							 
-03992B  |							 
-03992D /								 
-03992F \   Index (16 bit) Accum (16 bit) 
+03991A \ Load Y with Reznor number (0-3)				
+03991B  |							
+03991D /								
+03991E \								
+039920  |							
+039921  |							
+039924  | $01,00 = 0-1FF, position Reznors on the circle		
+039926  |							
+039928  |							
+03992B  |							
+03992D /								
+03992F \   Index (16 bit) Accum (16 bit)
 039931  | Make Reznors turn clockwise rather than counter clockwise
-039933  | ($01,00 = -1 * $01,00)					 							 
-039936  |							 
-039937 /                                                          
+039933  | ($01,00 = -1 * $01,00)					 							
+039936  |							
+039937 /                                                       
 0399A4 X = sprite index
 0399E9 \ If a Reznor is dead, make it's platform standable
 0399EC  |
@@ -1202,129 +1202,129 @@
 039A0D /
 039A19 Firing
 039A1C Turning
-039A21 \ if direction has changed since last frame...		  
-039A24  |							  
-039A25  |							  
-039A28  |							  
-039A29  |							  
-039A2C  |							  
-039A2D  |							  
-039A30  |							  
-039A32  | ...set time to show turning graphic = 0A		  
-039A34 /								  
-039A37 \ If disable interaction timer > 0, just draw Reznor	  
-039A3A /								  
-039A3C \ Interact with mario					  
-039A40 / If no contact, just draw Reznor				  
-039A42 \ Disable interaction timer = 08				  
+039A21 \ if direction has changed since last frame...		
+039A24  |							
+039A25  |							
+039A28  |							
+039A29  |							
+039A2C  |							
+039A2D  |							
+039A30  |							
+039A32  | ...set time to show turning graphic = 0A		
+039A34 /								
+039A37 \ If disable interaction timer > 0, just draw Reznor	
+039A3A /								
+039A3C \ Interact with mario					
+039A40 / If no contact, just draw Reznor				
+039A42 \ Disable interaction timer = 08				
 039A44 / (eg. after hitting Reznor, or getting bounced by platform)
-039A47 \ Compare y positions to see if mario hit Reznor		  
-039A49  |							  
-039A4A  |							  
-039A4C  |							  
-039A4E /								  
-039A50 \ See if mario hit side of the platform			  
-039A52  |							  
-039A54  |							  
-039A56 /								  
+039A47 \ Compare y positions to see if mario hit Reznor		
+039A49  |							
+039A4A  |							
+039A4C  |							
+039A4E /								
+039A50 \ See if mario hit side of the platform			
+039A52  |							
+039A54  |							
+039A56 /								
 039A58 ??Something about boosting mario on platform??
-039A5A  								  
-039A5D \ Time to bounce platform = 0F				  
-039A5F /								  
-039A62 \ Set mario's y speed to rebound down off platform	  
-039A64 /								  
+039A5A  								
+039A5D \ Time to bounce platform = 0F				
+039A5F /								
+039A62 \ Set mario's y speed to rebound down off platform	
+039A64 /								
 039A66 \
-039A6D \ Set mario to bounce back				  
-039A70  | (hit side of platform?)				  
-039A73  |							  
-039A75 /                                                           
+039A6D \ Set mario to bounce back				
+039A70  | (hit side of platform?)				
+039A73  |							
+039A75 /                                                        
 039A77 Hurt Mario
 039A7B Set normal image
 039A90 \ Set turning image
 039A92 /
-039A95 \ Shoot fire if "time to show firing image" == 20	       
-039A98  |						       
+039A95 \ Shoot fire if "time to show firing image" == 20	    
+039A98  |						    
 039A9A  | (shows image for 20 frames after the fireball is shot)
-039A9C  |						       
-039A9E /							       
-039AA1 \ Set firing image				       
-039AA3 /							       
-039AA6 Draw Reznor                                              
-039AAD \ If sprites locked, or mario already killed the Reznor on the platform, return		  
-039AAF  |											  
-039AB2 /												  
-039AB4 \ If time to bounce platform != 0C, return						  
-039AB7  | (causes delay between start of boucing platform and killing Reznor)			  
-039AB9 /												  
+039A9C  |						    
+039A9E /							    
+039AA1 \ Set firing image				    
+039AA3 /							    
+039AA6 Draw Reznor                                           
+039AAD \ If sprites locked, or mario already killed the Reznor on the platform, return		
+039AAF  |											
+039AB2 /												
+039AB4 \ If time to bounce platform != 0C, return						
+039AB7  | (causes delay between start of boucing platform and killing Reznor)			
+039AB9 /												
 039ABB \
-039AC0 Prevent from throwing fire after death							  
-039AC3 Record a hit on Reznor									  
-039AC6 \ Load Y with a free sprite index for dead Reznor						  
-039ACA / Return if no free index									  
-039ACC \ Set status to being killed								  
-039ACE /												  
-039AD1 \ Sprite to use for dead Reznor								  
-039AD3 /												  
-039AD6 \ Transfer x position to dead Reznor							  
-039AD8  |											  
-039ADB  |											  
-039ADE /												  
-039AE1 \ Transfer y position to dead Reznor							  
-039AE3  |											  
-039AE6  |											  
-039AE9 /												  
-039AEC \ 											  
-039AED  | Before: X must have index of sprite being generated					  
+039AC0 Prevent from throwing fire after death							
+039AC3 Record a hit on Reznor									
+039AC6 \ Load Y with a free sprite index for dead Reznor						
+039ACA / Return if no free index									
+039ACC \ Set status to being killed								
+039ACE /												
+039AD1 \ Sprite to use for dead Reznor								
+039AD3 /												
+039AD6 \ Transfer x position to dead Reznor							
+039AD8  |											
+039ADB  |											
+039ADE /												
+039AE1 \ Transfer y position to dead Reznor							
+039AE3  |											
+039AE6  |											
+039AE9 /												
+039AEC \ 											
+039AED  | Before: X must have index of sprite being generated					
 039AEE /  Routine clears all old sprite values and loads in new values for the 6 main sprite tables
-039AF2 \ Set y speed for Reznor's bounce off the platform					  
-039AF4 /												  
-039AF6 pull, X = sprite index                                                                      
+039AF2 \ Set y speed for Reznor's bounce off the platform					
+039AF4 /												
+039AF6 pull, X = sprite index                                                                   
 039AF8 \ find a free extended sprite slot, return if all full
-039B02 / Return 
+039B02 / Return
 039B03 \
 039B08 \ Extended sprite = fireball
 039B0A /
-039B75 \ if the reznor is dead, only draw the platform			 
-039B78 /									 
+039B75 \ if the reznor is dead, only draw the platform			
+039B78 /									
 039B7A after: Y = index to sprite tile map, $00 = sprite x, $01 = sprite y
-039B7D \ $03 = index to frame start (frame to show * 4 tiles per frame)	 
-039B80  | 								 
-039B81  |								 
-039B82 /									 
-039B84 \ $02 = direction index						 
-039B87  |								 
-039B88  |								 
-039B89 /                                                                  
-039BB1 \ set tile					 
-039BB4 /							 
-039BB7 \ set palette/properties				 
-039BBA  | if turning, don't flip				 
-039BBC  | 						 
-039BBE  | if direction = 0, don't flip			 
-039BC0  |						 
-039BC2  |						 
-039BC4 /							 
+039B7D \ $03 = index to frame start (frame to show * 4 tiles per frame)	
+039B80  | 								
+039B81  |								
+039B82 /									
+039B84 \ $02 = direction index						
+039B87  |								
+039B88  |								
+039B89 /                                                               
+039BB1 \ set tile					
+039BB4 /							
+039BB7 \ set palette/properties				
+039BBA  | if turning, don't flip				
+039BBC  | 						
+039BBE  | if direction = 0, don't flip			
+039BC0  |						
+039BC2  |						
+039BC4 /							
 039BC7 \ pull, X = current tile of the frame we're drawing
-039BC8  | Increase index to sprite tile map ($300)...	 
-039BC9  |    ...we wrote 4 bytes...			 
-039BCA  |    ...so increment 4 times			 
-039BCB  |    						 
-039BCC  | Go to next tile of frame and loop		 
-039BCD / 						 
-039BCF \							 
-039BD0  | Y = 02 (All 16x16 tiles)			 
-039BD2  | A = number of tiles drawn - 1			 
-039BD4 / Don't draw if offscreen                          
-039C19 \ Tile of reznor platform...    
-039C1B  | ...store left side	      
-039C1E /  ...store right side	      
-039C21 \ Palette of reznor platform... 
-039C23  |			      
-039C26  | ...flip right side	      
-039C28 /				      
-039C2B \				      
+039BC8  | Increase index to sprite tile map ($300)...	
+039BC9  |    ...we wrote 4 bytes...			
+039BCA  |    ...so increment 4 times			
+039BCB  |    						
+039BCC  | Go to next tile of frame and loop		
+039BCD / 						
+039BCF \							
+039BD0  | Y = 02 (All 16x16 tiles)			
+039BD2  | A = number of tiles drawn - 1			
+039BD4 / Don't draw if offscreen                       
+039C19 \ Tile of reznor platform... 
+039C1B  | ...store left side	   
+039C1E /  ...store right side	   
+039C21 \ Palette of reznor platform...
+039C23  |			   
+039C26  | ...flip right side	   
+039C28 /				   
+039C2B \				   
 039C2D  | A = number of tiles drawn - 1
-039C2F / Don't draw if offscreen       
+039C2F / Don't draw if offscreen    
 03C34C Draw sprite uing the routine for sprites <= 53
 03C350 \ Return if sprites locked			
 03C352 /						
@@ -1333,7 +1333,7 @@
 03C358 /						
 03C35B Only process while onscreen			
 03C35E Interact with mario				
-03C362 Update position based on speed values      
+03C362 Update position based on speed values   
 03C11E \ If sprites locked...
 03C120  | ...or battle is over (set to FF when over)...
 03C123 / ...return
@@ -1400,4 +1400,48 @@
 03C36D Sprite Y Speed = 0
 03C8E2 Sprite Y Speed = 0
 03CE22 Sprite Y Speed = 0
-
+03870F  \
+038712   | Allow sprite to be reloaded by level loading routine
+038714  /
+038AE4  \ Sprite = Bowser Statue Fireball
+038AE6  /
+038B08  \ Reset sprite tables
+038B09   |
+038B0D  /
+03A6E7  \ Time to show cloud of smoke = #$1F
+03A6E9  /
+03AB99  \ Set ground shake timer
+03AB9B  /
+03B1A8  \ Set ground shake timer
+03B1AA  /
+03B8B3  \ Branch if should permanently erase sprite
+03B8B6   |
+03B8B8  /
+03B8BA  \ Allow sprite to be reloaded by level loading routine
+03B8BC  /
+03C369   |
+03C36B  /
+03C369   | Bug: Ninji can jump through ceiling.  See NinjiFix.asm
+03C36B  /       Should set Y Speed = 0 if ($1588,x & #$08)
+03C852  / Play sound effect
+03C858  / Play sound effect
+03C84F  \ Play sound effect
+03C852  /
+03C855  \ Play sound effect
+03C858  /
+03C899  / Play sound effect
+03C89F  / Play sound effect
+03C896  \ Play sound effect
+03C899  /
+03C89C  \ Play sound effect
+03C89F  /
+03DDA4  \ $00 = Pointer in bank 0 (from above tables)
+03DDA7   |
+03DDA9   |
+03DDAC   |
+03DDAE  /
+03DDB0  \ Read 0B bytes and put them in $0707
+03DDB2   |
+03DDB4   |
+03DDB7   |
+03DDB8  /

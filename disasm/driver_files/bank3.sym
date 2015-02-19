@@ -128,25 +128,5 @@
 0394CF WoodSpikeGfx
 0394E1 WoodSpikeGfxLoopSt
 039465 SetTimerNextState
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+03B72B CheckForContact
+03A6C8 KillMostSprites

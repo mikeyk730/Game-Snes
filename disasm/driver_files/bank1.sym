@@ -333,4 +333,8 @@
 01E700 SmushedGfxRt
 019B13 HandleSpriteDeath
 01C358 DrawBerryGfx
-
+01B7BB FinishOAMWriteRt
+01AF54 ThwompGfx
+01B7B3 FinishOAMWrite
+01CC94 DoNothing
+01EE61 HandleOffYoshi

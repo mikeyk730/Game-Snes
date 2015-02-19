@@ -116,9 +116,4 @@
 00C592 Return00C592
 00CC68 ResetAni
 00CE08 ScrollScreen
-
-
-
-
-
-
+00CA31 SetMarioPeaceImg

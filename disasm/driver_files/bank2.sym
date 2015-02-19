@@ -128,12 +128,31 @@
 02A9EF FindFreeSlotRt
 02A9E4 FindFreeSprSlot
 02D1F3 SetTreeTile
-
-
-
-
-
-
-
-
-
+0286BF YoshiStompRoutine
+028086 ExplodeBombRt
+02808A ExplodeBombSubRt
+0280A5 ExplodeBombGfx
+028139 ExplodeSprites
+02813B ExplodeLoopStart
+028150 ExplodeKillSpr
+02ADA4 ScoreSprGfx
+02A7FC LoadSprFromLevel
+0291B8 InvisSldFromBncSpr
+029076 TurnBlockSpr
+0291F8 BounceSprGfx
+0291BA TileFromBounceSpr1
+0290DE BounceBlockSpr
+02A8DD LoadNormalSprite
+02AB78 LoadShooter
+02A82E LoadSpriteLoopStrt
+02AF9D Load5Eeries
+02A846 LoadNextSprite
+02A86A LoadScrollSprite
+02AF33 Load3Platforms
+02A8B4 InitGenerator
+02DE3E SumoBroGfx
+02DD8F GenSumoLightning
+02E00B VolcanoLotusGfx
+02E3AA GasBubbleGfx
+02E57E MushroomScaleGfx
+02E8BA GrowingPipeGfx

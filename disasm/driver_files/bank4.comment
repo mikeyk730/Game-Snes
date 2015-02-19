@@ -316,3 +316,16 @@
 04FF2D Return
 04FF66 Return
 04FFB0 Return
+048244  \ If player 1 pushes select... 
+048246   | 
+048249   | ...disabled by BRA 
+04824B  / Change to BEQ to enable debug code below 
+048383  Look around overworld 
+0485A9  \ Mario X postion = #$001E 
+0485AC   | (On overworld boarder) 
+0485AD   | 
+0485AF  / 
+0485B1  \ Mario Y postion = #$0006 
+0485B4   | (On overworld boarder) 
+0485B5   | 
+0485B7  / 

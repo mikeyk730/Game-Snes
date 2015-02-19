@@ -484,21 +484,21 @@
 02D2BC  |
 02D2BF /
 02D2C3 $1491 = amount sprite was moved
-02B00C 00 - Eerie, generator                         
-02B00E 01 - Para-Goomba, generator                   
-02B010 02 - Para-Bomb, generator                     
-02B012 03 - Para-Bomb and Para-Goomba, generator     
-02B014 04 - Dolphin, left, generator                 
-02B016 05 - Dolphin, right, generator                
-02B018 06 - Jumping fish, generator                  
-02B01A 07 - Turn off generator 2 (sprite E5)         
-02B01C 08 - Super Koopa, generator                   
+02B00C 00 - Eerie, generator                       
+02B00E 01 - Para-Goomba, generator                 
+02B010 02 - Para-Bomb, generator                   
+02B012 03 - Para-Bomb and Para-Goomba, generator   
+02B014 04 - Dolphin, left, generator               
+02B016 05 - Dolphin, right, generator              
+02B018 06 - Jumping fish, generator                
+02B01A 07 - Turn off generator 2 (sprite E5)       
+02B01C 08 - Super Koopa, generator                 
 02B01E 09 - Bubble with Goomba and Bob-omb, generator
-02B020 0A - Bullet Bill, generator                   
-02B022 0B - Bullet Bill surrounded, generator        
-02B024 0C - Bullet Bill diagonal, generator          
-02B026 0D - Bowser statue fire breath, generator     
-02B028 0E - Turn off standard generators             
+02B020 0A - Bullet Bill, generator                 
+02B022 0B - Bullet Bill surrounded, generator      
+02B024 0C - Bullet Bill diagonal, generator        
+02B026 0D - Bowser statue fire breath, generator   
+02B028 0E - Turn off standard generators           
 02B3B0 00 - Bullet Bill shooter
 02B3B2 01 - Torpedo Ted launcher
 02B3B4 02 - Unused
@@ -541,23 +541,23 @@
 02DAE5 /
 029B2B 00 - Empty slot
 029B2D 01 - Puff of smoke
-029B2F 02 - Reznor fireball                            
-029B31 03 - Tiny flame left by hopping flame           
-029B33 04 - Hammer                                     
+029B2F 02 - Reznor fireball                          
+029B31 03 - Tiny flame left by hopping flame         
+029B33 04 - Hammer                                   
 029B35 05 - Mario fireball
 029B37 06 - Bone
 029B39 07 - Lava splash
-029B3B 08 - Torpedo Ted shooter's arm                  
+029B3B 08 - Torpedo Ted shooter's arm                
 029B3D 09 - Unused (Red thing that flickers from 16x16 to 8x8)
-029B3F 0A - Coin from cloud game 
-029B41 0B - Piranha fireball                           
+029B3F 0A - Coin from cloud game
+029B41 0B - Piranha fireball                         
 029B43 0C - Volcano lotus fire
-029B45 0D - Baseball                                   
+029B45 0D - Baseball                                 
 029B47 0E - Flower of Wiggler
-029B49 0F - Trail of smoke                             
-029B4B 10 - Spin Jump stars                             
+029B49 0F - Trail of smoke                           
+029B4B 10 - Spin Jump stars                           
 029B4D 11 - Yoshi fireballs
-029B4F 12 - Water bubble                               
+029B4F 12 - Water bubble                             
 028534 \ Find a free extended sprite slot
 028536  |
 028539  |
@@ -959,7 +959,7 @@
 028758 \ Increase points
 028773 Deflect Mario downward
 028779 Actually break the block
-02877D Handle sprite/block interaction 
+02877D Handle sprite/block interaction
 028780 \ Replace block with "nothing" tile
 028782  |
 028784 /
@@ -1534,33 +1534,33 @@
 02FFD0 Return
 02FFE1 Return
 02867F \
-02B466 \ Return if it's not time to generate			       
-02B469 /								       
-02B46B \ Set time till next generation = 60			       
-02B46D /								       
-02B470 \ Don't generate if off screen vertically			       
-02B473  |							       
-02B475  |							       
-02B478  |							       
-02B47A /								       
-02B47C \ Don't generate if off screen horizontally		       
-02B47F  |							       
-02B481  |							       
-02B484  |							       
-02B486 / 							       
-02B488 \ ?? something else related to x position of generator??	       
-02B48B  | 							       
-02B48C  |							       
-02B48E  |							       
-02B48F  |							       
-02B491  |							       
-02B493 /								       
-02B495 \ Don't fire if mario is next to generator		       
-02B497  |							       
-02B49A  |							       
-02B49B  |							       
-02B49D  |							       
-02B49F /								       
+02B466 \ Return if it's not time to generate			     
+02B469 /								     
+02B46B \ Set time till next generation = 60			     
+02B46D /								     
+02B470 \ Don't generate if off screen vertically			     
+02B473  |							     
+02B475  |							     
+02B478  |							     
+02B47A /								     
+02B47C \ Don't generate if off screen horizontally		     
+02B47F  |							     
+02B481  |							     
+02B484  |							     
+02B486 / 							     
+02B488 \ ?? something else related to x position of generator??	     
+02B48B  | 							     
+02B48C  |							     
+02B48E  |							     
+02B48F  |							     
+02B491  |							     
+02B493 /								     
+02B495 \ Don't fire if mario is next to generator		     
+02B497  |							     
+02B49A  |							     
+02B49B  |							     
+02B49D  |							     
+02B49F /								     
 02B4A1 \ Get an index to an unused sprite slot, return if all slots full
 02B4A5 / After: Y has index of sprite being generated		
 02B4A7 \ 							
@@ -1584,32 +1584,32 @@
 02B4D4  | Routine clears *all* old sprite values...		
 02B4D5  | ...and loads in new values for the 6 main sprite tables
 02B4D9 / 							
-02B4DA Display smoke graphic                                     
+02B4DA Display smoke graphic                                   
 02B4DE \ Find a free slot to display effect
 02B4E0  |
 02B4E3  |
 02B4E5  |
 02B4E6  |
 02B4E8 / Return if no slots open
-02B4EB \ Set effect graphic to smoke graphic		 
-02B4ED /							 
-02B4F0 \ Smoke y position = generator y position		 
-02B4F3 /							 
-02B4F6 \ Set time to show smoke				 
-02B4F8 /							 
-02B4FB \ Load generator x position and store it for later 
-02B4FE /							 
+02B4EB \ Set effect graphic to smoke graphic		
+02B4ED /							
+02B4F0 \ Smoke y position = generator y position		
+02B4F3 /							
+02B4F6 \ Set time to show smoke				
+02B4F8 /							
+02B4FB \ Load generator x position and store it for later
+02B4FE /							
 02B4FF \ Determine which side of the generator mario is on
-02B501  |						 
-02B504  |						 
-02B506  |						 
-02B509  |						 
-02B50B  |						 
-02B50D /							 
-02B50E \ Set smoke x position from generator position	 
-02B50F  |						 
-02B510  |						 
-02B513 /  
+02B501  |						
+02B504  |						
+02B506  |						
+02B509  |						
+02B50B  |						
+02B50D /							
+02B50E \ Set smoke x position from generator position	
+02B50F  |						
+02B510  |						
+02B513 /
 02808A Make sprite unstompable
 02808D \ Set new clipping area for explosion
 02808F /
@@ -1750,3 +1750,241 @@
 02B6AB  |
 02B6AE / Return
 02B6AE Return
+02813E   |
+028140   |
+028141   | Skip sprite if it's already dying/dead
+028144   |
+028146   |
+028148   | Check for contact
+02814B   |
+02814C   | Next
+02814D  /
+028151  \ Return if no sprite contact
+028152   |
+028156   |
+028157   |
+02815B   |
+02815F  /
+028161  \ Return if sprite is invincible
+028164   | to explosions
+028166  /
+02816D  \ Sprite Y speed = #$C0
+02816F  /
+028172  \ Sprite X speed = #$00
+028174  /
+02840F  \ Set ground shake timer
+028411  /
+02858F  \ If Big Mario:
+028591   | Y = #$1F
+028593   | X = #$00
+028595   | Small Mario:
+028597   | Y = #$0F
+028599  / X = #$10
+02882A  \
+02882D  Set block bounce sprite type
+02882A  \ Set block bounce sprite type
+02882D  /
+028B20  \ Return if timer not set
+028B23  /
+028B25  \ Decrement every other frame...
+028B27   |
+028B29   | ...as long as sprites not locked...
+028B2E   |
+028B30  /
+028B33  Return if the timer hasn't just run out
+028B41  \ Sprite = Sprite to respwan
+028B44  /
+028B61  Reset sprite tables
+029056  \ Decrement bounce sprite timer if > 0
+029078  /
+02907A  \ Initialize only once
+02907D   | (Generate invisible tile sprite)
+02907F   |
+029082  /
+0291BA  /
+029191  \ Toggle On/Off
+029194   |
+029196  /
+0291A2   |
+0291A4   |
+0291A6   |
+0291A8  / Block to generate = Bounce sprite block to turn into
+0291B4  Block to generate = Used block
+0291BC  \ Block Y position = Bounce sprite Y position
+0291BF   |
+0291C0   | (Rounded to nearest #$10)
+0291C2   |
+0291C4   |
+0291C6   |
+0291C9   |
+0291CB  /
+0291CD  \ Block X position = Bounce sprite X position
+0291D0   |
+0291D1   | (Rounded to nearest #$10)
+0291D3   |
+0291D5   |
+0291D7   |
+0291DA   |
+0291DC  /
+029AD7   $99E3 puts #$00 into $17D0 and returns
+029AD7  Puts #$00 into $17D0 and returns
+029BE4  \ Set ground shake timer
+029BE6  /
+02A7FE   |
+02A800  /
+02A804  \ Branch if horizontal level
+02A806   |
+02A807  /
+02A809  \ Vertical level:
+02A80B   | $00,$01 = Screen boundary Y + offset
+02A80C   |
+02A80F   |
+02A811   |
+02A813   |
+02A815  /
+02A817  \ Horizontal level:
+02A819   | $00,$01 = Screen boundary X + offset
+02A81A   |
+02A81D   |
+02A81F   |
+02A821   |
+02A823   |
+02A826   |
+02A828  /
+02A82A  X = #$00 (Number of sprite in level)
+02A82C  Y = #$01 (Index into level data)
+02A830  \ Return when we encounter $FF, as it signals the end
+02A832  /
+02A834  \ If 's' is set, $02 = #$10
+02A835   | Else, $02 = #$00
+02A836   |
+02A837   |
+02A839  /
+02A83B  Next byte
+02A83C  Byte format: XXXXSSSS
+02A83E  \ Skip all sprites until we find one at the adjusted screen boundary:
+02A840   |
+02A842   | If sprite screen (sSSSS) < adjusted screen boundary...
+02A844  / ...skip the sprite
+02A847   |
+02A848   |
+02A849  /
+02A84C  Return if sprite screen > adjusted screen boundary
+02A84E  Byte format: XXXXSSSS
+02A850  \ Skip sprite if not right at the screen boundary
+02A852   |
+02A854  /
+02A856  \ This table has a flag for every sprite in the level (not just those onscreen)
+02A859  / Skip sprite if it's already been loaded/permanently killed
+02A85B  $02 = Number of sprite in level
+02A85D  Mark sprite as loaded
+02A860  Next byte
+02A861  Byte format: Sprite number
+02A863  $05 = Sprite number
+02A865  Previous byte
+02A866  \ Branch if sprite number < #$E7
+02A868  /
+02A874  \ $143E = Type of scroll sprite
+02A876   | (Sprite number - #$E7)
+02A877   |
+02A879  /
+02A87C  Previous byte
+02A87D  Byte format: YYYYEEsy
+02A88C  \ Branch if sprite number != 5 Eeries
+02A88E  /
+02A89C  \ Branch if sprite number != 3 Platforms on Chain
+02A89E  /
+02A8AC  \ Branch if sprite number < #$CB
+02A8AE  /
+02A8B0  \ Branch if sprite number >= #$DA
+02A8B2  /
+02A8B5   | (Sprite number - #$CA)
+02A8B7   |
+02A8B8  /
+02A8BB  Allow sprite to be reloaded by level loading routine
+02A8C0  \ Branch if sprite number < #$E1
+02A8C2  /
+02A8D4  \ Branch if sprite number < #$C9
+02A8D6  /
+02A8DF  / Eventually goes into sprite status
+02A8E1  Previous byte
+02A973  \ Sprite status = Killed by spin jump
+02A938  Allow sprite to be reloaded by level loading routine
+02A93E  \ Branch if horizontal level
+02A940   |
+02A941  /
+02A943  \ Vertical level:
+02A945   | Same as below with X and Y coords swapped
+02A946   |
+02A948   |
+02A94A   |
+02A94B   |
+02A94D   |
+02A950   |
+02A952   |
+02A954   |
+02A956   |
+02A959  /
+02A95B  Byte format: YYYYEEsy
+02A95D  \ Bits 11110000 are low byte of Y position
+02A95E   |
+02A960  /
+02A962  \ Bits 00001101 are high byte of Y position
+02A963   | (Extra bits are stored in Y position)
+02A965  /
+02A968  \ X position = adjusted screen boundary
+02A96A   |
+02A96C   |
+02A96E  /
+02A973  \ Sprite status = ??
+02A999  \ $161A,x = index of the sprite in the level
+02A99B  / (Number of sprites in level, not just onscreen)
+02A9C9  Reset sprite tables
+02A9CD  \ Set off screen horizontally
+02A9CF  /
+02A9D2  \ ?? $1FE2,X = #$04
+02A9D4  /
+02A9E0   |
+02A9E2  /
+02AB99  \ Allow sprite to be reloaded by level loading routine
+02AB9B  /
+02ABF4  Allow sprite to be reloaded by level loading routine
+02AC00  \ Set to permanently erase sprite
+02AC02  /
+02AED6  \ Maxed out at #$0E makes 3up the limit
+02AED8  /
+02AEDC  Bug: only 2up/3up supported.  See 5up-fix.asm
+02AFBB  \ Sprite = Wave Eerie
+02AFBD  /
+02B02E  Don't respawn any sprites
+02C0DC  \ Return if sprite is offscreen
+02C0DF   |
+02C0E2  /
+02D081  \ Branch if should permanently erase sprite
+02D084   |
+02D086  /
+02D088  \ Allow sprite to be reloaded by level loading routine
+02D08A  /
+02D46F  \ Set ground shake timer
+02D471  /
+02DD5F  \ Set ground shake timer
+02DD61  /
+02DD8F  \ Return if no free slots
+02DD95  \ Sprite = Lightning
+02DD97  /
+02DD9F  \ Lightning X position = Sprite X position + #$04
+02DDA1   |
+02DDA3   |
+02DDA6   |
+02DDA9   |
+02DDAB  /
+02DDAE  \ Lightning Y position = Sprite Y position
+02DDB0   |
+02DDB3   |
+02DDB6  /
+02DDBA  \ Reset sprite tables
+02DDBB  /
+02DDBF  \ $1FE2,x = #$10
+02DDC1  / Time to not interact with ground??
+02F283  Bug: Value should capped at #$08 to prevent wiggler 1up/score glitch.  See wigglerfix.asm
+02FAE9  Allow sprite to be reloaded by level loading routine
