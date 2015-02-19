@@ -25,7 +25,7 @@ public:
     void doDisasm();
     void doSmart();
 
-    void doType(const Instruction& instr, bool is_data = false);
+    void doType(const Instruction& instr, bool is_data, unsigned char default_bank);
     void setProcessFlags();
 
     std::string getRAMComment(unsigned char low, unsigned char high);

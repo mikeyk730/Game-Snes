@@ -176,7 +176,7 @@ void Disassembler::doDisasm()
                 if (!m_request_prop.m_quiet) cout << to_string(code, 2) << " ";
             }
 
-            doType(instr);
+            doType(instr, false, bank);
 
             if (m_request_prop.m_stop_at_rts &&
                 (instr.name() == "RTS" || instr.name() == "RTI" || instr.name() == "RTL"))
@@ -364,7 +364,9 @@ void Disassembler::load_data(char *fname, bool is_ptr_data)
                 cout << "couldn't read pointer size in: " << line << endl;
                 exit(-1);
             }
-            m_ptr_bank_lookup.insert(make_pair(index, ptr_bank));
+            for (int i = 0; i < size; i += flag_byte){
+                m_ptr_bank_lookup.insert(make_pair(index+i, ptr_bank));
+            }
         }
 
         memset(&m_data[index], flag_byte, size);
@@ -580,29 +582,36 @@ void Disassembler::doPtr(bool long_ptrs)
             if (!m_request_prop.m_quiet) cout << "   ";
         }
 
+        unsigned char default_bank = bank;
+        unsigned int index = (bank * BANK_SIZE + pc - 0x08000);
+        auto it = m_ptr_bank_lookup.find(index);
+        if (it != m_ptr_bank_lookup.end()){
+            default_bank = it->second;
+        }
+
         if(long_ptrs)
-            doType(m_instruction_lookup[0x101], true);
+            doType(m_instruction_lookup[0x101], true, default_bank);
         else
-            doType(m_instruction_lookup[0x100], true);
+            doType(m_instruction_lookup[0x100], true, default_bank);
        
     }
 }
 
  
-void Disassembler::doType(const Instruction& instr, bool is_data)
+void Disassembler::doType(const Instruction& instr, bool is_data, unsigned char default_bank)
 {
     int high = 0, low = 0;
 
     char buff1[80];
     char buff2[80];
 
-    unsigned char& bank = m_current_bank;
+    unsigned char& bank = default_bank; // m_current_bank;
     unsigned int& pc = m_current_addr;
     bool& accum16 = m_request_prop.m_accum_16;
     bool& index16 = m_request_prop.m_index_16;
 
     unsigned char t = instr.addressMode();
-    unsigned char i, j, k;
+    unsigned char i, j, k, oldk;
     long ll;
     unsigned char h;
     char r;
@@ -779,11 +788,19 @@ void Disassembler::doType(const Instruction& instr, bool is_data)
         /* $xxxx, .db :$xxxx */ 
         if (printInstructionBytes()) 
             printf("%.2X %.2X %.2X ", i, j, k);
+        oldk = k;
+        if (k == 0xFF) k = default_bank;
         msg = get_label(instr, k, j * 256 + i, offset);
         if (msg == "")
             sprintf(buff1, "$%.2X%.2X%.2X .db :$%.2X%.2X%.2X", k, j, i, k, j, i);
-        else 
-            sprintf(buff1, "%s .db :$%s", msg.c_str(), msg.c_str());  
+        else {
+            if (oldk == 0xFF){
+                sprintf(buff1, "%s .db $%.2X", msg.c_str(), oldk);
+            }
+            else{
+                sprintf(buff1, "%s .db :$%s", msg.c_str(), msg.c_str());
+            }
+        }
         strcat(buff2, buff1); 
         pc += 3; 
         break;
