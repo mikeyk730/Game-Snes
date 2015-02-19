@@ -1,7 +1,6 @@
 
 
 
-
 008000 ResetStart
 008079 SPC700UploadLoop
 0080E7 Return0080E7
@@ -29,7 +28,6 @@
 008474 Return008474
 0084C7 Return0084C7
 0084CF Return0084CF
-0084d0 ImagePointers
 0085d2 LoadScrnImage
 0085F9 Return0085F9
 008650 ControllerUpdate
@@ -180,8 +178,6 @@
 00b983 ReadByte
 00B991 Return00B991
 00BA4C Return00BA4C
-00bea8 LoadBlkTable1
-00beac LoadBlkTable2
 00BEB0 GenerateTile
 00BFBB Return00BFBB
 00C062 Return00C062
@@ -1235,6 +1231,7 @@
 0290CD Return0290CD
 0290DE BounceBlockSpr
 02919C Return02919C
+02919F TileFromBounceSpr0
 0291B8 InvisSldFromBncSpr
 0291BA TileFromBounceSpr1
 0291EC Return0291EC
@@ -2210,6 +2207,7 @@
 048430 Return048430
 04853A Return04853A
 048575 Return048575
+0485A4 DrawOWBoarder?
 04862D Return04862D
 048788 Return048788
 0487CA Return0487CA

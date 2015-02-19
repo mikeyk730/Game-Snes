@@ -18,7 +18,6 @@
 008246 NMINotSpecialLv
 008375 IRQStart
 008449 DoSomeSpriteDMA
-0084d0 ImagePointers
 0085d2 LoadScrnImage
 008650 ControllerUpdate
 0086DF ExecutePtr
@@ -73,8 +72,6 @@
 00aced LoadCol8Pal
 00acff LoadColors
 00b983 ReadByte
-00bea8 LoadBlkTable1
-00beac LoadBlkTable2
 00cede MarioAnimAir
 00cfc3 MarioAnimNoAbs1
 00d030 MarioAnimNo45

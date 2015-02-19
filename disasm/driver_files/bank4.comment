@@ -1,3 +1,28 @@
+0480B8 Return
+0480DF Return
+0480E0 \
+0480E2  |If lower 3 bits of frame counter isn't 0,
+0480E4 / don't update the water animation
+048101 \
+048103  |If lower 3 bits of frame counter isn't 0,
+048105 / don't update the waterfall animation
+04810C \
+04810E  |If lower 3 bits of frame counter isn't 0,
+048110 / branch to $8123
+048171 Return
+04819E Return
+048244  \ If player 1 pushes select...
+048244  \ If player 1 pushes select...
+048244 \ If player 1 pushes select...
+048246   |
+048246   |
+048246  |
+048249   | ...disabled by BRA
+048249   | ...disabled by BRA
+048249  | ...disabled by BRA
+04824B  / Change to BEQ to enable debug code below
+04824B  / Change to BEQ to enable debug code below
+04824B / Change to BEQ to enable debug code below
 04824D \ Unreachable
 048250  | Debug: Change Yoshi color
 048251  |
@@ -8,72 +33,106 @@
 04825A  |
 04825C  |
 04825E /
-049136 Change to BEQ to enable below debug code
-049138 \ Unreachable
-04913B  | Debug: Warp to star road from Yoshi's house
-04913D  |
-04913F /
-049E9B \ Unreachable
-049EA6 / Return
-0480e0 \
-0480e2  |If lower 3 bits of frame counter isn't 0,
-0480e4 / don't update the water animation
-048101 \
-048103  |If lower 3 bits of frame counter isn't 0,
-048105 / don't update the waterfall animation
-04810c \
-04810e  |If lower 3 bits of frame counter isn't 0,
-048110 / branch to $8123
-04826a \ If "! blocks flying away color" is 0,
-04826d / don't play the animation
+04826A \ If "! blocks flying away color" is 0,
+04826D / don't play the animation
 048275 \ If not showing Continue/End message,
 048278 / branch to $8281
-0482f8 \
-0482f9  |
-0482fa  |Makes you wonder what used to be here...
-0482fb  |
-0482fc  |
-0482fd /
+0482F8 \
+0482F9  |
+0482FA  |Makes you wonder what used to be here...
+0482FB  |
+0482FC  |
+0482FD /
+048383  Look around overworld
+048383  Look around overworld
+048383 Look around overworld
+0483CE / Play sound effect
+0483D3 / Change music
+048405 / Play sound effect
+048414 Return
+048430 Return
 048509 \ Get current player's submap
-04850c /
-04850f Store it in $01
+04850C /
+04850F Store it in $01
 048511 Store x00 in $00
 048513 16 bit A
 048515 Set X to Current character*4
 048518 Set Y to x34
 048535 Store Y in "Warp destination"
 048538 8 bit A
-04853a Return
+04853A Return
+04853A Return
+048575 Return
+0485A9  \ Mario X postion = #$001E
+0485A9  \ Mario X postion = #$001E
+0485A9 \ Mario X postion = #$001E
+0485AC   | (On overworld boarder)
+0485AC   | (On overworld boarder)
+0485AC  | (On overworld boarder)
+0485AD   |
+0485AD   |
+0485AD  |
+0485AF  /
+0485AF  /
+0485AF /
+0485B1  \ Mario Y postion = #$0006
+0485B1  \ Mario Y postion = #$0006
+0485B1 \ Mario Y postion = #$0006
+0485B4   | (On overworld boarder)
+0485B4   | (On overworld boarder)
+0485B4  | (On overworld boarder)
+0485B5   |
+0485B5   |
+0485B5  |
+0485B7  /
+0485B7  /
+0485B7 /
+04862D Return
 048630 \ Get current player's X position
 048633 /
 048636 \ Subtract x1A
 048637 /
 048639 \ If A >= x100,
-04863c / branch to $864D
-04863e \ Store in $00 and $08
+04863C / branch to $864D
+04863E \ Store in $00 and $08
 048640 /
+048788 Return
+0487CA Return
+0489DD Return
+048D73 Return
+048E44 / Change music
+048E48 Return
+048FE8 Return
+049036 Return
+049057 Return
+049136 Change to BEQ to enable below debug code
+049138 \ Unreachable
+04913B  | Debug: Warp to star road from Yoshi's house
+04913D  |
+04913F /
 049141 \
 049143  |If L and R aren't pressed,
 049145  |branch to OWPU_NoLR
 049147 /
 049149 \
-04914c  |If Mario is standing on Destroyed Castle,
-04914e / branch to OWPU_EnterLevel
+04914C  |If Mario is standing on Destroyed Castle,
+04914E / branch to OWPU_EnterLevel
 049150 \
 049152  |If A, B, X or Y are pressed,
 049154  |branch to OWPU_ABXY
 049156  |Otherwise,
 049158 / branch to $91E9
-04915e \
+04915E \
 049161  |If not standing on a star tile,
 049163 / branch to OWPU_NotOnStar
-04916a Set "Fly away" speed to 0
-04916d Set "Stay on ground" timer to 0 (31 = Fly away)
+04916A Set "Fly away" speed to 0
+04916D Set "Stay on ground" timer to 0 (31 = Fly away)
 049170 \ Star Road sound effect
 049172 /
+049172 / Play sound effect
 049175 \ Activate star warp
 049177 /
-04917d \
+04917D \
 049180  |If standing on Pipe#1 (unused),
 049182 / branch to OWPU_IsOnPipe
 049184 \ If not standing on Pipe#2,
@@ -81,52 +140,54 @@
 049190 Set auto-walk to 0
 049193 \ Fade to overworld
 049195 /
+049198 Return
 049199 \
-04919b  |If standing on a tile >= (?) Destroyed Castle,
-04919d / branch to $91E9
-04919f \
-0491a2  |If current player is Luigi,
-0491a3  |change Luigi's animation in the following lines
-0491a5 /
-0491a6 \
-0491a8  |
-0491ab  |If Mario isn't swimming, use "raise hand" animation
-0491ad  |Otherwise, use "raise hand, swimming" animation
-0491af  |
-0491b1  |
-0491b2 /
-0491b5 Get current character
-0491b8 \ Get character's coins
-0491bb /
-0491be \ Get character's lives
-0491c1 /
-0491c4 \ Get character's powerup
-0491c7 /
-0491c9 \
-0491cc  |Get character's Yoshi color
-0491cf  |
-0491d2 /
-0491d5 \ Get character's reserved item
-0491d8 /
-0491db \ Related to fade speed
-0491dd /
-0491e0 \ Music fade out
-0491e2 /
-0491e5 Fade to level
-0491e8 Return
-0491e9 16 bit A
-0491eb Get current character * 4
-0491ee Get character's X coordinate
-0491f1 \
-0491f2  |Divide X coordinate by 16
-0491f3  |
-0491f4 /
-0491f5 \ Store in $00 and $1F1F,x
-0491f7 /
-0491fa Get character's Y coordinate
-0491fd \
-0491fe  |Divide Y coordinate by 16
-0491ff  |
+04919B  |If standing on a tile >= (?) Destroyed Castle,
+04919D / branch to $91E9
+04919F \
+0491A2  |If current player is Luigi,
+0491A3  |change Luigi's animation in the following lines
+0491A5 /
+0491A6 \
+0491A8  |
+0491AB  |If Mario isn't swimming, use "raise hand" animation
+0491AD  |Otherwise, use "raise hand, swimming" animation
+0491AF  |
+0491B1  |
+0491B2 /
+0491B5 Get current character
+0491B8 \ Get character's coins
+0491BB /
+0491BE \ Get character's lives
+0491C1 /
+0491C4 \ Get character's powerup
+0491C7 /
+0491C9 \
+0491CC  |Get character's Yoshi color
+0491CF  |
+0491D2 /
+0491D5 \ Get character's reserved item
+0491D8 /
+0491DB \ Related to fade speed
+0491DD /
+0491E0 \ Music fade out
+0491E2 / 
+0491E5 Fade to level
+0491E8 Return
+0491E8 Return
+0491E9 16 bit A
+0491EB Get current character * 4
+0491EE Get character's X coordinate
+0491F1 \
+0491F2  |Divide X coordinate by 16
+0491F3  |
+0491F4 /
+0491F5 \ Store in $00 and $1F1F,x
+0491F7 /
+0491FA Get character's Y coordinate
+0491FD \
+0491FE  |Divide Y coordinate by 16
+0491FF  |
 049200 /
 049201 \ Store in $02 and $1F21,x
 049203 /
@@ -134,42 +195,45 @@
 049207  |Divide (current character * 4) by 4
 049208  |
 049209 /
-04920a Calculate current tile pos
-04920d 8 bit A
-04920f \ If auto-walk=0,
+04920A Calculate current tile pos
+04920D 8 bit A
+04920F \ If auto-walk=0,
 049212 / branch to OWPU_NotAutoWalk
-04921c 16 bit A,X,Y
-04921e X = tile pos
+04921C 16 bit A,X,Y
+04921E X = tile pos
 049220 \ Get level number of current tile pos
 049224 /
-04925a 8 bit A,X,Y
-04925c Set auto-walk to 0
-04925f \
+04925A 8 bit A,X,Y
+04925C Set auto-walk to 0
+04925F \
 049261  |If no dir button is pressed (one frame),
 049263 / branch to $926E
 049265 \
 049268  |If standing on Pipe#2,
-04926a  |branch to $92AD
-04926c / Otherwise, branch to $928C
-04926e \ Decrease "Face walking dir" timer
+04926A  |branch to $92AD
+04926C / Otherwise, branch to $928C
+04926E \ Decrease "Face walking dir" timer
 049271 / If >= 0, branch to $9287
 049273 Set "Face walking dir" timer to 0
 049276 \
 049279  |Set X to current character * 2
-04927a  |
-04927c /
-04927d \
+04927A  |
+04927C /
+04927D \
 049280  |Set current character's animation to "facing down"
 049282  |or "facing down in water", depending on if character
 049284 / is in water or not.
-0495d7 \ Load OW tile number
-0495db /
-0495de Set "Current OW tile"
+049467 Return
+0495D7 \ Load OW tile number
+0495DB /
+0495DE Set "Current OW tile"
+0496A2 / Play sound effect
+049884 Return
 049885 Get overworld X pos/16 (X)
 049887 \
-04988a  |
-04988c  |
-04988e  |
+04988A  |
+04988C  |
+04988E  |
 049891  |Set tile pos to ((X&0xF)+((X&0x10)<<4))
 049892  |
 049893  |
@@ -177,59 +241,27 @@
 049895  |
 049897 /
 049899 Get overworld Y pos/16 (Y)
-04989b \
-04989c  |
-04989d  |Increase tile pos by ((Y<<4)&0xFF)
-04989e  |
-04989f  |
-0498a2  |
-0498a4 /
-0498a6 \
-0498a8  |
-0498ab  |If (Y&0x10) isn't 0,
-0498ad  |increase tile pos by x200
-0498af  |
-0498b0  |
-0498b3 /
-0498b5 \
-0498b8  |
-0498bb  |If on submap,
-0498bd  |Increase tile pos by x400
-0498bf  |
-0498c0  |
-0498c3 /
-0483D3 / Change music
-048E44 / Change music
-0491E2 / Change music
-04DBFB / Change music
-0480B8 Return
-0480DF Return
-048171 Return
-04819E Return
-0483CE / Play sound effect
-0483D3 / Play sound effect
-048405 / Play sound effect
-048414 Return
-048430 Return
-04853A Return
-048575 Return
-04862D Return
-048788 Return
-0487CA Return
-0489DD Return
-048D73 Return
-048E44 / Play sound effect
-048E48 Return
-048FE8 Return
-049036 Return
-049057 Return
-049172 / Play sound effect
-049198 Return
-0491E2 / Play sound effect
-0491E8 Return
-049467 Return
-0496A2 / Play sound effect
-049884 Return
+04989B \
+04989C  |
+04989D  |Increase tile pos by ((Y<<4)&0xFF)
+04989E  |
+04989F  |
+0498A2  |
+0498A4 /
+0498A6 \
+0498A8  |
+0498AB  |If (Y&0x10) isn't 0,
+0498AD  |increase tile pos by x200
+0498AF  |
+0498B0  |
+0498B3 /
+0498B5 \
+0498B8  |
+0498BB  |If on submap,
+0498BD  |Increase tile pos by x400
+0498BF  |
+0498C0  |
+0498C3 /
 0498C5 Return
 0498FA Return
 049963 Return
@@ -241,6 +273,13 @@
 049E4B Return
 049E51 Return
 049E95 Return
+049E9B \ Unreachable
+049E9D  | While A >= #$0A...
+049E9F  |
+049EA1  | A -= #$0A
+049EA3  | Y++
+049EA4 /
+049EA6 / Return
 049EA6 Return
 04D76F Return
 04D7F1 Return
@@ -250,6 +289,7 @@
 04DAEE Return
 04DB9C Return
 04DBC7 Return
+04DBFB / Change music
 04DBFB / Play sound effect
 04DC01 Return
 04DC69 Return
@@ -302,30 +342,59 @@
 04F9A7 Return
 04FA7A / Play sound effect
 04FA82 Return
+04FAF4 NOP this and the sprite doesn't appear
+04FAF7 NOP this and the sprite stops animating.
+04FAFA Tile for pirahna plant, #1
+04FB00 Tile for pirahna plant, #2, stored in $0242
+04FB02 YXPPCCCT - 00110010
+04FB0A Tilemap
+04FB0E Property
+04FB17 X Position
+04FB21 Y Position
 04FB36 Return
+04FB37 \Overworld Sprite X Speed
+04FB39 /
+04FB3C \Overworld Sprite Y Speed
+04FB3E /
+04FB41 Move the overworld cloud
 04FB84 Return
 04FC1D Return
 04FCE0 Return
+04FCE1 Bowser's sign code starts here.
+04FCE4 \How many tiles to show up for Bowser's sign
+04FCE6 /
+04FCF9 Jump to CLC, then the OAM part of the Pirahna Plant code.
 04FD09 Return
 04FD6F Return
 04FE5A Return
 04FE61 Return
 04FE8F Return
+04FE90 Transfer X to A
+04FE91 Clear Carry Flag
+04FE92 Add #$20 to A
+04FE94 Transfer A to X
+04FE98 Load OW Sprite XPos Low
+04FE9B If it is => 80
+04FE9D Store 00 OW Sprite Xpos Low
+04FEA0 Transfer X to A
+04FEA1 Set Carry Flag...
+04FEA2 ...for substraction
+04FEA4 Transfer A to X
+04FEAB Load OW Sprite X Speed
+04FEAE Multiply it by 2
+04FEAF 4...
+04FEB0 8...
+04FEB1 16...
+04FEB2 Clear Carry Flag
+04FEB6 And store it in
+04FEB9 Load OW Sprite X Speed
+04FEBD Divide by 2
+04FEBE 4
+04FEBF 8
+04FEC0 16
+04FEC1 Load $00 in Y
 04FED6 Return
 04FEEE Return
 04FF2D Return
 04FF66 Return
 04FFB0 Return
-048244  \ If player 1 pushes select... 
-048246   | 
-048249   | ...disabled by BRA 
-04824B  / Change to BEQ to enable debug code below 
-048383  Look around overworld 
-0485A9  \ Mario X postion = #$001E 
-0485AC   | (On overworld boarder) 
-0485AD   | 
-0485AF  / 
-0485B1  \ Mario Y postion = #$0006 
-0485B4   | (On overworld boarder) 
-0485B5   | 
-0485B7  / 
