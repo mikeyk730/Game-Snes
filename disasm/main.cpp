@@ -44,7 +44,9 @@ void main (int argc, char *argv[])
             disasm.load_symbols2(argv[i]);
         else if (current == "--comment" && ++i < argc)
             disasm.load_comments(argv[i]);
-        else if (current == "--accum" && ++i < argc)
+		else if (current == "--offsets" && ++i < argc)
+			disasm.load_offsets(argv[i]);
+		else if (current == "--accum" && ++i < argc)
             disasm.load_accum_bytes(argv[i], true);
         else if (current == "--index" && ++i < argc)
             disasm.load_accum_bytes(argv[i], false);
@@ -54,6 +56,8 @@ void main (int argc, char *argv[])
             disasm.passes(2);
 
     }
+
+    cout << "Ready to disassemble..." << endl;
 
     while(1){
 

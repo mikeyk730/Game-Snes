@@ -167,7 +167,7 @@ void Disassembler::doDisasm()
             //adjust pc address
             fix_address(bank,pc);
 
-            string label = get_label(Instruction("",0,LINE_LABEL), bank, pc);
+            string label = get_label(Instruction("",0,LINE_LABEL), bank, pc, 0);
             if (label != "") label += ":";
             
             if (finalPass()){
@@ -252,6 +252,32 @@ void Disassembler::load_comments(char* fname)
     cerr << "; Reading comments... done." << endl;
 }
 
+void Disassembler::load_offsets(char* fname)
+{
+    fstream in(fname);
+    string line;
+    while (getline(in, line)){
+        if (is_comment(line)) continue;
+
+        string label;
+
+        istringstream ss(line);
+        int hex_addr;
+        if (!(ss >> hex >> hex_addr)) continue;
+
+        int offset = 1;
+        if (!(ss >> dec >> offset)){
+            cout << "couldn't read offset size in: " << line << endl;
+            exit(-1);
+        }
+
+        auto result = m_load_offsets.insert(make_pair(hex_addr, offset));
+        if (!result.second){
+            cerr << "failed to add load offset >" << line << "<" << endl;
+        }
+    }
+}
+
 
 void Disassembler::load_symbols(char *fname, bool ram)
 {
@@ -332,9 +358,13 @@ void Disassembler::load_data(char *fname, bool is_ptr_data)
         }
 
         int flag_byte = 1;
-        if (is_ptr_data && !(line_stream >> flag_byte)){
-            cout << "couldn't read pointer size in: " << line << endl;
-            exit(-1);
+        if (is_ptr_data){
+            int ptr_bank;
+            if (!(line_stream >> flag_byte >> hex >> ptr_bank)){
+                cout << "couldn't read pointer size in: " << line << endl;
+                exit(-1);
+            }
+            m_ptr_bank_lookup.insert(make_pair(index, ptr_bank));
         }
 
         memset(&m_data[index], flag_byte, size);
@@ -365,11 +395,13 @@ bool Disassembler::add_label(int bank, int pc, const string& label, bool used)
     return true;
 }
 
-string Disassembler::get_label(const Instruction& instr, unsigned char bank, int pc)
+string Disassembler::get_label(const Instruction& instr, unsigned char bank, int pc, int offset)
 {
+    pc -= offset;
     if (pc < 0x8000 && bank != 0x7f) bank = 0x7e;
     int key = full_address(bank,pc);
 
+    // does the symbol lie outside of the range we are disassembling?
     bool is_extern = (key < m_start || key > m_end);
     if(is_extern && !m_request_prop.m_use_extern_symbols)
         return "";
@@ -403,6 +435,16 @@ string Disassembler::get_label(const Instruction& instr, unsigned char bank, int
     
     if (label.size() > 0 && finalPass() && is_extern)
         m_unresolved_symbol_lookup.insert(make_pair(key, label));
+
+    if (offset != 0){
+        stringstream ss;
+        ss << label;
+        if (offset > 0){
+            ss << "+";
+        }
+        ss << offset;
+        label = ss.str();
+    }
 
     return label;
 }
@@ -469,7 +511,7 @@ void Disassembler::doDcb(int bytes_per_line)
     string comment;
     for(int i=0; bank * 65536 + pc < end_bank * 65536 + pc_end; ++i){
         int output_flag = (m_request_prop.m_print_data_addr) ? 0 : NO_ADDR_LABEL;
-        string label = get_label(Instruction("",0,LINE_LABEL | output_flag), bank, pc);
+        string label = get_label(Instruction("",0,LINE_LABEL | output_flag), bank, pc, 0);
 
         if (label != "") label += ":";
 
@@ -529,7 +571,7 @@ void Disassembler::doPtr(bool long_ptrs)
         fix_address(bank,pc);
 
         int output_flag = (m_request_prop.m_print_data_addr) ? 0 : NO_ADDR_LABEL;
-        string label = get_label(Instruction("",0,LINE_LABEL | output_flag), bank, pc);
+        string label = get_label(Instruction("",0,LINE_LABEL | output_flag), bank, pc, 0);
         if (label != "") label += ":";
 
         if (finalPass()){
@@ -568,8 +610,16 @@ void Disassembler::doType(const Instruction& instr, bool is_data)
 
     setProcessFlags();
     string comment = get_comment(bank, pc);
+
+    int offset = 0;
+    int full_addr = (bank << 16) + pc;
+    auto load_offset = m_load_offsets.find(full_addr);
+    if (load_offset != m_load_offsets.end()){
+        offset = load_offset->second;
+    }
+
     if (!is_data) ++pc;
-    sprintf(buff2, "%s ", getInstructionName(instr).c_str()); 
+    sprintf(buff2, "%s ", getInstructionName(instr).c_str());
 
     switch (t)
     {
@@ -589,86 +639,86 @@ void Disassembler::doType(const Instruction& instr, bool is_data)
         break;
     case 2 : i = read_char(srcfile); j = read_char(srcfile);
         /* $xxxx */  if (printInstructionBytes()) printf("%.2X %.2X    ",i,j);
-        msg = get_label(instr, bank, j * 256 + i); 
+        msg = get_label(instr, bank, j * 256 + i, offset);
         if (msg == "") sprintf(buff1, "$%.2X%.2X", j, i); 
         else sprintf(buff1, "%s",msg.c_str());
         strcat(buff2, buff1);
         pc += 2; high = j; low = i; break;
     case 3 : i = read_char(srcfile); j = read_char(srcfile); k = read_char(srcfile);
         /* $xxxxxx */ if (printInstructionBytes()) printf("%.2X %.2X %.2X ", i, j, k);
-        msg = get_label(instr, k, j * 256 + i); if (msg == "")
+        msg = get_label(instr, k, j * 256 + i, offset); if (msg == "")
             sprintf(buff1, "$%.2X%.2X%.2X", k, j, i);
         else sprintf(buff1, "%s", msg.c_str());  strcat(buff2, buff1); 
         pc += 3; break;
     case 4 : i = read_char(srcfile); if (printInstructionBytes()) printf("%.2X       ", i);
-        /* $xx */    msg = get_label(instr, bank, i); if (msg == "")
+        /* $xx */    msg = get_label(instr, bank, i, offset); if (msg == "")
         sprintf(buff1, "$%.2X", i);
         else sprintf(buff1, "%s", msg.c_str()); strcat(buff2, buff1);
         pc++; break;
     case 5 : i = read_char(srcfile); if (printInstructionBytes()) printf("%.2X       ", i);
-        /* ($xx),Y */ msg = get_label(instr, bank, i); if (msg == "")
+        /* ($xx),Y */ msg = get_label(instr, bank, i, offset); if (msg == "")
         sprintf(buff1, "($%.2X),Y", i);
         else sprintf(buff1, "(%s),Y" ,msg.c_str());
         strcat(buff2, buff1); pc++; break;
     case 6 : i = read_char(srcfile); if (printInstructionBytes()) printf("%.2X       ", i);
-        /* [$xx],Y */ msg = get_label(instr, bank, i);  if (msg == "")
+        /* [$xx],Y */ msg = get_label(instr, bank, i, offset);  if (msg == "")
         sprintf(buff1, "[$%.2X],Y", i);
         else sprintf(buff1,"[%s],Y",msg.c_str());
         strcat(buff2, buff1); pc++; break; 
     case 7 : i = read_char(srcfile); if (printInstructionBytes()) printf("%.2X       ", i);
-        /* ($xx,X) */ msg = get_label(instr, bank, i); if (msg == "")
+        /* ($xx,X) */ msg = get_label(instr, bank, i, offset); if (msg == "")
         sprintf(buff1, "($%.2X,X)", i);
         else sprintf(buff1, "(%s,X)", msg.c_str());
         strcat(buff2, buff1); pc++; break;
     case 8 : i = read_char(srcfile); if (printInstructionBytes()) printf("%.2X       ", i);
-        /* $xx,X */  msg = get_label(instr, bank, i); if (msg == "")
+        /* $xx,X */  msg = get_label(instr, bank, i, offset); if (msg == "")
         sprintf(buff1, "$%.2X,X", i);
         else sprintf(buff1, "%s,X", msg.c_str());
         strcat(buff2, buff1); pc++; break;
     case 9 : i = read_char(srcfile); j = read_char(srcfile);
         /* $xxxx,X */ if (printInstructionBytes()) printf("%.2X %.2X    ",i,j);
-        msg = get_label(instr, bank, j * 256 + i); if (msg == "")
+        msg = get_label(instr, bank, j * 256 + i, offset); if (msg == "")
             sprintf(buff1, "$%.2X%.2X,X", j, i);
         else sprintf(buff1, "%s,X", msg.c_str());
         strcat(buff2, buff1); pc += 2; break;
     case 10: i = read_char(srcfile); j = read_char(srcfile); k = read_char(srcfile);
         /* $xxxxxx,X */ if (printInstructionBytes()) printf("%.2X %.2X %.2X ", i, j, k);
-        msg = get_label(instr, k, j * 256 + i); if (msg == "")
+        msg = get_label(instr, k, j * 256 + i, offset); if (msg == "")
             sprintf(buff1, "$%.2X%.2X%.2X,X", k, j, i);
         else sprintf(buff1, "%s,X", msg.c_str());
         strcat(buff2, buff1); pc += 3; break;
     case 11: i = read_char(srcfile); j = read_char(srcfile);
         /* $xxxx,Y */ if (printInstructionBytes()) printf("%.2X %.2X    ",i,j);
-        msg = get_label(instr, bank, j * 256 + i); if (msg == "")
+        msg = get_label(instr, bank, j * 256 + i, offset); if (msg == "")
             sprintf(buff1, "$%.2X%.2X,Y", j, i);
         else sprintf(buff1, "%s,Y", msg.c_str());
         strcat(buff2, buff1);
         pc += 2; break;
     case 12: i = read_char(srcfile); if (printInstructionBytes()) printf("%.2X       ", i);
-        /* ($xx) */  msg = get_label(instr, bank, i); if (msg == "")
+        /* ($xx) */  msg = get_label(instr, bank, i, offset); if (msg == "")
         sprintf(buff1, "($%.2X)", i); else sprintf(buff1, "(%s)", msg.c_str());
         strcat(buff2, buff1); pc++; break;
     case 13: i = read_char(srcfile); if (printInstructionBytes()) printf("%.2X       ", i);
-        /* [$xx] */  msg = get_label(instr, bank, i); if (msg == "")
+        /* [$xx] */  msg = get_label(instr, bank, i, offset); if (msg == "")
         sprintf(buff1, "[$%.2X]", i); else sprintf(buff1, "[%s]", msg.c_str());
         strcat(buff2, buff1); pc++; break;
     case 14: i = read_char(srcfile); if (printInstructionBytes()) printf("%.2X       ", i);
-        /* $xx,S */  msg = get_label(instr, bank, i); if (msg == "")
+        /* $xx,S */  msg = get_label(instr, bank, i, offset); if (msg == "")
         sprintf(buff1, "$%.x,S", i); else sprintf(buff1, "%s,S", msg.c_str());
         strcat(buff2, buff1); pc++; break;
     case 15: i = read_char(srcfile); if (printInstructionBytes()) printf("%.2X       ", i);
-        /* ($xx,S),Y */ msg = get_label(instr, bank, i); if (msg == "")
+        /* ($xx,S),Y */ msg = get_label(instr, bank, i, offset); if (msg == "")
         sprintf(buff1, "($%.2X,S),Y", i);
         else sprintf(buff1, "(%s,S),Y", msg.c_str());
         strcat(buff2, buff1); pc++; break;
     case 16: r = read_char(srcfile); h = r; if (printInstructionBytes()) printf("%.2X       ", h);
-        /* relative */ pc++; msg = get_label(instr, bank, pc+r); if (msg == "")
+        /* relative */ pc++; msg = get_label(instr, bank, pc + r, offset); if (msg == "")
         sprintf(buff1, "$%.4X", pc+r); else sprintf(buff1, "%s", msg.c_str());
         strcat(buff2, buff1); break;
     case 17: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
         /* relative long */ if (printInstructionBytes()) printf("%.2X %.2X    ",i,j);
         ll = j * 256 + i; if (ll > 32767) ll = -(65536-ll);
-        msg = get_label(instr, (bank*65536+pc+ll)/0x10000, (bank*65536+pc+ll)&0xffff);
+        msg = get_label(instr, (bank * 65536 + pc + ll) / 0x10000, (bank * 65536 + pc + ll) & 0xffff, offset);
         if (msg == "") sprintf(buff1, "$%.6x", bank*65536+pc+ll);
         else sprintf(buff1, "%s", msg.c_str());
         strcat(buff2, buff1); break;
@@ -678,23 +728,23 @@ void Disassembler::doType(const Instruction& instr, bool is_data)
         strcat(buff2, buff1); break;
     case 19: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
         /* [$xxxx] */ if (printInstructionBytes()) printf("%.2X %.2X    ",i,j);
-        msg = get_label(instr, bank, j * 256 + i); if (msg == "")
+        msg = get_label(instr, bank, j * 256 + i, offset); if (msg == "")
             sprintf(buff1, "[$%.2X%.2X]", j, i);
         else sprintf(buff1,"[%s]",msg.c_str());
         strcat(buff2, buff1); break;
     case 20: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
         /* ($xxxx) */ if (printInstructionBytes()) printf("%.2X %.2X    ",i,j);
-        msg = get_label(instr, bank, j * 256 + i); if (msg == "")
+        msg = get_label(instr, bank, j * 256 + i, offset); if (msg == "")
             sprintf(buff1, "($%.2X%.2X)", j, i); else sprintf(buff1, "(%s)", msg.c_str());
         strcat(buff2, buff1); break;
     case 21: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
         /* ($xxxx,X) */ if (printInstructionBytes()) printf("%.2X %.2X    ",i,j);
-        msg = get_label(instr, bank, j * 256 + i); if (msg == "")
+        msg = get_label(instr, bank, j * 256 + i, offset); if (msg == "")
             sprintf(buff1, "($%.2X%.2X,X)", j, i);
         else sprintf(buff1, "(%s,X)", msg.c_str());
         strcat(buff2,buff1); break;
     case 22: i = read_char(srcfile); if (printInstructionBytes()) printf("%.2X       ", i); pc++;
-        /* $xx,Y */  msg = get_label(instr, bank, i); if (msg == "")
+        /* $xx,Y */  msg = get_label(instr, bank, i, offset); if (msg == "")
         sprintf(buff1, "$%.2X,Y", i); else sprintf(buff1, "%s,Y", msg.c_str());
         strcat(buff2, buff1); break;
     case 23: i = read_char(srcfile); if (printInstructionBytes()) printf("%.2X       ", i); pc++;
@@ -729,7 +779,7 @@ void Disassembler::doType(const Instruction& instr, bool is_data)
         /* $xxxx, .db :$xxxx */ 
         if (printInstructionBytes()) 
             printf("%.2X %.2X %.2X ", i, j, k);
-        msg = get_label(instr, k, j * 256 + i); 
+        msg = get_label(instr, k, j * 256 + i, offset);
         if (msg == "")
             sprintf(buff1, "$%.2X%.2X%.2X .db :$%.2X%.2X%.2X", k, j, i, k, j, i);
         else 

@@ -35,10 +35,11 @@ public:
     void load_symbols(char *fname, bool ram = false);
     void load_symbols2(char *fname);
     void load_accum_bytes(char *fname, bool accum);
+    void load_offsets(char *fname);
 
     bool is_comment(const std::string& line);    
     bool add_label(int bank, int pc, const std::string& label, bool used=false);
-    std::string get_label(const Instruction& instr, unsigned char bank, int pc);
+    std::string get_label(const Instruction& instr, unsigned char bank, int pc, int offset);
 
     std::istream& get_address(std::istream& in, unsigned char& bank, unsigned int& addr);
     std::string get_comment(unsigned char bank, unsigned int pc);
@@ -59,11 +60,14 @@ private:
     std::map<int, std::string> m_used_label_lookup;
     std::map<int, std::string> m_comment_lookup;
     std::map<int, std::string> m_unresolved_symbol_lookup;
+    std::map<int, int> m_load_offsets;
 
     std::map<int, int> m_accum_lookup;
     std::map<int, int> m_index_lookup;
+    std::map<int, int> m_ptr_bank_lookup;
 
-    unsigned char *m_data;
+    // m_data holds a char for every byte of the rom, indicating if that byte is data, code, ptr, etc
+    unsigned char *m_data; 
 
     DisassemblerProperties m_request_prop;
 

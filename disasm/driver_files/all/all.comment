@@ -7301,6 +7301,7 @@
 02FFA2 Return
 02FFD0 Return
 02FFE1 Return
+02D800 TODO: does this actually act as data? consult trace
 038031 \ Branch if not touching object
 038034  |
 038036 /
@@ -7743,12 +7744,8 @@
 03961B  |
 03961D  |    ... play sound effect
 039620 /
-039620 / Play sound effect
-039623 Final return
 039623 Return
 039630 Increase consecutive enemies stomped
-039633
-039634
 039635 \ If consecutive enemies stomped >= 8 ...
 039637 /    ... don't play sound
 039639 \
@@ -7758,7 +7755,6 @@
 039642  |
 039644 /
 039646 Give mario points
-03964A
 03964B Return
 03967E \ If time to show Rex remains > 0...
 039681  |
@@ -7857,7 +7853,6 @@
 0398E1 \ Set time before return to overworld
 0398E3 /
 0398E6 \
-0398E8 / Change music
 0398E8 / Play sound effect
 0398EB Return
 0398EC \
@@ -7869,7 +7864,6 @@
 0398FB  |
 0398FD  | Set time to trigger level if all Reznors are dead
 0398FF /
-039906 \ Zero out 170B table
 039906 \ Zero out extended sprite table
 039908  |
 03990A  |
@@ -7930,7 +7924,6 @@
 039A54  |
 039A56 /
 039A58 ??Something about boosting mario on platform??
-039A5A
 039A5D \ Time to bounce platform = 0F
 039A5F /
 039A62 \ Set mario's y speed to rebound down off platform
@@ -7989,13 +7982,10 @@
 039AFD  |
 039AFF  |
 039B00  |
-039B02 / Return
 039B02 / Return if no free slots
-039B02 Return
 039B03 \
 039B05 / Play sound effect
 039B08 \ Extended sprite = Reznor fireball
-039B08 \ Extended sprite = fireball
 039B0A /
 039B50 Return
 039B75 \ if the reznor is dead, only draw the platform
@@ -8046,7 +8036,6 @@
 039C38 /
 039C3A \ Call "Invisible solid block" routine
 039C3E / Return
-039C3E Return
 039C46 Return
 039C7A \ Branch if not touching object
 039C7D  |

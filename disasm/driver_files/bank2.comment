@@ -2097,3 +2097,4 @@
 02FFA2 Return
 02FFD0 Return
 02FFE1 Return
+02D800 TODO: does this actually act as data? consult trace

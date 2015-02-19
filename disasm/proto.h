@@ -5,7 +5,7 @@
 #include <iostream>
 #include <map>
 
-#define HELP "help!\n"
+#define HELP "disasm.exe ROM_FILENAME\n"
 extern FILE *srcfile;
 
 class Instruction;

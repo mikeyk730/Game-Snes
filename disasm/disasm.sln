@@ -1,45 +1,27 @@
-Microsoft Visual Studio Solution File, Format Version 8.00
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "disasm", "disasm.vcproj", "{F7EE283F-C3CC-4E46-9D2D-8CFA8963DDAE}"
-	ProjectSection(ProjectDependencies) = postProject
-	EndProjectSection
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Express 2013 for Windows Desktop
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "disasm", "disasm.vcxproj", "{F7EE283F-C3CC-4E46-9D2D-8CFA8963DDAE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "driver", "driver.vcproj", "{FA26E0BD-D466-4818-937F-30147B7D0541}"
-	ProjectSection(ProjectDependencies) = postProject
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "split", "..\split\split.vcproj", "{59E61EF3-A3B7-4E5E-A898-5DBA5B2F92CC}"
-	ProjectSection(ProjectDependencies) = postProject
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hex_count", "..\hex_count\hex_count.vcproj", "{B32D1040-7620-4B75-B42F-43C6197ABC7B}"
-	ProjectSection(ProjectDependencies) = postProject
-	EndProjectSection
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "driver", "driver.vcxproj", "{FA26E0BD-D466-4818-937F-30147B7D0541}"
 EndProject
 Global
-	GlobalSection(SolutionConfiguration) = preSolution
-		Debug = Debug
-		Release = Release
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
 	EndGlobalSection
-	GlobalSection(ProjectConfiguration) = postSolution
-		{F7EE283F-C3CC-4E46-9D2D-8CFA8963DDAE}.Debug.ActiveCfg = Release|Win32
-		{F7EE283F-C3CC-4E46-9D2D-8CFA8963DDAE}.Debug.Build.0 = Release|Win32
-		{F7EE283F-C3CC-4E46-9D2D-8CFA8963DDAE}.Release.ActiveCfg = Release|Win32
-		{F7EE283F-C3CC-4E46-9D2D-8CFA8963DDAE}.Release.Build.0 = Release|Win32
-		{FA26E0BD-D466-4818-937F-30147B7D0541}.Debug.ActiveCfg = Release|Win32
-		{FA26E0BD-D466-4818-937F-30147B7D0541}.Debug.Build.0 = Release|Win32
-		{FA26E0BD-D466-4818-937F-30147B7D0541}.Release.ActiveCfg = Release|Win32
-		{FA26E0BD-D466-4818-937F-30147B7D0541}.Release.Build.0 = Release|Win32
-		{59E61EF3-A3B7-4E5E-A898-5DBA5B2F92CC}.Debug.ActiveCfg = Release|Win32
-		{59E61EF3-A3B7-4E5E-A898-5DBA5B2F92CC}.Debug.Build.0 = Release|Win32
-		{59E61EF3-A3B7-4E5E-A898-5DBA5B2F92CC}.Release.ActiveCfg = Release|Win32
-		{59E61EF3-A3B7-4E5E-A898-5DBA5B2F92CC}.Release.Build.0 = Release|Win32
-		{B32D1040-7620-4B75-B42F-43C6197ABC7B}.Debug.ActiveCfg = Release|Win32
-		{B32D1040-7620-4B75-B42F-43C6197ABC7B}.Debug.Build.0 = Release|Win32
-		{B32D1040-7620-4B75-B42F-43C6197ABC7B}.Release.ActiveCfg = Release|Win32
-		{B32D1040-7620-4B75-B42F-43C6197ABC7B}.Release.Build.0 = Release|Win32
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F7EE283F-C3CC-4E46-9D2D-8CFA8963DDAE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F7EE283F-C3CC-4E46-9D2D-8CFA8963DDAE}.Debug|Win32.Build.0 = Debug|Win32
+		{F7EE283F-C3CC-4E46-9D2D-8CFA8963DDAE}.Release|Win32.ActiveCfg = Release|Win32
+		{F7EE283F-C3CC-4E46-9D2D-8CFA8963DDAE}.Release|Win32.Build.0 = Release|Win32
+		{FA26E0BD-D466-4818-937F-30147B7D0541}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FA26E0BD-D466-4818-937F-30147B7D0541}.Debug|Win32.Build.0 = Debug|Win32
+		{FA26E0BD-D466-4818-937F-30147B7D0541}.Release|Win32.ActiveCfg = Release|Win32
+		{FA26E0BD-D466-4818-937F-30147B7D0541}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-	EndGlobalSection
-	GlobalSection(ExtensibilityAddIns) = postSolution
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal
