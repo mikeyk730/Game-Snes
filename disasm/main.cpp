@@ -52,12 +52,16 @@ void main (int argc, char *argv[])
             disasm.load_accum_bytes(argv[i], false);
         else if (current == "--hirom")
             disasm.hirom(true);
+        else if (current == "--quiet")
+            disasm.quiet(true);
         else if (current == "--2pass")
             disasm.passes(2);
 
     }
 
-    cout << "Ready to disassemble..." << endl;
+    if (!disasm.quiet()){
+        cout << "Ready to disassemble..." << endl;
+    }
 
     while(1){
 

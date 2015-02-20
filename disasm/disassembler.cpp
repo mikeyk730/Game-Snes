@@ -134,8 +134,8 @@ void Disassembler::handleRequest(const Request& request, bool user_request)
     } while(request.m_type == Request::Smart);
     
     if (user_request){
-        if (!m_unresolved_symbol_lookup.empty()){
-            cerr << "Unresolved symbols: " << endl; 
+        if (!m_unresolved_symbol_lookup.empty() && !quiet()){
+            cout << "Unresolved symbols: " << endl; 
             for (map<int,string>::iterator it = m_unresolved_symbol_lookup.begin(), 
                 end_it = m_unresolved_symbol_lookup.end(); it != end_it; ++it){
                     cout << to_string(it->first, 6) << " " << it->second << endl;
@@ -792,7 +792,7 @@ void Disassembler::doType(const Instruction& instr, bool is_data, unsigned char 
         if (k == 0xFF) k = default_bank;
         msg = get_label(instr, k, j * 256 + i, offset);
         if (msg == "")
-            sprintf(buff1, "$%.2X%.2X%.2X .db :$%.2X%.2X%.2X", k, j, i, k, j, i);
+            sprintf(buff1, "$%.2X%.2X .db $%.2X", j, i, k);
         else {
             if (oldk == 0xFF){
                 sprintf(buff1, "%s .db $%.2X", msg.c_str(), oldk);

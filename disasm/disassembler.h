@@ -49,6 +49,9 @@ public:
     inline void hirom(bool hirom) { m_hirom = hirom; }
     inline bool hirom() const { return m_hirom; }
 
+    inline void quiet(bool q) { m_quiet = q; }
+    inline bool quiet() const { return m_quiet; }
+
     inline void passes(int passes) { m_passes_to_make = passes; }
     bool finalPass() const { return (m_current_pass == m_passes_to_make); }
     bool printInstructionBytes() const { return (!m_request_prop.m_quiet && finalPass()); }
@@ -72,6 +75,7 @@ private:
     DisassemblerProperties m_request_prop;
 
     bool m_hirom;
+    bool m_quiet;
     int m_current_pass;
     int m_passes_to_make;
     int m_flag; 
