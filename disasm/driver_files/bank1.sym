@@ -28,15 +28,15 @@
 01839A InitGreyChainPlat
 0183A4 InitExplodingBlk
 0183B5 InitScalePlats
-0183DA InitMsg+SideExit
+0183DA InitMsg_SideExit
 0183E0 InitYoshi
 0183EE Return0183EE
 0183F2 InitSpikeTop
 018404 InitUrchinWallFllw
-01840B InitFuzzBall+Spark
+01840B InitFuzzBall_Spark
 01841B InitUrchin
 018431 InitRipVanFish
-018435 InitKey+BabyYoshi
+018435 InitKey_BabyYoshi
 01843B InitChangingItem
 01843D Return01843D
 01843E InitPeaBouncer
@@ -67,7 +67,7 @@
 0185B0 InitPiranha
 0185C2 Return0185C2
 0185C3 CallSpriteMain
-01875E InvisSolid+Dinos
+01875E InvisSolid_Dinos
 018763 GoalSphere
 018789 InitReznor
 01878E Bank3SprHandler
@@ -213,9 +213,9 @@
 01D6D2 InitLinePlat
 01D6ED InitLineGuidedSpr
 01D711 InitLineBrwnPlat
-01D719 LineRope+Chainsaw
+01D719 LineRope_Chainsaw
 01D73A LineGrinder
-01D74A LineFuzzy+Plats
+01D74A LineFuzzy_Plats
 01DB5C Grinder
 01DDAC InitBonusGame
 01DE2A BonusGame
@@ -235,7 +235,7 @@
 01F884 InitBigBoo
 01F890 Eerie
 01F8D5 BigBoo
-01F8DC Boo+BooBlock
+01F8DC Boo_BooBlock
 01FA58 Iggy'sBall
 01FAC1 KoopaKid
 01FDA7 ThrowBall
@@ -273,8 +273,8 @@
 019032 SubUpdateSprPos
 01ABCC SubSprXPosNoGrvty
 01ABD8 SubSprYPosNoGrvty
-01803A SprSpr+MarioSprRts
-018FC1 SubSprSpr+MarioSpr
+01803A SprSpr_MarioSprRts
+018FC1 SubSprSpr_MarioSpr
 
 019CF3 SubSprGfx0Entry0
 019CF5 SubSprGfx0Entry1
@@ -322,7 +322,7 @@
 0188A8 JumpLoopNext
 0196E1 SpawnShelless
 019776 SpawnMovingCoin
-0196CB SetNormalStatus
+0196CB SetNormalStatus2
 0196D7 IncrmntStunTimer
 0196A9 UnstunSprite
 0196E1 GeneralResetSpr

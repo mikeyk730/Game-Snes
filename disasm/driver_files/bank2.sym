@@ -57,7 +57,7 @@
 02DB4C FlyingPlatformMain
 02DA52 HammerBrotherMain
 02D8AD BubbleSpriteMain
-02D617 Banzai+Rotating
+02D617 Banzai_Rotating
 02F035 WigglerMainRt
 02B672 PokeyMainRt
 02B647 BitNotSet
@@ -113,15 +113,15 @@
 02B02B TurnOffGen2
 02B1BC GenSuperKoopa
 02B207 GenerateBubble
-02B07C GenerateBullet
+02B07C GenerateBullet2
 02B0CD GenMultiBullets
 02B036 GenerateFire
 02B032 TurnOffGenerators
 02B466 ShootBullet
 02B3B6 LaunchTorpedo
 02B8F7 TorpedoGfxRt
-02D294 UpdateYPosNoGrvty
-02D288 UpdateXPosNoGrvty
+02D294 UpdateYPosNoGrvty2
+02D288 UpdateXPosNoGrvty2
 02848D SubHorzPosBnk2
 02849F IsOffScreenBnk2
 02B9A4 GenTileFromSpr0

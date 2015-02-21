@@ -792,13 +792,13 @@ void Disassembler::doType(const Instruction& instr, bool is_data, unsigned char 
         if (k == 0xFF) k = default_bank;
         msg = get_label(instr, k, j * 256 + i, offset);
         if (msg == "")
-            sprintf(buff1, "$%.2X%.2X .db $%.2X", j, i, k);
+            sprintf(buff1, ".db $%.2X,$%.2X,$%.2X ", i, j, k);
         else {
             if (oldk == 0xFF){
-                sprintf(buff1, "%s .db $%.2X", msg.c_str(), oldk);
+                sprintf(buff1, ".dw %s \n.db $%.2X", msg.c_str(), oldk);
             }
             else{
-                sprintf(buff1, "%s .db :$%s", msg.c_str(), msg.c_str());
+                sprintf(buff1, ".dw %s \n.db $%.2X", msg.c_str(), k);
             }
         }
         strcat(buff2, buff1); 
@@ -1094,5 +1094,5 @@ void Disassembler::initialize_instruction_lookup()
   m_instruction_lookup.insert(make_pair(0x44, Instruction("MVP", 27)));
 
   m_instruction_lookup.insert(make_pair(0x100, Instruction(".dw", 2)));
-  m_instruction_lookup.insert(make_pair(0x101, Instruction(".dw", 30)));
+  m_instruction_lookup.insert(make_pair(0x101, Instruction("", 30)));
 }
