@@ -791,14 +791,20 @@ void Disassembler::doType(const Instruction& instr, bool is_data, unsigned char 
         oldk = k;
         if (k == 0xFF) k = default_bank;
         msg = get_label(instr, k, j * 256 + i, offset);
-        if (msg == "")
-            sprintf(buff1, ".db $%.2X,$%.2X,$%.2X ", i, j, k);
+        if (msg == ""){
+            if (i == 0 && j == 0 & k == 0){
+                sprintf(buff1, ".dw $%.2X%.2X%.2X \n.db $%.2X", k, j, i, k);
+            }
+            else{
+                sprintf(buff1, ".dw $%.2X%.2X%.2X \n.db :$%.2X%.2X%.2X", k, j, i, k, j, i);
+            }
+        }
         else {
             if (oldk == 0xFF){
                 sprintf(buff1, ".dw %s \n.db $%.2X", msg.c_str(), oldk);
             }
             else{
-                sprintf(buff1, ".dw %s \n.db $%.2X", msg.c_str(), k);
+                sprintf(buff1, ".dw %s \n.db :%s", msg.c_str(), msg.c_str());
             }
         }
         strcat(buff2, buff1); 
