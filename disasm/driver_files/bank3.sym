@@ -39,7 +39,6 @@
 0394CF WoodSpikeGfx
 0394E1 WoodSpikeGfxLoopSt
 039517 RexMainRt
-039533 RexReturn
 039534 RexAlive
 039564 RexNoAdjustSpeed
 039569 RexInAir
@@ -116,7 +115,6 @@
 03B85D SubOffscreen0Bnk3
 03B8AC OffScrEraseSprBnk3
 03B8BF OffScrKillSprBnk3
-03B8C2 Return03B8C2
 03B8C3 VerticalLevelBnk3
 03B8FB IsSprOffScreenBnk3
 03C000 GenTileFromSpr2

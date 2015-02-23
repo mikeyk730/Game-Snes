@@ -16,7 +16,6 @@
 028804 NoResetTurningBlk
 028905 GenSpriteFromBlk
 028BB0 DisabledAddSmokeRt
-028BB8 Return028BB8
 028BB9 UnusedYoshiSmoke
 029076 TurnBlockSpr
 0290DE BounceBlockSpr
@@ -27,7 +26,6 @@
 0294C1 GroundPound
 0294CE KillSprLoopStart
 0294F0 GroundPoundNextSpr
-029B15 Return029B15
 029B51 VolcanoLotusFire
 029C3E SmokeTrail
 029C83 SpinJumpStars
@@ -39,7 +37,6 @@
 029EEE WaterBubble
 029F61 YoshiFireball
 029FAF MarioFireball
-02A0A8 Return02A0A8
 02A0AC ProcessFireball
 02A0BA FireRtLoopStart
 02A106 ChuckFireKill
@@ -78,7 +75,6 @@
 02B26C GenerateDolphin
 02B2D6 GenerateEerie
 02B329 GenParaEnemy
-02B3AA Return02B3AA
 02B3B6 LaunchTorpedo
 02B466 ShootBullet
 02B4A7 GenerateBullet
@@ -99,7 +95,6 @@
 02BCDB WallFollowersMain
 02BFCD RipVanFishMain
 02C1F5 ChucksMain
-02CBFD Return02CBFD
 02CBFE WingedCageMain
 02CDCB PeaBouncerMain
 02D017 SubOffscreen3Bnk2
@@ -108,7 +103,6 @@
 02D025 SubOffscreen0Bnk2
 02D07A OffScrEraseSprBnk2
 02D08D OffScrKillSprBnk2
-02D090 Return02D090
 02D091 VerticalLevelBnk2
 02D0C9 IsSprOffScreenBnk2
 02D1F3 SetTreeTile
@@ -119,9 +113,7 @@
 02D617 Banzai_Rotating
 02D8AD BubbleSpriteMain
 02DA52 HammerBrotherMain
-02DA59 Return02DA59
 02DAC3 GenerateHammer
-02DAE8 Return02DAE8
 02DAFD HammerBroGfx
 02DB4C FlyingPlatformMain
 02DB79 PutHammerBroOnPlat

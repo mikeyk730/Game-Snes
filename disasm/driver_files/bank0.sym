@@ -82,7 +82,6 @@
 00B983 ReadByte
 00BA28 ExtSub00BA28
 00BEB0 GenerateTile
-00C592 Return00C592
 00C5B5 UnknownAniB
 00C6E7 UnknownAniC
 00C7FD YoshiWingsAni

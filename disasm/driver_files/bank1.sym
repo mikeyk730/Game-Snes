@@ -11,12 +11,10 @@
 0180CB IsSprOffScreen
 018127 HandleSprite
 018151 EraseSprite
-018156 Return018156
 018157 HandleGoalPowerup
 01816D HandleSprLvlEnd
 018172 CallSpriteInit
 01830F InitGreyLavaPlat
-018313 Return018313
 018314 InitBowserStatue
 018326 InitTimedPlat
 018339 InitYoshiEgg
@@ -34,7 +32,6 @@
 0183B5 InitScalePlats
 0183DA InitMsg_SideExit
 0183E0 InitYoshi
-0183EE Return0183EE
 0183F2 InitSpikeTop
 018404 InitUrchinWallFllw
 01840B InitFuzzBall_Spark
@@ -42,7 +39,6 @@
 018431 InitRipVanFish
 018435 InitKey_BabyYoshi
 01843B InitChangingItem
-01843D Return01843D
 01843E InitPeaBouncer
 01844E InitPSwitch
 01846B InitLakitu
@@ -64,13 +60,11 @@
 01856E InitGrnBounceKoopa
 018575 InitStandardSprite
 01857C FaceMario
-018583 Return018583
 018584 InitBowsersFire
 01858B InitPowerUp
 01858E InitFishbone
 01859A InitDownPiranha
 0185B0 InitPiranha
-0185C2 Return0185C2
 0185C3 CallSpriteMain
 01875E InvisSolid_Dinos
 018763 GoalSphere
@@ -114,7 +108,6 @@
 018848 PeaBouncer
 018853 RipVanFish
 01885E WallFollowers
-018869 Return018869
 01886A Chucks
 01886F InitWingedCage
 01887A WingedCage
@@ -143,9 +136,7 @@
 018DE9 GoombaWingGfxRt
 018E5F SetAnimationFrame
 018E76 ClassicPiranhas
-018EC7 Return018EC7
 018EC8 ChangePiranhaState
-018EEE Return018EEE
 018F0D HoppingFlame
 018F97 Lakitu
 018FC1 SubSprSpr_MarioSpr
@@ -154,7 +145,6 @@
 019089 FlipIfTouchingObj
 019098 FlipSpriteDir
 0190B2 GenericSprGfxRt2
-0192C0 Return0192C0
 01953C HandleSprStunned
 019540 YoshiShellSts9
 019562 SetNormalStatus
@@ -190,7 +180,6 @@
 01A12F StunGoomba
 01A152 StunMechaKoopa
 01A178 StunFish
-01A1D3 Return01A1D3
 01A1D4 StunThrowBlock
 01A1E8 StunYoshiEgg
 01A1EC StunBomb
@@ -220,21 +209,17 @@
 01AC31 SubOffscreen0Bnk1
 01AC80 OffScrEraseSprite
 01ACA1 OffScrKillSprite
-01ACA4 Return01ACA4
 01ACA5 VerticalLevel
 01ACF9 GetRand
 01AD30 SubHorizPos
 01AD59 InitFlying?Block
 01AD6E Flying?Block
-01AE90 Return01AE90
 01AE91 PalaceSwitch
 01AE96 InitThwomp
-01AEA2 Return01AEA2
 01AEA3 Thwomp
 01AF54 ThwompGfx
 01AF9F Thwimp
 01B00B InitVerticalFish
-01B011 Return01B011
 01B014 InitFish
 01B033 Fish
 01B192 GeneratedFish
@@ -243,9 +228,7 @@
 01B22B InitFallingPlat
 01B22E InitOrangePlat
 01B236 InitFloatingPlat
-01B25D Return01B25D
 01B25E InitChckbrdPlat
-01B267 Return01B267
 01B26C Platforms
 01B44F InvisBlkMainRt
 01B536 OrangePlatform
@@ -293,7 +276,6 @@
 01CDAB WallKoopaKids
 01D44E BossFireball
 01D4FB ParachuteSprites
-01D6C3 Return01D6C3
 01D6C4 InitLineRope
 01D6D2 InitLinePlat
 01D6ED InitLineGuidedSpr
@@ -325,7 +307,6 @@
 01F5AE SpltPokeyInto2Sprs
 01F764 YoshiEgg
 01F875 UnusedInit
-01F87B Return01F87B
 01F87C InitEerie
 01F884 InitBigBoo
 01F890 Eerie
