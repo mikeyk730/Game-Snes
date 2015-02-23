@@ -604,6 +604,8 @@ void Disassembler::doType(const Instruction& instr, bool is_data, unsigned char 
 
     char buff1[80];
     char buff2[80];
+    char buff3[80];
+    buff3[0] = 0;
 
     unsigned char& bank = default_bank; // m_current_bank;
     unsigned int& pc = m_current_addr;
@@ -793,18 +795,22 @@ void Disassembler::doType(const Instruction& instr, bool is_data, unsigned char 
         msg = get_label(instr, k, j * 256 + i, offset);
         if (msg == ""){
             if (i == 0 && j == 0 & k == 0){
-                sprintf(buff1, ".dw $%.2X%.2X%.2X \n.db $%.2X", k, j, i, k);
+                sprintf(buff1, "$%.2X%.2X%.2X", k, j, i);
+                sprintf(buff3, ".db $%.2X", k);
             }
             else{
-                sprintf(buff1, ".dw $%.2X%.2X%.2X \n.db :$%.2X%.2X%.2X", k, j, i, k, j, i);
+                sprintf(buff1, "$%.2X%.2X%.2X", k, j, i);
+                sprintf(buff3, ".db :$%.2X%.2X%.2X", k, j, i);
             }
         }
         else {
             if (oldk == 0xFF){
-                sprintf(buff1, ".dw %s \n.db $%.2X", msg.c_str(), oldk);
+                sprintf(buff1, ".%s", msg.c_str());
+                sprintf(buff3, ".db $%.2X", oldk);
             }
             else{
-                sprintf(buff1, ".dw %s \n.db :%s", msg.c_str(), msg.c_str());
+                sprintf(buff1, ".%s", msg.c_str());
+                sprintf(buff3, ".db :%s", msg.c_str());
             }
         }
         strcat(buff2, buff1); 
@@ -836,6 +842,9 @@ void Disassembler::doType(const Instruction& instr, bool is_data, unsigned char 
     if (finalPass()){
         if (!m_request_prop.m_quiet) cout << "  ";    
         cout << setw(25) << left << buff2 << " " << comment << endl;
+        if (buff3[0] != 0){
+            cout << setw(34)  << "" << buff3 << endl;
+        }
     }
 }
 
@@ -1100,5 +1109,5 @@ void Disassembler::initialize_instruction_lookup()
   m_instruction_lookup.insert(make_pair(0x44, Instruction("MVP", 27)));
 
   m_instruction_lookup.insert(make_pair(0x100, Instruction(".dw", 2)));
-  m_instruction_lookup.insert(make_pair(0x101, Instruction("", 30)));
+  m_instruction_lookup.insert(make_pair(0x101, Instruction(".dw", 30)));
 }
