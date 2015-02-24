@@ -9,6 +9,8 @@
 extern FILE *srcfile;
 
 class Instruction;
+struct StateContext;
+struct DisasmState;
 
 unsigned int hex(const char *s);
 std::string spaces(int number);
@@ -22,21 +24,34 @@ const int NO_ADDR_LABEL = 0x02;
 const int LINE_LABEL = 0x04;
 
 class Instruction{
+    typedef void(*HandlerPtr)(FILE*, char*, char*, DisasmState*, StateContext*);
+    typedef std::string(*BarPtr)(bool, bool);
 public:
     Instruction() :
         m_name(""), 
-        m_address_mode(-1), 
+        m_address_mode_handler(0), 
         m_bitmask(0)
     {}
 
-    Instruction(const std::string& name, unsigned char address_mode, int bitmask=0) :
+    Instruction(const std::string& name, HandlerPtr address_mode_handler, BarPtr bar = 0, int bitmask = 0) :
         m_name(name), 
-        m_address_mode(address_mode), 
+        m_address_mode_handler(address_mode_handler),
+        m_bar(bar),
         m_bitmask(bitmask)
     { }
 
-    inline std::string name() const { return m_name; }
-    inline unsigned char addressMode() const { return m_address_mode; }
+    inline std::string name() const { 
+        return m_name; 
+    }
+
+    inline std::string annotated_name(bool is_accum_16, bool is_index_16) const {
+        if (m_bar){
+            return m_name + (*m_bar)(is_accum_16, is_index_16);
+        }
+        return m_name ;
+    }
+
+    //int(*)(FILE *, char *, char *, bool, bool) a();// { return m_address_mode_handler; }
     inline bool isBranch() const { return (m_bitmask & IS_BRANCH); }
     inline bool neverUseAddrLabel() const { return (m_bitmask & NO_ADDR_LABEL); }
     inline bool isLineLabel() const { return (m_bitmask & LINE_LABEL); }
@@ -44,10 +59,12 @@ public:
         return (m_name == "RTS" || m_name == "RTI" || m_name == "RTL"
             || m_name == "JMP" || m_name == "BRA");
     }
-
+    
+    HandlerPtr m_address_mode_handler;
+    BarPtr m_bar;
 private:
     std::string m_name;
-    unsigned char m_address_mode;
+    
     int m_bitmask;
 };
 

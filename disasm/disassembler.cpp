@@ -13,6 +13,518 @@ namespace{
    const unsigned int BANK_SIZE = 0x08000;
 }
 
+
+struct StateContext
+{
+    StateContext(unsigned int& pc, int& flag, bool& accum16, bool& index16, int& low, int& high)
+    : m_pc(pc), m_flag(flag), m_accum_16(accum16), m_index_16(index16), m_low(low), m_high(high)
+    { }
+
+    unsigned int advance_pc(int n) {
+        m_pc += n;
+        return m_pc;
+    }
+    void set_flag(int flag) { m_flag |= flag; }
+    void set_accum_16(bool is_16) { m_accum_16 = is_16; }
+    void set_index_16(bool is_16) { m_index_16 = is_16; }
+
+    unsigned int& m_pc;
+    int& m_flag;
+    bool& m_accum_16;
+    bool& m_index_16;
+    int& m_low;
+    int& m_high;
+};
+
+struct DisasmState
+{
+    DisasmState(Disassembler& disasm,
+    const Instruction& instr,
+    bool accum_16,
+    const bool index_16,
+    const bool print_bytes,
+    const unsigned char current,
+    const unsigned char defaultb,
+    const int off) : d(disasm), i(instr), is_accum_16(accum_16), is_index_16(index_16), print_instruction_bytes(print_bytes),
+    current_bank(current), default_bank(defaultb), offset(off)
+    {}
+
+    const bool is_accum_16;
+    const bool is_index_16;
+    const bool print_instruction_bytes;
+    const unsigned char current_bank;
+    const unsigned char default_bank;
+    const int offset;
+
+    string get_label(int bank, int pc)
+    {
+        return d.get_label(i, bank, pc, offset);
+    }
+
+    Disassembler& d;
+    const Instruction& i;
+};
+
+
+void foo0(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    if (disasm_state->print_instruction_bytes) printf("         ");
+}
+
+void foo1(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(rom);
+    context->advance_pc(1);
+
+    if (disasm_state->print_instruction_bytes)
+        printf("%.2X ", i);
+
+    /* Accum  #$xx or #$xxxx */
+    long ll = i;
+    strcat(buff2, "#");
+    if (disasm_state->is_accum_16) {
+        unsigned char j = read_char(srcfile);
+        context->advance_pc(1);
+        ll = j * 256 + ll;
+        if (disasm_state->print_instruction_bytes) printf("%.2X ", j);
+    }
+    if (!disasm_state->is_accum_16)
+        sprintf(buff1, "$%.2X", ll);
+    else
+        sprintf(buff1, "$%.4X", ll);
+    strcat(buff2, buff1);
+    if (disasm_state->print_instruction_bytes) {
+        printf("   ");
+        if (disasm_state->is_accum_16 == 0) printf("   ");
+    }
+}
+
+void foo2(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(srcfile);
+    unsigned char j = read_char(srcfile);
+    context->advance_pc(2);
+
+    /* $xxxx */  if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
+    string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i);
+    if (msg == "") sprintf(buff1, "$%.2X%.2X", j, i);
+    else sprintf(buff1, "%s", msg.c_str());
+    strcat(buff2, buff1);
+    context->m_high = j; context->m_low = i;
+}
+
+void foo3(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(srcfile);
+    unsigned char j = read_char(srcfile);
+    unsigned char k = read_char(srcfile);
+    context->advance_pc(3);
+
+    /* $xxxxxx */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X %.2X ", i, j, k);
+    string msg = disasm_state->get_label(k, j * 256 + i); if (msg == "")
+        sprintf(buff1, "$%.2X%.2X%.2X", k, j, i);
+    else sprintf(buff1, "%s", msg.c_str());  strcat(buff2, buff1); 
+}
+
+void foo4(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(srcfile);
+    context->advance_pc(1); 
+    
+    if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
+    /* $xx */
+    string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
+        sprintf(buff1, "$%.2X", i);
+    else sprintf(buff1, "%s", msg.c_str()); strcat(buff2, buff1);
+}
+void foo5(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+    
+    unsigned char i = read_char(srcfile); 
+    context->advance_pc(1); 
+    
+    if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
+    /* ($xx),Y */
+    string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
+        sprintf(buff1, "($%.2X),Y", i);
+    else sprintf(buff1, "(%s),Y", msg.c_str());
+    strcat(buff2, buff1); 
+}
+
+void foo6(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(srcfile); 
+    context->advance_pc(1); 
+    
+    if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
+    /* [$xx],Y */
+    string msg = disasm_state->get_label(disasm_state->current_bank, i);  if (msg == "")
+        sprintf(buff1, "[$%.2X],Y", i);
+    else sprintf(buff1, "[%s],Y", msg.c_str());
+    strcat(buff2, buff1); 
+}
+
+void foo7(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(srcfile);
+    context->advance_pc(1); 
+    
+    if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
+    /* ($xx,X) */
+    string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
+        sprintf(buff1, "($%.2X,X)", i);
+    else sprintf(buff1, "(%s,X)", msg.c_str());
+    strcat(buff2, buff1);
+}
+void foo8(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(srcfile); 
+    context->advance_pc(1); 
+    
+    if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
+    /* $xx,X */
+    string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
+        sprintf(buff1, "$%.2X,X", i);
+    else sprintf(buff1, "%s,X", msg.c_str());
+    strcat(buff2, buff1);
+}
+
+void foo9(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(srcfile);
+    unsigned char j = read_char(srcfile);
+    context->advance_pc(2);
+
+    /* $xxxx,X */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
+    string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i); if (msg == "")
+        sprintf(buff1, "$%.2X%.2X,X", j, i);
+    else sprintf(buff1, "%s,X", msg.c_str());
+    strcat(buff2, buff1); 
+}
+
+void foo10(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(srcfile);
+    unsigned char j = read_char(srcfile);
+    unsigned char k = read_char(srcfile);
+    context->advance_pc(3);
+
+    /* $xxxxxx,X */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X %.2X ", i, j, k);
+    string msg = disasm_state->get_label(k, j * 256 + i); if (msg == "")
+        sprintf(buff1, "$%.2X%.2X%.2X,X", k, j, i);
+    else sprintf(buff1, "%s,X", msg.c_str());
+    strcat(buff2, buff1);
+}
+
+void foo11(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(srcfile);
+    unsigned char j = read_char(srcfile);
+    context->advance_pc(2);
+
+    /* $xxxx,Y */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
+    string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i); if (msg == "")
+        sprintf(buff1, "$%.2X%.2X,Y", j, i);
+    else sprintf(buff1, "%s,Y", msg.c_str());
+    strcat(buff2, buff1);
+}
+
+void foo12(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char  i = read_char(srcfile);
+    context->advance_pc(1);
+    
+    if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
+    /* ($xx) */
+    string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
+        sprintf(buff1, "($%.2X)", i); else sprintf(buff1, "(%s)", msg.c_str());
+    strcat(buff2, buff1);
+}
+
+void foo13(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(srcfile); 
+    context->advance_pc(1); 
+    
+    if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
+    /* [$xx] */
+    string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
+        sprintf(buff1, "[$%.2X]", i); else sprintf(buff1, "[%s]", msg.c_str());
+    strcat(buff2, buff1);
+}
+
+void foo14(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(srcfile);
+    context->advance_pc(1);
+    
+    if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
+    /* $xx,S */
+    string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
+        sprintf(buff1, "$%.x,S", i); else sprintf(buff1, "%s,S", msg.c_str());
+    strcat(buff2, buff1);
+}
+
+void foo15(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(srcfile); 
+    context->advance_pc(1);
+    
+    if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
+    /* ($xx,S),Y */
+    string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
+        sprintf(buff1, "($%.2X,S),Y", i);
+    else sprintf(buff1, "(%s,S),Y", msg.c_str());
+    strcat(buff2, buff1);
+}
+
+void foo16(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    char r = read_char(srcfile);
+    unsigned int pc = context->advance_pc(1);
+
+    unsigned char h = r; if (disasm_state->print_instruction_bytes) printf("%.2X       ", h);
+    /* relative */ 
+
+    string msg = disasm_state->get_label(disasm_state->current_bank, pc + r); if (msg == "")
+        sprintf(buff1, "$%.4X", pc + r); else sprintf(buff1, "%s", msg.c_str());
+    strcat(buff2, buff1);
+}
+void foo17(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(srcfile);
+    unsigned char j = read_char(srcfile);
+    unsigned int pc = context->advance_pc(2);
+
+    /* relative long */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
+    long ll = j * 256 + i; if (ll > 32767) ll = -(65536 - ll);
+    string msg = disasm_state->get_label((disasm_state->current_bank * 65536 + pc + ll) / 0x10000, (disasm_state->current_bank * 65536 + pc + ll) & 0xffff);
+    if (msg == "") sprintf(buff1, "$%.6x", disasm_state->current_bank * 65536 + pc + ll);
+    else sprintf(buff1, "%s", msg.c_str());
+    strcat(buff2, buff1);
+}
+
+void foo18(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(srcfile);
+    unsigned char j = read_char(srcfile); 
+    context->advance_pc(2);
+
+    /* PER/PEA $xxxx */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
+    sprintf(buff1, "$%.2X%.2X", j, i);
+    strcat(buff2, buff1);    
+}
+
+void foo19(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(srcfile);
+    unsigned char j = read_char(srcfile);
+    context->advance_pc(2);
+
+    /* [$xxxx] */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
+    string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i); if (msg == "")
+        sprintf(buff1, "[$%.2X%.2X]", j, i);
+    else sprintf(buff1, "[%s]", msg.c_str());
+    strcat(buff2, buff1);
+}
+
+void foo20(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(srcfile);
+    unsigned char j = read_char(srcfile);
+    context->advance_pc(2);
+
+    /* ($xxxx) */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
+    string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i); if (msg == "")
+        sprintf(buff1, "($%.2X%.2X)", j, i); else sprintf(buff1, "(%s)", msg.c_str());
+    strcat(buff2, buff1);
+}
+
+void foo21(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(srcfile);
+    unsigned char j = read_char(srcfile);
+    context->advance_pc(2);
+
+    /* ($xxxx,X) */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
+    string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i); if (msg == "")
+        sprintf(buff1, "($%.2X%.2X,X)", j, i);
+    else sprintf(buff1, "(%s,X)", msg.c_str());
+    strcat(buff2, buff1);
+}
+
+void foo22(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(srcfile); 
+    context->advance_pc(1);
+
+    if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
+    /* $xx,Y */
+    string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
+        sprintf(buff1, "$%.2X,Y", i); else sprintf(buff1, "%s,Y", msg.c_str());
+    strcat(buff2, buff1);
+}
+
+void foo23(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(srcfile);
+    context->advance_pc(1);
+
+    if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
+    /* #$xx */
+    sprintf(buff1, "#$%.2X", i);
+    strcat(buff2, buff1);
+}
+
+void foo24(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(srcfile); 
+    context->advance_pc(1); 
+    
+    if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
+    /* REP */    sprintf(buff1, "#$%.2X", i); strcat(buff2, buff1);
+    if (i & 0x20) { context->set_accum_16(1); context->set_flag(0x20); }
+    if (i & 0x10) { context->set_index_16(1); context->set_flag(0x10); }
+}
+
+void foo25(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(srcfile); 
+    context->advance_pc(1); 
+    
+    if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
+    /* SEP */    sprintf(buff1, "#$%.2X", i); strcat(buff2, buff1);
+    if (i & 0x20) { context->set_accum_16(0); context->set_flag(0x02); }
+    if (i & 0x10) { context->set_index_16(0); context->set_flag(0x01); }
+}
+
+void foo26(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(srcfile);
+    context->advance_pc(1); 
+    
+    if (disasm_state->print_instruction_bytes) printf("%.2X ", i);
+    /* Index  #$xx or #$xxxx */
+    long ll = i; strcat(buff2, "#");
+    if (disasm_state->is_index_16) {
+        unsigned char j = read_char(srcfile); 
+        context->advance_pc(1);
+
+        ll = j * 256 + ll;
+        if (disasm_state->print_instruction_bytes) printf("%.2X ", j);
+    }
+    if (!disasm_state->is_index_16)
+        sprintf(buff1, "$%.2X", ll); 
+    else 
+        sprintf(buff1, "$%.4X", ll);
+    strcat(buff2, buff1);
+    if (disasm_state->print_instruction_bytes) {
+        printf("   ");
+        if (disasm_state->is_index_16 == 0) printf("   ");
+    }
+}
+
+void foo27(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(srcfile);
+    unsigned char j = read_char(srcfile);
+    context->advance_pc(2);
+
+    /* MVN / MVP */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
+    sprintf(buff1, "$%.2X,$%.2X", i, j); strcat(buff2, buff1);
+}
+
+void foo30(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+{
+    char buff1[80];
+
+    unsigned char i = read_char(srcfile);
+    unsigned char j = read_char(srcfile);
+    unsigned char k = read_char(srcfile);
+    context->advance_pc(3);
+
+    /* $xxxx, .db :$xxxx */
+    if (disasm_state->print_instruction_bytes)
+        printf("%.2X %.2X %.2X ", i, j, k);
+    unsigned char oldk = k;
+    if (k == 0xFF) k = disasm_state->default_bank;
+    string msg = disasm_state->get_label(k, j * 256 + i);
+    if (msg == ""){
+        if (i == 0 && j == 0 & k == 0){
+            sprintf(buff1, "$%.2X%.2X%.2X", k, j, i);
+            sprintf(buff3, ".db $%.2X", k);
+        }
+        else{
+            sprintf(buff1, "$%.2X%.2X%.2X", k, j, i);
+            sprintf(buff3, ".db :$%.2X%.2X%.2X", k, j, i);
+        }
+    }
+    else {
+        if (oldk == 0xFF){
+            sprintf(buff1, ".%s", msg.c_str());
+            sprintf(buff3, ".db $%.2X", oldk);
+        }
+        else{
+            sprintf(buff1, ".%s", msg.c_str());
+            sprintf(buff3, ".db :%s", msg.c_str());
+        }
+    }
+    strcat(buff2, buff1);
+}
+
 Disassembler::Disassembler() :
 m_hirom(false),
 m_current_pass(1),
@@ -29,27 +541,29 @@ Disassembler::~Disassembler()
     delete [] m_data;
 }
 
-std::string Disassembler::getInstructionName(const Instruction& instr){
-    string name = instr.name();
+string bar1(bool is_accum_16, bool is_index_16){
+    if (is_accum_16)
+        return ".W";
+    return ".B";
+}
 
-    if (instr.addressMode() == 1)
-        if (m_request_prop.m_accum_16 == true)
-            name += ".W";
-        else
-            name += ".B";
-    else if (instr.addressMode() == 26)
-        if(m_request_prop.m_index_16 == true)
-            name += ".W";
-        else
-            name += ".B";
-    else if (instr.addressMode() == 2 || instr.addressMode() == 9 || 
-        instr.addressMode() == 11){
-        if(name != ".dw") name += ".W";
-        }
-    else if (instr.addressMode() == 3 || instr.addressMode() == 10)
-        name += ".L";
-    
-    return name;
+string bar4(bool is_accum_16, bool is_index_16){
+    if (is_index_16)
+        return ".W";
+    return ".B";
+}
+
+string bar2(bool is_accum_16, bool is_index_16){
+    return ".W";
+}
+
+string bar3(bool is_accum_16, bool is_index_16){
+    return ".L";
+}
+
+
+std::string Disassembler::getInstructionName(const Instruction& instr, bool is_accum_16, bool is_index_16){
+    return instr.annotated_name(is_accum_16, is_index_16);
 }
 
 std::string Disassembler::get_comment(unsigned char bank, unsigned int pc)
@@ -167,7 +681,7 @@ void Disassembler::doDisasm()
             //adjust pc address
             fix_address(bank,pc);
 
-            string label = get_label(Instruction("",0,LINE_LABEL), bank, pc, 0);
+            string label = get_label(Instruction("", &foo0, 0, LINE_LABEL), bank, pc, 0);
             if (label != "") label += ":";
             
             if (finalPass()){
@@ -513,7 +1027,7 @@ void Disassembler::doDcb(int bytes_per_line)
     string comment;
     for(int i=0; bank * 65536 + pc < end_bank * 65536 + pc_end; ++i){
         int output_flag = (m_request_prop.m_print_data_addr) ? 0 : NO_ADDR_LABEL;
-        string label = get_label(Instruction("",0,LINE_LABEL | output_flag), bank, pc, 0);
+        string label = get_label(Instruction("", &foo0, 0, LINE_LABEL | output_flag), bank, pc, 0);
 
         if (label != "") label += ":";
 
@@ -573,7 +1087,7 @@ void Disassembler::doPtr(bool long_ptrs)
         fix_address(bank,pc);
 
         int output_flag = (m_request_prop.m_print_data_addr) ? 0 : NO_ADDR_LABEL;
-        string label = get_label(Instruction("",0,LINE_LABEL | output_flag), bank, pc, 0);
+        string label = get_label(Instruction("", &foo0, 0, LINE_LABEL | output_flag), bank, pc, 0);
         if (label != "") label += ":";
 
         if (finalPass()){
@@ -597,12 +1111,11 @@ void Disassembler::doPtr(bool long_ptrs)
     }
 }
 
- 
+
 void Disassembler::doType(const Instruction& instr, bool is_data, unsigned char default_bank)
 {
     int high = 0, low = 0;
 
-    char buff1[80];
     char buff2[80];
     char buff3[80];
     buff3[0] = 0;
@@ -612,7 +1125,6 @@ void Disassembler::doType(const Instruction& instr, bool is_data, unsigned char 
     bool& accum16 = m_request_prop.m_accum_16;
     bool& index16 = m_request_prop.m_index_16;
 
-    unsigned char t = instr.addressMode();
     unsigned char i, j, k, oldk;
     long ll;
     unsigned char h;
@@ -630,196 +1142,13 @@ void Disassembler::doType(const Instruction& instr, bool is_data, unsigned char 
     }
 
     if (!is_data) ++pc;
-    sprintf(buff2, "%s ", getInstructionName(instr).c_str());
+    sprintf(buff2, "%s ", getInstructionName(instr, accum16, index16).c_str());
 
-    switch (t)
-    {
-    case 0 : if (printInstructionBytes()) printf("         "); break;
-    case 1 : i = read_char(srcfile); pc++; if (printInstructionBytes()) printf("%.2X ", i);
-        /* Accum  #$xx or #$xxxx */
-        ll = i; strcat(buff2,"#");
-        if (accum16 == 1) { j = read_char(srcfile); pc++; ll = j * 256 + ll;
-        if (printInstructionBytes()) printf("%.2X ", j); }
-        if (accum16 == 0)
-            sprintf(buff1, "$%.2X", ll); 
-        else 
-            sprintf(buff1, "$%.4X", ll);
-        strcat(buff2, buff1);
-        if (printInstructionBytes()) { printf("   "); 
-        if (accum16 == 0) printf("   "); }
-        break;
-    case 2 : i = read_char(srcfile); j = read_char(srcfile);
-        /* $xxxx */  if (printInstructionBytes()) printf("%.2X %.2X    ",i,j);
-        msg = get_label(instr, bank, j * 256 + i, offset);
-        if (msg == "") sprintf(buff1, "$%.2X%.2X", j, i); 
-        else sprintf(buff1, "%s",msg.c_str());
-        strcat(buff2, buff1);
-        pc += 2; high = j; low = i; break;
-    case 3 : i = read_char(srcfile); j = read_char(srcfile); k = read_char(srcfile);
-        /* $xxxxxx */ if (printInstructionBytes()) printf("%.2X %.2X %.2X ", i, j, k);
-        msg = get_label(instr, k, j * 256 + i, offset); if (msg == "")
-            sprintf(buff1, "$%.2X%.2X%.2X", k, j, i);
-        else sprintf(buff1, "%s", msg.c_str());  strcat(buff2, buff1); 
-        pc += 3; break;
-    case 4 : i = read_char(srcfile); if (printInstructionBytes()) printf("%.2X       ", i);
-        /* $xx */    msg = get_label(instr, bank, i, offset); if (msg == "")
-        sprintf(buff1, "$%.2X", i);
-        else sprintf(buff1, "%s", msg.c_str()); strcat(buff2, buff1);
-        pc++; break;
-    case 5 : i = read_char(srcfile); if (printInstructionBytes()) printf("%.2X       ", i);
-        /* ($xx),Y */ msg = get_label(instr, bank, i, offset); if (msg == "")
-        sprintf(buff1, "($%.2X),Y", i);
-        else sprintf(buff1, "(%s),Y" ,msg.c_str());
-        strcat(buff2, buff1); pc++; break;
-    case 6 : i = read_char(srcfile); if (printInstructionBytes()) printf("%.2X       ", i);
-        /* [$xx],Y */ msg = get_label(instr, bank, i, offset);  if (msg == "")
-        sprintf(buff1, "[$%.2X],Y", i);
-        else sprintf(buff1,"[%s],Y",msg.c_str());
-        strcat(buff2, buff1); pc++; break; 
-    case 7 : i = read_char(srcfile); if (printInstructionBytes()) printf("%.2X       ", i);
-        /* ($xx,X) */ msg = get_label(instr, bank, i, offset); if (msg == "")
-        sprintf(buff1, "($%.2X,X)", i);
-        else sprintf(buff1, "(%s,X)", msg.c_str());
-        strcat(buff2, buff1); pc++; break;
-    case 8 : i = read_char(srcfile); if (printInstructionBytes()) printf("%.2X       ", i);
-        /* $xx,X */  msg = get_label(instr, bank, i, offset); if (msg == "")
-        sprintf(buff1, "$%.2X,X", i);
-        else sprintf(buff1, "%s,X", msg.c_str());
-        strcat(buff2, buff1); pc++; break;
-    case 9 : i = read_char(srcfile); j = read_char(srcfile);
-        /* $xxxx,X */ if (printInstructionBytes()) printf("%.2X %.2X    ",i,j);
-        msg = get_label(instr, bank, j * 256 + i, offset); if (msg == "")
-            sprintf(buff1, "$%.2X%.2X,X", j, i);
-        else sprintf(buff1, "%s,X", msg.c_str());
-        strcat(buff2, buff1); pc += 2; break;
-    case 10: i = read_char(srcfile); j = read_char(srcfile); k = read_char(srcfile);
-        /* $xxxxxx,X */ if (printInstructionBytes()) printf("%.2X %.2X %.2X ", i, j, k);
-        msg = get_label(instr, k, j * 256 + i, offset); if (msg == "")
-            sprintf(buff1, "$%.2X%.2X%.2X,X", k, j, i);
-        else sprintf(buff1, "%s,X", msg.c_str());
-        strcat(buff2, buff1); pc += 3; break;
-    case 11: i = read_char(srcfile); j = read_char(srcfile);
-        /* $xxxx,Y */ if (printInstructionBytes()) printf("%.2X %.2X    ",i,j);
-        msg = get_label(instr, bank, j * 256 + i, offset); if (msg == "")
-            sprintf(buff1, "$%.2X%.2X,Y", j, i);
-        else sprintf(buff1, "%s,Y", msg.c_str());
-        strcat(buff2, buff1);
-        pc += 2; break;
-    case 12: i = read_char(srcfile); if (printInstructionBytes()) printf("%.2X       ", i);
-        /* ($xx) */  msg = get_label(instr, bank, i, offset); if (msg == "")
-        sprintf(buff1, "($%.2X)", i); else sprintf(buff1, "(%s)", msg.c_str());
-        strcat(buff2, buff1); pc++; break;
-    case 13: i = read_char(srcfile); if (printInstructionBytes()) printf("%.2X       ", i);
-        /* [$xx] */  msg = get_label(instr, bank, i, offset); if (msg == "")
-        sprintf(buff1, "[$%.2X]", i); else sprintf(buff1, "[%s]", msg.c_str());
-        strcat(buff2, buff1); pc++; break;
-    case 14: i = read_char(srcfile); if (printInstructionBytes()) printf("%.2X       ", i);
-        /* $xx,S */  msg = get_label(instr, bank, i, offset); if (msg == "")
-        sprintf(buff1, "$%.x,S", i); else sprintf(buff1, "%s,S", msg.c_str());
-        strcat(buff2, buff1); pc++; break;
-    case 15: i = read_char(srcfile); if (printInstructionBytes()) printf("%.2X       ", i);
-        /* ($xx,S),Y */ msg = get_label(instr, bank, i, offset); if (msg == "")
-        sprintf(buff1, "($%.2X,S),Y", i);
-        else sprintf(buff1, "(%s,S),Y", msg.c_str());
-        strcat(buff2, buff1); pc++; break;
-    case 16: r = read_char(srcfile); h = r; if (printInstructionBytes()) printf("%.2X       ", h);
-        /* relative */ pc++; msg = get_label(instr, bank, pc + r, offset); if (msg == "")
-        sprintf(buff1, "$%.4X", pc+r); else sprintf(buff1, "%s", msg.c_str());
-        strcat(buff2, buff1); break;
-    case 17: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
-        /* relative long */ if (printInstructionBytes()) printf("%.2X %.2X    ",i,j);
-        ll = j * 256 + i; if (ll > 32767) ll = -(65536-ll);
-        msg = get_label(instr, (bank * 65536 + pc + ll) / 0x10000, (bank * 65536 + pc + ll) & 0xffff, offset);
-        if (msg == "") sprintf(buff1, "$%.6x", bank*65536+pc+ll);
-        else sprintf(buff1, "%s", msg.c_str());
-        strcat(buff2, buff1); break;
-    case 18: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
-        /* PER/PEA $xxxx */ if (printInstructionBytes()) printf("%.2X %.2X    ",i,j);
-        sprintf(buff1, "$%.2X%.2X", j, i);
-        strcat(buff2, buff1); break;
-    case 19: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
-        /* [$xxxx] */ if (printInstructionBytes()) printf("%.2X %.2X    ",i,j);
-        msg = get_label(instr, bank, j * 256 + i, offset); if (msg == "")
-            sprintf(buff1, "[$%.2X%.2X]", j, i);
-        else sprintf(buff1,"[%s]",msg.c_str());
-        strcat(buff2, buff1); break;
-    case 20: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
-        /* ($xxxx) */ if (printInstructionBytes()) printf("%.2X %.2X    ",i,j);
-        msg = get_label(instr, bank, j * 256 + i, offset); if (msg == "")
-            sprintf(buff1, "($%.2X%.2X)", j, i); else sprintf(buff1, "(%s)", msg.c_str());
-        strcat(buff2, buff1); break;
-    case 21: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
-        /* ($xxxx,X) */ if (printInstructionBytes()) printf("%.2X %.2X    ",i,j);
-        msg = get_label(instr, bank, j * 256 + i, offset); if (msg == "")
-            sprintf(buff1, "($%.2X%.2X,X)", j, i);
-        else sprintf(buff1, "(%s,X)", msg.c_str());
-        strcat(buff2,buff1); break;
-    case 22: i = read_char(srcfile); if (printInstructionBytes()) printf("%.2X       ", i); pc++;
-        /* $xx,Y */  msg = get_label(instr, bank, i, offset); if (msg == "")
-        sprintf(buff1, "$%.2X,Y", i); else sprintf(buff1, "%s,Y", msg.c_str());
-        strcat(buff2, buff1); break;
-    case 23: i = read_char(srcfile); if (printInstructionBytes()) printf("%.2X       ", i); pc++;
-        /* #$xx */   
-        sprintf(buff1, "#$%.2X", i);
-        strcat(buff2, buff1); break;
-    case 24: i = read_char(srcfile); if (printInstructionBytes()) printf("%.2X       ", i); pc++;
-        /* REP */    sprintf(buff1,"#$%.2X", i); strcat(buff2, buff1);
-        if (i & 0x20) { accum16 = 1; m_flag |= 0x20; }
-        if (i & 0x10) { index16 = 1; m_flag |= 0x10; }
-        break;
-    case 25: i = read_char(srcfile); if (printInstructionBytes()) printf("%.2X       ", i); pc++;
-        /* SEP */    sprintf(buff1, "#$%.2X", i); strcat(buff2, buff1);
-        if (i & 0x20) { accum16 = 0; m_flag |= 0x02; }
-        if (i & 0x10) { index16 = 0; m_flag |= 0x01; }
-        break;
-    case 26: i = read_char(srcfile); pc++; if (printInstructionBytes()) printf("%.2X ", i);
-        /* Index  #$xx or #$xxxx */
-        ll = i; strcat(buff2,"#");
-        if (index16 == 1) { j = read_char(srcfile); pc++; ll = j * 256 + ll;
-        if (printInstructionBytes()) printf("%.2X ", j); }
-        if (index16 == 0)
-            sprintf(buff1, "$%.2X", ll); else sprintf(buff1, "$%.4X", ll);
-        strcat(buff2, buff1);
-        if (printInstructionBytes()) { printf("   "); if (index16 == 0) printf("   "); }
-        break;
-    case 27: i = read_char(srcfile); j = read_char(srcfile); pc += 2;
-        /* MVN / MVP */ if (printInstructionBytes()) printf("%.2X %.2X    ", i, j);
-        sprintf(buff1, "$%.2X,$%.2X", i, j); strcat(buff2, buff1); break;
+    DisasmState state(*((Disassembler*)this), instr, accum16, index16, printInstructionBytes(), bank, default_bank, offset);
+    StateContext context(pc, m_flag, accum16, index16, low, high);
 
-    case 30 : i = read_char(srcfile); j = read_char(srcfile); k = read_char(srcfile);
-        /* $xxxx, .db :$xxxx */ 
-        if (printInstructionBytes()) 
-            printf("%.2X %.2X %.2X ", i, j, k);
-        oldk = k;
-        if (k == 0xFF) k = default_bank;
-        msg = get_label(instr, k, j * 256 + i, offset);
-        if (msg == ""){
-            if (i == 0 && j == 0 & k == 0){
-                sprintf(buff1, "$%.2X%.2X%.2X", k, j, i);
-                sprintf(buff3, ".db $%.2X", k);
-            }
-            else{
-                sprintf(buff1, "$%.2X%.2X%.2X", k, j, i);
-                sprintf(buff3, ".db :$%.2X%.2X%.2X", k, j, i);
-            }
-        }
-        else {
-            if (oldk == 0xFF){
-                sprintf(buff1, ".%s", msg.c_str());
-                sprintf(buff3, ".db $%.2X", oldk);
-            }
-            else{
-                sprintf(buff1, ".%s", msg.c_str());
-                sprintf(buff3, ".db :%s", msg.c_str());
-            }
-        }
-        strcat(buff2, buff1); 
-        pc += 3; 
-        break;
-
-
-    default: sprintf(buff2, "???"); break;
-    }
+    auto f = instr.m_address_mode_handler;
+    f(srcfile, buff2, buff3, &state, &context);
 
     //get comment
     if (comment != "")
@@ -852,262 +1181,262 @@ void Disassembler::doType(const Instruction& instr, bool is_data, unsigned char 
 
 void Disassembler::initialize_instruction_lookup()
 {
-    m_instruction_lookup.insert(make_pair(0x69, Instruction("ADC", 1)));
-    m_instruction_lookup.insert(make_pair(0x6D, Instruction("ADC", 2)));
-    m_instruction_lookup.insert(make_pair(0x6F, Instruction("ADC", 3)));
-    m_instruction_lookup.insert(make_pair(0x65, Instruction("ADC", 4)));
-    m_instruction_lookup.insert(make_pair(0x71, Instruction("ADC", 5)));
-    m_instruction_lookup.insert(make_pair(0x77, Instruction("ADC", 6)));
-    m_instruction_lookup.insert(make_pair(0x61, Instruction("ADC", 7)));
-    m_instruction_lookup.insert(make_pair(0x75, Instruction("ADC", 8)));
-    m_instruction_lookup.insert(make_pair(0x7D, Instruction("ADC", 9)));
-    m_instruction_lookup.insert(make_pair(0x7F, Instruction("ADC", 10)));
-    m_instruction_lookup.insert(make_pair(0x79, Instruction("ADC", 11)));
-    m_instruction_lookup.insert(make_pair(0x72, Instruction("ADC", 12)));
-    m_instruction_lookup.insert(make_pair(0x67, Instruction("ADC", 13)));
-    m_instruction_lookup.insert(make_pair(0x63, Instruction("ADC", 14)));
-    m_instruction_lookup.insert(make_pair(0x73, Instruction("ADC", 15)));
-    m_instruction_lookup.insert(make_pair(0x29, Instruction("AND", 1)));
-    m_instruction_lookup.insert(make_pair(0x2D, Instruction("AND", 2)));
-    m_instruction_lookup.insert(make_pair(0x2F, Instruction("AND", 3)));
-    m_instruction_lookup.insert(make_pair(0x25, Instruction("AND", 4)));
-    m_instruction_lookup.insert(make_pair(0x31, Instruction("AND", 5)));
-    m_instruction_lookup.insert(make_pair(0x37, Instruction("AND", 6)));
-    m_instruction_lookup.insert(make_pair(0x21, Instruction("AND", 7)));
-    m_instruction_lookup.insert(make_pair(0x35, Instruction("AND", 8)));
-    m_instruction_lookup.insert(make_pair(0x3D, Instruction("AND", 9)));
-    m_instruction_lookup.insert(make_pair(0x3F, Instruction("AND", 10)));
-    m_instruction_lookup.insert(make_pair(0x39, Instruction("AND", 11)));
-    m_instruction_lookup.insert(make_pair(0x32, Instruction("AND", 12)));
-    m_instruction_lookup.insert(make_pair(0x27, Instruction("AND", 13)));
-    m_instruction_lookup.insert(make_pair(0x23, Instruction("AND", 14)));
-    m_instruction_lookup.insert(make_pair(0x33, Instruction("AND", 15)));
-    m_instruction_lookup.insert(make_pair(0x0E, Instruction("ASL", 2)));
-    m_instruction_lookup.insert(make_pair(0x06, Instruction("ASL", 4)));
-    m_instruction_lookup.insert(make_pair(0x0A, Instruction("ASL", 0)));
-    m_instruction_lookup.insert(make_pair(0x16, Instruction("ASL", 8)));
-    m_instruction_lookup.insert(make_pair(0x1E, Instruction("ASL", 9)));
-    m_instruction_lookup.insert(make_pair(0x90, Instruction("BCC", 16, IS_BRANCH)));
-    m_instruction_lookup.insert(make_pair(0xB0, Instruction("BCS", 16, IS_BRANCH)));
-    m_instruction_lookup.insert(make_pair(0xF0, Instruction("BEQ", 16, IS_BRANCH)));
-    m_instruction_lookup.insert(make_pair(0x30, Instruction("BMI", 16, IS_BRANCH)));
-    m_instruction_lookup.insert(make_pair(0xD0, Instruction("BNE", 16, IS_BRANCH)));
-    m_instruction_lookup.insert(make_pair(0x10, Instruction("BPL", 16, IS_BRANCH)));
-    m_instruction_lookup.insert(make_pair(0x80, Instruction("BRA", 16, IS_BRANCH)));
-    m_instruction_lookup.insert(make_pair(0x82, Instruction("BRL", 17)));
-    m_instruction_lookup.insert(make_pair(0x50, Instruction("BVC", 16, IS_BRANCH)));
-    m_instruction_lookup.insert(make_pair(0x70, Instruction("BVS", 16, IS_BRANCH)));
-    m_instruction_lookup.insert(make_pair(0x89, Instruction("BIT", 1)));
-    m_instruction_lookup.insert(make_pair(0x2C, Instruction("BIT", 2)));
-    m_instruction_lookup.insert(make_pair(0x24, Instruction("BIT", 4)));
-    m_instruction_lookup.insert(make_pair(0x34, Instruction("BIT", 8)));
-    m_instruction_lookup.insert(make_pair(0x3C, Instruction("BIT", 9)));
-    m_instruction_lookup.insert(make_pair(0x00, Instruction("BRK", 0)));
-    m_instruction_lookup.insert(make_pair(0x18, Instruction("CLC", 0)));
-    m_instruction_lookup.insert(make_pair(0xD8, Instruction("CLD", 0)));
-    m_instruction_lookup.insert(make_pair(0x58, Instruction("CLI", 0)));
-    m_instruction_lookup.insert(make_pair(0xB8, Instruction("CLV", 0)));
-    m_instruction_lookup.insert(make_pair(0xC9, Instruction("CMP", 1)));
-    m_instruction_lookup.insert(make_pair(0xCD, Instruction("CMP", 2)));
-    m_instruction_lookup.insert(make_pair(0xCF, Instruction("CMP", 3)));
-    m_instruction_lookup.insert(make_pair(0xC5, Instruction("CMP", 4)));
-    m_instruction_lookup.insert(make_pair(0xD1, Instruction("CMP", 5)));
-    m_instruction_lookup.insert(make_pair(0xD7, Instruction("CMP", 6)));
-    m_instruction_lookup.insert(make_pair(0xC1, Instruction("CMP", 7)));
-    m_instruction_lookup.insert(make_pair(0xD5, Instruction("CMP", 8)));
-  m_instruction_lookup.insert(make_pair(0xDD, Instruction("CMP", 9)));
-  m_instruction_lookup.insert(make_pair(0xDF, Instruction("CMP", 10)));
-  m_instruction_lookup.insert(make_pair(0xD9, Instruction("CMP", 11)));
-  m_instruction_lookup.insert(make_pair(0xD2, Instruction("CMP", 12)));
-  m_instruction_lookup.insert(make_pair(0xC7, Instruction("CMP", 13)));
-  m_instruction_lookup.insert(make_pair(0xC3, Instruction("CMP", 14)));
-  m_instruction_lookup.insert(make_pair(0xD3, Instruction("CMP", 15)));
-  m_instruction_lookup.insert(make_pair(0xE0, Instruction("CPX", 26)));
-  m_instruction_lookup.insert(make_pair(0xEC, Instruction("CPX", 2)));
-  m_instruction_lookup.insert(make_pair(0xE4, Instruction("CPX", 4)));
-  m_instruction_lookup.insert(make_pair(0xC0, Instruction("CPY", 26)));
-  m_instruction_lookup.insert(make_pair(0xCC, Instruction("CPY", 2)));
-  m_instruction_lookup.insert(make_pair(0xC4, Instruction("CPY", 4)));
-  m_instruction_lookup.insert(make_pair(0xCE, Instruction("DEC", 2)));
-  m_instruction_lookup.insert(make_pair(0xC6, Instruction("DEC", 4)));
-  m_instruction_lookup.insert(make_pair(0x3A, Instruction("DEC A", 0)));
-  m_instruction_lookup.insert(make_pair(0xD6, Instruction("DEC", 8)));
-  m_instruction_lookup.insert(make_pair(0xDE, Instruction("DEC", 9)));
-  m_instruction_lookup.insert(make_pair(0xCA, Instruction("DEX", 0)));
-  m_instruction_lookup.insert(make_pair(0x88, Instruction("DEY", 0)));
-  m_instruction_lookup.insert(make_pair(0x49, Instruction("EOR", 1)));
-  m_instruction_lookup.insert(make_pair(0x4D, Instruction("EOR", 2)));
-  m_instruction_lookup.insert(make_pair(0x4F, Instruction("EOR", 3)));
-  m_instruction_lookup.insert(make_pair(0x45, Instruction("EOR", 4)));
-  m_instruction_lookup.insert(make_pair(0x51, Instruction("EOR", 5)));
-  m_instruction_lookup.insert(make_pair(0x57, Instruction("EOR", 6)));
-  m_instruction_lookup.insert(make_pair(0x41, Instruction("EOR", 7)));
-  m_instruction_lookup.insert(make_pair(0x55, Instruction("EOR", 8)));
-  m_instruction_lookup.insert(make_pair(0x5D, Instruction("EOR", 9)));
-  m_instruction_lookup.insert(make_pair(0x5F, Instruction("EOR", 10)));
-  m_instruction_lookup.insert(make_pair(0x59, Instruction("EOR", 11)));
-  m_instruction_lookup.insert(make_pair(0x52, Instruction("EOR", 12)));
-  m_instruction_lookup.insert(make_pair(0x47, Instruction("EOR", 13)));
-  m_instruction_lookup.insert(make_pair(0x43, Instruction("EOR", 14)));
-  m_instruction_lookup.insert(make_pair(0x53, Instruction("EOR", 15)));
-  m_instruction_lookup.insert(make_pair(0xEE, Instruction("INC", 2)));
-  m_instruction_lookup.insert(make_pair(0xE6, Instruction("INC", 4)));
-  m_instruction_lookup.insert(make_pair(0x1A, Instruction("INC A", 0)));
-  m_instruction_lookup.insert(make_pair(0xF6, Instruction("INC", 8)));
-  m_instruction_lookup.insert(make_pair(0xFE, Instruction("INC", 9)));
-  m_instruction_lookup.insert(make_pair(0xE8, Instruction("INX", 0)));
-  m_instruction_lookup.insert(make_pair(0xC8, Instruction("INY", 0)));
-  m_instruction_lookup.insert(make_pair(0x5C, Instruction("JMP", 3)));
-  m_instruction_lookup.insert(make_pair(0xDC, Instruction("JMP", 19)));
-  m_instruction_lookup.insert(make_pair(0x4C, Instruction("JMP", 2)));
-  m_instruction_lookup.insert(make_pair(0x6C, Instruction("JMP", 20)));
-  m_instruction_lookup.insert(make_pair(0x7C, Instruction("JMP", 21)));
-  m_instruction_lookup.insert(make_pair(0x22, Instruction("JSL", 3)));
-  m_instruction_lookup.insert(make_pair(0x20, Instruction("JSR", 2)));
-  m_instruction_lookup.insert(make_pair(0xFC, Instruction("JSR", 21)));
-  m_instruction_lookup.insert(make_pair(0xA9, Instruction("LDA", 1)));
-  m_instruction_lookup.insert(make_pair(0xAD, Instruction("LDA", 2)));
-  m_instruction_lookup.insert(make_pair(0xAF, Instruction("LDA", 3)));
-  m_instruction_lookup.insert(make_pair(0xA5, Instruction("LDA", 4)));
-  m_instruction_lookup.insert(make_pair(0xB1, Instruction("LDA", 5)));
-  m_instruction_lookup.insert(make_pair(0xB7, Instruction("LDA", 6)));
-  m_instruction_lookup.insert(make_pair(0xA1, Instruction("LDA", 7)));
-  m_instruction_lookup.insert(make_pair(0xB5, Instruction("LDA", 8)));
-  m_instruction_lookup.insert(make_pair(0xBD, Instruction("LDA", 9)));
-  m_instruction_lookup.insert(make_pair(0xBF, Instruction("LDA", 10)));
-  m_instruction_lookup.insert(make_pair(0xB9, Instruction("LDA", 11)));
-  m_instruction_lookup.insert(make_pair(0xB2, Instruction("LDA", 12)));
-  m_instruction_lookup.insert(make_pair(0xA7, Instruction("LDA", 13)));
-  m_instruction_lookup.insert(make_pair(0xA3, Instruction("LDA", 14)));
-  m_instruction_lookup.insert(make_pair(0xB3, Instruction("LDA", 15)));
-  m_instruction_lookup.insert(make_pair(0xA2, Instruction("LDX", 26)));
-  m_instruction_lookup.insert(make_pair(0xAE, Instruction("LDX", 2)));
-  m_instruction_lookup.insert(make_pair(0xA6, Instruction("LDX", 4)));
-  m_instruction_lookup.insert(make_pair(0xB6, Instruction("LDX", 22)));
-  m_instruction_lookup.insert(make_pair(0xBE, Instruction("LDX", 11)));
-  m_instruction_lookup.insert(make_pair(0xA0, Instruction("LDY", 26)));
-  m_instruction_lookup.insert(make_pair(0xAC, Instruction("LDY", 2)));
-  m_instruction_lookup.insert(make_pair(0xA4, Instruction("LDY", 4)));
-  m_instruction_lookup.insert(make_pair(0xB4, Instruction("LDY", 8)));
-  m_instruction_lookup.insert(make_pair(0xBC, Instruction("LDY", 9)));
-  m_instruction_lookup.insert(make_pair(0x4E, Instruction("LSR", 2)));
-  m_instruction_lookup.insert(make_pair(0x46, Instruction("LSR", 4)));
-  m_instruction_lookup.insert(make_pair(0x4A, Instruction("LSR", 0)));
-  m_instruction_lookup.insert(make_pair(0x56, Instruction("LSR", 8)));
-  m_instruction_lookup.insert(make_pair(0x5E, Instruction("LSR", 9)));
-  m_instruction_lookup.insert(make_pair(0xEA, Instruction("NOP", 0)));
-  m_instruction_lookup.insert(make_pair(0x09, Instruction("ORA", 1)));
-  m_instruction_lookup.insert(make_pair(0x0D, Instruction("ORA", 2)));
-  m_instruction_lookup.insert(make_pair(0x0F, Instruction("ORA", 3)));
-  m_instruction_lookup.insert(make_pair(0x05, Instruction("ORA", 4)));
-  m_instruction_lookup.insert(make_pair(0x11, Instruction("ORA", 5)));
-  m_instruction_lookup.insert(make_pair(0x17, Instruction("ORA", 6)));
-  m_instruction_lookup.insert(make_pair(0x01, Instruction("ORA", 7)));
-  m_instruction_lookup.insert(make_pair(0x15, Instruction("ORA", 8)));
-  m_instruction_lookup.insert(make_pair(0x1D, Instruction("ORA", 9)));
-  m_instruction_lookup.insert(make_pair(0x1F, Instruction("ORA", 10)));
-  m_instruction_lookup.insert(make_pair(0x19, Instruction("ORA", 11)));
-  m_instruction_lookup.insert(make_pair(0x12, Instruction("ORA", 12)));
-  m_instruction_lookup.insert(make_pair(0x07, Instruction("ORA", 13)));
-  m_instruction_lookup.insert(make_pair(0x03, Instruction("ORA", 14)));
-  m_instruction_lookup.insert(make_pair(0x13, Instruction("ORA", 15)));
-  m_instruction_lookup.insert(make_pair(0xF4, Instruction("PEA", 18)));
-  m_instruction_lookup.insert(make_pair(0xD4, Instruction("PEI", 23)));
-  m_instruction_lookup.insert(make_pair(0x62, Instruction("PER", 18)));
-  m_instruction_lookup.insert(make_pair(0x48, Instruction("PHA", 0)));
-  m_instruction_lookup.insert(make_pair(0x8B, Instruction("PHB", 0)));
-  m_instruction_lookup.insert(make_pair(0x0B, Instruction("PHD", 0)));
-  m_instruction_lookup.insert(make_pair(0x4B, Instruction("PHK", 0)));
-  m_instruction_lookup.insert(make_pair(0x08, Instruction("PHP", 0)));
-  m_instruction_lookup.insert(make_pair(0xDA, Instruction("PHX", 0)));
-  m_instruction_lookup.insert(make_pair(0x5A, Instruction("PHY", 0)));
-  m_instruction_lookup.insert(make_pair(0x68, Instruction("PLA", 0)));
-  m_instruction_lookup.insert(make_pair(0xAB, Instruction("PLB", 0)));
-  m_instruction_lookup.insert(make_pair(0x2B, Instruction("PLD", 0)));
-  m_instruction_lookup.insert(make_pair(0x28, Instruction("PLP", 0)));
-  m_instruction_lookup.insert(make_pair(0xFA, Instruction("PLX", 0)));
-  m_instruction_lookup.insert(make_pair(0x7A, Instruction("PLY", 0)));
-  m_instruction_lookup.insert(make_pair(0xC2, Instruction("REP", 24)));
-  m_instruction_lookup.insert(make_pair(0x2E, Instruction("ROL", 1)));
-  m_instruction_lookup.insert(make_pair(0x26, Instruction("ROL", 4)));
-  m_instruction_lookup.insert(make_pair(0x2A, Instruction("ROL", 0)));
-  m_instruction_lookup.insert(make_pair(0x36, Instruction("ROL", 8)));
-  m_instruction_lookup.insert(make_pair(0x3E, Instruction("ROL", 9)));
-  m_instruction_lookup.insert(make_pair(0x6E, Instruction("ROR", 2)));
-  m_instruction_lookup.insert(make_pair(0x66, Instruction("ROR", 4)));
-  m_instruction_lookup.insert(make_pair(0x6A, Instruction("ROR", 0)));
-  m_instruction_lookup.insert(make_pair(0x76, Instruction("ROR", 8)));
-  m_instruction_lookup.insert(make_pair(0x7E, Instruction("ROR", 9)));
-  m_instruction_lookup.insert(make_pair(0x40, Instruction("RTI", 0)));
-  m_instruction_lookup.insert(make_pair(0x6B, Instruction("RTL", 0)));
-  m_instruction_lookup.insert(make_pair(0x60, Instruction("RTS", 0)));
-  m_instruction_lookup.insert(make_pair(0xE9, Instruction("SBC", 1)));
-  m_instruction_lookup.insert(make_pair(0xED, Instruction("SBC", 2)));
-  m_instruction_lookup.insert(make_pair(0xEF, Instruction("SBC", 3)));
-  m_instruction_lookup.insert(make_pair(0xE5, Instruction("SBC", 4)));
-  m_instruction_lookup.insert(make_pair(0xF1, Instruction("SBC", 5)));
-  m_instruction_lookup.insert(make_pair(0xF7, Instruction("SBC", 6)));
-  m_instruction_lookup.insert(make_pair(0xE1, Instruction("SBC", 7)));
-  m_instruction_lookup.insert(make_pair(0xF5, Instruction("SBC", 8)));
-  m_instruction_lookup.insert(make_pair(0xFD, Instruction("SBC", 9)));
-  m_instruction_lookup.insert(make_pair(0xFF, Instruction("SBC", 10)));
-  m_instruction_lookup.insert(make_pair(0xF9, Instruction("SBC", 11)));
-  m_instruction_lookup.insert(make_pair(0xF2, Instruction("SBC", 12)));
-  m_instruction_lookup.insert(make_pair(0xE7, Instruction("SBC", 13)));
-  m_instruction_lookup.insert(make_pair(0xE3, Instruction("SBC", 14)));
-  m_instruction_lookup.insert(make_pair(0xF3, Instruction("SBC", 15)));
-  m_instruction_lookup.insert(make_pair(0x38, Instruction("SEC", 0)));
-  m_instruction_lookup.insert(make_pair(0xF8, Instruction("SED", 0)));
-  m_instruction_lookup.insert(make_pair(0x78, Instruction("SEI", 0)));
-  m_instruction_lookup.insert(make_pair(0xE2, Instruction("SEP", 25)));
-  m_instruction_lookup.insert(make_pair(0x8D, Instruction("STA", 2)));
-  m_instruction_lookup.insert(make_pair(0x8F, Instruction("STA", 3)));
-  m_instruction_lookup.insert(make_pair(0x85, Instruction("STA", 4)));
-  m_instruction_lookup.insert(make_pair(0x91, Instruction("STA", 5)));
-  m_instruction_lookup.insert(make_pair(0x97, Instruction("STA", 6)));
-  m_instruction_lookup.insert(make_pair(0x81, Instruction("STA", 7)));
-  m_instruction_lookup.insert(make_pair(0x95, Instruction("STA", 8)));
-  m_instruction_lookup.insert(make_pair(0x9D, Instruction("STA", 9)));
-  m_instruction_lookup.insert(make_pair(0x9F, Instruction("STA", 10)));
-  m_instruction_lookup.insert(make_pair(0x99, Instruction("STA", 11)));
-  m_instruction_lookup.insert(make_pair(0x92, Instruction("STA", 12)));
-  m_instruction_lookup.insert(make_pair(0x87, Instruction("STA", 13)));
-  m_instruction_lookup.insert(make_pair(0x83, Instruction("STA", 14)));
-  m_instruction_lookup.insert(make_pair(0x93, Instruction("STA", 15)));
-  m_instruction_lookup.insert(make_pair(0xDB, Instruction("STP", 0)));
-  m_instruction_lookup.insert(make_pair(0x8E, Instruction("STX", 2)));
-  m_instruction_lookup.insert(make_pair(0x86, Instruction("STX", 4)));
-  m_instruction_lookup.insert(make_pair(0x96, Instruction("STX", 8)));
-  m_instruction_lookup.insert(make_pair(0x8C, Instruction("STY", 2)));
-  m_instruction_lookup.insert(make_pair(0x84, Instruction("STY", 4)));
-  m_instruction_lookup.insert(make_pair(0x94, Instruction("STY", 8)));
-  m_instruction_lookup.insert(make_pair(0x9C, Instruction("STZ", 2)));
-  m_instruction_lookup.insert(make_pair(0x64, Instruction("STZ", 4)));
-  m_instruction_lookup.insert(make_pair(0x74, Instruction("STZ", 8)));
-  m_instruction_lookup.insert(make_pair(0x9E, Instruction("STZ", 9)));
-  m_instruction_lookup.insert(make_pair(0xAA, Instruction("TAX", 0)));
-  m_instruction_lookup.insert(make_pair(0xA8, Instruction("TAY", 0)));
-  m_instruction_lookup.insert(make_pair(0x5B, Instruction("TCD", 0)));
-  m_instruction_lookup.insert(make_pair(0x1B, Instruction("TCS", 0)));
-  m_instruction_lookup.insert(make_pair(0x7B, Instruction("TDC", 0)));
-  m_instruction_lookup.insert(make_pair(0x1C, Instruction("TRB", 2)));
-  m_instruction_lookup.insert(make_pair(0x14, Instruction("TRB", 4)));
-  m_instruction_lookup.insert(make_pair(0x0C, Instruction("TSB", 2)));
-  m_instruction_lookup.insert(make_pair(0x04, Instruction("TSB", 4)));
-  m_instruction_lookup.insert(make_pair(0x3B, Instruction("TSC", 0)));
-  m_instruction_lookup.insert(make_pair(0xBA, Instruction("TSX", 0)));
-  m_instruction_lookup.insert(make_pair(0x8A, Instruction("TXA", 0)));
-  m_instruction_lookup.insert(make_pair(0x9A, Instruction("TXS", 0)));
-  m_instruction_lookup.insert(make_pair(0x9B, Instruction("TXY", 0)));
-  m_instruction_lookup.insert(make_pair(0x98, Instruction("TYA", 0)));
-  m_instruction_lookup.insert(make_pair(0xBB, Instruction("TYX", 0)));
-  m_instruction_lookup.insert(make_pair(0xCB, Instruction("WAI", 0)));
-  m_instruction_lookup.insert(make_pair(0xEB, Instruction("XBA", 0)));
-  m_instruction_lookup.insert(make_pair(0xFB, Instruction("XCE", 0)));
-  m_instruction_lookup.insert(make_pair(0x02, Instruction("COP", 0)));
-  m_instruction_lookup.insert(make_pair(0x54, Instruction("MVN", 27)));
-  m_instruction_lookup.insert(make_pair(0x44, Instruction("MVP", 27)));
+    m_instruction_lookup.insert(make_pair(0x69, Instruction("ADC", &foo1, &bar1)));
+    m_instruction_lookup.insert(make_pair(0x6D, Instruction("ADC", &foo2, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x6F, Instruction("ADC", &foo3, &bar3)));
+    m_instruction_lookup.insert(make_pair(0x65, Instruction("ADC", &foo4)));
+    m_instruction_lookup.insert(make_pair(0x71, Instruction("ADC", &foo5)));
+    m_instruction_lookup.insert(make_pair(0x77, Instruction("ADC", &foo6)));
+    m_instruction_lookup.insert(make_pair(0x61, Instruction("ADC", &foo7)));
+    m_instruction_lookup.insert(make_pair(0x75, Instruction("ADC", &foo8)));
+    m_instruction_lookup.insert(make_pair(0x7D, Instruction("ADC", &foo9, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x7F, Instruction("ADC", &foo10, &bar3)));
+    m_instruction_lookup.insert(make_pair(0x79, Instruction("ADC", &foo11, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x72, Instruction("ADC", &foo12)));
+    m_instruction_lookup.insert(make_pair(0x67, Instruction("ADC", &foo13)));
+    m_instruction_lookup.insert(make_pair(0x63, Instruction("ADC", &foo14)));
+    m_instruction_lookup.insert(make_pair(0x73, Instruction("ADC", &foo15)));
+    m_instruction_lookup.insert(make_pair(0x29, Instruction("AND", &foo1, &bar1)));
+    m_instruction_lookup.insert(make_pair(0x2D, Instruction("AND", &foo2, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x2F, Instruction("AND", &foo3, &bar3)));
+    m_instruction_lookup.insert(make_pair(0x25, Instruction("AND", &foo4)));
+    m_instruction_lookup.insert(make_pair(0x31, Instruction("AND", &foo5)));
+    m_instruction_lookup.insert(make_pair(0x37, Instruction("AND", &foo6)));
+    m_instruction_lookup.insert(make_pair(0x21, Instruction("AND", &foo7)));
+    m_instruction_lookup.insert(make_pair(0x35, Instruction("AND", &foo8)));
+    m_instruction_lookup.insert(make_pair(0x3D, Instruction("AND", &foo9, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x3F, Instruction("AND", &foo10, &bar3)));
+    m_instruction_lookup.insert(make_pair(0x39, Instruction("AND", &foo11, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x32, Instruction("AND", &foo12)));
+    m_instruction_lookup.insert(make_pair(0x27, Instruction("AND", &foo13)));
+    m_instruction_lookup.insert(make_pair(0x23, Instruction("AND", &foo14)));
+    m_instruction_lookup.insert(make_pair(0x33, Instruction("AND", &foo15)));
+    m_instruction_lookup.insert(make_pair(0x0E, Instruction("ASL", &foo2, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x06, Instruction("ASL", &foo4)));
+    m_instruction_lookup.insert(make_pair(0x0A, Instruction("ASL", &foo0)));
+    m_instruction_lookup.insert(make_pair(0x16, Instruction("ASL", &foo8)));
+    m_instruction_lookup.insert(make_pair(0x1E, Instruction("ASL", &foo9, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x90, Instruction("BCC", &foo16, 0, IS_BRANCH)));
+    m_instruction_lookup.insert(make_pair(0xB0, Instruction("BCS", &foo16, 0, IS_BRANCH)));
+    m_instruction_lookup.insert(make_pair(0xF0, Instruction("BEQ", &foo16, 0, IS_BRANCH)));
+    m_instruction_lookup.insert(make_pair(0x30, Instruction("BMI", &foo16, 0, IS_BRANCH)));
+    m_instruction_lookup.insert(make_pair(0xD0, Instruction("BNE", &foo16, 0, IS_BRANCH)));
+    m_instruction_lookup.insert(make_pair(0x10, Instruction("BPL", &foo16, 0, IS_BRANCH)));
+    m_instruction_lookup.insert(make_pair(0x80, Instruction("BRA", &foo16, 0, IS_BRANCH)));
+    m_instruction_lookup.insert(make_pair(0x82, Instruction("BRL", &foo17)));
+    m_instruction_lookup.insert(make_pair(0x50, Instruction("BVC", &foo16, 0, IS_BRANCH)));
+    m_instruction_lookup.insert(make_pair(0x70, Instruction("BVS", &foo16, 0, IS_BRANCH)));
+    m_instruction_lookup.insert(make_pair(0x89, Instruction("BIT", &foo1, &bar1)));
+    m_instruction_lookup.insert(make_pair(0x2C, Instruction("BIT", &foo2, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x24, Instruction("BIT", &foo4)));
+    m_instruction_lookup.insert(make_pair(0x34, Instruction("BIT", &foo8)));
+    m_instruction_lookup.insert(make_pair(0x3C, Instruction("BIT", &foo9, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x00, Instruction("BRK", &foo0)));
+    m_instruction_lookup.insert(make_pair(0x18, Instruction("CLC", &foo0)));
+    m_instruction_lookup.insert(make_pair(0xD8, Instruction("CLD", &foo0)));
+    m_instruction_lookup.insert(make_pair(0x58, Instruction("CLI", &foo0)));
+    m_instruction_lookup.insert(make_pair(0xB8, Instruction("CLV", &foo0)));
+    m_instruction_lookup.insert(make_pair(0xC9, Instruction("CMP", &foo1, &bar1)));
+    m_instruction_lookup.insert(make_pair(0xCD, Instruction("CMP", &foo2, &bar2)));
+    m_instruction_lookup.insert(make_pair(0xCF, Instruction("CMP", &foo3, &bar3)));
+    m_instruction_lookup.insert(make_pair(0xC5, Instruction("CMP", &foo4)));
+    m_instruction_lookup.insert(make_pair(0xD1, Instruction("CMP", &foo5)));
+    m_instruction_lookup.insert(make_pair(0xD7, Instruction("CMP", &foo6)));
+    m_instruction_lookup.insert(make_pair(0xC1, Instruction("CMP", &foo7)));
+    m_instruction_lookup.insert(make_pair(0xD5, Instruction("CMP", &foo8)));
+  m_instruction_lookup.insert(make_pair(0xDD, Instruction("CMP", &foo9, &bar2)));
+  m_instruction_lookup.insert(make_pair(0xDF, Instruction("CMP", &foo10, &bar3)));
+  m_instruction_lookup.insert(make_pair(0xD9, Instruction("CMP", &foo11, &bar2)));
+  m_instruction_lookup.insert(make_pair(0xD2, Instruction("CMP", &foo12)));
+  m_instruction_lookup.insert(make_pair(0xC7, Instruction("CMP", &foo13)));
+  m_instruction_lookup.insert(make_pair(0xC3, Instruction("CMP", &foo14)));
+  m_instruction_lookup.insert(make_pair(0xD3, Instruction("CMP", &foo15)));
+  m_instruction_lookup.insert(make_pair(0xE0, Instruction("CPX", &foo26, &bar4)));
+  m_instruction_lookup.insert(make_pair(0xEC, Instruction("CPX", &foo2, &bar2)));
+  m_instruction_lookup.insert(make_pair(0xE4, Instruction("CPX", &foo4)));
+  m_instruction_lookup.insert(make_pair(0xC0, Instruction("CPY", &foo26, &bar4)));
+  m_instruction_lookup.insert(make_pair(0xCC, Instruction("CPY", &foo2, &bar2)));
+  m_instruction_lookup.insert(make_pair(0xC4, Instruction("CPY", &foo4)));
+  m_instruction_lookup.insert(make_pair(0xCE, Instruction("DEC", &foo2, &bar2)));
+  m_instruction_lookup.insert(make_pair(0xC6, Instruction("DEC", &foo4)));
+  m_instruction_lookup.insert(make_pair(0x3A, Instruction("DEC A", &foo0)));
+  m_instruction_lookup.insert(make_pair(0xD6, Instruction("DEC", &foo8)));
+  m_instruction_lookup.insert(make_pair(0xDE, Instruction("DEC", &foo9, &bar2)));
+  m_instruction_lookup.insert(make_pair(0xCA, Instruction("DEX", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x88, Instruction("DEY", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x49, Instruction("EOR", &foo1, &bar1)));
+  m_instruction_lookup.insert(make_pair(0x4D, Instruction("EOR", &foo2, &bar2)));
+  m_instruction_lookup.insert(make_pair(0x4F, Instruction("EOR", &foo3, &bar3)));
+  m_instruction_lookup.insert(make_pair(0x45, Instruction("EOR", &foo4)));
+  m_instruction_lookup.insert(make_pair(0x51, Instruction("EOR", &foo5)));
+  m_instruction_lookup.insert(make_pair(0x57, Instruction("EOR", &foo6)));
+  m_instruction_lookup.insert(make_pair(0x41, Instruction("EOR", &foo7)));
+  m_instruction_lookup.insert(make_pair(0x55, Instruction("EOR", &foo8)));
+  m_instruction_lookup.insert(make_pair(0x5D, Instruction("EOR", &foo9, &bar2)));
+  m_instruction_lookup.insert(make_pair(0x5F, Instruction("EOR", &foo10, &bar3)));
+  m_instruction_lookup.insert(make_pair(0x59, Instruction("EOR", &foo11, &bar2)));
+  m_instruction_lookup.insert(make_pair(0x52, Instruction("EOR", &foo12)));
+  m_instruction_lookup.insert(make_pair(0x47, Instruction("EOR", &foo13)));
+  m_instruction_lookup.insert(make_pair(0x43, Instruction("EOR", &foo14)));
+  m_instruction_lookup.insert(make_pair(0x53, Instruction("EOR", &foo15)));
+  m_instruction_lookup.insert(make_pair(0xEE, Instruction("INC", &foo2, &bar2)));
+  m_instruction_lookup.insert(make_pair(0xE6, Instruction("INC", &foo4)));
+  m_instruction_lookup.insert(make_pair(0x1A, Instruction("INC A", &foo0)));
+  m_instruction_lookup.insert(make_pair(0xF6, Instruction("INC", &foo8)));
+  m_instruction_lookup.insert(make_pair(0xFE, Instruction("INC", &foo9, &bar2)));
+  m_instruction_lookup.insert(make_pair(0xE8, Instruction("INX", &foo0)));
+  m_instruction_lookup.insert(make_pair(0xC8, Instruction("INY", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x5C, Instruction("JMP", &foo3, &bar3)));
+  m_instruction_lookup.insert(make_pair(0xDC, Instruction("JMP", &foo19)));
+  m_instruction_lookup.insert(make_pair(0x4C, Instruction("JMP", &foo2, &bar2)));
+  m_instruction_lookup.insert(make_pair(0x6C, Instruction("JMP", &foo20)));
+  m_instruction_lookup.insert(make_pair(0x7C, Instruction("JMP", &foo21)));
+  m_instruction_lookup.insert(make_pair(0x22, Instruction("JSL", &foo3, &bar3)));
+  m_instruction_lookup.insert(make_pair(0x20, Instruction("JSR", &foo2, &bar2)));
+  m_instruction_lookup.insert(make_pair(0xFC, Instruction("JSR", &foo21)));
+  m_instruction_lookup.insert(make_pair(0xA9, Instruction("LDA", &foo1, &bar1)));
+  m_instruction_lookup.insert(make_pair(0xAD, Instruction("LDA", &foo2, &bar2)));
+  m_instruction_lookup.insert(make_pair(0xAF, Instruction("LDA", &foo3, &bar3)));
+  m_instruction_lookup.insert(make_pair(0xA5, Instruction("LDA", &foo4)));
+  m_instruction_lookup.insert(make_pair(0xB1, Instruction("LDA", &foo5)));
+  m_instruction_lookup.insert(make_pair(0xB7, Instruction("LDA", &foo6)));
+  m_instruction_lookup.insert(make_pair(0xA1, Instruction("LDA", &foo7)));
+  m_instruction_lookup.insert(make_pair(0xB5, Instruction("LDA", &foo8)));
+  m_instruction_lookup.insert(make_pair(0xBD, Instruction("LDA", &foo9, &bar2)));
+  m_instruction_lookup.insert(make_pair(0xBF, Instruction("LDA", &foo10, &bar3)));
+  m_instruction_lookup.insert(make_pair(0xB9, Instruction("LDA", &foo11, &bar2)));
+  m_instruction_lookup.insert(make_pair(0xB2, Instruction("LDA", &foo12)));
+  m_instruction_lookup.insert(make_pair(0xA7, Instruction("LDA", &foo13)));
+  m_instruction_lookup.insert(make_pair(0xA3, Instruction("LDA", &foo14)));
+  m_instruction_lookup.insert(make_pair(0xB3, Instruction("LDA", &foo15)));
+  m_instruction_lookup.insert(make_pair(0xA2, Instruction("LDX", &foo26, &bar4)));
+  m_instruction_lookup.insert(make_pair(0xAE, Instruction("LDX", &foo2, &bar2)));
+  m_instruction_lookup.insert(make_pair(0xA6, Instruction("LDX", &foo4)));
+  m_instruction_lookup.insert(make_pair(0xB6, Instruction("LDX", &foo22)));
+  m_instruction_lookup.insert(make_pair(0xBE, Instruction("LDX", &foo11, &bar2)));
+  m_instruction_lookup.insert(make_pair(0xA0, Instruction("LDY", &foo26, &bar4)));
+  m_instruction_lookup.insert(make_pair(0xAC, Instruction("LDY", &foo2, &bar2)));
+  m_instruction_lookup.insert(make_pair(0xA4, Instruction("LDY", &foo4)));
+  m_instruction_lookup.insert(make_pair(0xB4, Instruction("LDY", &foo8)));
+  m_instruction_lookup.insert(make_pair(0xBC, Instruction("LDY", &foo9, &bar2)));
+  m_instruction_lookup.insert(make_pair(0x4E, Instruction("LSR", &foo2, &bar2)));
+  m_instruction_lookup.insert(make_pair(0x46, Instruction("LSR", &foo4)));
+  m_instruction_lookup.insert(make_pair(0x4A, Instruction("LSR", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x56, Instruction("LSR", &foo8)));
+  m_instruction_lookup.insert(make_pair(0x5E, Instruction("LSR", &foo9, &bar2)));
+  m_instruction_lookup.insert(make_pair(0xEA, Instruction("NOP", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x09, Instruction("ORA", &foo1, &bar1)));
+  m_instruction_lookup.insert(make_pair(0x0D, Instruction("ORA", &foo2, &bar2)));
+  m_instruction_lookup.insert(make_pair(0x0F, Instruction("ORA", &foo3, &bar3)));
+  m_instruction_lookup.insert(make_pair(0x05, Instruction("ORA", &foo4)));
+  m_instruction_lookup.insert(make_pair(0x11, Instruction("ORA", &foo5)));
+  m_instruction_lookup.insert(make_pair(0x17, Instruction("ORA", &foo6)));
+  m_instruction_lookup.insert(make_pair(0x01, Instruction("ORA", &foo7)));
+  m_instruction_lookup.insert(make_pair(0x15, Instruction("ORA", &foo8)));
+  m_instruction_lookup.insert(make_pair(0x1D, Instruction("ORA", &foo9, &bar2)));
+  m_instruction_lookup.insert(make_pair(0x1F, Instruction("ORA", &foo10, &bar3)));
+  m_instruction_lookup.insert(make_pair(0x19, Instruction("ORA", &foo11, &bar2)));
+  m_instruction_lookup.insert(make_pair(0x12, Instruction("ORA", &foo12)));
+  m_instruction_lookup.insert(make_pair(0x07, Instruction("ORA", &foo13)));
+  m_instruction_lookup.insert(make_pair(0x03, Instruction("ORA", &foo14)));
+  m_instruction_lookup.insert(make_pair(0x13, Instruction("ORA", &foo15)));
+  m_instruction_lookup.insert(make_pair(0xF4, Instruction("PEA", &foo18)));
+  m_instruction_lookup.insert(make_pair(0xD4, Instruction("PEI", &foo23)));
+  m_instruction_lookup.insert(make_pair(0x62, Instruction("PER", &foo18)));
+  m_instruction_lookup.insert(make_pair(0x48, Instruction("PHA", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x8B, Instruction("PHB", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x0B, Instruction("PHD", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x4B, Instruction("PHK", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x08, Instruction("PHP", &foo0)));
+  m_instruction_lookup.insert(make_pair(0xDA, Instruction("PHX", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x5A, Instruction("PHY", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x68, Instruction("PLA", &foo0)));
+  m_instruction_lookup.insert(make_pair(0xAB, Instruction("PLB", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x2B, Instruction("PLD", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x28, Instruction("PLP", &foo0)));
+  m_instruction_lookup.insert(make_pair(0xFA, Instruction("PLX", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x7A, Instruction("PLY", &foo0)));
+  m_instruction_lookup.insert(make_pair(0xC2, Instruction("REP", &foo24)));
+  m_instruction_lookup.insert(make_pair(0x2E, Instruction("ROL", &foo1, &bar1)));
+  m_instruction_lookup.insert(make_pair(0x26, Instruction("ROL", &foo4)));
+  m_instruction_lookup.insert(make_pair(0x2A, Instruction("ROL", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x36, Instruction("ROL", &foo8)));
+  m_instruction_lookup.insert(make_pair(0x3E, Instruction("ROL", &foo9, &bar2)));
+  m_instruction_lookup.insert(make_pair(0x6E, Instruction("ROR", &foo2, &bar2)));
+  m_instruction_lookup.insert(make_pair(0x66, Instruction("ROR", &foo4)));
+  m_instruction_lookup.insert(make_pair(0x6A, Instruction("ROR", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x76, Instruction("ROR", &foo8)));
+  m_instruction_lookup.insert(make_pair(0x7E, Instruction("ROR", &foo9, &bar2)));
+  m_instruction_lookup.insert(make_pair(0x40, Instruction("RTI", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x6B, Instruction("RTL", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x60, Instruction("RTS", &foo0)));
+  m_instruction_lookup.insert(make_pair(0xE9, Instruction("SBC", &foo1, &bar1)));
+  m_instruction_lookup.insert(make_pair(0xED, Instruction("SBC", &foo2, &bar2)));
+  m_instruction_lookup.insert(make_pair(0xEF, Instruction("SBC", &foo3, &bar3)));
+  m_instruction_lookup.insert(make_pair(0xE5, Instruction("SBC", &foo4)));
+  m_instruction_lookup.insert(make_pair(0xF1, Instruction("SBC", &foo5)));
+  m_instruction_lookup.insert(make_pair(0xF7, Instruction("SBC", &foo6)));
+  m_instruction_lookup.insert(make_pair(0xE1, Instruction("SBC", &foo7)));
+  m_instruction_lookup.insert(make_pair(0xF5, Instruction("SBC", &foo8)));
+  m_instruction_lookup.insert(make_pair(0xFD, Instruction("SBC", &foo9, &bar2)));
+  m_instruction_lookup.insert(make_pair(0xFF, Instruction("SBC", &foo10, &bar3)));
+  m_instruction_lookup.insert(make_pair(0xF9, Instruction("SBC", &foo11, &bar2)));
+  m_instruction_lookup.insert(make_pair(0xF2, Instruction("SBC", &foo12)));
+  m_instruction_lookup.insert(make_pair(0xE7, Instruction("SBC", &foo13)));
+  m_instruction_lookup.insert(make_pair(0xE3, Instruction("SBC", &foo14)));
+  m_instruction_lookup.insert(make_pair(0xF3, Instruction("SBC", &foo15)));
+  m_instruction_lookup.insert(make_pair(0x38, Instruction("SEC", &foo0)));
+  m_instruction_lookup.insert(make_pair(0xF8, Instruction("SED", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x78, Instruction("SEI", &foo0)));
+  m_instruction_lookup.insert(make_pair(0xE2, Instruction("SEP", &foo25)));
+  m_instruction_lookup.insert(make_pair(0x8D, Instruction("STA", &foo2, &bar2)));
+  m_instruction_lookup.insert(make_pair(0x8F, Instruction("STA", &foo3, &bar3)));
+  m_instruction_lookup.insert(make_pair(0x85, Instruction("STA", &foo4)));
+  m_instruction_lookup.insert(make_pair(0x91, Instruction("STA", &foo5)));
+  m_instruction_lookup.insert(make_pair(0x97, Instruction("STA", &foo6)));
+  m_instruction_lookup.insert(make_pair(0x81, Instruction("STA", &foo7)));
+  m_instruction_lookup.insert(make_pair(0x95, Instruction("STA", &foo8)));
+  m_instruction_lookup.insert(make_pair(0x9D, Instruction("STA", &foo9, &bar2)));
+  m_instruction_lookup.insert(make_pair(0x9F, Instruction("STA", &foo10, &bar3)));
+  m_instruction_lookup.insert(make_pair(0x99, Instruction("STA", &foo11, &bar2)));
+  m_instruction_lookup.insert(make_pair(0x92, Instruction("STA", &foo12)));
+  m_instruction_lookup.insert(make_pair(0x87, Instruction("STA", &foo13)));
+  m_instruction_lookup.insert(make_pair(0x83, Instruction("STA", &foo14)));
+  m_instruction_lookup.insert(make_pair(0x93, Instruction("STA", &foo15)));
+  m_instruction_lookup.insert(make_pair(0xDB, Instruction("STP", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x8E, Instruction("STX", &foo2, &bar2)));
+  m_instruction_lookup.insert(make_pair(0x86, Instruction("STX", &foo4)));
+  m_instruction_lookup.insert(make_pair(0x96, Instruction("STX", &foo8)));
+  m_instruction_lookup.insert(make_pair(0x8C, Instruction("STY", &foo2, &bar2)));
+  m_instruction_lookup.insert(make_pair(0x84, Instruction("STY", &foo4)));
+  m_instruction_lookup.insert(make_pair(0x94, Instruction("STY", &foo8)));
+  m_instruction_lookup.insert(make_pair(0x9C, Instruction("STZ", &foo2, &bar2)));
+  m_instruction_lookup.insert(make_pair(0x64, Instruction("STZ", &foo4)));
+  m_instruction_lookup.insert(make_pair(0x74, Instruction("STZ", &foo8)));
+  m_instruction_lookup.insert(make_pair(0x9E, Instruction("STZ", &foo9, &bar2)));
+  m_instruction_lookup.insert(make_pair(0xAA, Instruction("TAX", &foo0)));
+  m_instruction_lookup.insert(make_pair(0xA8, Instruction("TAY", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x5B, Instruction("TCD", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x1B, Instruction("TCS", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x7B, Instruction("TDC", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x1C, Instruction("TRB", &foo2, &bar2)));
+  m_instruction_lookup.insert(make_pair(0x14, Instruction("TRB", &foo4)));
+  m_instruction_lookup.insert(make_pair(0x0C, Instruction("TSB", &foo2, &bar2)));
+  m_instruction_lookup.insert(make_pair(0x04, Instruction("TSB", &foo4)));
+  m_instruction_lookup.insert(make_pair(0x3B, Instruction("TSC", &foo0)));
+  m_instruction_lookup.insert(make_pair(0xBA, Instruction("TSX", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x8A, Instruction("TXA", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x9A, Instruction("TXS", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x9B, Instruction("TXY", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x98, Instruction("TYA", &foo0)));
+  m_instruction_lookup.insert(make_pair(0xBB, Instruction("TYX", &foo0)));
+  m_instruction_lookup.insert(make_pair(0xCB, Instruction("WAI", &foo0)));
+  m_instruction_lookup.insert(make_pair(0xEB, Instruction("XBA", &foo0)));
+  m_instruction_lookup.insert(make_pair(0xFB, Instruction("XCE", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x02, Instruction("COP", &foo0)));
+  m_instruction_lookup.insert(make_pair(0x54, Instruction("MVN", &foo27)));
+  m_instruction_lookup.insert(make_pair(0x44, Instruction("MVP", &foo27)));
 
-  m_instruction_lookup.insert(make_pair(0x100, Instruction(".dw", 2)));
-  m_instruction_lookup.insert(make_pair(0x101, Instruction(".dw", 30)));
+  m_instruction_lookup.insert(make_pair(0x100, Instruction(".dw", &foo2)));
+  m_instruction_lookup.insert(make_pair(0x101, Instruction(".dw", &foo30)));
 }

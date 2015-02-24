@@ -44,7 +44,7 @@ public:
     std::istream& get_address(std::istream& in, unsigned char& bank, unsigned int& addr);
     std::string get_comment(unsigned char bank, unsigned int pc);
     void fix_address(unsigned char& bank, unsigned int& pc);
-    std::string getInstructionName(const Instruction& instr);
+    std::string getInstructionName(const Instruction& instr, bool is_accum_16, bool is_index_16);
 
     inline void hirom(bool hirom) { m_hirom = hirom; }
     inline bool hirom() const { return m_hirom; }
