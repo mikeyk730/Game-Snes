@@ -24,7 +24,7 @@ const int NO_ADDR_LABEL = 0x02;
 const int LINE_LABEL = 0x04;
 
 class Instruction{
-    typedef void(*HandlerPtr)(FILE*, char*, char*, DisasmState*, StateContext*);
+    typedef void(*HandlerPtr)(char*, char*, DisasmState*, StateContext*);
     typedef std::string(*BarPtr)(bool, bool);
 public:
     Instruction() :

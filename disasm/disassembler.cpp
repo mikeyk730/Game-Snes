@@ -71,12 +71,12 @@ struct DisasmState
 };
 
 
-void foo0(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo0(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     if (disasm_state->print_instruction_bytes) printf("         ");
 }
 
-void foo1(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo1(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -106,7 +106,7 @@ void foo1(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, Sta
     }
 }
 
-void foo2(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo2(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -122,7 +122,7 @@ void foo2(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, Sta
     context->m_high = j; context->m_low = i;
 }
 
-void foo3(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo3(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -137,7 +137,7 @@ void foo3(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, Sta
     else sprintf(buff1, "%s", msg.c_str());  strcat(buff2, buff1); 
 }
 
-void foo4(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo4(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -150,7 +150,8 @@ void foo4(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, Sta
         sprintf(buff1, "$%.2X", i);
     else sprintf(buff1, "%s", msg.c_str()); strcat(buff2, buff1);
 }
-void foo5(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+
+void foo5(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
     
@@ -165,7 +166,7 @@ void foo5(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, Sta
     strcat(buff2, buff1); 
 }
 
-void foo6(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo6(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -180,7 +181,7 @@ void foo6(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, Sta
     strcat(buff2, buff1); 
 }
 
-void foo7(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo7(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -194,7 +195,8 @@ void foo7(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, Sta
     else sprintf(buff1, "(%s,X)", msg.c_str());
     strcat(buff2, buff1);
 }
-void foo8(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+
+void foo8(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -209,7 +211,7 @@ void foo8(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, Sta
     strcat(buff2, buff1);
 }
 
-void foo9(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo9(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -224,7 +226,7 @@ void foo9(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, Sta
     strcat(buff2, buff1); 
 }
 
-void foo10(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo10(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -240,7 +242,7 @@ void foo10(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
     strcat(buff2, buff1);
 }
 
-void foo11(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo11(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -255,7 +257,7 @@ void foo11(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
     strcat(buff2, buff1);
 }
 
-void foo12(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo12(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -269,7 +271,7 @@ void foo12(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
     strcat(buff2, buff1);
 }
 
-void foo13(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo13(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -283,7 +285,7 @@ void foo13(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
     strcat(buff2, buff1);
 }
 
-void foo14(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo14(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -297,7 +299,7 @@ void foo14(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
     strcat(buff2, buff1);
 }
 
-void foo15(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo15(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -312,7 +314,7 @@ void foo15(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
     strcat(buff2, buff1);
 }
 
-void foo16(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo16(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -326,7 +328,8 @@ void foo16(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
         sprintf(buff1, "$%.4X", pc + r); else sprintf(buff1, "%s", msg.c_str());
     strcat(buff2, buff1);
 }
-void foo17(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+
+void foo17(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -342,7 +345,7 @@ void foo17(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
     strcat(buff2, buff1);
 }
 
-void foo18(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo18(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -355,7 +358,7 @@ void foo18(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
     strcat(buff2, buff1);    
 }
 
-void foo19(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo19(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -370,7 +373,7 @@ void foo19(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
     strcat(buff2, buff1);
 }
 
-void foo20(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo20(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -384,7 +387,7 @@ void foo20(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
     strcat(buff2, buff1);
 }
 
-void foo21(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo21(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -399,7 +402,7 @@ void foo21(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
     strcat(buff2, buff1);
 }
 
-void foo22(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo22(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -413,7 +416,7 @@ void foo22(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
     strcat(buff2, buff1);
 }
 
-void foo23(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo23(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -426,7 +429,7 @@ void foo23(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
     strcat(buff2, buff1);
 }
 
-void foo24(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo24(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -439,7 +442,7 @@ void foo24(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
     if (i & 0x10) { context->set_index_16(1); context->set_flag(0x10); }
 }
 
-void foo25(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo25(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -452,7 +455,7 @@ void foo25(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
     if (i & 0x10) { context->set_index_16(0); context->set_flag(0x01); }
 }
 
-void foo26(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo26(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -480,7 +483,7 @@ void foo26(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
     }
 }
 
-void foo27(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo27(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -492,7 +495,7 @@ void foo27(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
     sprintf(buff1, "$%.2X,$%.2X", i, j); strcat(buff2, buff1);
 }
 
-void foo30(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+void foo30(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
 {
     char buff1[80];
 
@@ -1153,7 +1156,7 @@ void Disassembler::doType(const Instruction& instr, bool is_data, unsigned char 
     StateContext context(pc, m_flag, accum16, index16, low, high);
 
     auto f = instr.m_address_mode_handler;
-    f(srcfile, buff2, buff3, &state, &context);
+    f(buff2, buff3, &state, &context);
 
     //get comment
     if (comment != "")
