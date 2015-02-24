@@ -20,10 +20,15 @@ struct StateContext
     : m_pc(pc), m_flag(flag), m_accum_16(accum16), m_index_16(index16), m_low(low), m_high(high)
     { }
 
-    unsigned int advance_pc(int n) {
-        m_pc += n;
-        return m_pc;
+    unsigned char read_next_byte(int* pc)
+    {
+        ++m_pc;
+        if (pc) {
+            *pc = m_pc;
+        }
+        return read_char(srcfile);
     }
+    
     void set_flag(int flag) { m_flag |= flag; }
     void set_accum_16(bool is_16) { m_accum_16 = is_16; }
     void set_index_16(bool is_16) { m_index_16 = is_16; }
@@ -75,8 +80,8 @@ void foo1(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, Sta
 {
     char buff1[80];
 
-    unsigned char i = read_char(rom);
-    context->advance_pc(1);
+    unsigned char i = context->read_next_byte(NULL);
+
 
     if (disasm_state->print_instruction_bytes)
         printf("%.2X ", i);
@@ -85,8 +90,8 @@ void foo1(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, Sta
     long ll = i;
     strcat(buff2, "#");
     if (disasm_state->is_accum_16) {
-        unsigned char j = read_char(srcfile);
-        context->advance_pc(1);
+        unsigned char j = context->read_next_byte(NULL);
+    
         ll = j * 256 + ll;
         if (disasm_state->print_instruction_bytes) printf("%.2X ", j);
     }
@@ -105,9 +110,9 @@ void foo2(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, Sta
 {
     char buff1[80];
 
-    unsigned char i = read_char(srcfile);
-    unsigned char j = read_char(srcfile);
-    context->advance_pc(2);
+    unsigned char i = context->read_next_byte(NULL);
+    unsigned char j = context->read_next_byte(NULL);
+
 
     /* $xxxx */  if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
     string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i);
@@ -121,10 +126,10 @@ void foo3(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, Sta
 {
     char buff1[80];
 
-    unsigned char i = read_char(srcfile);
-    unsigned char j = read_char(srcfile);
-    unsigned char k = read_char(srcfile);
-    context->advance_pc(3);
+    unsigned char i = context->read_next_byte(NULL);
+    unsigned char j = context->read_next_byte(NULL);
+    unsigned char k = context->read_next_byte(NULL);
+
 
     /* $xxxxxx */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X %.2X ", i, j, k);
     string msg = disasm_state->get_label(k, j * 256 + i); if (msg == "")
@@ -136,8 +141,8 @@ void foo4(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, Sta
 {
     char buff1[80];
 
-    unsigned char i = read_char(srcfile);
-    context->advance_pc(1); 
+    unsigned char i = context->read_next_byte(NULL);
+ 
     
     if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
     /* $xx */
@@ -149,8 +154,8 @@ void foo5(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, Sta
 {
     char buff1[80];
     
-    unsigned char i = read_char(srcfile); 
-    context->advance_pc(1); 
+    unsigned char i = context->read_next_byte(NULL); 
+ 
     
     if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
     /* ($xx),Y */
@@ -164,8 +169,8 @@ void foo6(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, Sta
 {
     char buff1[80];
 
-    unsigned char i = read_char(srcfile); 
-    context->advance_pc(1); 
+    unsigned char i = context->read_next_byte(NULL); 
+ 
     
     if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
     /* [$xx],Y */
@@ -179,8 +184,8 @@ void foo7(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, Sta
 {
     char buff1[80];
 
-    unsigned char i = read_char(srcfile);
-    context->advance_pc(1); 
+    unsigned char i = context->read_next_byte(NULL);
+ 
     
     if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
     /* ($xx,X) */
@@ -193,8 +198,8 @@ void foo8(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, Sta
 {
     char buff1[80];
 
-    unsigned char i = read_char(srcfile); 
-    context->advance_pc(1); 
+    unsigned char i = context->read_next_byte(NULL); 
+ 
     
     if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
     /* $xx,X */
@@ -208,9 +213,9 @@ void foo9(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, Sta
 {
     char buff1[80];
 
-    unsigned char i = read_char(srcfile);
-    unsigned char j = read_char(srcfile);
-    context->advance_pc(2);
+    unsigned char i = context->read_next_byte(NULL);
+    unsigned char j = context->read_next_byte(NULL);
+
 
     /* $xxxx,X */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
     string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i); if (msg == "")
@@ -223,10 +228,10 @@ void foo10(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
 {
     char buff1[80];
 
-    unsigned char i = read_char(srcfile);
-    unsigned char j = read_char(srcfile);
-    unsigned char k = read_char(srcfile);
-    context->advance_pc(3);
+    unsigned char i = context->read_next_byte(NULL);
+    unsigned char j = context->read_next_byte(NULL);
+    unsigned char k = context->read_next_byte(NULL);
+
 
     /* $xxxxxx,X */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X %.2X ", i, j, k);
     string msg = disasm_state->get_label(k, j * 256 + i); if (msg == "")
@@ -239,9 +244,9 @@ void foo11(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
 {
     char buff1[80];
 
-    unsigned char i = read_char(srcfile);
-    unsigned char j = read_char(srcfile);
-    context->advance_pc(2);
+    unsigned char i = context->read_next_byte(NULL);
+    unsigned char j = context->read_next_byte(NULL);
+
 
     /* $xxxx,Y */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
     string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i); if (msg == "")
@@ -254,8 +259,8 @@ void foo12(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
 {
     char buff1[80];
 
-    unsigned char  i = read_char(srcfile);
-    context->advance_pc(1);
+    unsigned char  i = context->read_next_byte(NULL);
+
     
     if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
     /* ($xx) */
@@ -268,8 +273,8 @@ void foo13(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
 {
     char buff1[80];
 
-    unsigned char i = read_char(srcfile); 
-    context->advance_pc(1); 
+    unsigned char i = context->read_next_byte(NULL); 
+ 
     
     if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
     /* [$xx] */
@@ -282,8 +287,8 @@ void foo14(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
 {
     char buff1[80];
 
-    unsigned char i = read_char(srcfile);
-    context->advance_pc(1);
+    unsigned char i = context->read_next_byte(NULL);
+
     
     if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
     /* $xx,S */
@@ -296,8 +301,8 @@ void foo15(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
 {
     char buff1[80];
 
-    unsigned char i = read_char(srcfile); 
-    context->advance_pc(1);
+    unsigned char i = context->read_next_byte(NULL); 
+
     
     if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
     /* ($xx,S),Y */
@@ -311,8 +316,8 @@ void foo16(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
 {
     char buff1[80];
 
-    char r = read_char(srcfile);
-    unsigned int pc = context->advance_pc(1);
+    int pc;
+    char r = context->read_next_byte(&pc);
 
     unsigned char h = r; if (disasm_state->print_instruction_bytes) printf("%.2X       ", h);
     /* relative */ 
@@ -325,9 +330,9 @@ void foo17(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
 {
     char buff1[80];
 
-    unsigned char i = read_char(srcfile);
-    unsigned char j = read_char(srcfile);
-    unsigned int pc = context->advance_pc(2);
+    int pc;
+    unsigned char i = context->read_next_byte(&pc);
+    unsigned char j = context->read_next_byte(&pc);
 
     /* relative long */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
     long ll = j * 256 + i; if (ll > 32767) ll = -(65536 - ll);
@@ -341,9 +346,9 @@ void foo18(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
 {
     char buff1[80];
 
-    unsigned char i = read_char(srcfile);
-    unsigned char j = read_char(srcfile); 
-    context->advance_pc(2);
+    unsigned char i = context->read_next_byte(NULL);
+    unsigned char j = context->read_next_byte(NULL); 
+
 
     /* PER/PEA $xxxx */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
     sprintf(buff1, "$%.2X%.2X", j, i);
@@ -354,9 +359,9 @@ void foo19(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
 {
     char buff1[80];
 
-    unsigned char i = read_char(srcfile);
-    unsigned char j = read_char(srcfile);
-    context->advance_pc(2);
+    unsigned char i = context->read_next_byte(NULL);
+    unsigned char j = context->read_next_byte(NULL);
+
 
     /* [$xxxx] */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
     string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i); if (msg == "")
@@ -369,9 +374,9 @@ void foo20(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
 {
     char buff1[80];
 
-    unsigned char i = read_char(srcfile);
-    unsigned char j = read_char(srcfile);
-    context->advance_pc(2);
+    unsigned char i = context->read_next_byte(NULL);
+    unsigned char j = context->read_next_byte(NULL);
+
 
     /* ($xxxx) */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
     string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i); if (msg == "")
@@ -383,9 +388,9 @@ void foo21(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
 {
     char buff1[80];
 
-    unsigned char i = read_char(srcfile);
-    unsigned char j = read_char(srcfile);
-    context->advance_pc(2);
+    unsigned char i = context->read_next_byte(NULL);
+    unsigned char j = context->read_next_byte(NULL);
+
 
     /* ($xxxx,X) */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
     string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i); if (msg == "")
@@ -398,8 +403,8 @@ void foo22(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
 {
     char buff1[80];
 
-    unsigned char i = read_char(srcfile); 
-    context->advance_pc(1);
+    unsigned char i = context->read_next_byte(NULL); 
+
 
     if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
     /* $xx,Y */
@@ -412,8 +417,8 @@ void foo23(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
 {
     char buff1[80];
 
-    unsigned char i = read_char(srcfile);
-    context->advance_pc(1);
+    unsigned char i = context->read_next_byte(NULL);
+
 
     if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
     /* #$xx */
@@ -425,8 +430,8 @@ void foo24(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
 {
     char buff1[80];
 
-    unsigned char i = read_char(srcfile); 
-    context->advance_pc(1); 
+    unsigned char i = context->read_next_byte(NULL); 
+ 
     
     if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
     /* REP */    sprintf(buff1, "#$%.2X", i); strcat(buff2, buff1);
@@ -438,8 +443,8 @@ void foo25(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
 {
     char buff1[80];
 
-    unsigned char i = read_char(srcfile); 
-    context->advance_pc(1); 
+    unsigned char i = context->read_next_byte(NULL); 
+ 
     
     if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
     /* SEP */    sprintf(buff1, "#$%.2X", i); strcat(buff2, buff1);
@@ -451,15 +456,15 @@ void foo26(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
 {
     char buff1[80];
 
-    unsigned char i = read_char(srcfile);
-    context->advance_pc(1); 
+    unsigned char i = context->read_next_byte(NULL);
+ 
     
     if (disasm_state->print_instruction_bytes) printf("%.2X ", i);
     /* Index  #$xx or #$xxxx */
     long ll = i; strcat(buff2, "#");
     if (disasm_state->is_index_16) {
-        unsigned char j = read_char(srcfile); 
-        context->advance_pc(1);
+        unsigned char j = context->read_next_byte(NULL); 
+    
 
         ll = j * 256 + ll;
         if (disasm_state->print_instruction_bytes) printf("%.2X ", j);
@@ -479,9 +484,9 @@ void foo27(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
 {
     char buff1[80];
 
-    unsigned char i = read_char(srcfile);
-    unsigned char j = read_char(srcfile);
-    context->advance_pc(2);
+    unsigned char i = context->read_next_byte(NULL);
+    unsigned char j = context->read_next_byte(NULL);
+
 
     /* MVN / MVP */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
     sprintf(buff1, "$%.2X,$%.2X", i, j); strcat(buff2, buff1);
@@ -491,10 +496,10 @@ void foo30(FILE * rom, char * buff2, char * buff3, DisasmState* disasm_state, St
 {
     char buff1[80];
 
-    unsigned char i = read_char(srcfile);
-    unsigned char j = read_char(srcfile);
-    unsigned char k = read_char(srcfile);
-    context->advance_pc(3);
+    unsigned char i = context->read_next_byte(NULL);
+    unsigned char j = context->read_next_byte(NULL);
+    unsigned char k = context->read_next_byte(NULL);
+
 
     /* $xxxx, .db :$xxxx */
     if (disasm_state->print_instruction_bytes)
