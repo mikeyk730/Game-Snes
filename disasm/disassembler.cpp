@@ -124,6 +124,7 @@ namespace AddressMode
         context->m_high = j; context->m_low = i;
     }
 
+    /* $xxxxxx */
     void AbsoluteLong(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -133,12 +134,13 @@ namespace AddressMode
         unsigned char k = context->read_next_byte(NULL);
 
 
-        /* $xxxxxx */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X %.2X ", i, j, k);
+         if (disasm_state->print_instruction_bytes) printf("%.2X %.2X %.2X ", i, j, k);
         string msg = disasm_state->get_label(k, j * 256 + i); if (msg == "")
             sprintf(buff1, "$%.2X%.2X%.2X", k, j, i);
         else sprintf(buff1, "%s", msg.c_str());  strcat(buff2, buff1);
     }
 
+    /* $xx */
     void DirectPage(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -147,12 +149,13 @@ namespace AddressMode
 
 
         if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
-        /* $xx */
+        
         string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
             sprintf(buff1, "$%.2X", i);
         else sprintf(buff1, "%s", msg.c_str()); strcat(buff2, buff1);
     }
 
+    /* ($xx),Y */
     void DPIndirectIndexedY(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -161,13 +164,14 @@ namespace AddressMode
 
 
         if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
-        /* ($xx),Y */
+        
         string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
             sprintf(buff1, "($%.2X),Y", i);
         else sprintf(buff1, "(%s),Y", msg.c_str());
         strcat(buff2, buff1);
     }
 
+    /* [$xx],Y */
     void DPIndirectLongIndexedY(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -176,13 +180,14 @@ namespace AddressMode
 
 
         if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
-        /* [$xx],Y */
+        
         string msg = disasm_state->get_label(disasm_state->current_bank, i);  if (msg == "")
             sprintf(buff1, "[$%.2X],Y", i);
         else sprintf(buff1, "[%s],Y", msg.c_str());
         strcat(buff2, buff1);
     }
 
+    /* ($xx,X) */
     void DPIndexedIndirectX(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -191,13 +196,14 @@ namespace AddressMode
 
 
         if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
-        /* ($xx,X) */
+        
         string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
             sprintf(buff1, "($%.2X,X)", i);
         else sprintf(buff1, "(%s,X)", msg.c_str());
         strcat(buff2, buff1);
     }
 
+    /* $xx,X */
     void DPIndexedX(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -206,13 +212,14 @@ namespace AddressMode
 
 
         if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
-        /* $xx,X */
+        
         string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
             sprintf(buff1, "$%.2X,X", i);
         else sprintf(buff1, "%s,X", msg.c_str());
         strcat(buff2, buff1);
     }
 
+    /* $xxxx,X */
     void AbsoluteIndexedX(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -221,13 +228,14 @@ namespace AddressMode
         unsigned char j = context->read_next_byte(NULL);
 
 
-        /* $xxxx,X */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
+         if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
         string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i); if (msg == "")
             sprintf(buff1, "$%.2X%.2X,X", j, i);
         else sprintf(buff1, "%s,X", msg.c_str());
         strcat(buff2, buff1);
     }
 
+    /* $xxxxxx,X */
     void AbsoluteLongIndexedX(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -237,13 +245,14 @@ namespace AddressMode
         unsigned char k = context->read_next_byte(NULL);
 
 
-        /* $xxxxxx,X */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X %.2X ", i, j, k);
+         if (disasm_state->print_instruction_bytes) printf("%.2X %.2X %.2X ", i, j, k);
         string msg = disasm_state->get_label(k, j * 256 + i); if (msg == "")
             sprintf(buff1, "$%.2X%.2X%.2X,X", k, j, i);
         else sprintf(buff1, "%s,X", msg.c_str());
         strcat(buff2, buff1);
     }
 
+    /* $xxxx,Y */
     void AbsoluteIndexedY(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -252,13 +261,14 @@ namespace AddressMode
         unsigned char j = context->read_next_byte(NULL);
 
 
-        /* $xxxx,Y */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
+         if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
         string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i); if (msg == "")
             sprintf(buff1, "$%.2X%.2X,Y", j, i);
         else sprintf(buff1, "%s,Y", msg.c_str());
         strcat(buff2, buff1);
     }
 
+    /* ($xx) */
     void DPIndirect(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -267,12 +277,13 @@ namespace AddressMode
 
 
         if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
-        /* ($xx) */
+        
         string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
             sprintf(buff1, "($%.2X)", i); else sprintf(buff1, "(%s)", msg.c_str());
         strcat(buff2, buff1);
     }
 
+    /* [$xx] */
     void DPIndirectLong(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -281,12 +292,13 @@ namespace AddressMode
 
 
         if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
-        /* [$xx] */
+        
         string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
             sprintf(buff1, "[$%.2X]", i); else sprintf(buff1, "[%s]", msg.c_str());
         strcat(buff2, buff1);
     }
 
+    /* $xx,S */
     void StackRelative(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -295,12 +307,13 @@ namespace AddressMode
 
 
         if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
-        /* $xx,S */
+        
         string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
             sprintf(buff1, "$%.x,S", i); else sprintf(buff1, "%s,S", msg.c_str());
         strcat(buff2, buff1);
     }
 
+    /* ($xx,S),Y */
     void SRIndirectIndexedY(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -309,13 +322,14 @@ namespace AddressMode
 
 
         if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
-        /* ($xx,S),Y */
+        
         string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
             sprintf(buff1, "($%.2X,S),Y", i);
         else sprintf(buff1, "(%s,S),Y", msg.c_str());
         strcat(buff2, buff1);
     }
 
+    /* relative */
     void ProgramCounterRelative(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -324,13 +338,14 @@ namespace AddressMode
         char r = context->read_next_byte(&pc);
 
         unsigned char h = r; if (disasm_state->print_instruction_bytes) printf("%.2X       ", h);
-        /* relative */
+        
 
         string msg = disasm_state->get_label(disasm_state->current_bank, pc + r); if (msg == "")
             sprintf(buff1, "$%.4X", pc + r); else sprintf(buff1, "%s", msg.c_str());
         strcat(buff2, buff1);
     }
 
+    /* relative long */
     void ProgramCounterRelativeLong(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -339,7 +354,7 @@ namespace AddressMode
         unsigned char i = context->read_next_byte(&pc);
         unsigned char j = context->read_next_byte(&pc);
 
-        /* relative long */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
+         if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
         long ll = j * 256 + i; if (ll > 32767) ll = -(65536 - ll);
         string msg = disasm_state->get_label((disasm_state->current_bank * 65536 + pc + ll) / 0x10000, (disasm_state->current_bank * 65536 + pc + ll) & 0xffff);
         if (msg == "") sprintf(buff1, "$%.6x", disasm_state->current_bank * 65536 + pc + ll);
@@ -347,6 +362,7 @@ namespace AddressMode
         strcat(buff2, buff1);
     }
 
+    /* PER/PEA $xxxx */
     void StackPCRelativeLong(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -355,11 +371,12 @@ namespace AddressMode
         unsigned char j = context->read_next_byte(NULL);
 
 
-        /* PER/PEA $xxxx */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
+        if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
         sprintf(buff1, "$%.2X%.2X", j, i);
         strcat(buff2, buff1);
     }
 
+    /* [$xxxx] */
     void AbsoluteIndirectLong(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -368,13 +385,14 @@ namespace AddressMode
         unsigned char j = context->read_next_byte(NULL);
 
 
-        /* [$xxxx] */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
+        if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
         string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i); if (msg == "")
             sprintf(buff1, "[$%.2X%.2X]", j, i);
         else sprintf(buff1, "[%s]", msg.c_str());
         strcat(buff2, buff1);
     }
 
+    /* ($xxxx) */
     void AbsoluteIndirect(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -383,12 +401,13 @@ namespace AddressMode
         unsigned char j = context->read_next_byte(NULL);
 
 
-        /* ($xxxx) */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
+        if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
         string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i); if (msg == "")
             sprintf(buff1, "($%.2X%.2X)", j, i); else sprintf(buff1, "(%s)", msg.c_str());
         strcat(buff2, buff1);
     }
 
+    /* ($xxxx,X) */
     void AbsoluteIndexedIndirect(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -397,13 +416,14 @@ namespace AddressMode
         unsigned char j = context->read_next_byte(NULL);
 
 
-        /* ($xxxx,X) */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
+        if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
         string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i); if (msg == "")
             sprintf(buff1, "($%.2X%.2X,X)", j, i);
         else sprintf(buff1, "(%s,X)", msg.c_str());
         strcat(buff2, buff1);
     }
 
+    /* $xx,Y */
     void DPIndexedY(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -412,12 +432,13 @@ namespace AddressMode
 
 
         if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
-        /* $xx,Y */
+        
         string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
             sprintf(buff1, "$%.2X,Y", i); else sprintf(buff1, "%s,Y", msg.c_str());
         strcat(buff2, buff1);
     }
 
+    /* #$xx */
     void StackDPIndirect(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -426,11 +447,12 @@ namespace AddressMode
 
 
         if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
-        /* #$xx */
+        
         sprintf(buff1, "#$%.2X", i);
         strcat(buff2, buff1);
     }
 
+    /* REP */
     void ImmediateREP(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -439,11 +461,12 @@ namespace AddressMode
 
 
         if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
-        /* REP */    sprintf(buff1, "#$%.2X", i); strcat(buff2, buff1);
+          sprintf(buff1, "#$%.2X", i); strcat(buff2, buff1);
         if (i & 0x20) { context->set_accum_16(1); context->set_flag(0x20); }
         if (i & 0x10) { context->set_index_16(1); context->set_flag(0x10); }
     }
 
+    /* SEP */
     void ImmediateSEP(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -452,11 +475,12 @@ namespace AddressMode
 
 
         if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
-        /* SEP */    sprintf(buff1, "#$%.2X", i); strcat(buff2, buff1);
+        sprintf(buff1, "#$%.2X", i); strcat(buff2, buff1);
         if (i & 0x20) { context->set_accum_16(0); context->set_flag(0x02); }
         if (i & 0x10) { context->set_index_16(0); context->set_flag(0x01); }
     }
 
+    /* Index  #$xx or #$xxxx */
     void ImmediateXY(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -465,7 +489,7 @@ namespace AddressMode
 
 
         if (disasm_state->print_instruction_bytes) printf("%.2X ", i);
-        /* Index  #$xx or #$xxxx */
+        
         long ll = i; strcat(buff2, "#");
         if (disasm_state->is_index_16) {
             unsigned char j = context->read_next_byte(NULL);
@@ -485,6 +509,7 @@ namespace AddressMode
         }
     }
 
+    /* MVN/MVP */
     void BlockMove(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -493,10 +518,11 @@ namespace AddressMode
         unsigned char j = context->read_next_byte(NULL);
 
 
-        /* MVN / MVP */ if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
+         if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
         sprintf(buff1, "$%.2X,$%.2X", i, j); strcat(buff2, buff1);
     }
 
+    /* $xxxx, .db :$xxxx */
     void LongPointer(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
     {
         char buff1[80];
@@ -506,7 +532,7 @@ namespace AddressMode
         unsigned char k = context->read_next_byte(NULL);
 
 
-        /* $xxxx, .db :$xxxx */
+
         if (disasm_state->print_instruction_bytes)
             printf("%.2X %.2X %.2X ", i, j, k);
         unsigned char oldk = k;
@@ -1136,10 +1162,6 @@ void Disassembler::doType(const Instruction& instr, bool is_data, unsigned char 
     bool& accum16 = m_request_prop.m_accum_16;
     bool& index16 = m_request_prop.m_index_16;
 
-    unsigned char i, j, k, oldk;
-    long ll;
-    unsigned char h;
-    char r;
     string msg;
 
     setProcessFlags();
