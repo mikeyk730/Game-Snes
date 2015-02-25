@@ -23,8 +23,7 @@ void main (int argc, char *argv[])
         exit(-1);
     }  
 
-    srcfile = fopen(argv[--argc],"rb");
-    if (srcfile == NULL){
+    if (fopen_s(&srcfile, argv[--argc], "rb") != 0){
         printf("Could not open %s for reading.\n", argv[argc]);
         exit(-1);
     }
@@ -64,17 +63,16 @@ void main (int argc, char *argv[])
     }
 
     while(1){
-
         fseek(srcfile, 512, 0);
 
         Request request;
         if (!request.get(cin, disasm.hirom()))
+            continue;
+        if (request.m_quit)
             break;
-        if (request.m_quit) break;
         disasm.handleRequest(request);
 
         printf("\n");
-
     }
 }
 

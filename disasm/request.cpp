@@ -2,8 +2,10 @@
 
 #include "request.h"
 #include "proto.h"
+#include "utils.h"
 
 using namespace std;
+using namespace Address;
 
 namespace{
     unsigned int get_start_from_address(long offset, bool hirom){
@@ -17,7 +19,7 @@ namespace{
             printf("Error -- could not locate vector\n");
             exit(-1);
         }
-        return (b * 256 + a);
+        return address_16bit(a, b);
     }
 }
 
@@ -67,7 +69,7 @@ bool Request::get(istream & in, bool hirom)
         }
         else if (current == "quit" || current == "exit"){
             m_quit = true;
-            return false;
+            return true;
         }
         else if(current.length() > 2 && current[0] == '-' && current[1] == 'c'){
             const char* s = &(current.c_str()[1]);  
@@ -75,14 +77,14 @@ bool Request::get(istream & in, bool hirom)
         }
         else if(address_count == 0){
             int full = hex(current.c_str());
-            pc = (full & 0x0FFFF);
-            bank = ((full >> 16) & 0x0FF);
+            pc = addr16_from_addr24(full);
+            bank = bank_from_addr24(full);
             address_count++;
         }
         else if(address_count == 1){
             int full = hex(current.c_str());
-            m_properties.m_end_addr = (full & 0x0FFFF);
-            m_properties.m_end_bank = ((full >> 16) & 0x0FF);
+            m_properties.m_end_addr = addr16_from_addr24(full);
+            m_properties.m_end_bank = bank_from_addr24(full);
             address_count++;
         }
         else if(address_count > 1){

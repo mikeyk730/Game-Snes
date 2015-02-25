@@ -1,0 +1,22 @@
+namespace Address
+{
+    inline unsigned int address_16bit(unsigned char i, unsigned char j)
+    {
+        return j * 256 + i;
+    }
+
+    inline unsigned int address_24bit(unsigned char i, unsigned char j, unsigned char k)
+    {
+        return (k << 16) + (j << 8) + i;
+    }
+
+    inline unsigned char bank_from_addr24(unsigned int a)
+    {
+        return ((a >> 16) & 0x0FF);
+    }
+
+    inline unsigned int addr16_from_addr24(unsigned int a)
+    {
+        return (a & 0x0FFFF);
+    }
+}

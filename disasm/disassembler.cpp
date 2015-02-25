@@ -7,31 +7,14 @@
 #include "proto.h"
 #include "disassembler.h"
 #include "request.h"
+#include "utils.h"
 
 using namespace std;
+using namespace Address;
 
 namespace{
    const unsigned int BANK_SIZE = 0x08000;
-}
-
-inline int address_16bit(unsigned char i, unsigned char j)
-{
-    return j * 256 + i;
-}
-
-inline int address_24bit(unsigned char i, unsigned char j, unsigned char k)
-{
-    return (k << 16) + (j << 8) + i;
-}
-
-inline unsigned char bank_from_addr24(unsigned int a)
-{
-    return ((a >> 16) & 0x0FF);
-}
-
-inline unsigned int addr16_from_addr24(unsigned int a)
-{
-    return (a & 0x0FFFF);
+   const int MAX_FILE_SIZE = 0x400000;
 }
 
 struct StateContext
@@ -565,8 +548,8 @@ m_passes_to_make(1),
 m_flag(0)
 { 
     initialize_instruction_lookup(); 
-    m_data = new unsigned char[0x400000];
-    memset(m_data,0,0x400000);
+    m_data = new unsigned char[MAX_FILE_SIZE];
+    memset(m_data, 0, MAX_FILE_SIZE);
 }
 
 Disassembler::~Disassembler()
@@ -611,7 +594,7 @@ std::string Disassembler::get_comment(unsigned char bank, unsigned int pc)
 void Disassembler::fix_address(unsigned char& bank, unsigned int& pc)
 {
     char s2[10];
-    sprintf(s2, "%.4X", pc);
+    sprintf_s(s2, "%.4X", pc);
     if (strlen(s2) == 5){
         bank++; 
         if (m_hirom)
@@ -1007,7 +990,7 @@ void Disassembler::doSmart()
     unsigned int pc_end = m_request_prop.m_end_addr;
 
     unsigned int end_address = end_bank * 65536 + pc_end;
-    for(int i = bank * BANK_SIZE + pc - 0x08000;
+    for (int i = bank * BANK_SIZE + pc - 0x08000; i >= 0 && i < MAX_FILE_SIZE &&
         bank * 65536 + pc < end_address;){
 
             Request request(m_request_prop);
@@ -1469,6 +1452,7 @@ void Disassembler::initialize_instruction_lookup()
     m_instruction_lookup.insert(make_pair(0x54, Instruction("MVN", &AddressMode::BlockMove)));
     m_instruction_lookup.insert(make_pair(0x44, Instruction("MVP", &AddressMode::BlockMove)));
 
+    m_instruction_lookup.insert(make_pair(0x42, Instruction("???", &AddressMode::Implied)));
     m_instruction_lookup.insert(make_pair(0x100, Instruction(".dw", &AddressMode::Absolute)));
     m_instruction_lookup.insert(make_pair(0x101, Instruction(".dw", &AddressMode::LongPointer)));
 }
