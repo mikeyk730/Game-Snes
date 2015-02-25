@@ -1,6 +1,6 @@
 #include <string>
 
-namespace Annotation
+namespace AnnotationHandler
 {
     inline std::string Word(bool is_accum_16, bool is_index_16){
         return ".W";

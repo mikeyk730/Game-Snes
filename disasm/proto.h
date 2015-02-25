@@ -9,13 +9,12 @@
 extern FILE *srcfile;
 
 class Instruction;
-struct StateContext;
+struct DisassemblerContext;
 struct DisasmState;
 struct InstructionOutput;
 
 unsigned int hex(const char *s);
 std::string spaces(int number);
-char read_char(FILE * stream);
 std::string to_string(int i, int length, bool in_hex=true);
 std::istream& get_address(std::istream& in, unsigned char& bank, unsigned int& addr);
 int full_address(int bank, int pc);
@@ -25,8 +24,8 @@ const int NO_ADDR_LABEL = 0x02;
 const int LINE_LABEL = 0x04;
 
 class Instruction{
-    typedef void(*HandlerPtr)(DisasmState*, StateContext*, InstructionOutput*);
-    typedef std::string(*BarPtr)(bool, bool);
+    typedef void(*InstructionHandlerHandlerPtr)(DisassemblerContext*, InstructionOutput*);
+    typedef std::string(*AnnotationHandlerPtr)(bool, bool);
 public:
     Instruction() :
         m_name(""), 
@@ -34,10 +33,10 @@ public:
         m_bitmask(0)
     {}
 
-    Instruction(const std::string& name, HandlerPtr address_mode_handler, BarPtr bar = 0, int bitmask = 0) :
+    Instruction(const std::string& name, InstructionHandlerHandlerPtr address_mode_handler, AnnotationHandlerPtr annotation_handler = 0, int bitmask = 0) :
         m_name(name), 
         m_address_mode_handler(address_mode_handler),
-        m_bar(bar),
+        m_annotation_handler(annotation_handler),
         m_bitmask(bitmask)
     { }
 
@@ -46,13 +45,12 @@ public:
     }
 
     inline std::string annotated_name(bool is_accum_16, bool is_index_16) const {
-        if (m_bar){
-            return m_name + (*m_bar)(is_accum_16, is_index_16);
+        if (m_annotation_handler){
+            return m_name + (*m_annotation_handler)(is_accum_16, is_index_16);
         }
         return m_name ;
     }
 
-    //int(*)(FILE *, char *, char *, bool, bool) a();// { return m_address_mode_handler; }
     inline bool isBranch() const { return (m_bitmask & IS_BRANCH) != 0; }
     inline bool neverUseAddrLabel() const { return (m_bitmask & NO_ADDR_LABEL) != 0; }
     inline bool isLineLabel() const { return (m_bitmask & LINE_LABEL) != 0; }
@@ -61,8 +59,8 @@ public:
             || m_name == "JMP" || m_name == "BRA");
     }
     
-    HandlerPtr m_address_mode_handler;
-    BarPtr m_bar;
+    InstructionHandlerHandlerPtr m_address_mode_handler;
+    AnnotationHandlerPtr m_annotation_handler;
 private:
     std::string m_name;
     

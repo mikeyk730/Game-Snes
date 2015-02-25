@@ -40,10 +40,3 @@ std::string spaces(int number)
 {
   return ("\n" + string(number, ' '));
 }
-
-char read_char(FILE * stream)
-{
-    char c;
-    fread (&c, 1, 1, stream);
-    return c;
-}

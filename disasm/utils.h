@@ -1,3 +1,5 @@
+#include <cstdio>
+
 namespace Address
 {
     inline unsigned int address_16bit(unsigned char i, unsigned char j)
@@ -18,5 +20,12 @@ namespace Address
     inline unsigned int addr16_from_addr24(unsigned int a)
     {
         return (a & 0x0FFFF);
+    }
+
+    inline char read_char(FILE * stream)
+    {
+        char c;
+        fread(&c, 1, 1, stream);
+        return c;
     }
 }
