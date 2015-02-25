@@ -36,10 +36,6 @@ Disassembler::~Disassembler()
     delete [] m_data;
 }
 
-std::string Disassembler::getInstructionName(const Instruction& instr, bool is_accum_16, bool is_index_16){
-    return instr.annotated_name(is_accum_16, is_index_16);
-}
-
 std::string Disassembler::get_comment(unsigned char bank, unsigned int pc)
 {
     map<int,string>::iterator it = m_comment_lookup.find(full_address(bank,pc));
@@ -148,14 +144,14 @@ void Disassembler::doDisasm()
     while( (!feof(srcfile)) && (bank * 65536 + pc < end_bank * 65536 + pc_end) ){
 
         unsigned char code = read_char(srcfile);
-        Instruction instr = m_instruction_lookup[code];
+        InstructionMetadata instr = m_instruction_lookup[code];
 
         if (!feof(srcfile)){
 
             //adjust pc address
             fix_address(bank,pc);
 
-            string label = get_label(Instruction("", &InstructionHandler::Implied, 0, LINE_LABEL), bank, pc, 0);
+            string label = get_label(InstructionMetadata("", &InstructionHandler::Implied, 0, LINE_LABEL), bank, pc, 0);
             if (label != "") label += ":";
             
             if (finalPass()){
@@ -211,7 +207,6 @@ void Disassembler::setProcessFlags()
         m_request_prop.m_index_16 = ((it2->second) == 16);    
         m_flag |= (m_request_prop.m_index_16) ? 0x10 : 0x01;
     }
-
 }
 
 bool Disassembler::is_comment(const string& line)
@@ -385,7 +380,7 @@ bool Disassembler::add_label(int bank, int pc, const string& label, bool used)
     return true;
 }
 
-string Disassembler::get_label(const Instruction& instr, unsigned char bank, int pc, int offset)
+string Disassembler::get_label(const InstructionMetadata& instr, unsigned char bank, int pc, int offset)
 {
     pc -= offset;
     if (pc < 0x8000 && bank != 0x7f) bank = 0x7e;
@@ -501,7 +496,7 @@ void Disassembler::doDcb(int bytes_per_line)
     string comment;
     for(int i=0; bank * 65536 + pc < end_bank * 65536 + pc_end; ++i){
         int output_flag = (m_request_prop.m_print_data_addr) ? 0 : NO_ADDR_LABEL;
-        string label = get_label(Instruction("", &InstructionHandler::Implied, 0, LINE_LABEL | output_flag), bank, pc, 0);
+        string label = get_label(InstructionMetadata("", &InstructionHandler::Implied, 0, LINE_LABEL | output_flag), bank, pc, 0);
 
         if (label != "") label += ":";
 
@@ -561,7 +556,7 @@ void Disassembler::doPtr(bool long_ptrs)
         fix_address(bank,pc);
 
         int output_flag = (m_request_prop.m_print_data_addr) ? 0 : NO_ADDR_LABEL;
-        string label = get_label(Instruction("", &InstructionHandler::Implied, 0, LINE_LABEL | output_flag), bank, pc, 0);
+        string label = get_label(InstructionMetadata("", &InstructionHandler::Implied, 0, LINE_LABEL | output_flag), bank, pc, 0);
         if (label != "") label += ":";
 
         if (finalPass()){
@@ -586,7 +581,7 @@ void Disassembler::doPtr(bool long_ptrs)
 }
 
 
-void Disassembler::doType(const Instruction& instr, bool is_data, unsigned char default_bank)
+void Disassembler::doType(const InstructionMetadata& instr, bool is_data, unsigned char default_bank)
 {
     int high = 0, low = 0;
 
@@ -610,9 +605,9 @@ void Disassembler::doType(const Instruction& instr, bool is_data, unsigned char 
     if (!is_data) ++pc;
 
     DisassemblerContext context(*((Disassembler*)this), instr, pc, m_flag, accum16, index16, low, high, bank, default_bank, offset);
-    InstructionOutput output;
+    Instruction output(instr);
 
-    auto f = instr.m_address_mode_handler;
+    auto f = instr.handler();
     f(&context, &output);
 
     //get comment
@@ -628,9 +623,6 @@ void Disassembler::doType(const Instruction& instr, bool is_data, unsigned char 
 
     if (high)
         comment += getRAMComment(low, high);
-    if (instr.isCodeBreak())      
-        comment += /*"; Return\n";*/ "\n";
-
 
     //print instruction and comment
     if (finalPass()){
@@ -638,12 +630,15 @@ void Disassembler::doType(const Instruction& instr, bool is_data, unsigned char 
             cout << setw(11) << output.getInstructionBytes();
         }
         
-        cout << setw(25) << getInstructionName(instr, accum16, index16) + " " + output.getAddress()
-            << " " << comment << endl;
+        cout << setw(25) << output.toString(accum16, index16) << " " << comment << endl;
     
         string additional_instruction = output.getAdditionalInstruction();
         if (!additional_instruction.empty()){
             cout << setw(34)  << "" << additional_instruction << endl;
+        }
+
+        if (output.metadata().isCodeBreak()){
+            cout << endl;
         }
     }
 }
@@ -652,263 +647,263 @@ void Disassembler::doType(const Instruction& instr, bool is_data, unsigned char 
 
 void Disassembler::initialize_instruction_lookup()
 {
-    m_instruction_lookup.insert(make_pair(0x69, Instruction("ADC", &InstructionHandler::Immediate, &AnnotationHandler::AccumDependentWord)));
-    m_instruction_lookup.insert(make_pair(0x6D, Instruction("ADC", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x6F, Instruction("ADC", &InstructionHandler::AbsoluteLong, &AnnotationHandler::Long)));
-    m_instruction_lookup.insert(make_pair(0x65, Instruction("ADC", &InstructionHandler::DirectPage)));
-    m_instruction_lookup.insert(make_pair(0x71, Instruction("ADC", &InstructionHandler::DPIndirectIndexedY)));
-    m_instruction_lookup.insert(make_pair(0x77, Instruction("ADC", &InstructionHandler::DPIndirectLongIndexedY)));
-    m_instruction_lookup.insert(make_pair(0x61, Instruction("ADC", &InstructionHandler::DPIndexedIndirectX)));
-    m_instruction_lookup.insert(make_pair(0x75, Instruction("ADC", &InstructionHandler::DPIndexedX)));
-    m_instruction_lookup.insert(make_pair(0x7D, Instruction("ADC", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x7F, Instruction("ADC", &InstructionHandler::AbsoluteLongIndexedX, &AnnotationHandler::Long)));
-    m_instruction_lookup.insert(make_pair(0x79, Instruction("ADC", &InstructionHandler::AbsoluteIndexedY, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x72, Instruction("ADC", &InstructionHandler::DPIndirect)));
-    m_instruction_lookup.insert(make_pair(0x67, Instruction("ADC", &InstructionHandler::DPIndirectLong)));
-    m_instruction_lookup.insert(make_pair(0x63, Instruction("ADC", &InstructionHandler::StackRelative)));
-    m_instruction_lookup.insert(make_pair(0x73, Instruction("ADC", &InstructionHandler::SRIndirectIndexedY)));
-    m_instruction_lookup.insert(make_pair(0x29, Instruction("AND", &InstructionHandler::Immediate, &AnnotationHandler::AccumDependentWord)));
-    m_instruction_lookup.insert(make_pair(0x2D, Instruction("AND", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x2F, Instruction("AND", &InstructionHandler::AbsoluteLong, &AnnotationHandler::Long)));
-    m_instruction_lookup.insert(make_pair(0x25, Instruction("AND", &InstructionHandler::DirectPage)));
-    m_instruction_lookup.insert(make_pair(0x31, Instruction("AND", &InstructionHandler::DPIndirectIndexedY)));
-    m_instruction_lookup.insert(make_pair(0x37, Instruction("AND", &InstructionHandler::DPIndirectLongIndexedY)));
-    m_instruction_lookup.insert(make_pair(0x21, Instruction("AND", &InstructionHandler::DPIndexedIndirectX)));
-    m_instruction_lookup.insert(make_pair(0x35, Instruction("AND", &InstructionHandler::DPIndexedX)));
-    m_instruction_lookup.insert(make_pair(0x3D, Instruction("AND", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x3F, Instruction("AND", &InstructionHandler::AbsoluteLongIndexedX, &AnnotationHandler::Long)));
-    m_instruction_lookup.insert(make_pair(0x39, Instruction("AND", &InstructionHandler::AbsoluteIndexedY, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x32, Instruction("AND", &InstructionHandler::DPIndirect)));
-    m_instruction_lookup.insert(make_pair(0x27, Instruction("AND", &InstructionHandler::DPIndirectLong)));
-    m_instruction_lookup.insert(make_pair(0x23, Instruction("AND", &InstructionHandler::StackRelative)));
-    m_instruction_lookup.insert(make_pair(0x33, Instruction("AND", &InstructionHandler::SRIndirectIndexedY)));
-    m_instruction_lookup.insert(make_pair(0x0E, Instruction("ASL", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x06, Instruction("ASL", &InstructionHandler::DirectPage)));
-    m_instruction_lookup.insert(make_pair(0x0A, Instruction("ASL", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x16, Instruction("ASL", &InstructionHandler::DPIndexedX)));
-    m_instruction_lookup.insert(make_pair(0x1E, Instruction("ASL", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x90, Instruction("BCC", &InstructionHandler::ProgramCounterRelative, 0, IS_BRANCH)));
-    m_instruction_lookup.insert(make_pair(0xB0, Instruction("BCS", &InstructionHandler::ProgramCounterRelative, 0, IS_BRANCH)));
-    m_instruction_lookup.insert(make_pair(0xF0, Instruction("BEQ", &InstructionHandler::ProgramCounterRelative, 0, IS_BRANCH)));
-    m_instruction_lookup.insert(make_pair(0x30, Instruction("BMI", &InstructionHandler::ProgramCounterRelative, 0, IS_BRANCH)));
-    m_instruction_lookup.insert(make_pair(0xD0, Instruction("BNE", &InstructionHandler::ProgramCounterRelative, 0, IS_BRANCH)));
-    m_instruction_lookup.insert(make_pair(0x10, Instruction("BPL", &InstructionHandler::ProgramCounterRelative, 0, IS_BRANCH)));
-    m_instruction_lookup.insert(make_pair(0x80, Instruction("BRA", &InstructionHandler::ProgramCounterRelative, 0, IS_BRANCH)));
-    m_instruction_lookup.insert(make_pair(0x82, Instruction("BRL", &InstructionHandler::ProgramCounterRelativeLong)));
-    m_instruction_lookup.insert(make_pair(0x50, Instruction("BVC", &InstructionHandler::ProgramCounterRelative, 0, IS_BRANCH)));
-    m_instruction_lookup.insert(make_pair(0x70, Instruction("BVS", &InstructionHandler::ProgramCounterRelative, 0, IS_BRANCH)));
-    m_instruction_lookup.insert(make_pair(0x89, Instruction("BIT", &InstructionHandler::Immediate, &AnnotationHandler::AccumDependentWord)));
-    m_instruction_lookup.insert(make_pair(0x2C, Instruction("BIT", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x24, Instruction("BIT", &InstructionHandler::DirectPage)));
-    m_instruction_lookup.insert(make_pair(0x34, Instruction("BIT", &InstructionHandler::DPIndexedX)));
-    m_instruction_lookup.insert(make_pair(0x3C, Instruction("BIT", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x00, Instruction("BRK", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x18, Instruction("CLC", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0xD8, Instruction("CLD", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x58, Instruction("CLI", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0xB8, Instruction("CLV", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0xC9, Instruction("CMP", &InstructionHandler::Immediate, &AnnotationHandler::AccumDependentWord)));
-    m_instruction_lookup.insert(make_pair(0xCD, Instruction("CMP", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0xCF, Instruction("CMP", &InstructionHandler::AbsoluteLong, &AnnotationHandler::Long)));
-    m_instruction_lookup.insert(make_pair(0xC5, Instruction("CMP", &InstructionHandler::DirectPage)));
-    m_instruction_lookup.insert(make_pair(0xD1, Instruction("CMP", &InstructionHandler::DPIndirectIndexedY)));
-    m_instruction_lookup.insert(make_pair(0xD7, Instruction("CMP", &InstructionHandler::DPIndirectLongIndexedY)));
-    m_instruction_lookup.insert(make_pair(0xC1, Instruction("CMP", &InstructionHandler::DPIndexedIndirectX)));
-    m_instruction_lookup.insert(make_pair(0xD5, Instruction("CMP", &InstructionHandler::DPIndexedX)));
-    m_instruction_lookup.insert(make_pair(0xDD, Instruction("CMP", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0xDF, Instruction("CMP", &InstructionHandler::AbsoluteLongIndexedX, &AnnotationHandler::Long)));
-    m_instruction_lookup.insert(make_pair(0xD9, Instruction("CMP", &InstructionHandler::AbsoluteIndexedY, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0xD2, Instruction("CMP", &InstructionHandler::DPIndirect)));
-    m_instruction_lookup.insert(make_pair(0xC7, Instruction("CMP", &InstructionHandler::DPIndirectLong)));
-    m_instruction_lookup.insert(make_pair(0xC3, Instruction("CMP", &InstructionHandler::StackRelative)));
-    m_instruction_lookup.insert(make_pair(0xD3, Instruction("CMP", &InstructionHandler::SRIndirectIndexedY)));
-    m_instruction_lookup.insert(make_pair(0xE0, Instruction("CPX", &InstructionHandler::ImmediateXY, &AnnotationHandler::IndexDependentWord)));
-    m_instruction_lookup.insert(make_pair(0xEC, Instruction("CPX", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0xE4, Instruction("CPX", &InstructionHandler::DirectPage)));
-    m_instruction_lookup.insert(make_pair(0xC0, Instruction("CPY", &InstructionHandler::ImmediateXY, &AnnotationHandler::IndexDependentWord)));
-    m_instruction_lookup.insert(make_pair(0xCC, Instruction("CPY", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0xC4, Instruction("CPY", &InstructionHandler::DirectPage)));
-    m_instruction_lookup.insert(make_pair(0xCE, Instruction("DEC", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0xC6, Instruction("DEC", &InstructionHandler::DirectPage)));
-    m_instruction_lookup.insert(make_pair(0x3A, Instruction("DEC", &InstructionHandler::Accumulator)));
-    m_instruction_lookup.insert(make_pair(0xD6, Instruction("DEC", &InstructionHandler::DPIndexedX)));
-    m_instruction_lookup.insert(make_pair(0xDE, Instruction("DEC", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0xCA, Instruction("DEX", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x88, Instruction("DEY", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x49, Instruction("EOR", &InstructionHandler::Immediate, &AnnotationHandler::AccumDependentWord)));
-    m_instruction_lookup.insert(make_pair(0x4D, Instruction("EOR", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x4F, Instruction("EOR", &InstructionHandler::AbsoluteLong, &AnnotationHandler::Long)));
-    m_instruction_lookup.insert(make_pair(0x45, Instruction("EOR", &InstructionHandler::DirectPage)));
-    m_instruction_lookup.insert(make_pair(0x51, Instruction("EOR", &InstructionHandler::DPIndirectIndexedY)));
-    m_instruction_lookup.insert(make_pair(0x57, Instruction("EOR", &InstructionHandler::DPIndirectLongIndexedY)));
-    m_instruction_lookup.insert(make_pair(0x41, Instruction("EOR", &InstructionHandler::DPIndexedIndirectX)));
-    m_instruction_lookup.insert(make_pair(0x55, Instruction("EOR", &InstructionHandler::DPIndexedX)));
-    m_instruction_lookup.insert(make_pair(0x5D, Instruction("EOR", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x5F, Instruction("EOR", &InstructionHandler::AbsoluteLongIndexedX, &AnnotationHandler::Long)));
-    m_instruction_lookup.insert(make_pair(0x59, Instruction("EOR", &InstructionHandler::AbsoluteIndexedY, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x52, Instruction("EOR", &InstructionHandler::DPIndirect)));
-    m_instruction_lookup.insert(make_pair(0x47, Instruction("EOR", &InstructionHandler::DPIndirectLong)));
-    m_instruction_lookup.insert(make_pair(0x43, Instruction("EOR", &InstructionHandler::StackRelative)));
-    m_instruction_lookup.insert(make_pair(0x53, Instruction("EOR", &InstructionHandler::SRIndirectIndexedY)));
-    m_instruction_lookup.insert(make_pair(0xEE, Instruction("INC", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0xE6, Instruction("INC", &InstructionHandler::DirectPage)));
-    m_instruction_lookup.insert(make_pair(0x1A, Instruction("INC", &InstructionHandler::Accumulator)));
-    m_instruction_lookup.insert(make_pair(0xF6, Instruction("INC", &InstructionHandler::DPIndexedX)));
-    m_instruction_lookup.insert(make_pair(0xFE, Instruction("INC", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0xE8, Instruction("INX", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0xC8, Instruction("INY", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x5C, Instruction("JMP", &InstructionHandler::AbsoluteLong, &AnnotationHandler::Long)));
-    m_instruction_lookup.insert(make_pair(0xDC, Instruction("JMP", &InstructionHandler::AbsoluteIndirectLong)));
-    m_instruction_lookup.insert(make_pair(0x4C, Instruction("JMP", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x6C, Instruction("JMP", &InstructionHandler::AbsoluteIndirect)));
-    m_instruction_lookup.insert(make_pair(0x7C, Instruction("JMP", &InstructionHandler::AbsoluteIndexedIndirect)));
-    m_instruction_lookup.insert(make_pair(0x22, Instruction("JSL", &InstructionHandler::AbsoluteLong, &AnnotationHandler::Long)));
-    m_instruction_lookup.insert(make_pair(0x20, Instruction("JSR", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0xFC, Instruction("JSR", &InstructionHandler::AbsoluteIndexedIndirect)));
-    m_instruction_lookup.insert(make_pair(0xA9, Instruction("LDA", &InstructionHandler::Immediate, &AnnotationHandler::AccumDependentWord)));
-    m_instruction_lookup.insert(make_pair(0xAD, Instruction("LDA", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0xAF, Instruction("LDA", &InstructionHandler::AbsoluteLong, &AnnotationHandler::Long)));
-    m_instruction_lookup.insert(make_pair(0xA5, Instruction("LDA", &InstructionHandler::DirectPage)));
-    m_instruction_lookup.insert(make_pair(0xB1, Instruction("LDA", &InstructionHandler::DPIndirectIndexedY)));
-    m_instruction_lookup.insert(make_pair(0xB7, Instruction("LDA", &InstructionHandler::DPIndirectLongIndexedY)));
-    m_instruction_lookup.insert(make_pair(0xA1, Instruction("LDA", &InstructionHandler::DPIndexedIndirectX)));
-    m_instruction_lookup.insert(make_pair(0xB5, Instruction("LDA", &InstructionHandler::DPIndexedX)));
-    m_instruction_lookup.insert(make_pair(0xBD, Instruction("LDA", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0xBF, Instruction("LDA", &InstructionHandler::AbsoluteLongIndexedX, &AnnotationHandler::Long)));
-    m_instruction_lookup.insert(make_pair(0xB9, Instruction("LDA", &InstructionHandler::AbsoluteIndexedY, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0xB2, Instruction("LDA", &InstructionHandler::DPIndirect)));
-    m_instruction_lookup.insert(make_pair(0xA7, Instruction("LDA", &InstructionHandler::DPIndirectLong)));
-    m_instruction_lookup.insert(make_pair(0xA3, Instruction("LDA", &InstructionHandler::StackRelative)));
-    m_instruction_lookup.insert(make_pair(0xB3, Instruction("LDA", &InstructionHandler::SRIndirectIndexedY)));
-    m_instruction_lookup.insert(make_pair(0xA2, Instruction("LDX", &InstructionHandler::ImmediateXY, &AnnotationHandler::IndexDependentWord)));
-    m_instruction_lookup.insert(make_pair(0xAE, Instruction("LDX", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0xA6, Instruction("LDX", &InstructionHandler::DirectPage)));
-    m_instruction_lookup.insert(make_pair(0xB6, Instruction("LDX", &InstructionHandler::DPIndexedY)));
-    m_instruction_lookup.insert(make_pair(0xBE, Instruction("LDX", &InstructionHandler::AbsoluteIndexedY, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0xA0, Instruction("LDY", &InstructionHandler::ImmediateXY, &AnnotationHandler::IndexDependentWord)));
-    m_instruction_lookup.insert(make_pair(0xAC, Instruction("LDY", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0xA4, Instruction("LDY", &InstructionHandler::DirectPage)));
-    m_instruction_lookup.insert(make_pair(0xB4, Instruction("LDY", &InstructionHandler::DPIndexedX)));
-    m_instruction_lookup.insert(make_pair(0xBC, Instruction("LDY", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x4E, Instruction("LSR", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x46, Instruction("LSR", &InstructionHandler::DirectPage)));
-    m_instruction_lookup.insert(make_pair(0x4A, Instruction("LSR", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x56, Instruction("LSR", &InstructionHandler::DPIndexedX)));
-    m_instruction_lookup.insert(make_pair(0x5E, Instruction("LSR", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0xEA, Instruction("NOP", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x09, Instruction("ORA", &InstructionHandler::Immediate, &AnnotationHandler::AccumDependentWord)));
-    m_instruction_lookup.insert(make_pair(0x0D, Instruction("ORA", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x0F, Instruction("ORA", &InstructionHandler::AbsoluteLong, &AnnotationHandler::Long)));
-    m_instruction_lookup.insert(make_pair(0x05, Instruction("ORA", &InstructionHandler::DirectPage)));
-    m_instruction_lookup.insert(make_pair(0x11, Instruction("ORA", &InstructionHandler::DPIndirectIndexedY)));
-    m_instruction_lookup.insert(make_pair(0x17, Instruction("ORA", &InstructionHandler::DPIndirectLongIndexedY)));
-    m_instruction_lookup.insert(make_pair(0x01, Instruction("ORA", &InstructionHandler::DPIndexedIndirectX)));
-    m_instruction_lookup.insert(make_pair(0x15, Instruction("ORA", &InstructionHandler::DPIndexedX)));
-    m_instruction_lookup.insert(make_pair(0x1D, Instruction("ORA", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x1F, Instruction("ORA", &InstructionHandler::AbsoluteLongIndexedX, &AnnotationHandler::Long)));
-    m_instruction_lookup.insert(make_pair(0x19, Instruction("ORA", &InstructionHandler::AbsoluteIndexedY, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x12, Instruction("ORA", &InstructionHandler::DPIndirect)));
-    m_instruction_lookup.insert(make_pair(0x07, Instruction("ORA", &InstructionHandler::DPIndirectLong)));
-    m_instruction_lookup.insert(make_pair(0x03, Instruction("ORA", &InstructionHandler::StackRelative)));
-    m_instruction_lookup.insert(make_pair(0x13, Instruction("ORA", &InstructionHandler::SRIndirectIndexedY)));
-    m_instruction_lookup.insert(make_pair(0xF4, Instruction("PEA", &InstructionHandler::StackPCRelativeLong)));
-    m_instruction_lookup.insert(make_pair(0xD4, Instruction("PEI", &InstructionHandler::StackDPIndirect)));
-    m_instruction_lookup.insert(make_pair(0x62, Instruction("PER", &InstructionHandler::StackPCRelativeLong)));
-    m_instruction_lookup.insert(make_pair(0x48, Instruction("PHA", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x8B, Instruction("PHB", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x0B, Instruction("PHD", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x4B, Instruction("PHK", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x08, Instruction("PHP", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0xDA, Instruction("PHX", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x5A, Instruction("PHY", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x68, Instruction("PLA", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0xAB, Instruction("PLB", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x2B, Instruction("PLD", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x28, Instruction("PLP", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0xFA, Instruction("PLX", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x7A, Instruction("PLY", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0xC2, Instruction("REP", &InstructionHandler::ImmediateREP)));
-    m_instruction_lookup.insert(make_pair(0x2E, Instruction("ROL", &InstructionHandler::Immediate, &AnnotationHandler::AccumDependentWord)));
-    m_instruction_lookup.insert(make_pair(0x26, Instruction("ROL", &InstructionHandler::DirectPage)));
-    m_instruction_lookup.insert(make_pair(0x2A, Instruction("ROL", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x36, Instruction("ROL", &InstructionHandler::DPIndexedX)));
-    m_instruction_lookup.insert(make_pair(0x3E, Instruction("ROL", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x6E, Instruction("ROR", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x66, Instruction("ROR", &InstructionHandler::DirectPage)));
-    m_instruction_lookup.insert(make_pair(0x6A, Instruction("ROR", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x76, Instruction("ROR", &InstructionHandler::DPIndexedX)));
-    m_instruction_lookup.insert(make_pair(0x7E, Instruction("ROR", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x40, Instruction("RTI", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x6B, Instruction("RTL", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x60, Instruction("RTS", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0xE9, Instruction("SBC", &InstructionHandler::Immediate, &AnnotationHandler::AccumDependentWord)));
-    m_instruction_lookup.insert(make_pair(0xED, Instruction("SBC", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0xEF, Instruction("SBC", &InstructionHandler::AbsoluteLong, &AnnotationHandler::Long)));
-    m_instruction_lookup.insert(make_pair(0xE5, Instruction("SBC", &InstructionHandler::DirectPage)));
-    m_instruction_lookup.insert(make_pair(0xF1, Instruction("SBC", &InstructionHandler::DPIndirectIndexedY)));
-    m_instruction_lookup.insert(make_pair(0xF7, Instruction("SBC", &InstructionHandler::DPIndirectLongIndexedY)));
-    m_instruction_lookup.insert(make_pair(0xE1, Instruction("SBC", &InstructionHandler::DPIndexedIndirectX)));
-    m_instruction_lookup.insert(make_pair(0xF5, Instruction("SBC", &InstructionHandler::DPIndexedX)));
-    m_instruction_lookup.insert(make_pair(0xFD, Instruction("SBC", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0xFF, Instruction("SBC", &InstructionHandler::AbsoluteLongIndexedX, &AnnotationHandler::Long)));
-    m_instruction_lookup.insert(make_pair(0xF9, Instruction("SBC", &InstructionHandler::AbsoluteIndexedY, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0xF2, Instruction("SBC", &InstructionHandler::DPIndirect)));
-    m_instruction_lookup.insert(make_pair(0xE7, Instruction("SBC", &InstructionHandler::DPIndirectLong)));
-    m_instruction_lookup.insert(make_pair(0xE3, Instruction("SBC", &InstructionHandler::StackRelative)));
-    m_instruction_lookup.insert(make_pair(0xF3, Instruction("SBC", &InstructionHandler::SRIndirectIndexedY)));
-    m_instruction_lookup.insert(make_pair(0x38, Instruction("SEC", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0xF8, Instruction("SED", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x78, Instruction("SEI", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0xE2, Instruction("SEP", &InstructionHandler::ImmediateSEP)));
-    m_instruction_lookup.insert(make_pair(0x8D, Instruction("STA", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x8F, Instruction("STA", &InstructionHandler::AbsoluteLong, &AnnotationHandler::Long)));
-    m_instruction_lookup.insert(make_pair(0x85, Instruction("STA", &InstructionHandler::DirectPage)));
-    m_instruction_lookup.insert(make_pair(0x91, Instruction("STA", &InstructionHandler::DPIndirectIndexedY)));
-    m_instruction_lookup.insert(make_pair(0x97, Instruction("STA", &InstructionHandler::DPIndirectLongIndexedY)));
-    m_instruction_lookup.insert(make_pair(0x81, Instruction("STA", &InstructionHandler::DPIndexedIndirectX)));
-    m_instruction_lookup.insert(make_pair(0x95, Instruction("STA", &InstructionHandler::DPIndexedX)));
-    m_instruction_lookup.insert(make_pair(0x9D, Instruction("STA", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x9F, Instruction("STA", &InstructionHandler::AbsoluteLongIndexedX, &AnnotationHandler::Long)));
-    m_instruction_lookup.insert(make_pair(0x99, Instruction("STA", &InstructionHandler::AbsoluteIndexedY, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x92, Instruction("STA", &InstructionHandler::DPIndirect)));
-    m_instruction_lookup.insert(make_pair(0x87, Instruction("STA", &InstructionHandler::DPIndirectLong)));
-    m_instruction_lookup.insert(make_pair(0x83, Instruction("STA", &InstructionHandler::StackRelative)));
-    m_instruction_lookup.insert(make_pair(0x93, Instruction("STA", &InstructionHandler::SRIndirectIndexedY)));
-    m_instruction_lookup.insert(make_pair(0xDB, Instruction("STP", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x8E, Instruction("STX", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x86, Instruction("STX", &InstructionHandler::DirectPage)));
-    m_instruction_lookup.insert(make_pair(0x96, Instruction("STX", &InstructionHandler::DPIndexedX)));
-    m_instruction_lookup.insert(make_pair(0x8C, Instruction("STY", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x84, Instruction("STY", &InstructionHandler::DirectPage)));
-    m_instruction_lookup.insert(make_pair(0x94, Instruction("STY", &InstructionHandler::DPIndexedX)));
-    m_instruction_lookup.insert(make_pair(0x9C, Instruction("STZ", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x64, Instruction("STZ", &InstructionHandler::DirectPage)));
-    m_instruction_lookup.insert(make_pair(0x74, Instruction("STZ", &InstructionHandler::DPIndexedX)));
-    m_instruction_lookup.insert(make_pair(0x9E, Instruction("STZ", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0xAA, Instruction("TAX", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0xA8, Instruction("TAY", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x5B, Instruction("TCD", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x1B, Instruction("TCS", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x7B, Instruction("TDC", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x1C, Instruction("TRB", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x14, Instruction("TRB", &InstructionHandler::DirectPage)));
-    m_instruction_lookup.insert(make_pair(0x0C, Instruction("TSB", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
-    m_instruction_lookup.insert(make_pair(0x04, Instruction("TSB", &InstructionHandler::DirectPage)));
-    m_instruction_lookup.insert(make_pair(0x3B, Instruction("TSC", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0xBA, Instruction("TSX", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x8A, Instruction("TXA", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x9A, Instruction("TXS", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x9B, Instruction("TXY", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x98, Instruction("TYA", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0xBB, Instruction("TYX", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0xCB, Instruction("WAI", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0xEB, Instruction("XBA", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0xFB, Instruction("XCE", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x02, Instruction("COP", &InstructionHandler::Implied)));
-    m_instruction_lookup.insert(make_pair(0x54, Instruction("MVN", &InstructionHandler::BlockMove)));
-    m_instruction_lookup.insert(make_pair(0x44, Instruction("MVP", &InstructionHandler::BlockMove)));
-    m_instruction_lookup.insert(make_pair(0x42, Instruction("???", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x69, InstructionMetadata("ADC", &InstructionHandler::Immediate, &AnnotationHandler::AccumDependentWord)));
+    m_instruction_lookup.insert(make_pair(0x6D, InstructionMetadata("ADC", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x6F, InstructionMetadata("ADC", &InstructionHandler::AbsoluteLong, &AnnotationHandler::Long)));
+    m_instruction_lookup.insert(make_pair(0x65, InstructionMetadata("ADC", &InstructionHandler::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x71, InstructionMetadata("ADC", &InstructionHandler::DPIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0x77, InstructionMetadata("ADC", &InstructionHandler::DPIndirectLongIndexedY)));
+    m_instruction_lookup.insert(make_pair(0x61, InstructionMetadata("ADC", &InstructionHandler::DPIndexedIndirectX)));
+    m_instruction_lookup.insert(make_pair(0x75, InstructionMetadata("ADC", &InstructionHandler::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0x7D, InstructionMetadata("ADC", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x7F, InstructionMetadata("ADC", &InstructionHandler::AbsoluteLongIndexedX, &AnnotationHandler::Long)));
+    m_instruction_lookup.insert(make_pair(0x79, InstructionMetadata("ADC", &InstructionHandler::AbsoluteIndexedY, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x72, InstructionMetadata("ADC", &InstructionHandler::DPIndirect)));
+    m_instruction_lookup.insert(make_pair(0x67, InstructionMetadata("ADC", &InstructionHandler::DPIndirectLong)));
+    m_instruction_lookup.insert(make_pair(0x63, InstructionMetadata("ADC", &InstructionHandler::StackRelative)));
+    m_instruction_lookup.insert(make_pair(0x73, InstructionMetadata("ADC", &InstructionHandler::SRIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0x29, InstructionMetadata("AND", &InstructionHandler::Immediate, &AnnotationHandler::AccumDependentWord)));
+    m_instruction_lookup.insert(make_pair(0x2D, InstructionMetadata("AND", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x2F, InstructionMetadata("AND", &InstructionHandler::AbsoluteLong, &AnnotationHandler::Long)));
+    m_instruction_lookup.insert(make_pair(0x25, InstructionMetadata("AND", &InstructionHandler::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x31, InstructionMetadata("AND", &InstructionHandler::DPIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0x37, InstructionMetadata("AND", &InstructionHandler::DPIndirectLongIndexedY)));
+    m_instruction_lookup.insert(make_pair(0x21, InstructionMetadata("AND", &InstructionHandler::DPIndexedIndirectX)));
+    m_instruction_lookup.insert(make_pair(0x35, InstructionMetadata("AND", &InstructionHandler::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0x3D, InstructionMetadata("AND", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x3F, InstructionMetadata("AND", &InstructionHandler::AbsoluteLongIndexedX, &AnnotationHandler::Long)));
+    m_instruction_lookup.insert(make_pair(0x39, InstructionMetadata("AND", &InstructionHandler::AbsoluteIndexedY, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x32, InstructionMetadata("AND", &InstructionHandler::DPIndirect)));
+    m_instruction_lookup.insert(make_pair(0x27, InstructionMetadata("AND", &InstructionHandler::DPIndirectLong)));
+    m_instruction_lookup.insert(make_pair(0x23, InstructionMetadata("AND", &InstructionHandler::StackRelative)));
+    m_instruction_lookup.insert(make_pair(0x33, InstructionMetadata("AND", &InstructionHandler::SRIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0x0E, InstructionMetadata("ASL", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x06, InstructionMetadata("ASL", &InstructionHandler::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x0A, InstructionMetadata("ASL", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x16, InstructionMetadata("ASL", &InstructionHandler::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0x1E, InstructionMetadata("ASL", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x90, InstructionMetadata("BCC", &InstructionHandler::ProgramCounterRelative, 0, IS_BRANCH)));
+    m_instruction_lookup.insert(make_pair(0xB0, InstructionMetadata("BCS", &InstructionHandler::ProgramCounterRelative, 0, IS_BRANCH)));
+    m_instruction_lookup.insert(make_pair(0xF0, InstructionMetadata("BEQ", &InstructionHandler::ProgramCounterRelative, 0, IS_BRANCH)));
+    m_instruction_lookup.insert(make_pair(0x30, InstructionMetadata("BMI", &InstructionHandler::ProgramCounterRelative, 0, IS_BRANCH)));
+    m_instruction_lookup.insert(make_pair(0xD0, InstructionMetadata("BNE", &InstructionHandler::ProgramCounterRelative, 0, IS_BRANCH)));
+    m_instruction_lookup.insert(make_pair(0x10, InstructionMetadata("BPL", &InstructionHandler::ProgramCounterRelative, 0, IS_BRANCH)));
+    m_instruction_lookup.insert(make_pair(0x80, InstructionMetadata("BRA", &InstructionHandler::ProgramCounterRelative, 0, IS_BRANCH)));
+    m_instruction_lookup.insert(make_pair(0x82, InstructionMetadata("BRL", &InstructionHandler::ProgramCounterRelativeLong)));
+    m_instruction_lookup.insert(make_pair(0x50, InstructionMetadata("BVC", &InstructionHandler::ProgramCounterRelative, 0, IS_BRANCH)));
+    m_instruction_lookup.insert(make_pair(0x70, InstructionMetadata("BVS", &InstructionHandler::ProgramCounterRelative, 0, IS_BRANCH)));
+    m_instruction_lookup.insert(make_pair(0x89, InstructionMetadata("BIT", &InstructionHandler::Immediate, &AnnotationHandler::AccumDependentWord)));
+    m_instruction_lookup.insert(make_pair(0x2C, InstructionMetadata("BIT", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x24, InstructionMetadata("BIT", &InstructionHandler::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x34, InstructionMetadata("BIT", &InstructionHandler::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0x3C, InstructionMetadata("BIT", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x00, InstructionMetadata("BRK", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x18, InstructionMetadata("CLC", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0xD8, InstructionMetadata("CLD", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x58, InstructionMetadata("CLI", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0xB8, InstructionMetadata("CLV", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0xC9, InstructionMetadata("CMP", &InstructionHandler::Immediate, &AnnotationHandler::AccumDependentWord)));
+    m_instruction_lookup.insert(make_pair(0xCD, InstructionMetadata("CMP", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0xCF, InstructionMetadata("CMP", &InstructionHandler::AbsoluteLong, &AnnotationHandler::Long)));
+    m_instruction_lookup.insert(make_pair(0xC5, InstructionMetadata("CMP", &InstructionHandler::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0xD1, InstructionMetadata("CMP", &InstructionHandler::DPIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0xD7, InstructionMetadata("CMP", &InstructionHandler::DPIndirectLongIndexedY)));
+    m_instruction_lookup.insert(make_pair(0xC1, InstructionMetadata("CMP", &InstructionHandler::DPIndexedIndirectX)));
+    m_instruction_lookup.insert(make_pair(0xD5, InstructionMetadata("CMP", &InstructionHandler::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0xDD, InstructionMetadata("CMP", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0xDF, InstructionMetadata("CMP", &InstructionHandler::AbsoluteLongIndexedX, &AnnotationHandler::Long)));
+    m_instruction_lookup.insert(make_pair(0xD9, InstructionMetadata("CMP", &InstructionHandler::AbsoluteIndexedY, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0xD2, InstructionMetadata("CMP", &InstructionHandler::DPIndirect)));
+    m_instruction_lookup.insert(make_pair(0xC7, InstructionMetadata("CMP", &InstructionHandler::DPIndirectLong)));
+    m_instruction_lookup.insert(make_pair(0xC3, InstructionMetadata("CMP", &InstructionHandler::StackRelative)));
+    m_instruction_lookup.insert(make_pair(0xD3, InstructionMetadata("CMP", &InstructionHandler::SRIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0xE0, InstructionMetadata("CPX", &InstructionHandler::ImmediateXY, &AnnotationHandler::IndexDependentWord)));
+    m_instruction_lookup.insert(make_pair(0xEC, InstructionMetadata("CPX", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0xE4, InstructionMetadata("CPX", &InstructionHandler::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0xC0, InstructionMetadata("CPY", &InstructionHandler::ImmediateXY, &AnnotationHandler::IndexDependentWord)));
+    m_instruction_lookup.insert(make_pair(0xCC, InstructionMetadata("CPY", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0xC4, InstructionMetadata("CPY", &InstructionHandler::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0xCE, InstructionMetadata("DEC", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0xC6, InstructionMetadata("DEC", &InstructionHandler::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x3A, InstructionMetadata("DEC", &InstructionHandler::Accumulator)));
+    m_instruction_lookup.insert(make_pair(0xD6, InstructionMetadata("DEC", &InstructionHandler::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0xDE, InstructionMetadata("DEC", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0xCA, InstructionMetadata("DEX", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x88, InstructionMetadata("DEY", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x49, InstructionMetadata("EOR", &InstructionHandler::Immediate, &AnnotationHandler::AccumDependentWord)));
+    m_instruction_lookup.insert(make_pair(0x4D, InstructionMetadata("EOR", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x4F, InstructionMetadata("EOR", &InstructionHandler::AbsoluteLong, &AnnotationHandler::Long)));
+    m_instruction_lookup.insert(make_pair(0x45, InstructionMetadata("EOR", &InstructionHandler::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x51, InstructionMetadata("EOR", &InstructionHandler::DPIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0x57, InstructionMetadata("EOR", &InstructionHandler::DPIndirectLongIndexedY)));
+    m_instruction_lookup.insert(make_pair(0x41, InstructionMetadata("EOR", &InstructionHandler::DPIndexedIndirectX)));
+    m_instruction_lookup.insert(make_pair(0x55, InstructionMetadata("EOR", &InstructionHandler::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0x5D, InstructionMetadata("EOR", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x5F, InstructionMetadata("EOR", &InstructionHandler::AbsoluteLongIndexedX, &AnnotationHandler::Long)));
+    m_instruction_lookup.insert(make_pair(0x59, InstructionMetadata("EOR", &InstructionHandler::AbsoluteIndexedY, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x52, InstructionMetadata("EOR", &InstructionHandler::DPIndirect)));
+    m_instruction_lookup.insert(make_pair(0x47, InstructionMetadata("EOR", &InstructionHandler::DPIndirectLong)));
+    m_instruction_lookup.insert(make_pair(0x43, InstructionMetadata("EOR", &InstructionHandler::StackRelative)));
+    m_instruction_lookup.insert(make_pair(0x53, InstructionMetadata("EOR", &InstructionHandler::SRIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0xEE, InstructionMetadata("INC", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0xE6, InstructionMetadata("INC", &InstructionHandler::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x1A, InstructionMetadata("INC", &InstructionHandler::Accumulator)));
+    m_instruction_lookup.insert(make_pair(0xF6, InstructionMetadata("INC", &InstructionHandler::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0xFE, InstructionMetadata("INC", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0xE8, InstructionMetadata("INX", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0xC8, InstructionMetadata("INY", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x5C, InstructionMetadata("JMP", &InstructionHandler::AbsoluteLong, &AnnotationHandler::Long)));
+    m_instruction_lookup.insert(make_pair(0xDC, InstructionMetadata("JMP", &InstructionHandler::AbsoluteIndirectLong)));
+    m_instruction_lookup.insert(make_pair(0x4C, InstructionMetadata("JMP", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x6C, InstructionMetadata("JMP", &InstructionHandler::AbsoluteIndirect)));
+    m_instruction_lookup.insert(make_pair(0x7C, InstructionMetadata("JMP", &InstructionHandler::AbsoluteIndexedIndirect)));
+    m_instruction_lookup.insert(make_pair(0x22, InstructionMetadata("JSL", &InstructionHandler::AbsoluteLong, &AnnotationHandler::Long)));
+    m_instruction_lookup.insert(make_pair(0x20, InstructionMetadata("JSR", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0xFC, InstructionMetadata("JSR", &InstructionHandler::AbsoluteIndexedIndirect)));
+    m_instruction_lookup.insert(make_pair(0xA9, InstructionMetadata("LDA", &InstructionHandler::Immediate, &AnnotationHandler::AccumDependentWord)));
+    m_instruction_lookup.insert(make_pair(0xAD, InstructionMetadata("LDA", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0xAF, InstructionMetadata("LDA", &InstructionHandler::AbsoluteLong, &AnnotationHandler::Long)));
+    m_instruction_lookup.insert(make_pair(0xA5, InstructionMetadata("LDA", &InstructionHandler::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0xB1, InstructionMetadata("LDA", &InstructionHandler::DPIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0xB7, InstructionMetadata("LDA", &InstructionHandler::DPIndirectLongIndexedY)));
+    m_instruction_lookup.insert(make_pair(0xA1, InstructionMetadata("LDA", &InstructionHandler::DPIndexedIndirectX)));
+    m_instruction_lookup.insert(make_pair(0xB5, InstructionMetadata("LDA", &InstructionHandler::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0xBD, InstructionMetadata("LDA", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0xBF, InstructionMetadata("LDA", &InstructionHandler::AbsoluteLongIndexedX, &AnnotationHandler::Long)));
+    m_instruction_lookup.insert(make_pair(0xB9, InstructionMetadata("LDA", &InstructionHandler::AbsoluteIndexedY, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0xB2, InstructionMetadata("LDA", &InstructionHandler::DPIndirect)));
+    m_instruction_lookup.insert(make_pair(0xA7, InstructionMetadata("LDA", &InstructionHandler::DPIndirectLong)));
+    m_instruction_lookup.insert(make_pair(0xA3, InstructionMetadata("LDA", &InstructionHandler::StackRelative)));
+    m_instruction_lookup.insert(make_pair(0xB3, InstructionMetadata("LDA", &InstructionHandler::SRIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0xA2, InstructionMetadata("LDX", &InstructionHandler::ImmediateXY, &AnnotationHandler::IndexDependentWord)));
+    m_instruction_lookup.insert(make_pair(0xAE, InstructionMetadata("LDX", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0xA6, InstructionMetadata("LDX", &InstructionHandler::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0xB6, InstructionMetadata("LDX", &InstructionHandler::DPIndexedY)));
+    m_instruction_lookup.insert(make_pair(0xBE, InstructionMetadata("LDX", &InstructionHandler::AbsoluteIndexedY, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0xA0, InstructionMetadata("LDY", &InstructionHandler::ImmediateXY, &AnnotationHandler::IndexDependentWord)));
+    m_instruction_lookup.insert(make_pair(0xAC, InstructionMetadata("LDY", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0xA4, InstructionMetadata("LDY", &InstructionHandler::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0xB4, InstructionMetadata("LDY", &InstructionHandler::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0xBC, InstructionMetadata("LDY", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x4E, InstructionMetadata("LSR", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x46, InstructionMetadata("LSR", &InstructionHandler::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x4A, InstructionMetadata("LSR", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x56, InstructionMetadata("LSR", &InstructionHandler::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0x5E, InstructionMetadata("LSR", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0xEA, InstructionMetadata("NOP", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x09, InstructionMetadata("ORA", &InstructionHandler::Immediate, &AnnotationHandler::AccumDependentWord)));
+    m_instruction_lookup.insert(make_pair(0x0D, InstructionMetadata("ORA", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x0F, InstructionMetadata("ORA", &InstructionHandler::AbsoluteLong, &AnnotationHandler::Long)));
+    m_instruction_lookup.insert(make_pair(0x05, InstructionMetadata("ORA", &InstructionHandler::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x11, InstructionMetadata("ORA", &InstructionHandler::DPIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0x17, InstructionMetadata("ORA", &InstructionHandler::DPIndirectLongIndexedY)));
+    m_instruction_lookup.insert(make_pair(0x01, InstructionMetadata("ORA", &InstructionHandler::DPIndexedIndirectX)));
+    m_instruction_lookup.insert(make_pair(0x15, InstructionMetadata("ORA", &InstructionHandler::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0x1D, InstructionMetadata("ORA", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x1F, InstructionMetadata("ORA", &InstructionHandler::AbsoluteLongIndexedX, &AnnotationHandler::Long)));
+    m_instruction_lookup.insert(make_pair(0x19, InstructionMetadata("ORA", &InstructionHandler::AbsoluteIndexedY, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x12, InstructionMetadata("ORA", &InstructionHandler::DPIndirect)));
+    m_instruction_lookup.insert(make_pair(0x07, InstructionMetadata("ORA", &InstructionHandler::DPIndirectLong)));
+    m_instruction_lookup.insert(make_pair(0x03, InstructionMetadata("ORA", &InstructionHandler::StackRelative)));
+    m_instruction_lookup.insert(make_pair(0x13, InstructionMetadata("ORA", &InstructionHandler::SRIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0xF4, InstructionMetadata("PEA", &InstructionHandler::StackPCRelativeLong)));
+    m_instruction_lookup.insert(make_pair(0xD4, InstructionMetadata("PEI", &InstructionHandler::StackDPIndirect)));
+    m_instruction_lookup.insert(make_pair(0x62, InstructionMetadata("PER", &InstructionHandler::StackPCRelativeLong)));
+    m_instruction_lookup.insert(make_pair(0x48, InstructionMetadata("PHA", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x8B, InstructionMetadata("PHB", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x0B, InstructionMetadata("PHD", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x4B, InstructionMetadata("PHK", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x08, InstructionMetadata("PHP", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0xDA, InstructionMetadata("PHX", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x5A, InstructionMetadata("PHY", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x68, InstructionMetadata("PLA", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0xAB, InstructionMetadata("PLB", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x2B, InstructionMetadata("PLD", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x28, InstructionMetadata("PLP", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0xFA, InstructionMetadata("PLX", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x7A, InstructionMetadata("PLY", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0xC2, InstructionMetadata("REP", &InstructionHandler::ImmediateREP)));
+    m_instruction_lookup.insert(make_pair(0x2E, InstructionMetadata("ROL", &InstructionHandler::Immediate, &AnnotationHandler::AccumDependentWord)));
+    m_instruction_lookup.insert(make_pair(0x26, InstructionMetadata("ROL", &InstructionHandler::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x2A, InstructionMetadata("ROL", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x36, InstructionMetadata("ROL", &InstructionHandler::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0x3E, InstructionMetadata("ROL", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x6E, InstructionMetadata("ROR", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x66, InstructionMetadata("ROR", &InstructionHandler::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x6A, InstructionMetadata("ROR", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x76, InstructionMetadata("ROR", &InstructionHandler::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0x7E, InstructionMetadata("ROR", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x40, InstructionMetadata("RTI", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x6B, InstructionMetadata("RTL", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x60, InstructionMetadata("RTS", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0xE9, InstructionMetadata("SBC", &InstructionHandler::Immediate, &AnnotationHandler::AccumDependentWord)));
+    m_instruction_lookup.insert(make_pair(0xED, InstructionMetadata("SBC", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0xEF, InstructionMetadata("SBC", &InstructionHandler::AbsoluteLong, &AnnotationHandler::Long)));
+    m_instruction_lookup.insert(make_pair(0xE5, InstructionMetadata("SBC", &InstructionHandler::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0xF1, InstructionMetadata("SBC", &InstructionHandler::DPIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0xF7, InstructionMetadata("SBC", &InstructionHandler::DPIndirectLongIndexedY)));
+    m_instruction_lookup.insert(make_pair(0xE1, InstructionMetadata("SBC", &InstructionHandler::DPIndexedIndirectX)));
+    m_instruction_lookup.insert(make_pair(0xF5, InstructionMetadata("SBC", &InstructionHandler::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0xFD, InstructionMetadata("SBC", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0xFF, InstructionMetadata("SBC", &InstructionHandler::AbsoluteLongIndexedX, &AnnotationHandler::Long)));
+    m_instruction_lookup.insert(make_pair(0xF9, InstructionMetadata("SBC", &InstructionHandler::AbsoluteIndexedY, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0xF2, InstructionMetadata("SBC", &InstructionHandler::DPIndirect)));
+    m_instruction_lookup.insert(make_pair(0xE7, InstructionMetadata("SBC", &InstructionHandler::DPIndirectLong)));
+    m_instruction_lookup.insert(make_pair(0xE3, InstructionMetadata("SBC", &InstructionHandler::StackRelative)));
+    m_instruction_lookup.insert(make_pair(0xF3, InstructionMetadata("SBC", &InstructionHandler::SRIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0x38, InstructionMetadata("SEC", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0xF8, InstructionMetadata("SED", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x78, InstructionMetadata("SEI", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0xE2, InstructionMetadata("SEP", &InstructionHandler::ImmediateSEP)));
+    m_instruction_lookup.insert(make_pair(0x8D, InstructionMetadata("STA", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x8F, InstructionMetadata("STA", &InstructionHandler::AbsoluteLong, &AnnotationHandler::Long)));
+    m_instruction_lookup.insert(make_pair(0x85, InstructionMetadata("STA", &InstructionHandler::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x91, InstructionMetadata("STA", &InstructionHandler::DPIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0x97, InstructionMetadata("STA", &InstructionHandler::DPIndirectLongIndexedY)));
+    m_instruction_lookup.insert(make_pair(0x81, InstructionMetadata("STA", &InstructionHandler::DPIndexedIndirectX)));
+    m_instruction_lookup.insert(make_pair(0x95, InstructionMetadata("STA", &InstructionHandler::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0x9D, InstructionMetadata("STA", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x9F, InstructionMetadata("STA", &InstructionHandler::AbsoluteLongIndexedX, &AnnotationHandler::Long)));
+    m_instruction_lookup.insert(make_pair(0x99, InstructionMetadata("STA", &InstructionHandler::AbsoluteIndexedY, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x92, InstructionMetadata("STA", &InstructionHandler::DPIndirect)));
+    m_instruction_lookup.insert(make_pair(0x87, InstructionMetadata("STA", &InstructionHandler::DPIndirectLong)));
+    m_instruction_lookup.insert(make_pair(0x83, InstructionMetadata("STA", &InstructionHandler::StackRelative)));
+    m_instruction_lookup.insert(make_pair(0x93, InstructionMetadata("STA", &InstructionHandler::SRIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0xDB, InstructionMetadata("STP", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x8E, InstructionMetadata("STX", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x86, InstructionMetadata("STX", &InstructionHandler::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x96, InstructionMetadata("STX", &InstructionHandler::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0x8C, InstructionMetadata("STY", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x84, InstructionMetadata("STY", &InstructionHandler::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x94, InstructionMetadata("STY", &InstructionHandler::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0x9C, InstructionMetadata("STZ", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x64, InstructionMetadata("STZ", &InstructionHandler::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x74, InstructionMetadata("STZ", &InstructionHandler::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0x9E, InstructionMetadata("STZ", &InstructionHandler::AbsoluteIndexedX, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0xAA, InstructionMetadata("TAX", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0xA8, InstructionMetadata("TAY", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x5B, InstructionMetadata("TCD", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x1B, InstructionMetadata("TCS", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x7B, InstructionMetadata("TDC", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x1C, InstructionMetadata("TRB", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x14, InstructionMetadata("TRB", &InstructionHandler::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x0C, InstructionMetadata("TSB", &InstructionHandler::Absolute, &AnnotationHandler::Word)));
+    m_instruction_lookup.insert(make_pair(0x04, InstructionMetadata("TSB", &InstructionHandler::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x3B, InstructionMetadata("TSC", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0xBA, InstructionMetadata("TSX", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x8A, InstructionMetadata("TXA", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x9A, InstructionMetadata("TXS", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x9B, InstructionMetadata("TXY", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x98, InstructionMetadata("TYA", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0xBB, InstructionMetadata("TYX", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0xCB, InstructionMetadata("WAI", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0xEB, InstructionMetadata("XBA", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0xFB, InstructionMetadata("XCE", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x02, InstructionMetadata("COP", &InstructionHandler::Implied)));
+    m_instruction_lookup.insert(make_pair(0x54, InstructionMetadata("MVN", &InstructionHandler::BlockMove)));
+    m_instruction_lookup.insert(make_pair(0x44, InstructionMetadata("MVP", &InstructionHandler::BlockMove)));
+    m_instruction_lookup.insert(make_pair(0x42, InstructionMetadata("???", &InstructionHandler::Implied)));
 
-    m_instruction_lookup.insert(make_pair(0x100, Instruction(".dw", &InstructionHandler::Absolute)));
-    m_instruction_lookup.insert(make_pair(0x101, Instruction(".dw", &InstructionHandler::LongPointer)));
+    m_instruction_lookup.insert(make_pair(0x100, InstructionMetadata(".dw", &InstructionHandler::Absolute)));
+    m_instruction_lookup.insert(make_pair(0x101, InstructionMetadata(".dw", &InstructionHandler::LongPointer)));
 }

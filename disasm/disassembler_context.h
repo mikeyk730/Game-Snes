@@ -1,12 +1,12 @@
 #include <string>
 
 struct Disassembler;
-class Instruction;
+class InstructionMetadata;
 
 struct DisassemblerContext
 {
     DisassemblerContext(Disassembler& disasm,
-    const Instruction& instr, unsigned int& pc, int& flag, bool& accum16, bool& index16, int& low, int& high, int bank, int default_bank, int offset);
+    const InstructionMetadata& instr, unsigned int& pc, int& flag, bool& accum16, bool& index16, int& low, int& high, int bank, int default_bank, int offset);
 
     unsigned char read_next_byte(int* pc);
 
@@ -36,5 +36,5 @@ private:
     unsigned char m_default_bank;
     int m_offset;
     Disassembler& d;
-    const Instruction& i;
+    const InstructionMetadata& i;
 };

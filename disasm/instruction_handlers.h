@@ -1,65 +1,65 @@
 struct DisasmState;
 struct DisassemblerContext;
-struct InstructionOutput;
+struct Instruction;
 
 namespace InstructionHandler
 {
-    void Implied(DisassemblerContext* context, InstructionOutput* output);
-    void Accumulator(DisassemblerContext* context, InstructionOutput* output);
+    void Implied(DisassemblerContext* context, Instruction* output);
+    void Accumulator(DisassemblerContext* context, Instruction* output);
     /* Accum  #$xx or #$xxxx */
-    void Immediate(DisassemblerContext* context, InstructionOutput* output);
+    void Immediate(DisassemblerContext* context, Instruction* output);
     /* $xxxx */
-    void Absolute(DisassemblerContext* context, InstructionOutput* output);
+    void Absolute(DisassemblerContext* context, Instruction* output);
     /* $xxxxxx */
-    void AbsoluteLong(DisassemblerContext* context, InstructionOutput* output);
+    void AbsoluteLong(DisassemblerContext* context, Instruction* output);
     /* $xx */
-    void DirectPage(DisassemblerContext* context, InstructionOutput* output);
+    void DirectPage(DisassemblerContext* context, Instruction* output);
     /* ($xx),Y */
-    void DPIndirectIndexedY(DisassemblerContext* context, InstructionOutput* output);
+    void DPIndirectIndexedY(DisassemblerContext* context, Instruction* output);
     /* [$xx],Y */
-    void DPIndirectLongIndexedY(DisassemblerContext* context, InstructionOutput* output);
+    void DPIndirectLongIndexedY(DisassemblerContext* context, Instruction* output);
     /* ($xx,X) */
-    void DPIndexedIndirectX(DisassemblerContext* context, InstructionOutput* output);
+    void DPIndexedIndirectX(DisassemblerContext* context, Instruction* output);
     /* $xx,X */
-    void DPIndexedX(DisassemblerContext* context, InstructionOutput* output);
+    void DPIndexedX(DisassemblerContext* context, Instruction* output);
     /* $xxxx,X */
-    void AbsoluteIndexedX(DisassemblerContext* context, InstructionOutput* output);
+    void AbsoluteIndexedX(DisassemblerContext* context, Instruction* output);
     /* $xxxxxx,X */
-    void AbsoluteLongIndexedX(DisassemblerContext* context, InstructionOutput* output);
+    void AbsoluteLongIndexedX(DisassemblerContext* context, Instruction* output);
     /* $xxxx,Y */
-    void AbsoluteIndexedY(DisassemblerContext* context, InstructionOutput* output);
+    void AbsoluteIndexedY(DisassemblerContext* context, Instruction* output);
     /* ($xx) */
-    void DPIndirect(DisassemblerContext* context, InstructionOutput* output);
+    void DPIndirect(DisassemblerContext* context, Instruction* output);
     /* [$xx] */
-    void DPIndirectLong(DisassemblerContext* context, InstructionOutput* output);
+    void DPIndirectLong(DisassemblerContext* context, Instruction* output);
     /* $xx,S */
-    void StackRelative(DisassemblerContext* context, InstructionOutput* output);
+    void StackRelative(DisassemblerContext* context, Instruction* output);
     /* ($xx,S),Y */
-    void SRIndirectIndexedY(DisassemblerContext* context, InstructionOutput* output);
+    void SRIndirectIndexedY(DisassemblerContext* context, Instruction* output);
     /* relative */
-    void ProgramCounterRelative(DisassemblerContext* context, InstructionOutput* output);
+    void ProgramCounterRelative(DisassemblerContext* context, Instruction* output);
     /* relative long */
-    void ProgramCounterRelativeLong(DisassemblerContext* context, InstructionOutput* output);
+    void ProgramCounterRelativeLong(DisassemblerContext* context, Instruction* output);
     /* PER/PEA $xxxx */
-    void StackPCRelativeLong(DisassemblerContext* context, InstructionOutput* output);
+    void StackPCRelativeLong(DisassemblerContext* context, Instruction* output);
     /* [$xxxx] */
-    void AbsoluteIndirectLong(DisassemblerContext* context, InstructionOutput* output);
+    void AbsoluteIndirectLong(DisassemblerContext* context, Instruction* output);
     /* ($xxxx) */
-    void AbsoluteIndirect(DisassemblerContext* context, InstructionOutput* output);
+    void AbsoluteIndirect(DisassemblerContext* context, Instruction* output);
     /* ($xxxx,X) */
-    void AbsoluteIndexedIndirect(DisassemblerContext* context, InstructionOutput* output);
+    void AbsoluteIndexedIndirect(DisassemblerContext* context, Instruction* output);
     /* $xx,Y */
-    void DPIndexedY(DisassemblerContext* context, InstructionOutput* output);
+    void DPIndexedY(DisassemblerContext* context, Instruction* output);
     /* #$xx */
-    void StackDPIndirect(DisassemblerContext* context, InstructionOutput* output);
+    void StackDPIndirect(DisassemblerContext* context, Instruction* output);
     /* REP */
-    void ImmediateREP(DisassemblerContext* context, InstructionOutput* output);
+    void ImmediateREP(DisassemblerContext* context, Instruction* output);
     /* SEP */
-    void ImmediateSEP(DisassemblerContext* context, InstructionOutput* output);
+    void ImmediateSEP(DisassemblerContext* context, Instruction* output);
     /* Index  #$xx or #$xxxx */
-    void ImmediateXY(DisassemblerContext* context, InstructionOutput* output);
+    void ImmediateXY(DisassemblerContext* context, Instruction* output);
     /* MVN/MVP */
-    void BlockMove(DisassemblerContext* context, InstructionOutput* output);
+    void BlockMove(DisassemblerContext* context, Instruction* output);
     /* $xxxxxx, .db :$xxxxxx */
-    void LongPointer(DisassemblerContext* context, InstructionOutput* output);
+    void LongPointer(DisassemblerContext* context, Instruction* output);
 }

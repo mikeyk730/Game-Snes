@@ -8,7 +8,7 @@
 #include "proto.h"
 #include "request.h"
 
-class Instruction;
+class InstructionMetadata;
 
 struct Disassembler{
 private:    
@@ -25,7 +25,7 @@ public:
     void doDisasm();
     void doSmart();
 
-    void doType(const Instruction& instr, bool is_data, unsigned char default_bank);
+    void doType(const InstructionMetadata& instr, bool is_data, unsigned char default_bank);
     void setProcessFlags();
 
     std::string getRAMComment(unsigned char low, unsigned char high);
@@ -39,12 +39,11 @@ public:
 
     bool is_comment(const std::string& line);    
     bool add_label(int bank, int pc, const std::string& label, bool used=false);
-    std::string get_label(const Instruction& instr, unsigned char bank, int pc, int offset);
+    std::string get_label(const InstructionMetadata& instr, unsigned char bank, int pc, int offset);
 
     std::istream& get_address(std::istream& in, unsigned char& bank, unsigned int& addr);
     std::string get_comment(unsigned char bank, unsigned int pc);
     void fix_address(unsigned char& bank, unsigned int& pc);
-    std::string getInstructionName(const Instruction& instr, bool is_accum_16, bool is_index_16);
 
     inline void hirom(bool hirom) { m_hirom = hirom; }
     inline bool hirom() const { return m_hirom; }
@@ -57,7 +56,7 @@ public:
     bool printInstructionBytes() const { return (!m_request_prop.m_quiet && finalPass()); }
 
 private:    
-    std::map<int, Instruction> m_instruction_lookup;
+    std::map<int, InstructionMetadata> m_instruction_lookup;
     std::map<int, std::string> m_label_lookup;
     std::map<int, std::string> m_ram_lookup;
     std::map<int, std::string> m_used_label_lookup;

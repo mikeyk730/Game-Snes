@@ -4,26 +4,27 @@
 
 using namespace std;
 
-InstructionOutput::InstructionOutput()
+Instruction::Instruction(const InstructionMetadata& metadata)
+: m_metadata(metadata)
 {
     address[0] = 0;
     additional_instruction[0] = 0;
 }
 
-void InstructionOutput::addInstructionBytes(unsigned char a)
+void Instruction::addInstructionBytes(unsigned char a)
 {
     instruction_bytes
         << setw(2) << setfill('0') << uppercase << hex << (int)a << " ";
 }
 
-void InstructionOutput::addInstructionBytes(unsigned char a, unsigned char b)
+void Instruction::addInstructionBytes(unsigned char a, unsigned char b)
 {
     instruction_bytes
         << setw(2) << setfill('0') << uppercase << hex << (int)a << " "
         << setw(2) << setfill('0') << uppercase << hex << (int)b << " ";
 }
 
-void InstructionOutput::addInstructionBytes(unsigned char a, unsigned char b, unsigned char c)
+void Instruction::addInstructionBytes(unsigned char a, unsigned char b, unsigned char c)
 {
     instruction_bytes
         << setw(2) << setfill('0') << uppercase << hex << (int)a << " "
@@ -31,24 +32,29 @@ void InstructionOutput::addInstructionBytes(unsigned char a, unsigned char b, un
         << setw(2) << setfill('0') << uppercase << hex << (int)c << " ";
 }
 
-string InstructionOutput::getInstructionBytes()
+string Instruction::getInstructionBytes()
 {
     return instruction_bytes.str();
 }
 
-void InstructionOutput::setAddress(const char *format, ...){
+void Instruction::setAddress(const char *format, ...){
     va_list args;
     va_start(args, format);
     vsprintf_s(address, format, args);
     va_end(args);
 }
 
-string InstructionOutput::getAddress() const
+string Instruction::getAddress() const
 {
     return address;
 }
 
-void InstructionOutput::setAdditionalInstruction(const char* format, ...)
+string Instruction::toString(bool is_accum_16, bool is_index_16) const
+{
+    return m_metadata.annotated_name(is_accum_16, is_index_16) + " " + getAddress();
+}
+
+void Instruction::setAdditionalInstruction(const char* format, ...)
 {
     va_list args;
     va_start(args, format);
@@ -56,7 +62,7 @@ void InstructionOutput::setAdditionalInstruction(const char* format, ...)
     va_end(args);
 }
 
-string InstructionOutput::getAdditionalInstruction() const
+string Instruction::getAdditionalInstruction() const
 {
     return additional_instruction;
 }

@@ -9,16 +9,16 @@ using namespace Address;
 
 namespace InstructionHandler
 {
-    void Implied(DisassemblerContext* context, InstructionOutput* output)
+    void Implied(DisassemblerContext* context, Instruction* output)
     { }
 
-    void Accumulator(DisassemblerContext* context, InstructionOutput* output)
+    void Accumulator(DisassemblerContext* context, Instruction* output)
     {
         output->setAddress("A");
     }
 
     /* Accum  #$xx or #$xxxx */
-    void Immediate(DisassemblerContext* context, InstructionOutput* output)
+    void Immediate(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
@@ -35,7 +35,7 @@ namespace InstructionHandler
     }
 
     /* $xxxx */
-    void Absolute(DisassemblerContext* context, InstructionOutput* output)
+    void Absolute(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         unsigned char j = context->read_next_byte(NULL);
@@ -52,7 +52,7 @@ namespace InstructionHandler
     }
 
     /* $xxxxxx */
-    void AbsoluteLong(DisassemblerContext* context, InstructionOutput* output)
+    void AbsoluteLong(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         unsigned char j = context->read_next_byte(NULL);
@@ -67,7 +67,7 @@ namespace InstructionHandler
     }
 
     /* $xx */
-    void DirectPage(DisassemblerContext* context, InstructionOutput* output)
+    void DirectPage(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
@@ -80,7 +80,7 @@ namespace InstructionHandler
     }
 
     /* ($xx),Y */
-    void DPIndirectIndexedY(DisassemblerContext* context, InstructionOutput* output)
+    void DPIndirectIndexedY(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
@@ -93,7 +93,7 @@ namespace InstructionHandler
     }
 
     /* [$xx],Y */
-    void DPIndirectLongIndexedY(DisassemblerContext* context, InstructionOutput* output)
+    void DPIndirectLongIndexedY(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
@@ -106,7 +106,7 @@ namespace InstructionHandler
     }
 
     /* ($xx,X) */
-    void DPIndexedIndirectX(DisassemblerContext* context, InstructionOutput* output)
+    void DPIndexedIndirectX(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
@@ -119,7 +119,7 @@ namespace InstructionHandler
     }
 
     /* $xx,X */
-    void DPIndexedX(DisassemblerContext* context, InstructionOutput* output)
+    void DPIndexedX(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
@@ -132,7 +132,7 @@ namespace InstructionHandler
     }
 
     /* $xxxx,X */
-    void AbsoluteIndexedX(DisassemblerContext* context, InstructionOutput* output)
+    void AbsoluteIndexedX(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         unsigned char j = context->read_next_byte(NULL);
@@ -146,7 +146,7 @@ namespace InstructionHandler
     }
 
     /* $xxxxxx,X */
-    void AbsoluteLongIndexedX(DisassemblerContext* context, InstructionOutput* output)
+    void AbsoluteLongIndexedX(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         unsigned char j = context->read_next_byte(NULL);
@@ -161,7 +161,7 @@ namespace InstructionHandler
     }
 
     /* $xxxx,Y */
-    void AbsoluteIndexedY(DisassemblerContext* context, InstructionOutput* output)
+    void AbsoluteIndexedY(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         unsigned char j = context->read_next_byte(NULL);
@@ -175,7 +175,7 @@ namespace InstructionHandler
     }
 
     /* ($xx) */
-    void DPIndirect(DisassemblerContext* context, InstructionOutput* output)
+    void DPIndirect(DisassemblerContext* context, Instruction* output)
     {
         unsigned char  i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
@@ -188,7 +188,7 @@ namespace InstructionHandler
     }
 
     /* [$xx] */
-    void DPIndirectLong(DisassemblerContext* context, InstructionOutput* output)
+    void DPIndirectLong(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
@@ -201,7 +201,7 @@ namespace InstructionHandler
     }
 
     /* $xx,S */
-    void StackRelative(DisassemblerContext* context, InstructionOutput* output)
+    void StackRelative(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
@@ -214,7 +214,7 @@ namespace InstructionHandler
     }
 
     /* ($xx,S),Y */
-    void SRIndirectIndexedY(DisassemblerContext* context, InstructionOutput* output)
+    void SRIndirectIndexedY(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
@@ -227,7 +227,7 @@ namespace InstructionHandler
     }
 
     /* relative */
-    void ProgramCounterRelative(DisassemblerContext* context, InstructionOutput* output)
+    void ProgramCounterRelative(DisassemblerContext* context, Instruction* output)
     {
         int pc;
         char r = context->read_next_byte(&pc);
@@ -241,7 +241,7 @@ namespace InstructionHandler
     }
 
     /* relative long */
-    void ProgramCounterRelativeLong(DisassemblerContext* context, InstructionOutput* output)
+    void ProgramCounterRelativeLong(DisassemblerContext* context, Instruction* output)
     {
         int pc;
         unsigned char i = context->read_next_byte(&pc);
@@ -259,7 +259,7 @@ namespace InstructionHandler
     }
 
     /* PER/PEA $xxxx */
-    void StackPCRelativeLong(DisassemblerContext* context, InstructionOutput* output)
+    void StackPCRelativeLong(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         unsigned char j = context->read_next_byte(NULL);
@@ -269,7 +269,7 @@ namespace InstructionHandler
     }
 
     /* [$xxxx] */
-    void AbsoluteIndirectLong(DisassemblerContext* context, InstructionOutput* output)
+    void AbsoluteIndirectLong(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         unsigned char j = context->read_next_byte(NULL);
@@ -283,7 +283,7 @@ namespace InstructionHandler
     }
 
     /* ($xxxx) */
-    void AbsoluteIndirect(DisassemblerContext* context, InstructionOutput* output)
+    void AbsoluteIndirect(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         unsigned char j = context->read_next_byte(NULL);
@@ -297,7 +297,7 @@ namespace InstructionHandler
     }
 
     /* ($xxxx,X) */
-    void AbsoluteIndexedIndirect(DisassemblerContext* context, InstructionOutput* output)
+    void AbsoluteIndexedIndirect(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         unsigned char j = context->read_next_byte(NULL);
@@ -311,7 +311,7 @@ namespace InstructionHandler
     }
 
     /* $xx,Y */
-    void DPIndexedY(DisassemblerContext* context, InstructionOutput* output)
+    void DPIndexedY(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
@@ -324,7 +324,7 @@ namespace InstructionHandler
     }
 
     /* #$xx */
-    void StackDPIndirect(DisassemblerContext* context, InstructionOutput* output)
+    void StackDPIndirect(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
@@ -333,7 +333,7 @@ namespace InstructionHandler
     }
 
     /* REP */
-    void ImmediateREP(DisassemblerContext* context, InstructionOutput* output)
+    void ImmediateREP(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
@@ -345,7 +345,7 @@ namespace InstructionHandler
     }
 
     /* SEP */
-    void ImmediateSEP(DisassemblerContext* context, InstructionOutput* output)
+    void ImmediateSEP(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
@@ -357,7 +357,7 @@ namespace InstructionHandler
     }
 
     /* Index  #$xx or #$xxxx */
-    void ImmediateXY(DisassemblerContext* context, InstructionOutput* output)
+    void ImmediateXY(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
@@ -373,7 +373,7 @@ namespace InstructionHandler
     }
 
     /* MVN/MVP */
-    void BlockMove(DisassemblerContext* context, InstructionOutput* output)
+    void BlockMove(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         unsigned char j = context->read_next_byte(NULL);
@@ -383,7 +383,7 @@ namespace InstructionHandler
     }
 
     /* $xxxxxx, .db :$xxxxxx */
-    void LongPointer(DisassemblerContext* context, InstructionOutput* output)
+    void LongPointer(DisassemblerContext* context, Instruction* output)
     {
         unsigned char i = context->read_next_byte(NULL);
         unsigned char j = context->read_next_byte(NULL);
