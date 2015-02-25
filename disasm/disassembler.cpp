@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <sstream>
 #include <fstream>
+#include <cstdarg>
 
 #include "proto.h"
 #include "disassembler.h"
@@ -70,495 +71,478 @@ struct DisasmState
     const Instruction& i;
 };
 
-namespace AddressMode
+struct InstructionOutput
 {
-
-
-    void Implied(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    InstructionOutput()
     {
-        if (disasm_state->print_instruction_bytes) printf("         ");
+        address[0] = 0;
+        additional_instruction[0] = 0;
     }
 
-    /* Accum  #$xx or #$xxxx */
-    void Immediate(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void addInstructionBytes(unsigned char a)
     {
-        char buff1[80];
+        instruction_bytes 
+            << setw(2) << setfill('0') << uppercase << hex << (int)a << " ";
+    }
 
+    void addInstructionBytes(unsigned char a, unsigned char b)
+    {
+        instruction_bytes 
+            << setw(2) << setfill('0') << uppercase << hex << (int)a << " "
+            << setw(2) << setfill('0') << uppercase << hex << (int)b << " ";
+    }
+
+    void addInstructionBytes(unsigned char a, unsigned char b, unsigned char c)
+    {
+        instruction_bytes 
+            << setw(2) << setfill('0') << uppercase << hex << (int)a << " "
+            << setw(2) << setfill('0') << uppercase << hex << (int)b << " "
+            << setw(2) << setfill('0') << uppercase << hex << (int)c << " ";
+    }
+
+    string getInstructionBytes()
+    {
+        return instruction_bytes.str();
+    }
+
+    void setAddress(const char *format, ...){
+        va_list args;
+        va_start(args, format);
+        vsprintf(address, format, args);
+        va_end(args);
+    }
+
+    string getAddress() const
+    {
+        return address;
+    }
+
+    void setAdditionalInstruction(const char* format, ...)
+    {
+        va_list args;
+        va_start(args, format);
+        vsprintf(additional_instruction, format, args);
+        va_end(args);
+    }
+
+    string getAdditionalInstruction() const
+    {
+        return additional_instruction;
+    }
+
+private:
+    ostringstream instruction_bytes;
+    char address[80];
+    char additional_instruction[80];
+};
+
+namespace AddressMode
+{
+    void Implied(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
+    { }
+
+    /* Accum  #$xx or #$xxxx */
+    void Immediate(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
+    {
         unsigned char i = context->read_next_byte(NULL);
-
-        if (disasm_state->print_instruction_bytes)
-            printf("%.2X ", i);
+        output->addInstructionBytes(i);
 
         long ll = i;
-        strcat(buff2, "#");
         if (disasm_state->is_accum_16) {
             unsigned char j = context->read_next_byte(NULL);
+            output->addInstructionBytes(j);
 
             ll = j * 256 + ll;
-            if (disasm_state->print_instruction_bytes) printf("%.2X ", j);
+            output->setAddress("#$%.4X", ll);
         }
-        if (!disasm_state->is_accum_16)
-            sprintf(buff1, "$%.2X", ll);
-        else
-            sprintf(buff1, "$%.4X", ll);
-        strcat(buff2, buff1);
-        if (disasm_state->print_instruction_bytes) {
-            printf("   ");
-            if (disasm_state->is_accum_16 == 0) printf("   ");
+        else{
+            output->setAddress("#$%.2X", ll);
         }
     }
 
     /* $xxxx */
-    void Absolute(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void Absolute(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char i = context->read_next_byte(NULL);
         unsigned char j = context->read_next_byte(NULL);
+        output->addInstructionBytes(i, j);
 
-        if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
         string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i);
-        if (msg == "") sprintf(buff1, "$%.2X%.2X", j, i);
-        else sprintf(buff1, "%s", msg.c_str());
-        strcat(buff2, buff1);
-        context->m_high = j; context->m_low = i;
+
+        if (msg.empty()) 
+            output->setAddress("$%.2X%.2X", j, i);
+        else 
+            output->setAddress(msg.c_str());
+
+        context->m_high = j; 
+        context->m_low = i;
     }
 
     /* $xxxxxx */
-    void AbsoluteLong(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void AbsoluteLong(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char i = context->read_next_byte(NULL);
         unsigned char j = context->read_next_byte(NULL);
         unsigned char k = context->read_next_byte(NULL);
+        output->addInstructionBytes(i, j, k);
 
-
-         if (disasm_state->print_instruction_bytes) printf("%.2X %.2X %.2X ", i, j, k);
-        string msg = disasm_state->get_label(k, j * 256 + i); if (msg == "")
-            sprintf(buff1, "$%.2X%.2X%.2X", k, j, i);
-        else sprintf(buff1, "%s", msg.c_str());  strcat(buff2, buff1);
+        string msg = disasm_state->get_label(k, j * 256 + i); 
+        if (msg.empty())
+            output->setAddress("$%.2X%.2X%.2X", k, j, i);
+        else 
+            output->setAddress(msg.c_str());
     }
 
     /* $xx */
-    void DirectPage(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void DirectPage(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char i = context->read_next_byte(NULL);
-
-
-        if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
+        output->addInstructionBytes(i);
         
-        string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
-            sprintf(buff1, "$%.2X", i);
-        else sprintf(buff1, "%s", msg.c_str()); strcat(buff2, buff1);
+        string msg = disasm_state->get_label(disasm_state->current_bank, i);
+        if (msg.empty())
+            output->setAddress("$%.2X", i);
+        else 
+            output->setAddress(msg.c_str());
     }
 
     /* ($xx),Y */
-    void DPIndirectIndexedY(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void DPIndirectIndexedY(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char i = context->read_next_byte(NULL);
-
-
-        if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
+        output->addInstructionBytes(i);
         
-        string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
-            sprintf(buff1, "($%.2X),Y", i);
-        else sprintf(buff1, "(%s),Y", msg.c_str());
-        strcat(buff2, buff1);
+        string msg = disasm_state->get_label(disasm_state->current_bank, i);
+        if (msg.empty())
+            output->setAddress("($%.2X),Y", i);
+        else 
+            output->setAddress("(%s),Y", msg.c_str());
     }
 
     /* [$xx],Y */
-    void DPIndirectLongIndexedY(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void DPIndirectLongIndexedY(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char i = context->read_next_byte(NULL);
-
-
-        if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
+        output->addInstructionBytes(i);
         
-        string msg = disasm_state->get_label(disasm_state->current_bank, i);  if (msg == "")
-            sprintf(buff1, "[$%.2X],Y", i);
-        else sprintf(buff1, "[%s],Y", msg.c_str());
-        strcat(buff2, buff1);
+        string msg = disasm_state->get_label(disasm_state->current_bank, i);  
+        if (msg.empty())
+            output->setAddress("[$%.2X],Y", i);
+        else 
+            output->setAddress("[%s],Y", msg.c_str());
     }
 
     /* ($xx,X) */
-    void DPIndexedIndirectX(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void DPIndexedIndirectX(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char i = context->read_next_byte(NULL);
-
-
-        if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
+        output->addInstructionBytes(i);
         
-        string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
-            sprintf(buff1, "($%.2X,X)", i);
-        else sprintf(buff1, "(%s,X)", msg.c_str());
-        strcat(buff2, buff1);
+        string msg = disasm_state->get_label(disasm_state->current_bank, i); 
+        if (msg.empty())
+            output->setAddress("($%.2X,X)", i);
+        else 
+            output->setAddress("(%s,X)", msg.c_str());
     }
 
     /* $xx,X */
-    void DPIndexedX(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void DPIndexedX(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char i = context->read_next_byte(NULL);
-
-
-        if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
+        output->addInstructionBytes(i);
         
-        string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
-            sprintf(buff1, "$%.2X,X", i);
-        else sprintf(buff1, "%s,X", msg.c_str());
-        strcat(buff2, buff1);
+        string msg = disasm_state->get_label(disasm_state->current_bank, i); 
+        if (msg.empty())
+            output->setAddress("$%.2X,X", i);
+        else
+            output->setAddress("%s,X", msg.c_str());
     }
 
     /* $xxxx,X */
-    void AbsoluteIndexedX(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void AbsoluteIndexedX(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char i = context->read_next_byte(NULL);
         unsigned char j = context->read_next_byte(NULL);
+        output->addInstructionBytes(i, j);
 
-
-         if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
-        string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i); if (msg == "")
-            sprintf(buff1, "$%.2X%.2X,X", j, i);
-        else sprintf(buff1, "%s,X", msg.c_str());
-        strcat(buff2, buff1);
+        string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i); 
+        if (msg.empty())
+            output->setAddress("$%.2X%.2X,X", j, i);
+        else 
+            output->setAddress("%s,X", msg.c_str());
     }
 
     /* $xxxxxx,X */
-    void AbsoluteLongIndexedX(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void AbsoluteLongIndexedX(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char i = context->read_next_byte(NULL);
         unsigned char j = context->read_next_byte(NULL);
         unsigned char k = context->read_next_byte(NULL);
+        output->addInstructionBytes(i, j, k);
 
-
-         if (disasm_state->print_instruction_bytes) printf("%.2X %.2X %.2X ", i, j, k);
-        string msg = disasm_state->get_label(k, j * 256 + i); if (msg == "")
-            sprintf(buff1, "$%.2X%.2X%.2X,X", k, j, i);
-        else sprintf(buff1, "%s,X", msg.c_str());
-        strcat(buff2, buff1);
+        string msg = disasm_state->get_label(k, j * 256 + i);
+        if (msg.empty())
+            output->setAddress("$%.2X%.2X%.2X,X", k, j, i);
+        else 
+            output->setAddress("%s,X", msg.c_str());
     }
 
     /* $xxxx,Y */
-    void AbsoluteIndexedY(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void AbsoluteIndexedY(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char i = context->read_next_byte(NULL);
         unsigned char j = context->read_next_byte(NULL);
+        output->addInstructionBytes(i, j);
 
-
-         if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
-        string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i); if (msg == "")
-            sprintf(buff1, "$%.2X%.2X,Y", j, i);
-        else sprintf(buff1, "%s,Y", msg.c_str());
-        strcat(buff2, buff1);
+        string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i); 
+        if (msg.empty())
+            output->setAddress("$%.2X%.2X,Y", j, i);
+        else 
+            output->setAddress("%s,Y", msg.c_str());
     }
 
     /* ($xx) */
-    void DPIndirect(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void DPIndirect(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char  i = context->read_next_byte(NULL);
-
-
-        if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
+        output->addInstructionBytes(i);
         
-        string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
-            sprintf(buff1, "($%.2X)", i); else sprintf(buff1, "(%s)", msg.c_str());
-        strcat(buff2, buff1);
+        string msg = disasm_state->get_label(disasm_state->current_bank, i);
+        if (msg.empty())
+            output->setAddress("($%.2X)", i);
+        else 
+            output->setAddress("(%s)", msg.c_str());
     }
 
     /* [$xx] */
-    void DPIndirectLong(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void DPIndirectLong(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char i = context->read_next_byte(NULL);
-
-
-        if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
+        output->addInstructionBytes(i);
         
-        string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
-            sprintf(buff1, "[$%.2X]", i); else sprintf(buff1, "[%s]", msg.c_str());
-        strcat(buff2, buff1);
+        string msg = disasm_state->get_label(disasm_state->current_bank, i); 
+        if (msg.empty())
+            output->setAddress("[$%.2X]", i);
+        else 
+            output->setAddress("[%s]", msg.c_str());
     }
 
     /* $xx,S */
-    void StackRelative(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void StackRelative(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char i = context->read_next_byte(NULL);
-
-
-        if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
+        output->addInstructionBytes(i);
         
-        string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
-            sprintf(buff1, "$%.x,S", i); else sprintf(buff1, "%s,S", msg.c_str());
-        strcat(buff2, buff1);
+        string msg = disasm_state->get_label(disasm_state->current_bank, i);
+        if (msg.empty())
+            output->setAddress("$%.x,S", i);
+        else
+            output->setAddress("%s,S", msg.c_str());
     }
 
     /* ($xx,S),Y */
-    void SRIndirectIndexedY(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void SRIndirectIndexedY(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char i = context->read_next_byte(NULL);
-
-
-        if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
+        output->addInstructionBytes(i);
         
-        string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
-            sprintf(buff1, "($%.2X,S),Y", i);
-        else sprintf(buff1, "(%s,S),Y", msg.c_str());
-        strcat(buff2, buff1);
+        string msg = disasm_state->get_label(disasm_state->current_bank, i); 
+        if (msg.empty())
+            output->setAddress("($%.2X,S),Y", i);
+        else
+            output->setAddress("(%s,S),Y", msg.c_str());
     }
 
     /* relative */
-    void ProgramCounterRelative(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void ProgramCounterRelative(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         int pc;
         char r = context->read_next_byte(&pc);
+        output->addInstructionBytes((unsigned char)r);
 
-        unsigned char h = r; if (disasm_state->print_instruction_bytes) printf("%.2X       ", h);
-        
-
-        string msg = disasm_state->get_label(disasm_state->current_bank, pc + r); if (msg == "")
-            sprintf(buff1, "$%.4X", pc + r); else sprintf(buff1, "%s", msg.c_str());
-        strcat(buff2, buff1);
+        string msg = disasm_state->get_label(disasm_state->current_bank, pc + r);
+        if (msg.empty())
+            output->setAddress("$%.4X", pc + r);
+        else
+            output->setAddress("%s", msg.c_str());
     }
 
     /* relative long */
-    void ProgramCounterRelativeLong(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void ProgramCounterRelativeLong(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         int pc;
         unsigned char i = context->read_next_byte(&pc);
         unsigned char j = context->read_next_byte(&pc);
+        output->addInstructionBytes(i, j);
 
-         if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
-        long ll = j * 256 + i; if (ll > 32767) ll = -(65536 - ll);
+        long ll = j * 256 + i; 
+        if (ll > 32767) ll = -(65536 - ll);
         string msg = disasm_state->get_label((disasm_state->current_bank * 65536 + pc + ll) / 0x10000, (disasm_state->current_bank * 65536 + pc + ll) & 0xffff);
-        if (msg == "") sprintf(buff1, "$%.6x", disasm_state->current_bank * 65536 + pc + ll);
-        else sprintf(buff1, "%s", msg.c_str());
-        strcat(buff2, buff1);
+        if (msg.empty()) 
+            output->setAddress("$%.6x", disasm_state->current_bank * 65536 + pc + ll);
+        else 
+            output->setAddress("%s", msg.c_str());
     }
 
     /* PER/PEA $xxxx */
-    void StackPCRelativeLong(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void StackPCRelativeLong(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char i = context->read_next_byte(NULL);
         unsigned char j = context->read_next_byte(NULL);
+        output->addInstructionBytes(i, j);
 
-
-        if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
-        sprintf(buff1, "$%.2X%.2X", j, i);
-        strcat(buff2, buff1);
+        output->setAddress("$%.2X%.2X", j, i);
     }
 
     /* [$xxxx] */
-    void AbsoluteIndirectLong(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void AbsoluteIndirectLong(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char i = context->read_next_byte(NULL);
         unsigned char j = context->read_next_byte(NULL);
+        output->addInstructionBytes(i, j);
 
-
-        if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
-        string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i); if (msg == "")
-            sprintf(buff1, "[$%.2X%.2X]", j, i);
-        else sprintf(buff1, "[%s]", msg.c_str());
-        strcat(buff2, buff1);
+        string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i);
+        if (msg.empty())
+            output->setAddress("[$%.2X%.2X]", j, i);
+        else 
+            output->setAddress("[%s]", msg.c_str());
     }
 
     /* ($xxxx) */
-    void AbsoluteIndirect(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void AbsoluteIndirect(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char i = context->read_next_byte(NULL);
         unsigned char j = context->read_next_byte(NULL);
+        output->addInstructionBytes(i, j);
 
-
-        if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
-        string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i); if (msg == "")
-            sprintf(buff1, "($%.2X%.2X)", j, i); else sprintf(buff1, "(%s)", msg.c_str());
-        strcat(buff2, buff1);
+        string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i); 
+        if (msg.empty())
+            output->setAddress("($%.2X%.2X)", j, i); 
+        else 
+            output->setAddress("(%s)", msg.c_str());
     }
 
     /* ($xxxx,X) */
-    void AbsoluteIndexedIndirect(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void AbsoluteIndexedIndirect(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char i = context->read_next_byte(NULL);
         unsigned char j = context->read_next_byte(NULL);
+        output->addInstructionBytes(i, j);
 
-
-        if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
-        string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i); if (msg == "")
-            sprintf(buff1, "($%.2X%.2X,X)", j, i);
-        else sprintf(buff1, "(%s,X)", msg.c_str());
-        strcat(buff2, buff1);
+        string msg = disasm_state->get_label(disasm_state->current_bank, j * 256 + i);
+        if (msg.empty())
+            output->setAddress("($%.2X%.2X,X)", j, i);
+        else 
+            output->setAddress("(%s,X)", msg.c_str());
     }
 
     /* $xx,Y */
-    void DPIndexedY(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void DPIndexedY(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char i = context->read_next_byte(NULL);
-
-
-        if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
+        output->addInstructionBytes(i);
         
-        string msg = disasm_state->get_label(disasm_state->current_bank, i); if (msg == "")
-            sprintf(buff1, "$%.2X,Y", i); else sprintf(buff1, "%s,Y", msg.c_str());
-        strcat(buff2, buff1);
+        string msg = disasm_state->get_label(disasm_state->current_bank, i);
+        if (msg.empty())
+            output->setAddress("$%.2X,Y", i);
+        else
+            output->setAddress("%s,Y", msg.c_str());
     }
 
     /* #$xx */
-    void StackDPIndirect(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void StackDPIndirect(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char i = context->read_next_byte(NULL);
-
-
-        if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
+        output->addInstructionBytes(i);
         
-        sprintf(buff1, "#$%.2X", i);
-        strcat(buff2, buff1);
+        output->setAddress("#$%.2X", i);
     }
 
     /* REP */
-    void ImmediateREP(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void ImmediateREP(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char i = context->read_next_byte(NULL);
+        output->addInstructionBytes(i);
 
-
-        if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
-          sprintf(buff1, "#$%.2X", i); strcat(buff2, buff1);
+        output->setAddress("#$%.2X", i);
+        
         if (i & 0x20) { context->set_accum_16(1); context->set_flag(0x20); }
         if (i & 0x10) { context->set_index_16(1); context->set_flag(0x10); }
     }
 
     /* SEP */
-    void ImmediateSEP(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void ImmediateSEP(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char i = context->read_next_byte(NULL);
+        output->addInstructionBytes(i);
 
+        output->setAddress("#$%.2X", i);
 
-        if (disasm_state->print_instruction_bytes) printf("%.2X       ", i);
-        sprintf(buff1, "#$%.2X", i); strcat(buff2, buff1);
         if (i & 0x20) { context->set_accum_16(0); context->set_flag(0x02); }
         if (i & 0x10) { context->set_index_16(0); context->set_flag(0x01); }
     }
 
     /* Index  #$xx or #$xxxx */
-    void ImmediateXY(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void ImmediateXY(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char i = context->read_next_byte(NULL);
-
-
-        if (disasm_state->print_instruction_bytes) printf("%.2X ", i);
+        output->addInstructionBytes(i);
         
-        long ll = i; strcat(buff2, "#");
+        long ll = i;
         if (disasm_state->is_index_16) {
             unsigned char j = context->read_next_byte(NULL);
-
+            output->addInstructionBytes(j);
 
             ll = j * 256 + ll;
-            if (disasm_state->print_instruction_bytes) printf("%.2X ", j);
+            output->setAddress("#$%.4X", ll);
         }
-        if (!disasm_state->is_index_16)
-            sprintf(buff1, "$%.2X", ll);
         else
-            sprintf(buff1, "$%.4X", ll);
-        strcat(buff2, buff1);
-        if (disasm_state->print_instruction_bytes) {
-            printf("   ");
-            if (disasm_state->is_index_16 == 0) printf("   ");
-        }
+            output->setAddress("#$%.2X", ll);
     }
 
     /* MVN/MVP */
-    void BlockMove(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void BlockMove(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char i = context->read_next_byte(NULL);
         unsigned char j = context->read_next_byte(NULL);
+        output->addInstructionBytes(i, j);
 
-
-         if (disasm_state->print_instruction_bytes) printf("%.2X %.2X    ", i, j);
-        sprintf(buff1, "$%.2X,$%.2X", i, j); strcat(buff2, buff1);
+        output->setAddress("$%.2X,$%.2X", i, j);
     }
 
     /* $xxxx, .db :$xxxx */
-    void LongPointer(char * buff2, char * buff3, DisasmState* disasm_state, StateContext* context)
+    void LongPointer(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
-        char buff1[80];
-
         unsigned char i = context->read_next_byte(NULL);
         unsigned char j = context->read_next_byte(NULL);
         unsigned char k = context->read_next_byte(NULL);
+        output->addInstructionBytes(i, j, k);
 
-
-
-        if (disasm_state->print_instruction_bytes)
-            printf("%.2X %.2X %.2X ", i, j, k);
         unsigned char oldk = k;
-        if (k == 0xFF) k = disasm_state->default_bank;
+        if (k == 0xFF)
+            k = disasm_state->default_bank;
+
         string msg = disasm_state->get_label(k, j * 256 + i);
-        if (msg == ""){
+        if (msg.empty()){
             if (i == 0 && j == 0 & k == 0){
-                sprintf(buff1, "$%.2X%.2X%.2X", k, j, i);
-                sprintf(buff3, ".db $%.2X", k);
+                output->setAddress("$%.2X%.2X%.2X", k, j, i);
+                output->setAdditionalInstruction(".db $%.2X", k);
             }
             else{
-                sprintf(buff1, "$%.2X%.2X%.2X", k, j, i);
-                sprintf(buff3, ".db :$%.2X%.2X%.2X", k, j, i);
+                output->setAddress("$%.2X%.2X%.2X", k, j, i);
+                output->setAdditionalInstruction(".db :$%.2X%.2X%.2X", k, j, i);
             }
         }
         else {
             if (oldk == 0xFF){
-                sprintf(buff1, ".%s", msg.c_str());
-                sprintf(buff3, ".db $%.2X", oldk);
+                output->setAddress(".%s", msg.c_str());
+                output->setAdditionalInstruction(".db $%.2X", oldk);
             }
             else{
-                sprintf(buff1, ".%s", msg.c_str());
-                sprintf(buff3, ".db :%s", msg.c_str());
+                output->setAddress(".%s", msg.c_str());
+                output->setAdditionalInstruction(".db :%s", msg.c_str());
             }
         }
-        strcat(buff2, buff1);
     }
 }
 
@@ -1153,10 +1137,6 @@ void Disassembler::doType(const Instruction& instr, bool is_data, unsigned char 
 {
     int high = 0, low = 0;
 
-    char buff2[80];
-    char buff3[80];
-    buff3[0] = 0;
-
     unsigned char& bank = default_bank; // m_current_bank;
     unsigned int& pc = m_current_addr;
     bool& accum16 = m_request_prop.m_accum_16;
@@ -1175,13 +1155,13 @@ void Disassembler::doType(const Instruction& instr, bool is_data, unsigned char 
     }
 
     if (!is_data) ++pc;
-    sprintf(buff2, "%s ", getInstructionName(instr, accum16, index16).c_str());
 
     DisasmState state(*((Disassembler*)this), instr, accum16, index16, printInstructionBytes(), bank, default_bank, offset);
     StateContext context(pc, m_flag, accum16, index16, low, high);
+    InstructionOutput output;
 
     auto f = instr.m_address_mode_handler;
-    f(buff2, buff3, &state, &context);
+    f(&state, &context, &output);
 
     //get comment
     if (comment != "")
@@ -1202,10 +1182,16 @@ void Disassembler::doType(const Instruction& instr, bool is_data, unsigned char 
 
     //print instruction and comment
     if (finalPass()){
-        if (!m_request_prop.m_quiet) cout << "  ";    
-        cout << setw(25) << left << buff2 << " " << comment << endl;
-        if (buff3[0] != 0){
-            cout << setw(34)  << "" << buff3 << endl;
+        if (!m_request_prop.m_quiet){
+            cout << setw(11) << output.getInstructionBytes();
+        }
+        
+        cout << setw(25) << getInstructionName(instr, accum16, index16) + " " + output.getAddress()
+            << " " << comment << endl;
+    
+        string additional_instruction = output.getAdditionalInstruction();
+        if (!additional_instruction.empty()){
+            cout << setw(34)  << "" << additional_instruction << endl;
         }
     }
 }
@@ -1277,199 +1263,199 @@ void Disassembler::initialize_instruction_lookup()
     m_instruction_lookup.insert(make_pair(0xD7, Instruction("CMP", &AddressMode::DPIndirectLongIndexedY)));
     m_instruction_lookup.insert(make_pair(0xC1, Instruction("CMP", &AddressMode::DPIndexedIndirectX)));
     m_instruction_lookup.insert(make_pair(0xD5, Instruction("CMP", &AddressMode::DPIndexedX)));
-  m_instruction_lookup.insert(make_pair(0xDD, Instruction("CMP", &AddressMode::AbsoluteIndexedX, &bar2)));
-  m_instruction_lookup.insert(make_pair(0xDF, Instruction("CMP", &AddressMode::AbsoluteLongIndexedX, &bar3)));
-  m_instruction_lookup.insert(make_pair(0xD9, Instruction("CMP", &AddressMode::AbsoluteIndexedY, &bar2)));
-  m_instruction_lookup.insert(make_pair(0xD2, Instruction("CMP", &AddressMode::DPIndirect)));
-  m_instruction_lookup.insert(make_pair(0xC7, Instruction("CMP", &AddressMode::DPIndirectLong)));
-  m_instruction_lookup.insert(make_pair(0xC3, Instruction("CMP", &AddressMode::StackRelative)));
-  m_instruction_lookup.insert(make_pair(0xD3, Instruction("CMP", &AddressMode::SRIndirectIndexedY)));
-  m_instruction_lookup.insert(make_pair(0xE0, Instruction("CPX", &AddressMode::ImmediateXY, &bar4)));
-  m_instruction_lookup.insert(make_pair(0xEC, Instruction("CPX", &AddressMode::Absolute, &bar2)));
-  m_instruction_lookup.insert(make_pair(0xE4, Instruction("CPX", &AddressMode::DirectPage)));
-  m_instruction_lookup.insert(make_pair(0xC0, Instruction("CPY", &AddressMode::ImmediateXY, &bar4)));
-  m_instruction_lookup.insert(make_pair(0xCC, Instruction("CPY", &AddressMode::Absolute, &bar2)));
-  m_instruction_lookup.insert(make_pair(0xC4, Instruction("CPY", &AddressMode::DirectPage)));
-  m_instruction_lookup.insert(make_pair(0xCE, Instruction("DEC", &AddressMode::Absolute, &bar2)));
-  m_instruction_lookup.insert(make_pair(0xC6, Instruction("DEC", &AddressMode::DirectPage)));
-  m_instruction_lookup.insert(make_pair(0x3A, Instruction("DEC A", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0xD6, Instruction("DEC", &AddressMode::DPIndexedX)));
-  m_instruction_lookup.insert(make_pair(0xDE, Instruction("DEC", &AddressMode::AbsoluteIndexedX, &bar2)));
-  m_instruction_lookup.insert(make_pair(0xCA, Instruction("DEX", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x88, Instruction("DEY", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x49, Instruction("EOR", &AddressMode::Immediate, &bar1)));
-  m_instruction_lookup.insert(make_pair(0x4D, Instruction("EOR", &AddressMode::Absolute, &bar2)));
-  m_instruction_lookup.insert(make_pair(0x4F, Instruction("EOR", &AddressMode::AbsoluteLong, &bar3)));
-  m_instruction_lookup.insert(make_pair(0x45, Instruction("EOR", &AddressMode::DirectPage)));
-  m_instruction_lookup.insert(make_pair(0x51, Instruction("EOR", &AddressMode::DPIndirectIndexedY)));
-  m_instruction_lookup.insert(make_pair(0x57, Instruction("EOR", &AddressMode::DPIndirectLongIndexedY)));
-  m_instruction_lookup.insert(make_pair(0x41, Instruction("EOR", &AddressMode::DPIndexedIndirectX)));
-  m_instruction_lookup.insert(make_pair(0x55, Instruction("EOR", &AddressMode::DPIndexedX)));
-  m_instruction_lookup.insert(make_pair(0x5D, Instruction("EOR", &AddressMode::AbsoluteIndexedX, &bar2)));
-  m_instruction_lookup.insert(make_pair(0x5F, Instruction("EOR", &AddressMode::AbsoluteLongIndexedX, &bar3)));
-  m_instruction_lookup.insert(make_pair(0x59, Instruction("EOR", &AddressMode::AbsoluteIndexedY, &bar2)));
-  m_instruction_lookup.insert(make_pair(0x52, Instruction("EOR", &AddressMode::DPIndirect)));
-  m_instruction_lookup.insert(make_pair(0x47, Instruction("EOR", &AddressMode::DPIndirectLong)));
-  m_instruction_lookup.insert(make_pair(0x43, Instruction("EOR", &AddressMode::StackRelative)));
-  m_instruction_lookup.insert(make_pair(0x53, Instruction("EOR", &AddressMode::SRIndirectIndexedY)));
-  m_instruction_lookup.insert(make_pair(0xEE, Instruction("INC", &AddressMode::Absolute, &bar2)));
-  m_instruction_lookup.insert(make_pair(0xE6, Instruction("INC", &AddressMode::DirectPage)));
-  m_instruction_lookup.insert(make_pair(0x1A, Instruction("INC A", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0xF6, Instruction("INC", &AddressMode::DPIndexedX)));
-  m_instruction_lookup.insert(make_pair(0xFE, Instruction("INC", &AddressMode::AbsoluteIndexedX, &bar2)));
-  m_instruction_lookup.insert(make_pair(0xE8, Instruction("INX", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0xC8, Instruction("INY", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x5C, Instruction("JMP", &AddressMode::AbsoluteLong, &bar3)));
-  m_instruction_lookup.insert(make_pair(0xDC, Instruction("JMP", &AddressMode::AbsoluteIndirectLong)));
-  m_instruction_lookup.insert(make_pair(0x4C, Instruction("JMP", &AddressMode::Absolute, &bar2)));
-  m_instruction_lookup.insert(make_pair(0x6C, Instruction("JMP", &AddressMode::AbsoluteIndirect)));
-  m_instruction_lookup.insert(make_pair(0x7C, Instruction("JMP", &AddressMode::AbsoluteIndexedIndirect)));
-  m_instruction_lookup.insert(make_pair(0x22, Instruction("JSL", &AddressMode::AbsoluteLong, &bar3)));
-  m_instruction_lookup.insert(make_pair(0x20, Instruction("JSR", &AddressMode::Absolute, &bar2)));
-  m_instruction_lookup.insert(make_pair(0xFC, Instruction("JSR", &AddressMode::AbsoluteIndexedIndirect)));
-  m_instruction_lookup.insert(make_pair(0xA9, Instruction("LDA", &AddressMode::Immediate, &bar1)));
-  m_instruction_lookup.insert(make_pair(0xAD, Instruction("LDA", &AddressMode::Absolute, &bar2)));
-  m_instruction_lookup.insert(make_pair(0xAF, Instruction("LDA", &AddressMode::AbsoluteLong, &bar3)));
-  m_instruction_lookup.insert(make_pair(0xA5, Instruction("LDA", &AddressMode::DirectPage)));
-  m_instruction_lookup.insert(make_pair(0xB1, Instruction("LDA", &AddressMode::DPIndirectIndexedY)));
-  m_instruction_lookup.insert(make_pair(0xB7, Instruction("LDA", &AddressMode::DPIndirectLongIndexedY)));
-  m_instruction_lookup.insert(make_pair(0xA1, Instruction("LDA", &AddressMode::DPIndexedIndirectX)));
-  m_instruction_lookup.insert(make_pair(0xB5, Instruction("LDA", &AddressMode::DPIndexedX)));
-  m_instruction_lookup.insert(make_pair(0xBD, Instruction("LDA", &AddressMode::AbsoluteIndexedX, &bar2)));
-  m_instruction_lookup.insert(make_pair(0xBF, Instruction("LDA", &AddressMode::AbsoluteLongIndexedX, &bar3)));
-  m_instruction_lookup.insert(make_pair(0xB9, Instruction("LDA", &AddressMode::AbsoluteIndexedY, &bar2)));
-  m_instruction_lookup.insert(make_pair(0xB2, Instruction("LDA", &AddressMode::DPIndirect)));
-  m_instruction_lookup.insert(make_pair(0xA7, Instruction("LDA", &AddressMode::DPIndirectLong)));
-  m_instruction_lookup.insert(make_pair(0xA3, Instruction("LDA", &AddressMode::StackRelative)));
-  m_instruction_lookup.insert(make_pair(0xB3, Instruction("LDA", &AddressMode::SRIndirectIndexedY)));
-  m_instruction_lookup.insert(make_pair(0xA2, Instruction("LDX", &AddressMode::ImmediateXY, &bar4)));
-  m_instruction_lookup.insert(make_pair(0xAE, Instruction("LDX", &AddressMode::Absolute, &bar2)));
-  m_instruction_lookup.insert(make_pair(0xA6, Instruction("LDX", &AddressMode::DirectPage)));
-  m_instruction_lookup.insert(make_pair(0xB6, Instruction("LDX", &AddressMode::DPIndexedY)));
-  m_instruction_lookup.insert(make_pair(0xBE, Instruction("LDX", &AddressMode::AbsoluteIndexedY, &bar2)));
-  m_instruction_lookup.insert(make_pair(0xA0, Instruction("LDY", &AddressMode::ImmediateXY, &bar4)));
-  m_instruction_lookup.insert(make_pair(0xAC, Instruction("LDY", &AddressMode::Absolute, &bar2)));
-  m_instruction_lookup.insert(make_pair(0xA4, Instruction("LDY", &AddressMode::DirectPage)));
-  m_instruction_lookup.insert(make_pair(0xB4, Instruction("LDY", &AddressMode::DPIndexedX)));
-  m_instruction_lookup.insert(make_pair(0xBC, Instruction("LDY", &AddressMode::AbsoluteIndexedX, &bar2)));
-  m_instruction_lookup.insert(make_pair(0x4E, Instruction("LSR", &AddressMode::Absolute, &bar2)));
-  m_instruction_lookup.insert(make_pair(0x46, Instruction("LSR", &AddressMode::DirectPage)));
-  m_instruction_lookup.insert(make_pair(0x4A, Instruction("LSR", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x56, Instruction("LSR", &AddressMode::DPIndexedX)));
-  m_instruction_lookup.insert(make_pair(0x5E, Instruction("LSR", &AddressMode::AbsoluteIndexedX, &bar2)));
-  m_instruction_lookup.insert(make_pair(0xEA, Instruction("NOP", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x09, Instruction("ORA", &AddressMode::Immediate, &bar1)));
-  m_instruction_lookup.insert(make_pair(0x0D, Instruction("ORA", &AddressMode::Absolute, &bar2)));
-  m_instruction_lookup.insert(make_pair(0x0F, Instruction("ORA", &AddressMode::AbsoluteLong, &bar3)));
-  m_instruction_lookup.insert(make_pair(0x05, Instruction("ORA", &AddressMode::DirectPage)));
-  m_instruction_lookup.insert(make_pair(0x11, Instruction("ORA", &AddressMode::DPIndirectIndexedY)));
-  m_instruction_lookup.insert(make_pair(0x17, Instruction("ORA", &AddressMode::DPIndirectLongIndexedY)));
-  m_instruction_lookup.insert(make_pair(0x01, Instruction("ORA", &AddressMode::DPIndexedIndirectX)));
-  m_instruction_lookup.insert(make_pair(0x15, Instruction("ORA", &AddressMode::DPIndexedX)));
-  m_instruction_lookup.insert(make_pair(0x1D, Instruction("ORA", &AddressMode::AbsoluteIndexedX, &bar2)));
-  m_instruction_lookup.insert(make_pair(0x1F, Instruction("ORA", &AddressMode::AbsoluteLongIndexedX, &bar3)));
-  m_instruction_lookup.insert(make_pair(0x19, Instruction("ORA", &AddressMode::AbsoluteIndexedY, &bar2)));
-  m_instruction_lookup.insert(make_pair(0x12, Instruction("ORA", &AddressMode::DPIndirect)));
-  m_instruction_lookup.insert(make_pair(0x07, Instruction("ORA", &AddressMode::DPIndirectLong)));
-  m_instruction_lookup.insert(make_pair(0x03, Instruction("ORA", &AddressMode::StackRelative)));
-  m_instruction_lookup.insert(make_pair(0x13, Instruction("ORA", &AddressMode::SRIndirectIndexedY)));
-  m_instruction_lookup.insert(make_pair(0xF4, Instruction("PEA", &AddressMode::StackPCRelativeLong)));
-  m_instruction_lookup.insert(make_pair(0xD4, Instruction("PEI", &AddressMode::StackDPIndirect)));
-  m_instruction_lookup.insert(make_pair(0x62, Instruction("PER", &AddressMode::StackPCRelativeLong)));
-  m_instruction_lookup.insert(make_pair(0x48, Instruction("PHA", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x8B, Instruction("PHB", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x0B, Instruction("PHD", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x4B, Instruction("PHK", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x08, Instruction("PHP", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0xDA, Instruction("PHX", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x5A, Instruction("PHY", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x68, Instruction("PLA", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0xAB, Instruction("PLB", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x2B, Instruction("PLD", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x28, Instruction("PLP", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0xFA, Instruction("PLX", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x7A, Instruction("PLY", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0xC2, Instruction("REP", &AddressMode::ImmediateREP)));
-  m_instruction_lookup.insert(make_pair(0x2E, Instruction("ROL", &AddressMode::Immediate, &bar1)));
-  m_instruction_lookup.insert(make_pair(0x26, Instruction("ROL", &AddressMode::DirectPage)));
-  m_instruction_lookup.insert(make_pair(0x2A, Instruction("ROL", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x36, Instruction("ROL", &AddressMode::DPIndexedX)));
-  m_instruction_lookup.insert(make_pair(0x3E, Instruction("ROL", &AddressMode::AbsoluteIndexedX, &bar2)));
-  m_instruction_lookup.insert(make_pair(0x6E, Instruction("ROR", &AddressMode::Absolute, &bar2)));
-  m_instruction_lookup.insert(make_pair(0x66, Instruction("ROR", &AddressMode::DirectPage)));
-  m_instruction_lookup.insert(make_pair(0x6A, Instruction("ROR", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x76, Instruction("ROR", &AddressMode::DPIndexedX)));
-  m_instruction_lookup.insert(make_pair(0x7E, Instruction("ROR", &AddressMode::AbsoluteIndexedX, &bar2)));
-  m_instruction_lookup.insert(make_pair(0x40, Instruction("RTI", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x6B, Instruction("RTL", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x60, Instruction("RTS", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0xE9, Instruction("SBC", &AddressMode::Immediate, &bar1)));
-  m_instruction_lookup.insert(make_pair(0xED, Instruction("SBC", &AddressMode::Absolute, &bar2)));
-  m_instruction_lookup.insert(make_pair(0xEF, Instruction("SBC", &AddressMode::AbsoluteLong, &bar3)));
-  m_instruction_lookup.insert(make_pair(0xE5, Instruction("SBC", &AddressMode::DirectPage)));
-  m_instruction_lookup.insert(make_pair(0xF1, Instruction("SBC", &AddressMode::DPIndirectIndexedY)));
-  m_instruction_lookup.insert(make_pair(0xF7, Instruction("SBC", &AddressMode::DPIndirectLongIndexedY)));
-  m_instruction_lookup.insert(make_pair(0xE1, Instruction("SBC", &AddressMode::DPIndexedIndirectX)));
-  m_instruction_lookup.insert(make_pair(0xF5, Instruction("SBC", &AddressMode::DPIndexedX)));
-  m_instruction_lookup.insert(make_pair(0xFD, Instruction("SBC", &AddressMode::AbsoluteIndexedX, &bar2)));
-  m_instruction_lookup.insert(make_pair(0xFF, Instruction("SBC", &AddressMode::AbsoluteLongIndexedX, &bar3)));
-  m_instruction_lookup.insert(make_pair(0xF9, Instruction("SBC", &AddressMode::AbsoluteIndexedY, &bar2)));
-  m_instruction_lookup.insert(make_pair(0xF2, Instruction("SBC", &AddressMode::DPIndirect)));
-  m_instruction_lookup.insert(make_pair(0xE7, Instruction("SBC", &AddressMode::DPIndirectLong)));
-  m_instruction_lookup.insert(make_pair(0xE3, Instruction("SBC", &AddressMode::StackRelative)));
-  m_instruction_lookup.insert(make_pair(0xF3, Instruction("SBC", &AddressMode::SRIndirectIndexedY)));
-  m_instruction_lookup.insert(make_pair(0x38, Instruction("SEC", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0xF8, Instruction("SED", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x78, Instruction("SEI", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0xE2, Instruction("SEP", &AddressMode::ImmediateSEP)));
-  m_instruction_lookup.insert(make_pair(0x8D, Instruction("STA", &AddressMode::Absolute, &bar2)));
-  m_instruction_lookup.insert(make_pair(0x8F, Instruction("STA", &AddressMode::AbsoluteLong, &bar3)));
-  m_instruction_lookup.insert(make_pair(0x85, Instruction("STA", &AddressMode::DirectPage)));
-  m_instruction_lookup.insert(make_pair(0x91, Instruction("STA", &AddressMode::DPIndirectIndexedY)));
-  m_instruction_lookup.insert(make_pair(0x97, Instruction("STA", &AddressMode::DPIndirectLongIndexedY)));
-  m_instruction_lookup.insert(make_pair(0x81, Instruction("STA", &AddressMode::DPIndexedIndirectX)));
-  m_instruction_lookup.insert(make_pair(0x95, Instruction("STA", &AddressMode::DPIndexedX)));
-  m_instruction_lookup.insert(make_pair(0x9D, Instruction("STA", &AddressMode::AbsoluteIndexedX, &bar2)));
-  m_instruction_lookup.insert(make_pair(0x9F, Instruction("STA", &AddressMode::AbsoluteLongIndexedX, &bar3)));
-  m_instruction_lookup.insert(make_pair(0x99, Instruction("STA", &AddressMode::AbsoluteIndexedY, &bar2)));
-  m_instruction_lookup.insert(make_pair(0x92, Instruction("STA", &AddressMode::DPIndirect)));
-  m_instruction_lookup.insert(make_pair(0x87, Instruction("STA", &AddressMode::DPIndirectLong)));
-  m_instruction_lookup.insert(make_pair(0x83, Instruction("STA", &AddressMode::StackRelative)));
-  m_instruction_lookup.insert(make_pair(0x93, Instruction("STA", &AddressMode::SRIndirectIndexedY)));
-  m_instruction_lookup.insert(make_pair(0xDB, Instruction("STP", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x8E, Instruction("STX", &AddressMode::Absolute, &bar2)));
-  m_instruction_lookup.insert(make_pair(0x86, Instruction("STX", &AddressMode::DirectPage)));
-  m_instruction_lookup.insert(make_pair(0x96, Instruction("STX", &AddressMode::DPIndexedX)));
-  m_instruction_lookup.insert(make_pair(0x8C, Instruction("STY", &AddressMode::Absolute, &bar2)));
-  m_instruction_lookup.insert(make_pair(0x84, Instruction("STY", &AddressMode::DirectPage)));
-  m_instruction_lookup.insert(make_pair(0x94, Instruction("STY", &AddressMode::DPIndexedX)));
-  m_instruction_lookup.insert(make_pair(0x9C, Instruction("STZ", &AddressMode::Absolute, &bar2)));
-  m_instruction_lookup.insert(make_pair(0x64, Instruction("STZ", &AddressMode::DirectPage)));
-  m_instruction_lookup.insert(make_pair(0x74, Instruction("STZ", &AddressMode::DPIndexedX)));
-  m_instruction_lookup.insert(make_pair(0x9E, Instruction("STZ", &AddressMode::AbsoluteIndexedX, &bar2)));
-  m_instruction_lookup.insert(make_pair(0xAA, Instruction("TAX", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0xA8, Instruction("TAY", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x5B, Instruction("TCD", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x1B, Instruction("TCS", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x7B, Instruction("TDC", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x1C, Instruction("TRB", &AddressMode::Absolute, &bar2)));
-  m_instruction_lookup.insert(make_pair(0x14, Instruction("TRB", &AddressMode::DirectPage)));
-  m_instruction_lookup.insert(make_pair(0x0C, Instruction("TSB", &AddressMode::Absolute, &bar2)));
-  m_instruction_lookup.insert(make_pair(0x04, Instruction("TSB", &AddressMode::DirectPage)));
-  m_instruction_lookup.insert(make_pair(0x3B, Instruction("TSC", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0xBA, Instruction("TSX", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x8A, Instruction("TXA", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x9A, Instruction("TXS", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x9B, Instruction("TXY", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x98, Instruction("TYA", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0xBB, Instruction("TYX", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0xCB, Instruction("WAI", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0xEB, Instruction("XBA", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0xFB, Instruction("XCE", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x02, Instruction("COP", &AddressMode::Implied)));
-  m_instruction_lookup.insert(make_pair(0x54, Instruction("MVN", &AddressMode::BlockMove)));
-  m_instruction_lookup.insert(make_pair(0x44, Instruction("MVP", &AddressMode::BlockMove)));
+    m_instruction_lookup.insert(make_pair(0xDD, Instruction("CMP", &AddressMode::AbsoluteIndexedX, &bar2)));
+    m_instruction_lookup.insert(make_pair(0xDF, Instruction("CMP", &AddressMode::AbsoluteLongIndexedX, &bar3)));
+    m_instruction_lookup.insert(make_pair(0xD9, Instruction("CMP", &AddressMode::AbsoluteIndexedY, &bar2)));
+    m_instruction_lookup.insert(make_pair(0xD2, Instruction("CMP", &AddressMode::DPIndirect)));
+    m_instruction_lookup.insert(make_pair(0xC7, Instruction("CMP", &AddressMode::DPIndirectLong)));
+    m_instruction_lookup.insert(make_pair(0xC3, Instruction("CMP", &AddressMode::StackRelative)));
+    m_instruction_lookup.insert(make_pair(0xD3, Instruction("CMP", &AddressMode::SRIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0xE0, Instruction("CPX", &AddressMode::ImmediateXY, &bar4)));
+    m_instruction_lookup.insert(make_pair(0xEC, Instruction("CPX", &AddressMode::Absolute, &bar2)));
+    m_instruction_lookup.insert(make_pair(0xE4, Instruction("CPX", &AddressMode::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0xC0, Instruction("CPY", &AddressMode::ImmediateXY, &bar4)));
+    m_instruction_lookup.insert(make_pair(0xCC, Instruction("CPY", &AddressMode::Absolute, &bar2)));
+    m_instruction_lookup.insert(make_pair(0xC4, Instruction("CPY", &AddressMode::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0xCE, Instruction("DEC", &AddressMode::Absolute, &bar2)));
+    m_instruction_lookup.insert(make_pair(0xC6, Instruction("DEC", &AddressMode::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x3A, Instruction("DEC A", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0xD6, Instruction("DEC", &AddressMode::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0xDE, Instruction("DEC", &AddressMode::AbsoluteIndexedX, &bar2)));
+    m_instruction_lookup.insert(make_pair(0xCA, Instruction("DEX", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x88, Instruction("DEY", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x49, Instruction("EOR", &AddressMode::Immediate, &bar1)));
+    m_instruction_lookup.insert(make_pair(0x4D, Instruction("EOR", &AddressMode::Absolute, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x4F, Instruction("EOR", &AddressMode::AbsoluteLong, &bar3)));
+    m_instruction_lookup.insert(make_pair(0x45, Instruction("EOR", &AddressMode::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x51, Instruction("EOR", &AddressMode::DPIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0x57, Instruction("EOR", &AddressMode::DPIndirectLongIndexedY)));
+    m_instruction_lookup.insert(make_pair(0x41, Instruction("EOR", &AddressMode::DPIndexedIndirectX)));
+    m_instruction_lookup.insert(make_pair(0x55, Instruction("EOR", &AddressMode::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0x5D, Instruction("EOR", &AddressMode::AbsoluteIndexedX, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x5F, Instruction("EOR", &AddressMode::AbsoluteLongIndexedX, &bar3)));
+    m_instruction_lookup.insert(make_pair(0x59, Instruction("EOR", &AddressMode::AbsoluteIndexedY, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x52, Instruction("EOR", &AddressMode::DPIndirect)));
+    m_instruction_lookup.insert(make_pair(0x47, Instruction("EOR", &AddressMode::DPIndirectLong)));
+    m_instruction_lookup.insert(make_pair(0x43, Instruction("EOR", &AddressMode::StackRelative)));
+    m_instruction_lookup.insert(make_pair(0x53, Instruction("EOR", &AddressMode::SRIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0xEE, Instruction("INC", &AddressMode::Absolute, &bar2)));
+    m_instruction_lookup.insert(make_pair(0xE6, Instruction("INC", &AddressMode::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x1A, Instruction("INC A", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0xF6, Instruction("INC", &AddressMode::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0xFE, Instruction("INC", &AddressMode::AbsoluteIndexedX, &bar2)));
+    m_instruction_lookup.insert(make_pair(0xE8, Instruction("INX", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0xC8, Instruction("INY", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x5C, Instruction("JMP", &AddressMode::AbsoluteLong, &bar3)));
+    m_instruction_lookup.insert(make_pair(0xDC, Instruction("JMP", &AddressMode::AbsoluteIndirectLong)));
+    m_instruction_lookup.insert(make_pair(0x4C, Instruction("JMP", &AddressMode::Absolute, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x6C, Instruction("JMP", &AddressMode::AbsoluteIndirect)));
+    m_instruction_lookup.insert(make_pair(0x7C, Instruction("JMP", &AddressMode::AbsoluteIndexedIndirect)));
+    m_instruction_lookup.insert(make_pair(0x22, Instruction("JSL", &AddressMode::AbsoluteLong, &bar3)));
+    m_instruction_lookup.insert(make_pair(0x20, Instruction("JSR", &AddressMode::Absolute, &bar2)));
+    m_instruction_lookup.insert(make_pair(0xFC, Instruction("JSR", &AddressMode::AbsoluteIndexedIndirect)));
+    m_instruction_lookup.insert(make_pair(0xA9, Instruction("LDA", &AddressMode::Immediate, &bar1)));
+    m_instruction_lookup.insert(make_pair(0xAD, Instruction("LDA", &AddressMode::Absolute, &bar2)));
+    m_instruction_lookup.insert(make_pair(0xAF, Instruction("LDA", &AddressMode::AbsoluteLong, &bar3)));
+    m_instruction_lookup.insert(make_pair(0xA5, Instruction("LDA", &AddressMode::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0xB1, Instruction("LDA", &AddressMode::DPIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0xB7, Instruction("LDA", &AddressMode::DPIndirectLongIndexedY)));
+    m_instruction_lookup.insert(make_pair(0xA1, Instruction("LDA", &AddressMode::DPIndexedIndirectX)));
+    m_instruction_lookup.insert(make_pair(0xB5, Instruction("LDA", &AddressMode::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0xBD, Instruction("LDA", &AddressMode::AbsoluteIndexedX, &bar2)));
+    m_instruction_lookup.insert(make_pair(0xBF, Instruction("LDA", &AddressMode::AbsoluteLongIndexedX, &bar3)));
+    m_instruction_lookup.insert(make_pair(0xB9, Instruction("LDA", &AddressMode::AbsoluteIndexedY, &bar2)));
+    m_instruction_lookup.insert(make_pair(0xB2, Instruction("LDA", &AddressMode::DPIndirect)));
+    m_instruction_lookup.insert(make_pair(0xA7, Instruction("LDA", &AddressMode::DPIndirectLong)));
+    m_instruction_lookup.insert(make_pair(0xA3, Instruction("LDA", &AddressMode::StackRelative)));
+    m_instruction_lookup.insert(make_pair(0xB3, Instruction("LDA", &AddressMode::SRIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0xA2, Instruction("LDX", &AddressMode::ImmediateXY, &bar4)));
+    m_instruction_lookup.insert(make_pair(0xAE, Instruction("LDX", &AddressMode::Absolute, &bar2)));
+    m_instruction_lookup.insert(make_pair(0xA6, Instruction("LDX", &AddressMode::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0xB6, Instruction("LDX", &AddressMode::DPIndexedY)));
+    m_instruction_lookup.insert(make_pair(0xBE, Instruction("LDX", &AddressMode::AbsoluteIndexedY, &bar2)));
+    m_instruction_lookup.insert(make_pair(0xA0, Instruction("LDY", &AddressMode::ImmediateXY, &bar4)));
+    m_instruction_lookup.insert(make_pair(0xAC, Instruction("LDY", &AddressMode::Absolute, &bar2)));
+    m_instruction_lookup.insert(make_pair(0xA4, Instruction("LDY", &AddressMode::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0xB4, Instruction("LDY", &AddressMode::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0xBC, Instruction("LDY", &AddressMode::AbsoluteIndexedX, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x4E, Instruction("LSR", &AddressMode::Absolute, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x46, Instruction("LSR", &AddressMode::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x4A, Instruction("LSR", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x56, Instruction("LSR", &AddressMode::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0x5E, Instruction("LSR", &AddressMode::AbsoluteIndexedX, &bar2)));
+    m_instruction_lookup.insert(make_pair(0xEA, Instruction("NOP", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x09, Instruction("ORA", &AddressMode::Immediate, &bar1)));
+    m_instruction_lookup.insert(make_pair(0x0D, Instruction("ORA", &AddressMode::Absolute, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x0F, Instruction("ORA", &AddressMode::AbsoluteLong, &bar3)));
+    m_instruction_lookup.insert(make_pair(0x05, Instruction("ORA", &AddressMode::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x11, Instruction("ORA", &AddressMode::DPIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0x17, Instruction("ORA", &AddressMode::DPIndirectLongIndexedY)));
+    m_instruction_lookup.insert(make_pair(0x01, Instruction("ORA", &AddressMode::DPIndexedIndirectX)));
+    m_instruction_lookup.insert(make_pair(0x15, Instruction("ORA", &AddressMode::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0x1D, Instruction("ORA", &AddressMode::AbsoluteIndexedX, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x1F, Instruction("ORA", &AddressMode::AbsoluteLongIndexedX, &bar3)));
+    m_instruction_lookup.insert(make_pair(0x19, Instruction("ORA", &AddressMode::AbsoluteIndexedY, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x12, Instruction("ORA", &AddressMode::DPIndirect)));
+    m_instruction_lookup.insert(make_pair(0x07, Instruction("ORA", &AddressMode::DPIndirectLong)));
+    m_instruction_lookup.insert(make_pair(0x03, Instruction("ORA", &AddressMode::StackRelative)));
+    m_instruction_lookup.insert(make_pair(0x13, Instruction("ORA", &AddressMode::SRIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0xF4, Instruction("PEA", &AddressMode::StackPCRelativeLong)));
+    m_instruction_lookup.insert(make_pair(0xD4, Instruction("PEI", &AddressMode::StackDPIndirect)));
+    m_instruction_lookup.insert(make_pair(0x62, Instruction("PER", &AddressMode::StackPCRelativeLong)));
+    m_instruction_lookup.insert(make_pair(0x48, Instruction("PHA", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x8B, Instruction("PHB", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x0B, Instruction("PHD", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x4B, Instruction("PHK", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x08, Instruction("PHP", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0xDA, Instruction("PHX", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x5A, Instruction("PHY", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x68, Instruction("PLA", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0xAB, Instruction("PLB", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x2B, Instruction("PLD", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x28, Instruction("PLP", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0xFA, Instruction("PLX", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x7A, Instruction("PLY", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0xC2, Instruction("REP", &AddressMode::ImmediateREP)));
+    m_instruction_lookup.insert(make_pair(0x2E, Instruction("ROL", &AddressMode::Immediate, &bar1)));
+    m_instruction_lookup.insert(make_pair(0x26, Instruction("ROL", &AddressMode::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x2A, Instruction("ROL", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x36, Instruction("ROL", &AddressMode::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0x3E, Instruction("ROL", &AddressMode::AbsoluteIndexedX, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x6E, Instruction("ROR", &AddressMode::Absolute, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x66, Instruction("ROR", &AddressMode::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x6A, Instruction("ROR", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x76, Instruction("ROR", &AddressMode::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0x7E, Instruction("ROR", &AddressMode::AbsoluteIndexedX, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x40, Instruction("RTI", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x6B, Instruction("RTL", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x60, Instruction("RTS", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0xE9, Instruction("SBC", &AddressMode::Immediate, &bar1)));
+    m_instruction_lookup.insert(make_pair(0xED, Instruction("SBC", &AddressMode::Absolute, &bar2)));
+    m_instruction_lookup.insert(make_pair(0xEF, Instruction("SBC", &AddressMode::AbsoluteLong, &bar3)));
+    m_instruction_lookup.insert(make_pair(0xE5, Instruction("SBC", &AddressMode::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0xF1, Instruction("SBC", &AddressMode::DPIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0xF7, Instruction("SBC", &AddressMode::DPIndirectLongIndexedY)));
+    m_instruction_lookup.insert(make_pair(0xE1, Instruction("SBC", &AddressMode::DPIndexedIndirectX)));
+    m_instruction_lookup.insert(make_pair(0xF5, Instruction("SBC", &AddressMode::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0xFD, Instruction("SBC", &AddressMode::AbsoluteIndexedX, &bar2)));
+    m_instruction_lookup.insert(make_pair(0xFF, Instruction("SBC", &AddressMode::AbsoluteLongIndexedX, &bar3)));
+    m_instruction_lookup.insert(make_pair(0xF9, Instruction("SBC", &AddressMode::AbsoluteIndexedY, &bar2)));
+    m_instruction_lookup.insert(make_pair(0xF2, Instruction("SBC", &AddressMode::DPIndirect)));
+    m_instruction_lookup.insert(make_pair(0xE7, Instruction("SBC", &AddressMode::DPIndirectLong)));
+    m_instruction_lookup.insert(make_pair(0xE3, Instruction("SBC", &AddressMode::StackRelative)));
+    m_instruction_lookup.insert(make_pair(0xF3, Instruction("SBC", &AddressMode::SRIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0x38, Instruction("SEC", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0xF8, Instruction("SED", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x78, Instruction("SEI", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0xE2, Instruction("SEP", &AddressMode::ImmediateSEP)));
+    m_instruction_lookup.insert(make_pair(0x8D, Instruction("STA", &AddressMode::Absolute, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x8F, Instruction("STA", &AddressMode::AbsoluteLong, &bar3)));
+    m_instruction_lookup.insert(make_pair(0x85, Instruction("STA", &AddressMode::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x91, Instruction("STA", &AddressMode::DPIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0x97, Instruction("STA", &AddressMode::DPIndirectLongIndexedY)));
+    m_instruction_lookup.insert(make_pair(0x81, Instruction("STA", &AddressMode::DPIndexedIndirectX)));
+    m_instruction_lookup.insert(make_pair(0x95, Instruction("STA", &AddressMode::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0x9D, Instruction("STA", &AddressMode::AbsoluteIndexedX, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x9F, Instruction("STA", &AddressMode::AbsoluteLongIndexedX, &bar3)));
+    m_instruction_lookup.insert(make_pair(0x99, Instruction("STA", &AddressMode::AbsoluteIndexedY, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x92, Instruction("STA", &AddressMode::DPIndirect)));
+    m_instruction_lookup.insert(make_pair(0x87, Instruction("STA", &AddressMode::DPIndirectLong)));
+    m_instruction_lookup.insert(make_pair(0x83, Instruction("STA", &AddressMode::StackRelative)));
+    m_instruction_lookup.insert(make_pair(0x93, Instruction("STA", &AddressMode::SRIndirectIndexedY)));
+    m_instruction_lookup.insert(make_pair(0xDB, Instruction("STP", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x8E, Instruction("STX", &AddressMode::Absolute, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x86, Instruction("STX", &AddressMode::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x96, Instruction("STX", &AddressMode::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0x8C, Instruction("STY", &AddressMode::Absolute, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x84, Instruction("STY", &AddressMode::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x94, Instruction("STY", &AddressMode::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0x9C, Instruction("STZ", &AddressMode::Absolute, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x64, Instruction("STZ", &AddressMode::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x74, Instruction("STZ", &AddressMode::DPIndexedX)));
+    m_instruction_lookup.insert(make_pair(0x9E, Instruction("STZ", &AddressMode::AbsoluteIndexedX, &bar2)));
+    m_instruction_lookup.insert(make_pair(0xAA, Instruction("TAX", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0xA8, Instruction("TAY", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x5B, Instruction("TCD", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x1B, Instruction("TCS", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x7B, Instruction("TDC", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x1C, Instruction("TRB", &AddressMode::Absolute, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x14, Instruction("TRB", &AddressMode::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x0C, Instruction("TSB", &AddressMode::Absolute, &bar2)));
+    m_instruction_lookup.insert(make_pair(0x04, Instruction("TSB", &AddressMode::DirectPage)));
+    m_instruction_lookup.insert(make_pair(0x3B, Instruction("TSC", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0xBA, Instruction("TSX", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x8A, Instruction("TXA", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x9A, Instruction("TXS", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x9B, Instruction("TXY", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x98, Instruction("TYA", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0xBB, Instruction("TYX", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0xCB, Instruction("WAI", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0xEB, Instruction("XBA", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0xFB, Instruction("XCE", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x02, Instruction("COP", &AddressMode::Implied)));
+    m_instruction_lookup.insert(make_pair(0x54, Instruction("MVN", &AddressMode::BlockMove)));
+    m_instruction_lookup.insert(make_pair(0x44, Instruction("MVP", &AddressMode::BlockMove)));
 
-  m_instruction_lookup.insert(make_pair(0x100, Instruction(".dw", &AddressMode::Absolute)));
-  m_instruction_lookup.insert(make_pair(0x101, Instruction(".dw", &AddressMode::LongPointer)));
+    m_instruction_lookup.insert(make_pair(0x100, Instruction(".dw", &AddressMode::Absolute)));
+    m_instruction_lookup.insert(make_pair(0x101, Instruction(".dw", &AddressMode::LongPointer)));
 }

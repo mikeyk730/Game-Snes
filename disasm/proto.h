@@ -11,6 +11,7 @@ extern FILE *srcfile;
 class Instruction;
 struct StateContext;
 struct DisasmState;
+struct InstructionOutput;
 
 unsigned int hex(const char *s);
 std::string spaces(int number);
@@ -24,7 +25,7 @@ const int NO_ADDR_LABEL = 0x02;
 const int LINE_LABEL = 0x04;
 
 class Instruction{
-    typedef void(*HandlerPtr)(char*, char*, DisasmState*, StateContext*);
+    typedef void(*HandlerPtr)(DisasmState*, StateContext*, InstructionOutput*);
     typedef std::string(*BarPtr)(bool, bool);
 public:
     Instruction() :
