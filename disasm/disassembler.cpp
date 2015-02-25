@@ -14,14 +14,24 @@ namespace{
    const unsigned int BANK_SIZE = 0x08000;
 }
 
-inline int address(unsigned char i, unsigned char j)
+inline int address_16bit(unsigned char i, unsigned char j)
 {
     return j * 256 + i;
 }
 
-inline int bank_address(unsigned char i, unsigned char j, unsigned char k)
+inline int address_24bit(unsigned char i, unsigned char j, unsigned char k)
 {
-    return k * 256 * 256 + j * 256 + i;
+    return (k << 16) + (j << 8) + i;
+}
+
+inline unsigned char bank_from_addr24(unsigned int a)
+{
+    return ((a >> 16) & 0x0FF);
+}
+
+inline unsigned int addr16_from_addr24(unsigned int a)
+{
+    return (a & 0x0FFFF);
 }
 
 struct StateContext
@@ -158,7 +168,7 @@ namespace AddressMode
             unsigned char j = context->read_next_byte(NULL);
             output->addInstructionBytes(j);
 
-            output->setAddress("#$%.4X", address(i, j));
+            output->setAddress("#$%.4X", address_16bit(i, j));
         }
         else{
             output->setAddress("#$%.2X", i);
@@ -172,10 +182,10 @@ namespace AddressMode
         unsigned char j = context->read_next_byte(NULL);
         output->addInstructionBytes(i, j);
 
-        string msg = disasm_state->get_label(disasm_state->current_bank, address(i, j));
+        string msg = disasm_state->get_label(disasm_state->current_bank, address_16bit(i, j));
 
         if (msg.empty()) 
-            output->setAddress("$%.4X", address(i, j));
+            output->setAddress("$%.4X", address_16bit(i, j));
         else 
             output->setAddress(msg.c_str());
 
@@ -191,9 +201,9 @@ namespace AddressMode
         unsigned char k = context->read_next_byte(NULL);
         output->addInstructionBytes(i, j, k);
 
-        string msg = disasm_state->get_label(k, address(i, j)); 
+        string msg = disasm_state->get_label(k, address_16bit(i, j)); 
         if (msg.empty())
-            output->setAddress("$%.6X", bank_address(i, j, k));
+            output->setAddress("$%.6X", address_24bit(i, j, k));
         else 
             output->setAddress(msg.c_str());
     }
@@ -270,9 +280,9 @@ namespace AddressMode
         unsigned char j = context->read_next_byte(NULL);
         output->addInstructionBytes(i, j);
 
-        string msg = disasm_state->get_label(disasm_state->current_bank, address(i, j)); 
+        string msg = disasm_state->get_label(disasm_state->current_bank, address_16bit(i, j)); 
         if (msg.empty())
-            output->setAddress("$%.4X,X", address(i, j));
+            output->setAddress("$%.4X,X", address_16bit(i, j));
         else 
             output->setAddress("%s,X", msg.c_str());
     }
@@ -285,9 +295,9 @@ namespace AddressMode
         unsigned char k = context->read_next_byte(NULL);
         output->addInstructionBytes(i, j, k);
 
-        string msg = disasm_state->get_label(k, address(i, j));
+        string msg = disasm_state->get_label(k, address_16bit(i, j));
         if (msg.empty())
-            output->setAddress("$%.6X,X", bank_address(i, j, k));
+            output->setAddress("$%.6X,X", address_24bit(i, j, k));
         else 
             output->setAddress("%s,X", msg.c_str());
     }
@@ -299,9 +309,9 @@ namespace AddressMode
         unsigned char j = context->read_next_byte(NULL);
         output->addInstructionBytes(i, j);
 
-        string msg = disasm_state->get_label(disasm_state->current_bank, address(i, j)); 
+        string msg = disasm_state->get_label(disasm_state->current_bank, address_16bit(i, j)); 
         if (msg.empty())
-            output->setAddress("$%.4X,Y", address(i, j));
+            output->setAddress("$%.4X,Y", address_16bit(i, j));
         else 
             output->setAddress("%s,Y", msg.c_str());
     }
@@ -380,10 +390,10 @@ namespace AddressMode
         unsigned char j = context->read_next_byte(&pc);
         output->addInstructionBytes(i, j);
 
-        long ll = address(i, j); 
+        long ll = address_16bit(i, j); 
         if (ll > 32767) ll = -(65536 - ll);
         long xx = disasm_state->current_bank * 65536 + pc + ll;
-        string msg = disasm_state->get_label((xx) / 0x10000, (xx) & 0xffff);
+        string msg = disasm_state->get_label(bank_from_addr24(xx), addr16_from_addr24(xx));
         if (msg.empty()) 
             output->setAddress("$%.6x", xx);
         else 
@@ -397,7 +407,7 @@ namespace AddressMode
         unsigned char j = context->read_next_byte(NULL);
         output->addInstructionBytes(i, j);
 
-        output->setAddress("$%.4X", address(i, j));
+        output->setAddress("$%.4X", address_16bit(i, j));
     }
 
     /* [$xxxx] */
@@ -407,9 +417,9 @@ namespace AddressMode
         unsigned char j = context->read_next_byte(NULL);
         output->addInstructionBytes(i, j);
 
-        string msg = disasm_state->get_label(disasm_state->current_bank, address(i, j));
+        string msg = disasm_state->get_label(disasm_state->current_bank, address_16bit(i, j));
         if (msg.empty())
-            output->setAddress("[$%.4X]", address(i, j));
+            output->setAddress("[$%.4X]", address_16bit(i, j));
         else 
             output->setAddress("[%s]", msg.c_str());
     }
@@ -421,9 +431,9 @@ namespace AddressMode
         unsigned char j = context->read_next_byte(NULL);
         output->addInstructionBytes(i, j);
 
-        string msg = disasm_state->get_label(disasm_state->current_bank, address(i, j)); 
+        string msg = disasm_state->get_label(disasm_state->current_bank, address_16bit(i, j)); 
         if (msg.empty())
-            output->setAddress("($%.4X)", address(i, j));
+            output->setAddress("($%.4X)", address_16bit(i, j));
         else 
             output->setAddress("(%s)", msg.c_str());
     }
@@ -435,9 +445,9 @@ namespace AddressMode
         unsigned char j = context->read_next_byte(NULL);
         output->addInstructionBytes(i, j);
 
-        string msg = disasm_state->get_label(disasm_state->current_bank, address(i, j));
+        string msg = disasm_state->get_label(disasm_state->current_bank, address_16bit(i, j));
         if (msg.empty())
-            output->setAddress("($%.4X,X)", address(i, j));
+            output->setAddress("($%.4X,X)", address_16bit(i, j));
         else 
             output->setAddress("(%s,X)", msg.c_str());
     }
@@ -498,7 +508,7 @@ namespace AddressMode
             unsigned char j = context->read_next_byte(NULL);
             output->addInstructionBytes(j);
 
-            output->setAddress("#$%.4X", address(i, j));
+            output->setAddress("#$%.4X", address_16bit(i, j));
         }
         else
             output->setAddress("#$%.2X", i);
@@ -514,7 +524,7 @@ namespace AddressMode
         output->setAddress("$%.2X,$%.2X", i, j);
     }
 
-    /* $xxxx, .db :$xxxx */
+    /* $xxxxxx, .db :$xxxxxx */
     void LongPointer(DisasmState* disasm_state, StateContext* context, InstructionOutput* output)
     {
         unsigned char i = context->read_next_byte(NULL);
@@ -526,23 +536,22 @@ namespace AddressMode
         if (k == 0xFF)
             k = disasm_state->default_bank;
 
-        string msg = disasm_state->get_label(k, address(i, j));
+        string msg = disasm_state->get_label(k, address_16bit(i, j));
         if (msg.empty()){
-            output->setAddress("$%.6X", bank_address(i, j, k));
+            output->setAddress("$%.6X", address_24bit(i, j, k));
             if (i == 0 && j == 0 && k == 0){
                 output->setAdditionalInstruction(".db $00");  //WLA cannot take bank of $000000
             }
             else{
-                output->setAdditionalInstruction(".db :$%.6X", bank_address(i, j, k));
+                output->setAdditionalInstruction(".db :$%.6X", address_24bit(i, j, k));
             }
         }
         else {
+            output->setAddress(".%s", msg.c_str());
             if (oldk == 0xFF){
-                output->setAddress(".%s", msg.c_str());
                 output->setAdditionalInstruction(".db $%.2X", oldk);
             }
             else{
-                output->setAddress(".%s", msg.c_str());
                 output->setAdditionalInstruction(".db :%s", msg.c_str());
             }
         }
@@ -618,8 +627,8 @@ istream& Disassembler::get_address(istream& in, unsigned char& bank, unsigned in
     if(!(in >> hex >> full))
         return in;
 
-    addr = (full & 0x0FFFF);
-    bank = ((full >> 16) & 0x0FF);
+    addr = addr16_from_addr24(full);
+    bank = bank_from_addr24(full);
 
     if (addr < 0x8000)
         addr += 0x8000;
@@ -832,8 +841,8 @@ void Disassembler::load_symbols(char *fname, bool ram)
         if(!(line_stream >> hex >> fulladdr))
             continue;
 
-        unsigned int addr = (fulladdr & 0x0FFFF);   
-        unsigned char bank = ((fulladdr >> 16) & 0x0FF);
+        unsigned int addr = addr16_from_addr24(fulladdr);
+        unsigned char bank = bank_from_addr24(fulladdr);
 
         if (addr < 0x8000 && bank != 0x7F) bank = 0x7e;
 
