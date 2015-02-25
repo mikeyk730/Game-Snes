@@ -39,7 +39,7 @@ bool Request::get(istream & in, bool hirom)
     do{
         if (current == "data" || current == "dcb")
             m_type = Dcb;
-        if (current == "asm")
+        else if (current == "asm")
             m_type = Asm;
         else if (current == "-q")
             m_properties.m_quiet = true;
@@ -51,8 +51,6 @@ bool Request::get(istream & in, bool hirom)
             m_properties.m_stop_at_rts = true;
         else if (current == "-e")
             m_properties.m_use_extern_symbols = true;
-        else if (current == "-d")
-            m_properties.m_print_data_addr = true;
         else if (current == "-p")
             m_properties.m_passes = 2;
         else if (current == "nmi"){

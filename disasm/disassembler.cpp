@@ -497,8 +497,7 @@ void Disassembler::doDcb(int bytes_per_line)
     unsigned int pc_end = m_request_prop.m_end_addr;
     string comment;
     for(int i=0; bank * 65536 + pc < end_bank * 65536 + pc_end; ++i){
-        int output_flag = (m_request_prop.m_print_data_addr) ? 0 : NO_ADDR_LABEL;
-        string label = get_label(InstructionMetadata("", &InstructionHandler::Implied, 0, LINE_LABEL | output_flag), bank, pc, 0);
+        string label = get_label(InstructionMetadata("", &InstructionHandler::Implied, 0, LINE_LABEL | NO_ADDR_LABEL), bank, pc, 0);
 
         if (label != "") label += ":";
 
@@ -557,8 +556,7 @@ void Disassembler::doPtr(bool long_ptrs)
         //adjust pc address
         fix_address(bank,pc);
 
-        int output_flag = (m_request_prop.m_print_data_addr) ? 0 : NO_ADDR_LABEL;
-        string label = get_label(InstructionMetadata("", &InstructionHandler::Implied, 0, LINE_LABEL | output_flag), bank, pc, 0);
+        string label = get_label(InstructionMetadata("", &InstructionHandler::Implied, 0, LINE_LABEL | NO_ADDR_LABEL), bank, pc, 0);
         if (label != "") label += ":";
 
         if (finalPass()){
