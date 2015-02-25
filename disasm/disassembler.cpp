@@ -57,16 +57,14 @@ struct DisasmState
     const Instruction& instr,
     bool accum_16,
     const bool index_16,
-    const bool print_bytes,
     const unsigned char current,
     const unsigned char defaultb,
-    const int off) : d(disasm), i(instr), is_accum_16(accum_16), is_index_16(index_16), print_instruction_bytes(print_bytes),
+    const int off) : d(disasm), i(instr), is_accum_16(accum_16), is_index_16(index_16),
     current_bank(current), default_bank(defaultb), offset(off)
     {}
 
     const bool is_accum_16;
     const bool is_index_16;
-    const bool print_instruction_bytes;
     const unsigned char current_bank;
     const unsigned char default_bank;
     const int offset;
@@ -1161,7 +1159,7 @@ void Disassembler::doType(const Instruction& instr, bool is_data, unsigned char 
 
     if (!is_data) ++pc;
 
-    DisasmState state(*((Disassembler*)this), instr, accum16, index16, printInstructionBytes(), bank, default_bank, offset);
+    DisasmState state(*((Disassembler*)this), instr, accum16, index16, bank, default_bank, offset);
     StateContext context(pc, m_flag, accum16, index16, low, high);
     InstructionOutput output;
 
