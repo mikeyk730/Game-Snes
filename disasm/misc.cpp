@@ -24,10 +24,6 @@ string to_string(int i, int length, bool in_hex)
     return ss.str();
 }
 
-int full_address(int bank, int pc){
-    return bank * 65536 + pc;
-}
-
 unsigned int hex(const char *s)
 {
     istringstream ss(s);

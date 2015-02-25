@@ -250,7 +250,7 @@ namespace InstructionHandler
 
         long ll = address_16bit(i, j);
         if (ll > 32767) ll = -(65536 - ll);
-        long xx = context->current_bank() * 65536 + pc + ll;
+        long xx = full_address(context->current_bank(), pc) + ll;
         string msg = context->get_label(bank_from_addr24(xx), addr16_from_addr24(xx));
         if (msg.empty())
             output->setAddress("$%.6x", xx);

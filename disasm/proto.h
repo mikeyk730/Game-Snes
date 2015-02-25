@@ -16,7 +16,6 @@ unsigned int hex(const char *s);
 std::string spaces(int number);
 std::string to_string(int i, int length, bool in_hex=true);
 std::istream& get_address(std::istream& in, unsigned char& bank, unsigned int& addr);
-int full_address(int bank, int pc);
 
 const int IS_BRANCH = 0x01;
 const int NO_ADDR_LABEL = 0x02;

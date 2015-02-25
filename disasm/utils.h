@@ -12,6 +12,10 @@ namespace Address
         return (k << 16) + (j << 8) + i;
     }
 
+    inline unsigned int full_address(unsigned char bank, unsigned int pc){
+        return bank * 65536 + pc;
+    }
+
     inline unsigned char bank_from_addr24(unsigned int a)
     {
         return ((a >> 16) & 0x0FF);

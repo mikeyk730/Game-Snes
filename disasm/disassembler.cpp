@@ -93,7 +93,7 @@ void Disassembler::handleRequest(const Request& request, bool user_request)
 
         fseek(srcfile, 512, 0);
         if (m_hirom)
-            fseek(srcfile, m_current_bank * 65536 + m_current_addr, 1);
+            fseek(srcfile, full_address(m_current_bank, m_current_addr), 1);
         else
             fseek(srcfile, m_current_bank * 32768 + m_current_addr - 0x8000, 1);
 
@@ -138,10 +138,10 @@ void Disassembler::doDisasm()
     unsigned int& pc = m_current_addr;
     unsigned char& bank = m_current_bank;
 
-    unsigned int pc_end = m_request_prop.m_end_addr;
+    unsigned int end_pc = m_request_prop.m_end_addr;
     unsigned char end_bank = m_request_prop.m_end_bank;
 
-    while( (!feof(srcfile)) && (bank * 65536 + pc < end_bank * 65536 + pc_end) ){
+    while ((!feof(srcfile)) && (full_address(bank, pc) < full_address(end_bank, end_pc))){
 
         unsigned char code = read_char(srcfile);
         InstructionMetadata instr = m_instruction_lookup[code];
@@ -441,11 +441,11 @@ void Disassembler::doSmart()
     unsigned char bank = m_request_prop.m_start_bank;
     unsigned int pc = m_request_prop.m_start_addr;
     unsigned char end_bank = m_request_prop.m_end_bank;
-    unsigned int pc_end = m_request_prop.m_end_addr;
+    unsigned int end_pc = m_request_prop.m_end_addr;
 
-    unsigned int end_address = end_bank * 65536 + pc_end;
+    unsigned int end_address = full_address(end_bank, end_pc);
     for (int i = bank * BANK_SIZE + pc - 0x08000; i >= 0 && i < MAX_FILE_SIZE &&
-        bank * 65536 + pc < end_address;){
+        full_address(bank, pc) < end_address;){
 
             Request request(m_request_prop);
             request.m_properties.m_start_bank = bank;
@@ -457,33 +457,32 @@ void Disassembler::doSmart()
                 do{
                     ++i;
                     fix_address(bank,++pc);
-                } while((m_data[i] == 1) && (bank * 65536 + pc < end_address));
+                } while ((m_data[i] == 1) && (full_address(bank, pc) < end_address));
             }
             else if (m_data[i] == 2){
                 request.m_type = Request::Ptr;
                 do{
                     ++i;
                     fix_address(bank,++pc);
-                } while((m_data[i] == 2) && (bank * 65536 + pc < end_address));
+                } while ((m_data[i] == 2) && (full_address(bank, pc) < end_address));
             }
             else if (m_data[i] == 3){
                 request.m_type = Request::PtrLong;
                 do{
                     ++i;
                     fix_address(bank,++pc);
-                } while((m_data[i] == 3) && (bank * 65536 + pc < end_address));
+                } while ((m_data[i] == 3) && (full_address(bank, pc) < end_address));
             }
             else{
                 request.m_type = Request::Asm;
                 do{
                     ++i;
                     fix_address(bank,++pc);
-                } while((m_data[i] == 0) && (bank * 65536 + pc < end_address));
+                } while ((m_data[i] == 0) && (full_address(bank, pc) < end_address));
             }
 
             request.m_properties.m_end_bank = bank;
             request.m_properties.m_end_addr = pc;
-            //cerr << " end " << hex << bank * 65536 + pc << endl;
             handleRequest(request, false);
             if (finalPass()) cout << endl;
         }
@@ -494,9 +493,9 @@ void Disassembler::doDcb(int bytes_per_line)
     unsigned char bank = m_request_prop.m_start_bank;
     unsigned int pc = m_request_prop.m_start_addr;
     unsigned char end_bank = m_request_prop.m_end_bank;
-    unsigned int pc_end = m_request_prop.m_end_addr;
+    unsigned int end_pc = m_request_prop.m_end_addr;
     string comment;
-    for(int i=0; bank * 65536 + pc < end_bank * 65536 + pc_end; ++i){
+    for (int i = 0; full_address(bank, pc) < full_address(end_bank, end_pc); ++i){
         string label = get_label(InstructionMetadata("", &InstructionHandler::Implied, 0, LINE_LABEL | NO_ADDR_LABEL), bank, pc, 0);
 
         if (label != "") label += ":";
@@ -530,7 +529,7 @@ void Disassembler::doDcb(int bytes_per_line)
         unsigned char c = read_char(srcfile);
 
         if (finalPass()) printf("$%.2X", c);
-        if ((i+1)%bytes_per_line == 0 || !(bank * 65536 + pc < end_bank * 65536 + pc_end)){
+        if ((i + 1) % bytes_per_line == 0 || !(full_address(bank, pc) < full_address(end_bank, end_pc))){
             if (finalPass()){
                 if(!comment.empty())
                     cout << "     " << comment;
@@ -550,9 +549,9 @@ void Disassembler::doPtr(bool long_ptrs)
     unsigned char& bank = m_current_bank;
     unsigned int& pc = m_current_addr;
     unsigned char end_bank = m_request_prop.m_end_bank;
-    unsigned int pc_end = m_request_prop.m_end_addr;
+    unsigned int end_pc = m_request_prop.m_end_addr;
 
-    for(int i=0; bank * 65536 + pc < end_bank * 65536 + pc_end; ++i){
+    for (int i = 0; full_address(bank, pc) < full_address(end_bank, end_pc); ++i){
         //adjust pc address
         fix_address(bank,pc);
 
