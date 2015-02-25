@@ -366,18 +366,20 @@ void Disassembler::load_data(char *fname, bool is_ptr_data)
     }
 }
 
-bool Disassembler::add_label(int bank, int pc, const string& label, bool used)
+bool Disassembler::add_label(int bank, int pc, const string& label)
 {
     int full_addr = full_address(bank,pc);
-    if (used)
-        m_used_label_lookup.insert(make_pair(full_addr, label));
-    else{
-        if(!m_label_lookup.insert(make_pair(full_addr, label)).second){
-            cerr << "failed to add symbol >" << label << "<" << endl;
-            return false;
-        }
+    if (!m_label_lookup.insert(make_pair(full_addr, label)).second){
+        cerr << "failed to add symbol >" << label << "<" << endl;
+        return false;
     }
     return true;
+}
+
+void Disassembler::mark_label_used(int bank, int pc, const string& label)
+{
+    int full_addr = full_address(bank, pc);
+    m_used_label_lookup.insert(make_pair(full_addr, label));
 }
 
 string Disassembler::get_label(const InstructionMetadata& instr, unsigned char bank, int pc, int offset)
@@ -401,13 +403,14 @@ string Disassembler::get_label(const InstructionMetadata& instr, unsigned char b
         map<int, string>::iterator it = m_label_lookup.find(key);
         if (it != m_label_lookup.end()){
             label = it->second;
-            add_label(bank, pc, label, true);
+            mark_label_used(bank, pc, label);
         }
 
         else if( ( (pc >= 0x8000 && !instr.neverUseAddrLabel()) ||
             (pc < 0x8000 && instr.isBranch()) ) && bank < 0x7E){
                 label = "ADDR_" + to_string(bank, 2) + /*"_" +*/ to_string(pc, 4);
-                if (!instr.isLineLabel()) add_label(bank, pc, label, true);
+                if (!instr.isLineLabel()) 
+                    mark_label_used(bank, pc, label);
             }
         
         else if(pc < 0x8000){
@@ -415,7 +418,6 @@ string Disassembler::get_label(const InstructionMetadata& instr, unsigned char b
             if (it2 != m_ram_lookup.end())
                 label = it2->second;
         }
-            
     }
     
     if (label.size() > 0 && finalPass() && is_extern)

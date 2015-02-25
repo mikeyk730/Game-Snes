@@ -38,7 +38,8 @@ public:
     void load_offsets(char *fname);
 
     bool is_comment(const std::string& line);    
-    bool add_label(int bank, int pc, const std::string& label, bool used=false);
+    bool add_label(int bank, int pc, const std::string& label);
+    void mark_label_used(int bank, int pc, const std::string& label);
     std::string get_label(const InstructionMetadata& instr, unsigned char bank, int pc, int offset);
 
     std::istream& get_address(std::istream& in, unsigned char& bank, unsigned int& addr);
