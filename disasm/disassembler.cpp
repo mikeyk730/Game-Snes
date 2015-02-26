@@ -596,6 +596,8 @@ void Disassembler::doType(const InstructionMetadata& instr, bool is_data, unsign
         offset = load_offset->second;
     }
 
+    string comment = get_comment(m_current_bank, m_current_addr);
+
     if (!is_data) ++m_current_addr;
 
     int high = 0, low = 0;
@@ -606,7 +608,6 @@ void Disassembler::doType(const InstructionMetadata& instr, bool is_data, unsign
     f(&context, &output);
 
     //get comment
-    string comment = get_comment(m_current_bank, m_current_addr);
     if (comment != "")
         comment = ";" + comment + " ";
     if (m_flag != 0){
@@ -618,7 +619,7 @@ void Disassembler::doType(const InstructionMetadata& instr, bool is_data, unsign
     }
 
     if (high)
-        comment += getRAMComment(low, high);
+        comment += getRAMComment(address_16bit(low, high));
 
     //print instruction and comment
     if (finalPass()){

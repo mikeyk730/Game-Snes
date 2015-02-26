@@ -4,11 +4,10 @@
 
 using namespace std;
 
-std::string Disassembler::getRAMComment(unsigned char low, unsigned char high)
+std::string Disassembler::getRAMComment(unsigned int addr)
 {
     string comment;
     int comment_level = m_request_prop.m_comment_level;
-    unsigned int addr = high * 256 + low;
 
     if (comment_level)
     {

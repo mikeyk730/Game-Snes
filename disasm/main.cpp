@@ -67,7 +67,7 @@ void main (int argc, char *argv[])
 
         Request request;
         if (!request.get(cin, disasm.hirom()))
-            continue;
+            break;
         if (request.m_quit)
             break;
         disasm.handleRequest(request);

@@ -28,7 +28,7 @@ public:
     void doType(const InstructionMetadata& instr, bool is_data, unsigned char default_bank);
     void setProcessFlags();
 
-    std::string getRAMComment(unsigned char low, unsigned char high);
+    std::string getRAMComment(unsigned int addr);
 
     void load_data(char *fname, bool is_ptr_data = false);
     void load_comments(char* fname);
