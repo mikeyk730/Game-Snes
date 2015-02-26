@@ -77,8 +77,6 @@ istream& Disassembler::get_address(istream& in, unsigned char& bank, unsigned in
 
 void Disassembler::handleRequest(const Request& request, bool user_request)
 {
-    m_request_prop = request.m_properties;
-
     if (user_request) {
         m_passes_to_make = request.m_properties.m_passes;
 
@@ -88,11 +86,13 @@ void Disassembler::handleRequest(const Request& request, bool user_request)
         m_end = full_address(request.m_properties.m_end_bank,
             request.m_properties.m_end_addr);
 
-        m_accum_16 = m_request_prop.m_start_w_accum_16;
-        m_index_16 = m_request_prop.m_start_w_index_16;
+        m_accum_16 = request.m_properties.m_start_w_accum_16;
+        m_index_16 = request.m_properties.m_start_w_index_16;
     }
 
     do{
+        m_request_prop = request.m_properties;
+
         m_current_bank = m_request_prop.m_start_bank;
         m_current_addr = m_request_prop.m_start_addr;
 
@@ -631,7 +631,7 @@ void Disassembler::doType(const InstructionMetadata& instr, bool is_data, unsign
     
         string additional_instruction = output.getAdditionalInstruction();
         if (!additional_instruction.empty()){
-            cout << setw(34)  << "" << additional_instruction << endl;
+            cout << setw(m_request_prop.m_quiet ? 20 : 34) << "" << additional_instruction << endl;
         }
 
         if (output.metadata().isCodeBreak()){
