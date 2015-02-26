@@ -8,7 +8,6 @@
 008013 /
 008016 \ Turn off screen
 008018 /
-008018 /
 00801B \ Turn off emulation mode
 00801C /
 00801D 16 bit A,X,Y, Decimal mode off
@@ -34,7 +33,6 @@
 00804A  |
 00804C  |
 00804E /
-00804E /
 008052 SPC700 Bank 02 + Main code upload handler
 008055 Set game mode to 0
 008058 Set secondary game mode to 0
@@ -59,16 +57,12 @@
 0080FF  |
 008102  |Loads The Address 0F:8000 to 00-02 	(SAMPLE DATA + PTRS)
 008104  |[SPC Sample Pointers/Data ROM Address, this is]
-008104  |[SPC700 Bank 1 (level) music ROM Address, this is]
 008107  |
 008109 /
 00810E \
-00810E \
 008110  |
 008113  |Loads the Bank 1 music data (Map) to 00-02
-008113  |Same as above, but for the Bank 2 music data
 008115  | ($0E:98B1)
-008115  | ($0E:B198)
 008118  |
 00811A /
 008148 \
@@ -105,7 +99,6 @@
 0081A4  |
 0081A7 /
 0081AA \ Screen off, brightness=0
-0081AC /
 0081AC /
 0081AF Zero The HDMA reg
 0081C6 \
@@ -314,12 +307,8 @@
 0085D4 \
 0085D7  |
 0085D9   |Load pointer
-0085D9   |Load pointer
-0085D9  |Load pointer
 0085DC  |
 0085DE   |
-0085DE   |
-0085DE  |
 0085E1 /
 0085F7 Do not reload the same thing next frame
 008601 Set "VRAM Address Increment Value" to x00
@@ -717,7 +706,6 @@
 009380 Turn off all HDMA
 009383 \
 009385 /Disable Screen
-009385 /Disable Screen
 009388 And return
 009389 Nintendo Presents X locations
 00938D Nintendo Presents tilemap
@@ -934,38 +922,27 @@
 00A302 We're using DMA channel 2
 00A309 \ Set Address for CG-RAM Write to x86
 00A30B /
-00A30B /
 00A314 \ Get location of palette from $0D82-$0D83
-00A317 /
 00A317 /
 00A31A \ Palette is stored in bank x00
 00A31C /
-00A31C /
 00A31F \ x14 bytes will be transferred
-00A322 /
 00A322 /
 00A325 Transfer the colors
 00A328 \ Set VRAM Address Increment Value to x80
 00A32A /
-00A32A /
 00A33F \ Set bank to x7E
 00A341 /
-00A341 /
 00A344 \ x20 bytes will be transferred
-00A347 /
 00A347 /
 00A34A Transfer
 00A34D \ Set Address for VRAM Read/Write to x6000
 00A350 /
-00A350 /
 00A355 \ Get address of graphics to copy
-00A358 /
 00A358 /
 00A35B \ x40 bytes will be transferred
 00A35E /
-00A35E /
 00A361 \ Transfer
-00A363 /
 00A363 /
 00A366 \ Move to next address
 00A367 /
@@ -973,15 +950,11 @@
 00A36B /
 00A36D \ Set Address for VRAM Read/Write to x6100
 00A370 /
-00A370 /
 00A375 \ Get address of graphics to copy
-00A378 /
 00A378 /
 00A37B \ x40 bytes will be transferred
 00A37E /
-00A37E /
 00A381 \ Transfer
-00A383 /
 00A383 /
 00A386 \ Move to next address
 00A387 /
@@ -1265,7 +1238,6 @@
 00B8E8  |Compressed graphics files ends with xFF IIRC
 00B8EA  |
 00B8EC /
-00B8EC /    Return
 00B983 Read the byte
 00B985 \ Go to next byte
 00B987  |
@@ -1334,12 +1306,9 @@
 00C500 \ Branch if sprites locked
 00C502 /
 00C527 / Change music
-00C527 / Play sound effect
 00C54C / Change music
-00C54C / Play sound effect
 00C557 \ Play sound effect
 00C559 /
-00C559 / Play sound effect
 00C576 Change to BEQ to reach debug routine below
 00C578 \ Unreachable
 00C57A  | Debug: Cycle through powerups
@@ -1367,22 +1336,16 @@
 00C6F2 /
 00C720 \ Play sound effect
 00C722 /
-00C722 / Play sound effect
 00C732 \ Play sound effect
 00C734 /
-00C734 / Play sound effect
 00C75F \ Play sound effect
 00C761 /
-00C761 / Play sound effect
 00C798 \ Play sound effect
 00C79A /
-00C79A / Play sound effect
 00C7AC \ Play sound effect
 00C7AE /
-00C7AE / Play sound effect
 00C7D1 \ Play sound effect
 00C7D3 /
-00C7D3 / Play sound effect
 00C7F8 Return
 00C807  \ Branch if Mario has downward speed
 00C809  /
@@ -1393,11 +1356,9 @@
 00C812  /
 00C90F \ Play sound effect
 00C911 /
-00C911 / Play sound effect
 00C914 Return
 00C96A Return
 00C9BE / Change music
-00C9BE / Play sound effect
 00C9C1 Return
 00C9D1  \ Branch if Goal Tape extra bits == #$02
 00C9D4   | (never happens)
@@ -1422,7 +1383,6 @@
 00CA66  |Load xCB12 into $04 and $06
 00CA68 /
 00CA6A 8 bit A
-00CA6C Return
 00CA6C Return
 00CA88 16 bit A
 00CA8A Keep lower byte of A
@@ -1458,7 +1418,6 @@
 00CCAE  |
 00CCB0  | Accum (8 bit)
 00CCB2 / Return
-00CCB2 Return
 00CCC6 \ Branch if sprites locked
 00CCC8 /
 00CCD0  \ If lock Mario timer is set...
@@ -1496,7 +1455,6 @@
 00CE06 /
 00CE3F \ Play sound effect
 00CE41 /
-00CE41 / Play sound effect
 00CEB1 Related to cape animation?
 00CEB6 Cape image
 00CEB9 If Mario isn't in air, branch to $CEDE
@@ -1668,7 +1626,6 @@
 00D02E  |End If
 00D030 Store in Current animation frame
 00D033 And Finish
-00D033 And Finish   Return
 00D04B 16 bit A
 00D04D \
 00D04F  |
@@ -1680,10 +1637,8 @@
 00D05C /
 00D05F 8 bit A
 00D061 Return
-00D061 Return
 00D07B \ Play sound effect
 00D07D /
-00D07D / Play sound effect
 00D080 Return
 00D0AA haha, I read this as "FEAR" at first
 00D0AD Return
@@ -1700,7 +1655,6 @@
 00D0D8 Decrease amount of lifes
 00D0DB If not Game Over, branch to $D0E6
 00D0DF / Change music
-00D0DF / Play sound effect
 00D0E2 Set X (Death message) to x14 (Game Over)
 00D0E6 Set Y (game mode) to x0B (Fade to overworld)
 00D0E8 \
@@ -1753,7 +1707,6 @@
 00D252  |
 00D254  | ...play sound effect
 00D256 /
-00D256 / Play sound effect
 00D259 \ Set X speed
 00D25C /
 00D25E \ Set Y speed
@@ -1769,10 +1722,8 @@
 00D282  |
 00D284  |
 00D286 / Return
-00D286 Return
 00D2A5 \ Play sound effect
 00D2A7 /
-00D2A7 / Play sound effect
 00D2B0  Set sprites not locked
 00D2B2  \ X speed = #$40
 00D2B4  /
@@ -1780,14 +1731,11 @@
 00D2B8  /
 00D649 \ Play sound effect
 00D64B /
-00D64B / Play sound effect
 00D65E \ Play sound effect
 00D660 /
-00D660 / Play sound effect
 00D7A4 Return
 00D8A8 \ Play sound effect
 00D8AA /
-00D8AA / Play sound effect
 00D8CD \ Branch if not flying
 00D8CF /
 00D8D1 X = #$00
@@ -1815,16 +1763,13 @@
 00DAA8 Return
 00DAA9 \ Play sound effect
 00DAAB /
-00DAAB / Play sound effect
 00DAB6 Return
 00DB95 Return
 00DB96 Mario is in Water flag
 00DBA5 \ Play sound effect
 00DBA7 /
-00DBA7 / Play sound effect
 00DBB2 \ Play sound effect
 00DBB4 /
-00DBB4 / Play sound effect
 00DBBA Mario X
 00DBC3 Mario's Direction
 00DBCD Store A in Mario image
@@ -1835,7 +1780,6 @@
 00DBFA /
 00DC00 Mario isn't climbing
 00DC02 Return
-00DC02 Return
 00DC2C Return
 00DC2D \ Store Mario's Y speed in $8A
 00DC2F /
@@ -1845,14 +1789,12 @@
 00E2D2 /
 00E2E0 Decrease star timer
 00E305 / Change music
-00E305 / Play sound effect
 00E384 Return
 00E45C Return
 00E4B8 Return
 00E9A0 Return
 00EA8D \ Play sound effect
 00EA8F /
-00EA8F / Play sound effect
 00EAA5 Return
 00EAB8 Return
 00EB21 Return
@@ -1860,7 +1802,6 @@
 00EB76 Return
 00EC10 \ Play sound effect
 00EC12 /
-00EC12 / Play sound effect
 00EC5B Current MAP16 tile number
 00EC83 Current MAP16 tile number
 00EC98 Current MAP16 tile number
@@ -1904,7 +1845,6 @@
 00EEB3 \ Activate switch block
 00EEB4 /
 00EEC4 / Change music
-00EEC4 / Play sound effect
 00EEC7 \
 00EEC9 / Set music to xFF
 00EF87 \ If Yoshi has stomp ability,
@@ -1912,12 +1852,10 @@
 00EF8C  | Run routine
 00EF90  | Play sound effect
 00EF92 /
-00EF92 / Play sound effect
 00EF98 Return
 00EFAD Return
 00EFB6 \ Play sound effect
 00EFB8 /
-00EFB8 / Play sound effect
 00EFBB Return
 00EFE7 Return
 00F004 Return
@@ -1981,14 +1919,12 @@
 00F5E0 /
 00F5E2 \ Break Mario out of soaring
 00F5E4  | (Play sound effect)
-00F5E4 / Play sound effect
 00F5E7  | (Set spin jump flag)
 00F5E9  |
 00F5EC  | (Set flashing timer)
 00F5EE /
 00F5F3 \ Play sound effect
 00F5F5 /
-00F5F5 / Play sound effect
 00F5FC \ Set power down animation
 00F5FE /
 00F600 Mario status = Small
@@ -1996,7 +1932,6 @@
 00F608 /
 00F60A \
 00F60C / Change music
-00F60C / Play sound effect
 00F614 \ Animation sequence = Kill Mario
 00F616 /
 00F618 Spin jump flag = 0
@@ -2022,17 +1957,13 @@
 00F9C8 Return
 00F9F4 Return
 00FA10 \ Unreachable
-00FA10 \ Unused code:
 00FA12  | Clear out sprite status table
 00FA15  |
 00FA16  |
 00FA18 /
-00FA18 Return
 00FA44 Return
 00FA45 \ Set "Time to shake ground" to x20
 00FA47  /
-00FA47  /
-00FA47 /
 00FA4A \
 00FA4C  |Set sprite x02 to x60 (Flat palace switch)
 00FA4E /
@@ -2053,7 +1984,6 @@
 00FA70 / (Carry carried over from previous addition)
 00FA7A \ Set sprite's "Spin Jump Death Frame Counter" to x5F
 00FA7C /
-00FA7F Return
 00FA7F Return
 00FA86  Don't respawn sprites
 00FA8F Loop over sprites:
@@ -2089,9 +2019,7 @@
 00FAD2 /
 00FAD4 \
 00FAD6  | Clear out all extended sprites
-00FAD6 \ Clear extended sprite
 00FAD8  |
-00FAD8 /
 00FADB  |
 00FADC /
 00FADE Return
@@ -2099,7 +2027,6 @@
 00FB02 \ If Mario has star, X = #$04.  However this never happens as $1490 is cleared earlier
 00FB05  | Otherwise Mario could get a star from carrying a sprite past the goal.
 00FB07  / Unreachable instruction
-00FB07 / <--Unreachable, unused
 00FB09 \ If Mario on Yoshi, X = #$05
 00FB0C  |
 00FB0E /
@@ -2125,7 +2052,6 @@
 00FC0C  Bug: Sprites glitch if too many near goal tape.  See goalsprites.asm
 00FC22 Return
 00FC23  \ Unreachable instructions
-00FC23 \ Unreachable
 00FC25 / Status = Carried
 00FC38 No Yoshi wings
 00FC72 Return
@@ -2164,7 +2090,6 @@
 00FD20  |
 00FD21  |
 00FD23 / Return if no free slots
-00FD23 Return
 00FD26 \ Extended sprite = Water buble
 00FD28 /
 00FD59 Return
@@ -2182,8 +2107,6 @@
 00FEB0  |
 00FEB2  |
 00FEB4 / Return if no free slots
-00FEB4 Return
-00FEB4 Return
 00FEB7 / Play sound effect
 00FEBF \ Extended sprite = Mario fireball
 00FEC1 /
@@ -2252,8 +2175,6 @@
 018121  |
 018123  |
 018126 / Return
-018126 Return
-018126 Return
 018127 Call a routine based on the sprite's status
 01812A Routine for status 0 hardcoded, maybe for performance
 01812E Routine for status 8 hardcoded, maybe for preformance
@@ -2272,9 +2193,7 @@
 01814F C - Power up from carrying a sprite past the goal tape
 018151  \ Permanently erase sprite:
 018153   | By changing the sprite's index into the level tables
-018153   | By changing the sprite's index into the level tables
 018156  / the actual sprite won't get marked for reloading
-018156 Return
 01816C Return
 018171 Return
 018172 \ Sprite status = Normal
@@ -2743,7 +2662,6 @@
 018766 \ Branch if sprites locked
 018768 /
 018785 / Change music
-018785 / Play sound effect
 018788 Return
 01878D Return
 018792 Return
@@ -2870,10 +2788,8 @@
 018ADD  |
 018ADE  |
 018ADF  |
-018ADF Change Bob-omb into explosion
 018AE3  |
 018AE4 /
-018AE4 Return
 018AE5 \ Branch if exploding
 018AE8 /
 018AEA \ Branch if not set to explode
@@ -2889,7 +2805,6 @@
 018B03  | ...interact with sprites
 018B06  | ...draw sprite
 018B09 / Return
-018B09 Return
 018B0A \ If sprite on ground...
 018B0D  |
 018B0F  |
@@ -2911,16 +2826,12 @@
 018B31  | that Mario is moving...
 018B32  |
 018B33  |
-018B33 \ Branch if not touching object
 018B36  |
 018B38  |
-018B38 /
 018B3A / ...Sprite X Speed = 0
-018B3A Sprite X Speed = 0
 018B3C \ If touching ceiling...
 018B3F  |
 018B41 / ...Sprite Y Speed = 0
-018B41 Sprite Y Speed = 0
 018B46 Apply speed to position
 018B49 Set the animation frame
 018B4C \ Branch if not on ground
@@ -2943,7 +2854,6 @@
 018B77 /
 018B7A \ If jump over shells is set call routine
 018B7B  |
-018B7B  |
 018B7D  |
 018B7F  |
 018B82 /
@@ -2951,7 +2861,6 @@
 018B89  |
 018B8B  | ...set frame...
 018B8E  | ...and don't zero out $1570,x
-018B8E / ...and branch
 018B90 /
 018B93 \ If stay on ledges is set...
 018B96  |
@@ -3001,7 +2910,6 @@
 018C07  |
 018C08 /
 018C0A \ Add wings if sprite number > #$08
-018C0A \ Run $019E28 if sprite number > #$08
 018C0C  |
 018C0E  |
 018C10 /
@@ -3020,28 +2928,16 @@
 018C6B   |
 018C6D   |
 018C6F  / Sprite X Speed = 0
-018C6F Sprite X Speed = 0
-018C71  \ If flying left Green Koopa...
 018C71  \ If flying left Green Koopa...
 018C73   |
-018C73   |
-018C75   |
 018C75   |
 018C77   | Update X position
-018C77   | Update X position
-018C7A   |
 018C7A   |
 018C7C   | Y speed = #$FC or #$04,
-018C7C   | Y speed = #$FC or #$04,
-018C7F   | depending on 1570,x
 018C7F   | depending on 1570,x
 018C81   |
-018C81   |
-018C83   |
 018C83   |
 018C85   |
-018C85   |
-018C87  / Update Y position
 018C87  / Update Y position
 018C99 Sprite Y Speed = 0
 018CC6 \ Branch if sprites locked
@@ -3102,12 +2998,10 @@
 018ECC /
 018ECE \ If the piranha is in the pipe (State 0)...
 018ED0  | ...check if Mario is nearby...
-018ED0 \ Check if Mario is nearby
 018ED3  |
 018ED5  |
 018ED6  |
 018ED8  |
-018ED8 /
 018EDA  |
 018EDC  | ...and set $1594,x if so
 018EDF  |
@@ -3144,13 +3038,10 @@
 019089 \ If touching an object in the direction
 01908C  | that the sprite is moving...
 01908D  |
-01908D \ Branch if not touching object
 019090  |
 019092  |
-019092 /
 019094  | ...flip direction
 019097 /
-019097 Return
 019098 \ Return if turning timer is set
 01909B /
 01909D \ Set turning timer
@@ -3199,7 +3090,6 @@
 0191AC  |
 0191AE  |
 0191BE \ Branch if "Don't get stuck in walls" is not set
-0191BE \ Branch if "Don't get stuck in walls" is set
 0191C1 /
 0191C3 \ Branch if not touching object
 0191C6  |
@@ -3216,9 +3106,7 @@
 019250 /
 01926A \ TODO: Return if Unknown Bit B is set
 01926D /
-01926D / is set
 019272 \ Branch if "Don't get stuck in walls" is not set
-019272 \ Branch if "Don't get stuck in walls" is set
 019275 /
 019277 \ Branch if sprite has X speed...
 019279  | ...or sprite is turning
@@ -3234,9 +3122,6 @@
 01932C  | is set
 01932E /
 019330  \ Sprite status = #$05 ???
-019330  \ Sprite status = #$05 ???
-019330  \ Sprite status = ???
-019330 \ Sprite status = ???
 019332 /
 01933A Return
 01938E  \ Return if sprite status == Killed
@@ -3284,7 +3169,6 @@
 01955C  |  ...and jump to $01A187
 01955E  |
 019560  | Balloon Y Speed = 0
-019560 Sprite Y Speed = 0
 019562  |
 019564  |
 019567 /
@@ -3320,15 +3204,12 @@
 0195E6 /
 0195FB Return
 019624 \ Branch away if sprite isn't a Bob-omb
-019624 \ Branch away if sprite isn't a Bomb
 019626  |
 019628 /
 01962A \ Branch away if it's not time to explode
 01962D  |
 01962F /
 019631 \ Bomb sound effect
-019631 \ Bomb sound effect
-019631 \ Play explosion sound effect
 019633 /
 01963B \ Set explosion timer
 01963D /
@@ -3378,7 +3259,6 @@
 0196DB  |
 0196DD  |
 0196E0 /
-0196E0 Return
 0196E1 \ Return if no free sprite slot found
 0196E5 /
 0196E7 \ Sprite status = Normal
@@ -3426,7 +3306,6 @@
 019776 \ Sprite status = normal
 019778 /
 01977B \ Sprite = Moving Coin
-01977B \ Sprite = moving coin
 01977D /
 019780 \ Copy X position to coin
 019782  |
@@ -3472,7 +3351,6 @@
 0199D4  |
 0199D6  |
 0199D8 /
-0199D8 / Run only if throw block sprite
 0199DB Return
 0199DC Free up sprite slot
 0199DF Is this for the shatter routine??
@@ -3507,13 +3385,10 @@
 019A1D  |
 019A1E  |
 019A21 /
-019A21 Return
 019A44 Y = Index into sprite OAM
 019A4D Return
 019A52  \ Erase sprite if time up
 019A55  /
-019A55  /
-019A57  Call generic gfx routine
 019A57  Call generic gfx routine
 019A5A Y = Index into sprite OAM
 019A5D  \ Load tile based on timer
@@ -3545,7 +3420,6 @@
 019AB6  |
 019AB8  | ...break block...
 019ABB / ...and return
-019ABB Return
 019ABC \ If Exploding Block Enemy
 019ABE  |
 019AC0 /
@@ -3557,7 +3431,6 @@
 019AD0  | ...Set Time to show smoke cloud...
 019AD2  |
 019AD5 / ... and return
-019AD5 Return
 019AD6 \ Branch if sprites locked
 019AD8 /
 019AE3 Return
@@ -3576,7 +3449,6 @@
 019B0A  | ...and replace the tile with #$AC
 019B0C  |
 019B0F / Return
-019B0F Return
 019B10 Call smushed gfx routine
 019B13 \ If the main routine handles the death state...
 019B16  |
@@ -3590,11 +3462,8 @@
 019B2C /
 019B2E \ Branch if Lakitu
 019B30  |
-019B30 \ Branch if Lakitu
-019B32 /
 019B32 /
 019B34  \ If Pipe Lakitu,
-019B36   |
 019B36   |
 019B38   | set behind scenery flag
 019B3A  /
@@ -3906,7 +3775,6 @@
 01A727 Return
 01A728 \ Play sound effect
 01A72A /
-01A72A / Play sound effect
 01A72D Return
 01A72E \ Return if timer is set
 01A731 /
@@ -3936,7 +3804,6 @@
 01A7E3 Return
 01A7E4 \ Branch if "Process interaction every frame" is set
 01A7E7  |
-01A7E7  | is set
 01A7E9 /
 01A7EB \ Otherwise, return every other frame
 01A7EC  |
@@ -3945,7 +3812,6 @@
 01A7F3  |
 01A7F5  |
 01A7F6 /
-01A7F6 Return
 01A801 No contact, return
 01A80D No contact, return
 01A80F \ If animation sequence activated...
@@ -3966,7 +3832,6 @@
 01A83E /
 01A840 \ Branch if "Process interaction every frame" is set
 01A843  |
-01A843  | is set
 01A845 /
 01A868 / Play sound effect
 01A86B \ Sprite status = Killed
@@ -4037,7 +3902,6 @@
 01AA61  | ...or on Yoshi
 01AA64 /
 01AA66 \ Sprite status = Being carried
-01AA66 \ Sprite status = Carried
 01AA68 /
 01AA6B Set carrying enemy flag
 01AA73 Return
@@ -4060,7 +3924,6 @@
 01AACC Return
 01AAFF / Play sound effect
 01AB09 / Change music
-01AB09 / Play sound effect
 01AB1F  \ Set ground shake timer
 01AB21  /
 01AB2C Return
@@ -4101,23 +3964,16 @@
 01AC36 /
 01AC38 \  vertical level
 01AC3A  |
-01AC3A |
 01AC3C /
 01AC3E \
 01AC40  |
-01AC40 |
 01AC41  | if the sprite has gone off the bottom of the level...
-01AC41 | if the sprite has gone off the bottom of the level...
 01AC43  | (if adding 0x50 to the sprite y position would make the high byte >= 2)
-01AC43 | (if adding 0x50 to the sprite y position would make the high byte >= 2)
 01AC46  |
-01AC46 |
 01AC48  |
-01AC48 |
 01AC4A /    ...erase the sprite
 01AC4C \ if "process offscreen" flag is set, return
 01AC4F  |
-01AC4F |
 01AC51 /
 01AC80  \ If MagiKoopa...
 01AC82   |
@@ -4136,11 +3992,9 @@
 01ACA1 Erase sprite
 01ACA5 \ If "process offscreen" flag is set, return
 01ACA8  |
-01ACA8 |
 01ACAA /
 01ACAC \ Return every other frame
 01ACAE  |
-01ACAE |
 01ACAF /
 01ACB1 \
 01ACB3  | If the sprite has gone off the side of the level...
@@ -4252,7 +4106,6 @@
 01BACC Return
 01BAD7 \ Play sound effect
 01BAD9 /
-01BAD9 / Play sound effect
 01BBF5 X = Sprite index
 01BC1C Return
 01BC1D \ $00 = Mario X Low
@@ -4269,7 +4122,6 @@
 01BC33 Return
 01BC5F \ Play sound effect
 01BC61 /
-01BC61 / Play sound effect
 01BC92 \ Sprite status = Normal
 01BC94 /
 01BC9B \ Sprite X position = block X position
@@ -4307,7 +4159,6 @@
 01BF27 Return
 01BF28 \ Play sound effect
 01BF2A /
-01BF2A / Play sound effect
 01BF2D \ Sprite status = Normal
 01BF2F /
 01BF32 GENERATES MAGIC HERE!   !@#
@@ -4322,16 +4173,13 @@
 01C061 Return
 01C062 \ Unreachable
 01C065   | Call Goal Tape INIT, then
-01C065  | todo: point goal tape init ptr here
 01C067   | Sprite Y position -= #$4C
-01C067  |
 01C068  |
 01C06A  |
 01C06C  |
 01C06F  |
 01C071  |
 01C074 /
-01C074 Return
 01C089  \ Save extra bits into $187B,x
 01C08C  /
 01C08F  \ Clear extra bits out of position
@@ -4345,11 +4193,9 @@
 01C0EB   |
 01C0EC  /
 01C0F1 / Change music
-01C0F1 / Play sound effect
 01C0FE Zero out star timer
 01C109 \ Play sound effect
 01C10B /
-01C10B / Play sound effect
 01C12C Return
 01C17E Return
 01C182 Return
@@ -4386,7 +4232,6 @@
 01C2F4 /
 01C309 \ Play sound effect
 01C30B /
-01C30B / Play sound effect
 01C30E Return
 01C312 Return
 01C324 \ Determine which power-up to act like
@@ -4467,18 +4312,14 @@
 01C56A / Set lock sprites timer
 01C56C JMP to next instruction?
 01C57A \
-01C57A \ Sound effect
 01C57C /
-01C57C / Play sound effect
 01C57F Return
 01C580 \ Set star timer
 01C582 /
 01C587 / Change music
-01C587 / Play sound effect
 01C591 Return
 01C59C \ Play sound effect
 01C59E /
-01C59E / Play sound effect
 01C5AD Return
 01C5EB Return
 01C608 Return
@@ -4542,21 +4383,13 @@
 01CC93 Return
 01CC94  \ Do nothing at all
 01CC95   |
-01CC95   |
-01CC96   |
 01CC96   |
 01CC97   |
-01CC97   |
-01CC98   |
 01CC98   |
 01CC99   |
-01CC99   |
 01CC9A   |
-01CC9A   |
-01CC9B   |
 01CC9B   |
 01CC9C  /
-01CC9C Return
 01CCC4 Return
 01CCC6 Return
 01CCE9 Return
@@ -4580,7 +4413,6 @@
 01CEFC Return
 01CF0A \ Play sound effect
 01CF0C /
-01CF0C / Play sound effect
 01CF1B Return
 01CF25 \ Sprite Speed = 0
 01CF27 /
@@ -4590,15 +4422,12 @@
 01CFC5 Return
 01CFD0 \ Play sound effect
 01CFD2 /
-01CFD2 / Play sound effect
 01CFDF Return
 01D042 Return
 01D050 / Change music
-01D050 / Play sound effect
 01D056 Return
 01D059 \ Play sound effect
 01D05B /
-01D05B / Play sound effect
 01D068 Return
 01D069 \ Sprite status = Normal
 01D06B /
@@ -4617,21 +4446,17 @@
 01D296  /
 01D299 \ Play sound effect
 01D29B /
-01D29B / Play sound effect
 01D2A7 Return
 01D2FD \ Play sound effect
 01D2FF /
-01D2FF / Play sound effect
 01D318 Return
 01D31D Return
 01D31E \ Play sound effect
 01D320 /
-01D320 / Play sound effect
 01D32B Return
 01D333 Return
 01D334 \ Play sound effect
 01D336 /
-01D336 / Play sound effect
 01D341 Return
 01D350 Return
 01D378 Return
@@ -4639,18 +4464,15 @@
 01D39F /
 01D3AB \ Play sound effect
 01D3AD /
-01D3AD / Play sound effect
 01D3B0 Return
 01D3E9 \ Extended sprite = Smoke puff
 01D3EB /
 01D3F3 \ Play sound effect
 01D3F5 /
-01D3F5 / Play sound effect
 01D40A Return
 01D438 Return
 01D43E \ Unreachable
 01D441 / Erase sprite
-01D441 Return
 01D505 \ Branch if sprites locked
 01D507 /
 01D661 Sprite Y Speed = 0
@@ -4659,7 +4481,6 @@
 01D716 Return
 01D745 \ Play sound effect
 01D747 /
-01D747 / Play sound effect
 01D768 \ Branch if sprites locked
 01D76A /
 01D791 Return
@@ -4699,7 +4520,6 @@
 01DB68 /
 01DB70 \ Play sound effect
 01DB72 /
-01DB72 / Play sound effect
 01DB8B Sprite Y Speed = 0
 01DB95 Return
 01DBD7 Y = Index into sprite OAM
@@ -4715,12 +4535,10 @@
 01DE40 Return
 01DE77 \ Play sound effect
 01DE79 /
-01DE79 / Play sound effect
 01DEAF Return
 01DED6 Return
 01DF23 Y = Index into sprite OAM
 01DF49  \ Unreachable instructions
-01DF49 \ Unreachable
 01DF4A /
 01DFC0 Return
 01E039 X = Sprite index
@@ -4729,7 +4547,6 @@
 01E07A Return
 01E0A1 \ Play sound effect
 01E0A3 /
-01E0A3 / Play sound effect
 01E0A6 Return
 01E105 Return
 01E135 \ Branch if not on ground
@@ -4741,7 +4558,6 @@
 01E1B7 Return
 01E1C7 Return
 01E217 / Change music
-01E217 / Play sound effect
 01E269 Return
 01E280 Return
 01E28B Return
@@ -4778,7 +4594,6 @@
 01E5C3 Return
 01E5F2 \ Play sound effect
 01E5F4 /
-01E5F4 / Play sound effect
 01E603 Return
 01E608 \ Return if Mario is invincible
 01E60B /
@@ -4786,7 +4601,6 @@
 01E64E Sprite Y Speed = 0
 01E6A9 \ Play sound effect
 01E6AB /
-01E6AB / Play sound effect
 01E6D2 \ Branch if carrying an enemy...
 01E6D5  | ...or if on Yoshi
 01E6D8 /
@@ -4895,7 +4709,6 @@
 01EC84 \ Return if no free slots
 01EC88  |
 01EC8A /
-01EC8A Return
 01EC8B \ Sprite status = Carryable
 01EC8D /
 01ECE0 Return
@@ -4909,15 +4722,12 @@
 01ED4F /
 01ED5A \ Play sound effect
 01ED5C /
-01ED5C / Play sound effect
 01ED5F \ Play sound effect
 01ED61 /
-01ED61 / Play sound effect
 01ED90 \ Set turning timer
 01ED92 /
 01EDA5 \ Play sound effect
 01EDA7 /
-01EDA7 / Play sound effect
 01EDC6 Sprite Y Speed = 0
 01EDCB Return
 01EDE1 Return
@@ -4927,7 +4737,6 @@
 01EEE4 /
 01EF0E \ Play sound effect
 01EF10 /
-01EF10 / Play sound effect
 01EF17 Return
 01EF6F Y = Index into sprite OAM
 01EFDA Return
@@ -4939,10 +4748,8 @@
 01F0B1 / (fireball on Yoshi ability)
 01F0D3 \ Play sound effect
 01F0D5 /
-01F0D5 / Play sound effect
 01F0FD \ Play sound effect
 01F0FF /
-01F0FF / Play sound effect
 01F12D Return
 01F136 Return
 01F150 \ Set Yoshi wing ability
@@ -4976,14 +4783,12 @@
 01F234 /
 01F28F \ Play sound effect
 01F291 /
-01F291 / Play sound effect
 01F294 Return
 01F298 \ Extended sprite = Yoshi fireball
 01F29A /
 01F2D8 Return
 01F2DF \ Play sound effect
 01F2E1 /
-01F2E1 / Play sound effect
 01F2E4 \ Return if sprite doesn't spawn a new one
 01F2E7  |
 01F2E9 /
@@ -4999,7 +4804,6 @@
 01F2FE Return
 01F30E \ Play sound effect
 01F310 /
-01F310 / Play sound effect
 01F313 Return
 01F327 Return
 01F356 \ Sprite status = Unused (todo: look here)
@@ -5017,7 +4821,6 @@
 01F3A4 /
 01F3EC \ Play sound effect
 01F3EE /
-01F3EE / Play sound effect
 01F3FD Return
 01F3FE \ Branch if sprite off screen...
 01F401  |
@@ -5039,12 +4842,8 @@
 01F59E  |
 01F59F  |
 01F5A1  | Play sound effect
-01F5A1 \ Play sound effect
 01F5A3  |
-01F5A3 /
-01F5A3 / Play sound effect
 01F5A6 / Return
-01F5A6 Return
 01F5A7 \ Branch if sprite being eaten not Pokey
 01F5AA  |
 01F5AC /
@@ -5067,7 +4866,6 @@
 01F69D Return
 01F6C8 \ Play sound effect
 01F6CA /
-01F6CA / Play sound effect
 01F6D2 \ Set Yoshi wing ability
 01F6D4 /
 01F6DC Return
@@ -5075,10 +4873,8 @@
 01F711 /
 01F718 \ Play sound effect
 01F71A /
-01F71A / Play sound effect
 01F71D \ Play sound effect
 01F71F /
-01F71F / Play sound effect
 01F743 \ Mario invincible timer = #$30
 01F745 /
 01F74B Return
@@ -5086,7 +4882,6 @@
 01F74E /
 01F756 \ Play sound effect
 01F758 /
-01F758 / Play sound effect
 01F75B Return
 01F790 Y = Index into sprite OAM
 01F798 Return
@@ -5120,11 +4915,9 @@
 01FB15 \ Set time to go in shell
 01FB17 /
 01FB2F / Change music
-01FB2F / Play sound effect
 01FB35 Return
 01FB60 \ Play sound effect
 01FB62 /
-01FB62 / Play sound effect
 01FB6A Kill all sprites
 01FB99 Sprite Y Speed = 0
 01FB9B Sprite X Speed = 0
@@ -5135,14 +4928,12 @@
 01FC61 Return
 01FCCE \ Play sound effect
 01FCD0 /
-01FCD0 / Play sound effect
 01FD04 Return
 01FD09 Return
 01FD36 \ Extended sprite = Smoke puff
 01FD38 /
 01FD40 \ Play sound effect
 01FD42 /
-01FD42 / Play sound effect
 01FD4F Return
 01FD94 Return
 01FDA7 \ Find an open sprite index
@@ -5151,10 +4942,8 @@
 01FDAE  |
 01FDAF /
 01FDB1 Return
-01FDB1 Return if all are full
 01FDB2 \ Play sound effect
 01FDB4 /
-01FDB4 / Play sound effect
 01FDB7 \ Sprite status = normal
 01FDB9 /
 01FDBC \ Sprite to throw = Ball
@@ -5204,7 +4993,6 @@
 01FFBE Return
 028012 \ Play sound effect
 028014 /
-028014 / Play sound effect
 028042 \ Sprite status = Normal
 028044 /
 028071 Return
@@ -5223,22 +5011,13 @@
 028139  \ Loop over sprites:
 02813B   | Don't attempt to kill self
 02813E   |
-02813E   |
-028140   |
 028140   |
 028141   | Skip sprite if it's already dying/dead
-028141   | Skip sprite if it's already dying/dead
-028144   |
 028144   |
 028146   |
-028146   |
-028148   | Check for contact
 028148   | Check for contact
 02814B   |
-02814B   |
 02814C   | Next
-02814C   | Next
-02814D  /
 02814D  /
 02814F Return
 028151  \ Return if no sprite contact
@@ -5263,7 +5042,6 @@
 028411  /
 028414 \ Play sound effect
 028416 /
-028416 / Play sound effect
 028438 Return
 02848C Return
 02849E Return
@@ -5277,7 +5055,6 @@
 02853B  |
 02853C  |
 02853E / Return if no free slots
-02853E Return
 02853F \ Extended sprite = Lava splash
 028541 /
 02858E Return
@@ -5316,7 +5093,6 @@
 02876E  |
 028770 /
 028773 Deflect Mario downward
-028773 \ Deflect Mario upward
 028775 /
 028777 for shatter routine?
 028779 Actually break the block
@@ -5418,7 +5194,6 @@
 02893D /
 02894C / Play sound effect
 028969 / Change music
-028969 / Play sound effect
 0289CC Return
 028A07 Return
 028A29 Return
@@ -5426,7 +5201,6 @@
 028AA8 Return
 028ACD \ Play sound effect
 028ACF /
-028ACF / Play sound effect
 028AD5 \ Branch if Mario doesn't have star
 028AD8 /
 028B20  \ Return if timer not set
@@ -5452,7 +5226,6 @@
 028BB3  | Yoshi
 028BB6  |
 028BB7 / Return
-028BB7 Return
 028BB8 Return
 028BB9 \ Display smoke when getting on Yoshi
 028BBB  |
@@ -5463,7 +5236,6 @@
 028BC7  |
 028BC8  |
 028BCA / Return
-028BCA Return
 028C08 Return
 028C3A Return
 028C60 Return
@@ -5499,7 +5271,6 @@
 029070 07 - Turn Block
 029076  \ Return if sprites locked
 029078  /
-029078  /
 02907A  \ Initialize only once
 02907D   | (Generate invisible tile sprite)
 02907F   |
@@ -5508,27 +5279,20 @@
 0290CD Return
 02917D \ Play sound effect
 02917F /
-02917F / Play sound effect
 02918C \ Play sound effect
 02918E /
-02918E / Play sound effect
 029191  \ Toggle On/Off
 029194   |
 029196  /
 02919C Return
 02919F  \ If doesn't turn into multiple coin block,
 0291A2   |
-0291A2   |
-0291A4   |
 0291A4   |
 0291A6   |
-0291A6   |
-0291A8  / Block to generate = Bounce sprite block to turn into
 0291A8  / Block to generate = Bounce sprite block to turn into
 0291B4  Block to generate = Used block
 0291B8 \ Block to generate = Invisible solid
 0291BA  /
-0291BA /
 0291BC  \ Block Y position = Bounce sprite Y position
 0291BF   |
 0291C0   | (Rounded to nearest #$10)
@@ -5602,7 +5366,6 @@
 029A6D Return
 029AA7 Return
 029AA8  Find next usable location in score sprite table
-029AA8 Find next usable location in score sprite table
 029AAE add a "10" score sprite
 029AB4 set Yposition low byte
 029ABA set Ypos high byte
@@ -5655,14 +5418,12 @@
 029BE6  /
 029BE9 \ Play sound effect
 029BEB /
-029BEB / Play sound effect
 029BF5 \ Find a free extended sprite slot
 029BF7  |
 029BFA  |
 029BFC  |
 029BFD  |
 029BFF / Return if no free slots
-029BFF Return
 029C00 \ Extended sprite = Yoshi stomp smoke
 029C02 /
 029C32 Return
@@ -5689,7 +5450,6 @@
 02A041 Return
 02A045 \ Play sound effect
 02A047 /
-02A047 / Play sound effect
 02A0A5 X = Sprite index
 02A0A8 Return
 02A0AC \ Return every other frame
@@ -5723,7 +5483,6 @@
 02A0FF \ If fire count >= 5, kill Chuck:
 02A102  |
 02A104  |
-02A104 /
 02A106  | Play sound effect
 02A108  |
 02A10B  | Sprite status = Killed
@@ -5737,24 +5496,15 @@
 02A122 /
 02A124 \ Turn sprite into coin:
 02A126  | Play sound effect
-02A126 / Play sound effect
 02A129  | Sprite = Moving Coin
-02A129 \ Sprite = Moving Coin
 02A12B  |
-02A12B /
 02A12D  | Sprite status = Normal
-02A12D \ Sprite status = Normal
 02A12F  |
-02A12F /
 02A132  | Reset sprite tables
-02A132 Reset sprite tables
 02A136  | Set upward speed
-02A136 \ Set upward speed
 02A138  |
-02A138 /
 02A140 /
 02A14C $15E9 = Sprite index
-02A14D
 02A14D $15E9 = Sprite index
 02A150 Return
 02A1A3 Return
@@ -5781,10 +5531,8 @@
 02A46C /
 02A47C \ Play sound effect
 02A47E /
-02A47E / Play sound effect
 02A481 \ Play sound effect
 02A483 /
-02A483 / Play sound effect
 02A4AD Return
 02A4B2 Return
 02A4E8 Return
@@ -5802,84 +5550,45 @@
 02A772 Return
 02A7FC  \ Return every other frame
 02A7FE   |
-02A7FE   |
-02A800  /
 02A800  /
 02A804  \ Branch if horizontal level
-02A804  \ Branch if horizontal level
-02A806   |
 02A806   |
 02A807  /
-02A807  /
-02A809  \ Vertical level:
 02A809  \ Vertical level:
 02A80B   | $00,$01 = Screen boundary Y + offset
-02A80B   | $00,$01 = Screen boundary Y + offset
-02A80C   |
 02A80C   |
 02A80F   |
-02A80F   |
-02A811   |
 02A811   |
 02A813   |
-02A813   |
-02A815  /
 02A815  /
 02A817  \ Horizontal level:
-02A817  \ Horizontal level:
-02A819   | $00,$01 = Screen boundary X + offset
 02A819   | $00,$01 = Screen boundary X + offset
 02A81A   |
-02A81A   |
-02A81D   |
 02A81D   |
 02A81F   |
-02A81F   |
-02A821   |
 02A821   |
 02A823   |
-02A823   |
-02A826   |
 02A826   |
 02A828  /
-02A828  /
 02A82A  X = #$00 (Number of sprite in level)
-02A82A  X = #$00 (Number of sprite in level)
-02A82C  Y = #$01 (Index into level data)
 02A82C  Y = #$01 (Index into level data)
 02A82E  Byte format: YYYYEEsy
 02A830  \ Return when we encounter $FF, as it signals the end
-02A830  \ Return when we encounter $FF, as it signals the end
-02A832  /
 02A832  /
 02A834  \ If 's' is set, $02 = #$10
-02A834  \ If 's' is set, $02 = #$10
-02A835   | Else, $02 = #$00
 02A835   | Else, $02 = #$00
 02A836   |
-02A836   |
-02A837   |
 02A837   |
 02A839  /
-02A839  /
-02A83B  Next byte
 02A83B  Next byte
 02A83C  Byte format: XXXXSSSS
-02A83C  Byte format: XXXXSSSS
-02A83E  \ Skip all sprites until we find one at the adjusted screen boundary:
 02A83E  \ Skip all sprites until we find one at the adjusted screen boundary:
 02A840   |
-02A840   |
 02A842   | If sprite screen (sSSSS) < adjusted screen boundary...
-02A842   | If sprite screen (sSSSS) < adjusted screen boundary...
-02A844  / ...skip the sprite
 02A844  / ...skip the sprite
 02A846  \ Move on to the next sprite
 02A847   |
-02A847   |
 02A848   |
-02A848   |
-02A849  /
 02A849  /
 02A84B Return
 02A84C  Return if sprite screen > adjusted screen boundary
@@ -5908,22 +5617,13 @@
 02A89C  \ Branch if sprite number != 3 Platforms on Chain
 02A89E  /
 02A8AC  \ Branch if sprite number < #$CB
-02A8AC  \ Branch if sprite number < #$CB
-02A8AE  /
 02A8AE  /
 02A8B0   \ Branch if sprite number >= #$DA
-02A8B0  \ Branch if sprite number >= #$DA
-02A8B0  \ Branch if sprite number >= #$DA
-02A8B2  /
 02A8B2  /
 02A8B4  \ $18B9 = Type of generator
 02A8B5   | (Sprite number - #$CA)
-02A8B5   | (Sprite number - #$CA)
-02A8B7   |
 02A8B7   |
 02A8B8  /
-02A8B8  /
-02A8BB  Allow sprite to be reloaded by level loading routine
 02A8BB  Allow sprite to be reloaded by level loading routine
 02A8C0  \ Branch if sprite number < #$E1
 02A8C2  /
@@ -5931,8 +5631,6 @@
 02A8D6  /
 02A8DD  \ $04 = #$01
 02A8DF  / Eventually goes into sprite status
-02A8DF  / Eventually goes into sprite status
-02A8E1  Previous byte
 02A8E1  Previous byte
 02A938  Allow sprite to be reloaded by level loading routine
 02A93B Return
@@ -5963,9 +5661,6 @@
 02A96C   |
 02A96E  /
 02A973  \ Sprite status = ??
-02A973  \ Sprite status = ??
-02A973  \ Sprite status = Killed by spin jump
-02A973 \ Sprite status = Killed by spin jump
 02A975 /
 02A97A KKOOPA STORAGE???
 02A97C NO, IT WAS STATIONARY
@@ -5986,8 +5681,6 @@
 02A9D4  /
 02A9DE  \ Number of slots to leave free = 2
 02A9E0   |
-02A9E0   |
-02A9E2  /
 02A9E2  /
 02A9E4  Number of slots tp leave free = 0
 02A9EE Return
@@ -6005,11 +5698,9 @@
 02AA06  |
 02AA08  | If no free slots, Y=#$FF
 02AA0A /
-02AA0A Return
 02AA33 \ Unreachable
 02AA35   | Loop X = 00 to 0E
 02AA67 / Return
-02AA67 Return
 02AA8C Return
 02AABC Return
 02AB10 Return
@@ -6076,7 +5767,6 @@
 02AF28 Return
 02AF29 \ Unreachable
 02AF2C /
-02AF2C Return
 02AF45 \ Return if no free slots
 02AF49 /
 02AF4C \ Sprite status = Initialization
@@ -6112,7 +5802,6 @@
 02B035 Return
 02B043 \ Play sound effect
 02B045 /
-02B045 / Play sound effect
 02B048 \ Sprite status = Normal
 02B04A /
 02B04D \ Sprite = Bowser's Statue Fireball
@@ -6122,7 +5811,6 @@
 02B080 /
 02B088 \ Play sound effect
 02B08A /
-02B08A / Play sound effect
 02B08E \ Sprite status = Normal
 02B090 /
 02B093 \ Sprite = Bullet Bill
@@ -6130,7 +5818,6 @@
 02B0C8 Return
 02B0DF \ Play sound effect
 02B0E1 /
-02B0E1 / Play sound effect
 02B0F9 Return
 02B11B \ Sprite = Bullet Bill
 02B11D /
@@ -6189,7 +5876,6 @@
 02B429  |
 02B42A  |
 02B42C / Return if no free slots
-02B42C Return
 02B42D \ Extended sprite = Torpedo Ted arm
 02B42F /
 02B463 Return
@@ -6224,12 +5910,9 @@
 02B4A5 / After: Y has index of sprite being generated
 02B4A7 \ Only shoot every #$80 frames
 02B4A9 / Play sound effect
-02B4A9 / Play sound effect
 02B4AC \ Sprite status = Initialization
 02B4AE /
-02B4AE /
 02B4B1 \ New sprite = Bullet Bill
-02B4B1 \ Set sprite number for new sprite
 02B4B3 /
 02B4B6 \ Set x position for new sprite
 02B4B9  |
@@ -6254,8 +5937,6 @@
 02B4E5  |
 02B4E6  |
 02B4E8 / Return if no free slots
-02B4E8 / Return if no slots open
-02B4E8 Return
 02B4EB \ Set effect graphic to smoke graphic
 02B4ED /
 02B4F0 \ Smoke y position = generator y position
@@ -6351,14 +6032,12 @@
 02B8C0 /
 02B8C2 \ If not at maximum, increase X speed
 02B8C5  |
-02B8C5 \ If not at maximum, increase X speed
 02B8C7  |
 02B8CA  |
 02B8CC  |
 02B8CD  |
 02B8D0 /
 02B8D2 \ Apply speed to position
-02B8D2 \ apply speed to position
 02B8D5 /
 02B8D8 \ If sprite has Y speed...
 02B8DA  |
@@ -6390,8 +6069,6 @@
 02B9E0 /
 02B9F9 Return
 02B9FE  \ Unreachable
-02B9FE Unreachable/unused code
-02B9FE Unused/unreachable code
 02BA00   | Very similar to code below
 02BA47 Return
 02BA92 X = Sprite index
@@ -6423,7 +6100,6 @@
 02BAE4 /
 02BAE8 Reset sprite tables
 02BAEC ?
-02BAEC Change index into object clipping table
 02BAEF \ Change the index into sprite clipping table
 02BAF2  | to "resize" the sprite
 02BAF4  |
@@ -6529,7 +6205,6 @@
 02C2FC /
 02C381 \ Play sound effect
 02C383 /
-02C383 / Play sound effect
 02C3B2 Return
 02C418 Return
 02C439 Return
@@ -6542,20 +6217,17 @@
 02C475  |
 02C476  |
 02C478 / Return if no free slots
-02C478 Return
 02C479 \ Extended sprite = Baseball
 02C47B /
 02C4B4 Return
 02C4E2 Return
 02C4F8 \ Play sound effect
 02C4FA /
-02C4FA / Play sound effect
 02C507 \ Branch if not on ground
 02C50A  |
 02C50C /
 02C536 \ Play sound effect
 02C538 /
-02C538 / Play sound effect
 02C53B Return
 02C541 \ Branch if not on ground
 02C544  |
@@ -6570,7 +6242,6 @@
 02C57D Return
 02C5AE \ Play sound effect
 02C5B0 /
-02C5B0 / Play sound effect
 02C5C2 \ Sprite status = Normal
 02C5C4 /
 02C601 Return
@@ -6590,7 +6261,6 @@
 02C6FA /
 02C707 \ Play sound effect
 02C709 /
-02C709 / Play sound effect
 02C725 Return
 02C73C Return
 02C776 Return
@@ -6602,22 +6272,17 @@
 02C7B5 /
 02C7B8 \ Play sound effect
 02C7BA /
-02C7BA / Play sound effect
 02C7C3 Return
 02C7D2 \ Play sound effect
 02C7D4 /
-02C7D4 / Play sound effect
 02C7E8 Increase Chuck stomp count
 02C7EB \ Kill Chuck if stomp count >= 3
 02C7EE  |
 02C7F0  |
 02C7F2  | Sprite Y Speed = 0
-02C7F2 Sprite Y Speed = 0
-02C7F2 Sprite Y Speed = 0
 02C7F4 /
 02C7F6 \ Play sound effect
 02C7F8 /
-02C7F8 / Play sound effect
 02C80F Return
 02C819 Return
 02C905 X = Sprite index
@@ -6658,7 +6323,6 @@
 02CDC4 Return
 02CDEC \ Play sound effect
 02CDEE /
-02CDEE / Play sound effect
 02CDFE Return
 02CE1F Return
 02CE2E Return
@@ -6670,8 +6334,6 @@
 02CE8B Return
 02CE8C \ Unreachable
 02CE8F  / Wrapper for Pea Bouncer gfx routine
-02CE8F / Call Pea Bouncer gfx routine
-02CE8F Return
 02CEF9 Y = Index into sprite OAM
 02CF37 X = Sprite index
 02CF51 Return
@@ -6799,7 +6461,6 @@
 02D2C3 $1491 = amount sprite was moved
 02D2C6 Return
 02D2C7  Unreachable
-02D2C7 \ Unreachable
 02D2C9  \ Save Mario's position
 02D2CB   |
 02D2CC   |
@@ -6825,8 +6486,6 @@
 02D2F7   |
 02D2F8  /
 02D2FA  Return
-02D2FA / Return
-02D2FA Return
 02D373 Return
 02D3D5 Y = Index into sprite OAM
 02D3E6 Return
@@ -6840,7 +6499,6 @@
 02D471  /
 02D474 \ Play sound effect
 02D476 /
-02D476 / Play sound effect
 02D480 Return
 02D488 Return
 02D49B Return
@@ -6852,6 +6510,7 @@
 02D5A3 Return
 02D629 Return
 02D686 X = Sprite index
+02D800 TODO: does this actually act as data? consult trace
 02D806 Return
 02D83F Return
 02D86F Return
@@ -6862,7 +6521,6 @@
 02D8FF /
 02D918 \ Play sound effect
 02D91A /
-02D91A / Play sound effect
 02D977 Return
 02D9A0 Return
 02DA59 Return
@@ -6889,7 +6547,6 @@
 02DABF  |
 02DAC0  |
 02DAC2 / Return if no free slots
-02DAC2 Return
 02DAC3 \ Extended sprite = Hammer
 02DAC5 /
 02DAC8 \ Hammer X pos = sprite X pos
@@ -6955,11 +6612,9 @@
 02DD61  /
 02DD64 \ Play sound effect
 02DD66 /
-02DD66 / Play sound effect
 02DD80 Return
 02DD8E Return
 02DD8F  \ Return if no free slots
-02DD8F \ Return if no free slots
 02DD93 /
 02DD95  \ Sprite = Lightning
 02DD97  /
@@ -6987,7 +6642,6 @@
 02DECA /
 02DECC \ Play sound effect
 02DECE /
-02DECE / Play sound effect
 02DEF0 Y = Index into sprite OAM
 02DEFB Return
 02DF21 Return
@@ -7009,7 +6663,6 @@
 02E08C  |
 02E08D  |
 02E08F / Return if no free slots
-02E08F Return
 02E090 \ Extended sprite = Volcano Lotus fire
 02E092 /
 02E0C4 Return
@@ -7027,13 +6680,11 @@
 02E1C9  |
 02E1CA  |
 02E1CC / Return if no free slots
-02E1CC Return
 02E1CD \ Extended sprite = Piranha fireball
 02E1CF /
 02E21C Return
 02E249 Y = Index into sprite OAM
 02E284 / Change music
-02E284 / Play sound effect
 02E287 Return
 02E2C3 \ $9A = Sprite X position
 02E2C5  | for block creation
@@ -7177,7 +6828,6 @@
 02EFB8  |
 02EFB9  |
 02EFBB / Return if no free slots
-02EFBB Return
 02EFBC \ Extended sprite = Cloud game coin
 02EFBE /
 02EFE9 Return
@@ -7199,7 +6849,6 @@
 02F252 /
 02F26B \ Play sound effect
 02F26D /
-02F26D / Play sound effect
 02F283  Bug: Value should capped at #$08 to prevent wiggler 1up/score glitch.  See wigglerfix.asm
 02F295 Return
 02F29A Return
@@ -7207,7 +6856,6 @@
 02F29F /
 02F2C0 \ Play sound effect
 02F2C3 /
-02F2C3 / Play sound effect
 02F2C6 Return
 02F2D2 Return
 02F2D7 \ Find a free extended sprite slot
@@ -7216,7 +6864,6 @@
 02F2DE  |
 02F2DF  |
 02F2E1 / Return if no free slots
-02F2E1 Return
 02F2E2 \ Extended sprite = Wiggler flower
 02F2E4 /
 02F30E Return
@@ -7253,18 +6900,14 @@
 02F66D Return
 02F67A \ Play sound effect
 02F67C /
-02F67C / Play sound effect
 02F683 \ Play sound effect
 02F685 /
-02F685 / Play sound effect
 02F69F Return
 02F6F0 Return
 02F765 \ Play sound effect
 02F767 /
-02F767 / Play sound effect
 02F76E \ Play sound effect
 02F770 /
-02F770 / Play sound effect
 02F807 Return
 02F808 Wrapper
 02F80F Return
@@ -7294,14 +6937,12 @@
 02FF15  \ Allow sprite to be reloaded by level loading routine
 02FF17  /
 02FF1D / Return
-02FF1D Return
 02FF1E \ Unreachable, called from above routine
 02FF4E /
 02FF97 Return
 02FFA2 Return
 02FFD0 Return
 02FFE1 Return
-02D800 TODO: does this actually act as data? consult trace
 038031 \ Branch if not touching object
 038034  |
 038036 /
@@ -7311,12 +6952,10 @@
 03804D /
 038086 Return
 03809E / Change music
-03809E / Play sound effect
 0380A1 Return
 0380D4 Return
 0380E9 \ Play sound effect
 0380EB /
-0380EB / Play sound effect
 0380F9 Return
 03818A Return
 0381AD Return
@@ -7327,12 +6966,10 @@
 0381D8 Sprite X Speed = 0
 0381DE \ Play sound effect
 0381E0 /
-0381E0 / Play sound effect
 0381E3 Return
 0381F4 Return
 038233 \ Play sound effect
 038235 /
-038235 / Play sound effect
 038238 Return
 03827C X = Sprite index
 03827F Return
@@ -7348,16 +6985,10 @@
 0384F4 Return
 03852A Return
 038551 \ Branch if at max speed
-038551 \ Branch if at max speed
-038553  |
 038553  |
 038556 /
-038556 /
-038558 \ Otherwise, accelerate
 038558 \ Otherwise, accelerate
 038559  |
-038559  |
-03855C /
 03855C /
 038586 Return
 0385F3 Return
@@ -7435,7 +7066,6 @@
 038824 /   ...return
 038826 Hurt mario
 03882A Final return
-03882A Return
 038842 \ $02 = direction
 038845 /
 038847 \
@@ -7495,7 +7125,6 @@
 0388DF Return
 0388FF \ Play sound effect
 038901 /
-038901 / Play sound effect
 038904 Return
 038935 Return
 038968 Y = Index into sprite OAM
@@ -7525,7 +7154,6 @@
 038AD8 /
 038ADA \ Play sound effect
 038ADC /
-038ADC / Play sound effect
 038ADF \ Sprite status = Normal
 038AE1 /
 038AE4  \ Sprite = Bowser Statue Fireball
@@ -7541,7 +7169,6 @@
 038D65 Return
 038D7D \ Play sound effect
 038D7F /
-038D7F / Play sound effect
 038DAC Y = Index into sprite OAM
 038DBA Return
 038DEF Return
@@ -7577,7 +7204,6 @@
 039288 Y = Index into sprite OAM
 0392B8 \ Play sound effect
 0392BA /
-0392BA / Play sound effect
 03932B Return
 039386 Return
 03938A Return
@@ -7592,7 +7218,6 @@
 03939D /
 03939F Generate the tile
 0393A3 Return
-0393A3 Return
 039440 Return
 039457 Return
 039462 Return
@@ -7603,7 +7228,6 @@
 039470  |
 039472  | ...and goto next state
 039474 /
-039474 Return
 039483 Return
 03949E Return
 0394B0 Return
@@ -8064,7 +7688,6 @@
 039D41 Sprite X Speed = 0
 039D55 \ Play sound effect
 039D57 /
-039D57 / Play sound effect
 039D94 \ Branch if Mario has star
 039D97 /
 039D9D Return
@@ -8083,7 +7706,6 @@
 039FEC Return
 039FFA \ Play sound effect
 039FFC /
-039FFC / Play sound effect
 03A044 Return
 03A061 Return
 03A071 Y = Index into sprite OAM
@@ -8141,11 +7763,9 @@
 03A5BC Return
 03A5D0 \ Play sound effect
 03A5D2 /
-03A5D2 / Play sound effect
 03A5D7 Return
 03A603 \ Play sound effect
 03A605 /
-03A605 / Play sound effect
 03A60D Return
 03A61C Return
 03A64C Return
@@ -8158,20 +7778,16 @@
 03A6E9  /
 03A6EF Return
 03A703 / Change music
-03A703 / Play sound effect
 03A711 Sprite X Speed = 0
 03A713 Sprite Y Speed = 0
 03A71E Return
 03A7A9 / Change music
-03A7A9 / Play sound effect
 03A7AC Return
 03A7C3 / Change music
-03A7C3 / Play sound effect
 03A7DE Return
 03A7F5 Return
 03A7F6 \ Play sound effect
 03A7F8 /
-03A7F8 / Play sound effect
 03A7FB \ Sprite status = Normal
 03A7FD /
 03A83D / Play sound effect
@@ -8181,19 +7797,16 @@
 03A877 Sprite X Speed = 0
 03A879 Sprite Y Speed = 0
 03A88E / Change music
-03A88E / Play sound effect
 03A89C Return
 03A8A4 Sprite X Speed = 0
 03A8A6 Sprite Y Speed = 0
 03A8AD Return
 03A8B2 \ Play sound effect
 03A8B4 /
-03A8B4 / Play sound effect
 03A8BD Return
 03A8E2 Return
 03A8E3 \ Play sound effect
 03A8E5 /
-03A8E5 / Play sound effect
 03A8E8 \ Sprite status = Normal
 03A8EA /
 03A92D Return
@@ -8202,7 +7815,6 @@
 03AB61 Return
 03AB8C \ Play sound effect
 03AB8E /
-03AB8E / Play sound effect
 03AB99  \ Set ground shake timer
 03AB9B  /
 03AB9E Return
@@ -8211,11 +7823,9 @@
 03ABC3 Sprite Y Speed = 0
 03ABEA Return
 03ABF5 / Change music
-03ABF5 / Play sound effect
 03AC02 Return
 03AC4C Return
 03AC54 / Change music
-03AC54 / Play sound effect
 03AC62 Return
 03AC92 Return
 03AD18 Sprite X Speed = 0
@@ -8240,23 +7850,19 @@
 03B073 Return
 03B0B8 \ Play sound effect
 03B0BA /
-03B0BA / Play sound effect
 03B0DB Return
 03B0F2 Return
 03B129 \ Play sound effect
 03B12B /
-03B12B / Play sound effect
 03B155 \ Sprite status = Killed
 03B157 /
 03B160 Return
 03B1A3 \ Play sound effect
 03B1A5 /
-03B1A5 / Play sound effect
 03B1A8  \ Set ground shake timer
 03B1AA  /
 03B1B1 \ Play sound effect
 03B1B3 /
-03B1B3 / Play sound effect
 03B1D4 Return
 03B261 Y = Index into sprite OAM
 03B2A6 Return
@@ -8420,7 +8026,6 @@
 03B7CF \ Return from *main gfx routine* subroutine...
 03B7D0  |    ...(not just this subroutine)
 03B7D1 /
-03B7D1 /   Return
 03B7FB Sprite Y Speed = 0
 03B816 Return
 03B828 Return
@@ -8466,8 +8071,6 @@
 03B8FB \ If sprite is on screen, A = 0
 03B8FE  |
 03B901 / Return
-03B901 / Return
-03B901 Return
 03C000 $9C = tile to generate
 03C002 \ $9A = Sprite X position + #$08
 03C004  | for block creation
@@ -8489,13 +8092,11 @@
 03C02A Return
 03C037 \ Play sound effect
 03C039 /
-03C039 / Play sound effect
 03C05F No Yoshi wing ability
 03C067 \ Sprite status = Normal
 03C069 /
 03C06C \ Play sound effect
 03C06E /
-03C06E / Play sound effect
 03C09A Return
 03C0B1 Return
 03C111 Return
@@ -8539,7 +8140,6 @@
 03C1EB Return
 03C209 \ Play sound effect
 03C20B /
-03C20B / Play sound effect
 03C244 Y = Index into sprite OAM
 03C25A Return
 03C263 Wrapper
@@ -8553,7 +8153,6 @@
 03C2E2  |
 03C2E4  |
 03C2E5 /
-03C2E5 Return
 03C2E6 \ Sprite status = Normal
 03C2E8 /
 03C2EB \ Sprite = 1Up
@@ -8593,10 +8192,8 @@
 03C340 /
 03C342 \ Play sound effect
 03C344 /
-03C344 / Play sound effect
 03C347 Return
 03C34C  Draw sprite using the routine for sprites <= 53
-03C34C Draw sprite using the routine for sprites <= 53
 03C350 \ Return if sprites locked
 03C352 /
 03C354 \ Always face mario
@@ -8607,11 +8204,7 @@
 03C362 Update position based on speed values
 03C366 \ Branch if not on ground
 03C369   | Bug: Ninji can jump through ceiling.  See NinjiFix.asm
-03C369   | Bug: Ninji can jump through ceiling.  See NinjiFix.asm
-03C369  |
 03C36B  /       Should set Y Speed = 0 if ($1588,x & #$08)
-03C36B  /       Should set Y Speed = 0 if ($1588,x & #$08)
-03C36B /
 03C36D Sprite Y Speed = 0
 03C38F Return
 03C3AD Return
@@ -8623,7 +8216,6 @@
 03C45D  |
 03C45E  |
 03C460 / Return if no free slots
-03C460 Return
 03C461 \ Extended sprite = Bone
 03C463 /
 03C48E Return
@@ -8639,7 +8231,6 @@
 03C815 Return
 03C830 \ Play sound effect
 03C832 /
-03C832 / Play sound effect
 03C83C Return
 03C84F  \ Play sound effect
 03C852  /
@@ -8647,17 +8238,9 @@
 03C858  /
 03C888 Return
 03C896  \ Play sound effect
-03C896  \ Play sound effect
 03C899  /
-03C899  /
-03C899  / Play sound effect
-03C899 / Play sound effect
-03C89C  \ Play sound effect
 03C89C  \ Play sound effect
 03C89F  /
-03C89F  /
-03C89F  / Play sound effect
-03C89F / Play sound effect
 03C8E2 Sprite Y Speed = 0
 03C8F0 Return
 03C968 Return
@@ -8691,7 +8274,6 @@
 03CE55 Return
 03CE80 / Play sound effect
 03CE9B / Change music
-03CE9B / Play sound effect
 03CEA6 Return
 03CEC3 / Play sound effect
 03CECD / Play sound effect
@@ -8752,17 +8334,9 @@
 048171 Return
 04819E Return
 048244  \ If player 1 pushes select...
-048244  \ If player 1 pushes select...
-048244 \ If player 1 pushes select...
 048246   |
-048246   |
-048246  |
 048249   | ...disabled by BRA
-048249   | ...disabled by BRA
-048249  | ...disabled by BRA
 04824B  / Change to BEQ to enable debug code below
-04824B  / Change to BEQ to enable debug code below
-04824B / Change to BEQ to enable debug code below
 04824D \ Unreachable
 048250  | Debug: Change Yoshi color
 048251  |
@@ -8784,8 +8358,6 @@
 0482FC  |
 0482FD /
 048383  Look around overworld
-048383  Look around overworld
-048383 Look around overworld
 0483CE / Play sound effect
 0483D3 / Change music
 048405 / Play sound effect
@@ -8801,32 +8373,15 @@
 048535 Store Y in "Warp destination"
 048538 8 bit A
 04853A Return
-04853A Return
 048575 Return
 0485A9  \ Mario X postion = #$001E
-0485A9  \ Mario X postion = #$001E
-0485A9 \ Mario X postion = #$001E
 0485AC   | (On overworld boarder)
-0485AC   | (On overworld boarder)
-0485AC  | (On overworld boarder)
 0485AD   |
-0485AD   |
-0485AD  |
 0485AF  /
-0485AF  /
-0485AF /
 0485B1  \ Mario Y postion = #$0006
-0485B1  \ Mario Y postion = #$0006
-0485B1 \ Mario Y postion = #$0006
 0485B4   | (On overworld boarder)
-0485B4   | (On overworld boarder)
-0485B4  | (On overworld boarder)
 0485B5   |
-0485B5   |
-0485B5  |
 0485B7  /
-0485B7  /
-0485B7 /
 04862D Return
 048630 \ Get current player's X position
 048633 /
@@ -8869,7 +8424,6 @@
 04916D Set "Stay on ground" timer to 0 (31 = Fly away)
 049170 \ Star Road sound effect
 049172 /
-049172 / Play sound effect
 049175 \ Activate star warp
 049177 /
 04917D \
@@ -8913,7 +8467,6 @@
 0491E0 \ Music fade out
 0491E2 / 
 0491E5 Fade to level
-0491E8 Return
 0491E8 Return
 0491E9 16 bit A
 0491EB Get current character * 4
@@ -9020,7 +8573,6 @@
 049EA3  | Y++
 049EA4 /
 049EA6 / Return
-049EA6 Return
 04D76F Return
 04D7F1 Return
 04D85C Return
@@ -9030,7 +8582,6 @@
 04DB9C Return
 04DBC7 Return
 04DBFB / Change music
-04DBFB / Play sound effect
 04DC01 Return
 04DC69 Return
 04DCAD Return
@@ -9487,7 +9038,6 @@
 0586DD  |Otherwise, repeat this routine.
 0586DF  |
 0586E2 /
-0586E2 Return
 0586E9 Return
 0586F0 Return
 058775 Return
@@ -9553,7 +9103,6 @@
 05B35A Return
 05B363 \ Unreachable
 05B374 / Return
-05B374 Return
 05BBA5 Return
 05BC48 Return
 05BC49 Return
@@ -9663,22 +9212,16 @@
 05D8BF /
 05D8C0 8 bit A
 05D8C2  \ 
-05D8C2 \
 05D8C5  |
 05D8C7   |Load Layer 1 pointer into $65-$67 
-05D8C7  |Load Layer 1 pointer into $65-$67
 05D8CA  |
 05D8CC   | 
-05D8CC  |
 05D8CF /
 05D8D1  \ 
-05D8D1 \
 05D8D4  |
 05D8D6   |Load Layer 2 pointer into $68-$6A 
-05D8D6  |Load Layer 2 pointer into $68-$6A
 05D8D9  |
 05D8DB   | 
-05D8DB  |
 05D8DE /
 05D8E0 16 bit A
 05D8E2 \
@@ -9686,10 +9229,8 @@
 05D8E5 / (Each sprite pointer table entry is 2 bytes long)
 05D8E9 8 bit A
 05D8EB  \ 
-05D8EB \
 05D8EE  |Store location of sprite level Y in $CE-$CF
 05D8F0   | 
-05D8F0  |
 05D8F3 /
 05D8F5 \ Set highest byte to x07
 05D8F7 / (All sprite data is stored in bank 07)
@@ -9722,7 +9263,6 @@
 07F7D1 Return
 07F7DA Return
 07FC46 Return
-07FC51 Return
 07FC8F Return
 07F754 Sprite X Speed = 0
 07F759 Sprite Y Speed = 0

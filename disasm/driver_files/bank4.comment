@@ -12,17 +12,9 @@
 048171 Return
 04819E Return
 048244  \ If player 1 pushes select...
-048244  \ If player 1 pushes select...
-048244 \ If player 1 pushes select...
 048246   |
-048246   |
-048246  |
 048249   | ...disabled by BRA
-048249   | ...disabled by BRA
-048249  | ...disabled by BRA
 04824B  / Change to BEQ to enable debug code below
-04824B  / Change to BEQ to enable debug code below
-04824B / Change to BEQ to enable debug code below
 04824D \ Unreachable
 048250  | Debug: Change Yoshi color
 048251  |
@@ -44,8 +36,6 @@
 0482FC  |
 0482FD /
 048383  Look around overworld
-048383  Look around overworld
-048383 Look around overworld
 0483CE / Play sound effect
 0483D3 / Change music
 048405 / Play sound effect
@@ -61,32 +51,15 @@
 048535 Store Y in "Warp destination"
 048538 8 bit A
 04853A Return
-04853A Return
 048575 Return
 0485A9  \ Mario X postion = #$001E
-0485A9  \ Mario X postion = #$001E
-0485A9 \ Mario X postion = #$001E
 0485AC   | (On overworld boarder)
-0485AC   | (On overworld boarder)
-0485AC  | (On overworld boarder)
 0485AD   |
-0485AD   |
-0485AD  |
 0485AF  /
-0485AF  /
-0485AF /
 0485B1  \ Mario Y postion = #$0006
-0485B1  \ Mario Y postion = #$0006
-0485B1 \ Mario Y postion = #$0006
 0485B4   | (On overworld boarder)
-0485B4   | (On overworld boarder)
-0485B4  | (On overworld boarder)
 0485B5   |
-0485B5   |
-0485B5  |
 0485B7  /
-0485B7  /
-0485B7 /
 04862D Return
 048630 \ Get current player's X position
 048633 /
@@ -129,7 +102,6 @@
 04916D Set "Stay on ground" timer to 0 (31 = Fly away)
 049170 \ Star Road sound effect
 049172 /
-049172 / Play sound effect
 049175 \ Activate star warp
 049177 /
 04917D \
@@ -173,7 +145,6 @@
 0491E0 \ Music fade out
 0491E2 / 
 0491E5 Fade to level
-0491E8 Return
 0491E8 Return
 0491E9 16 bit A
 0491EB Get current character * 4
@@ -280,7 +251,6 @@
 049EA3  | Y++
 049EA4 /
 049EA6 / Return
-049EA6 Return
 04D76F Return
 04D7F1 Return
 04D85C Return
@@ -290,7 +260,6 @@
 04DB9C Return
 04DBC7 Return
 04DBFB / Change music
-04DBFB / Play sound effect
 04DC01 Return
 04DC69 Return
 04DCAD Return

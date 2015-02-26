@@ -347,7 +347,6 @@
 0586DD  |Otherwise, repeat this routine.
 0586DF  |
 0586E2 /
-0586E2 Return
 0586E9 Return
 0586F0 Return
 058775 Return
@@ -413,7 +412,6 @@
 05B35A Return
 05B363 \ Unreachable
 05B374 / Return
-05B374 Return
 05BBA5 Return
 05BC48 Return
 05BC49 Return
@@ -523,22 +521,16 @@
 05D8BF /
 05D8C0 8 bit A
 05D8C2  \ 
-05D8C2 \
 05D8C5  |
 05D8C7   |Load Layer 1 pointer into $65-$67 
-05D8C7  |Load Layer 1 pointer into $65-$67
 05D8CA  |
 05D8CC   | 
-05D8CC  |
 05D8CF /
 05D8D1  \ 
-05D8D1 \
 05D8D4  |
 05D8D6   |Load Layer 2 pointer into $68-$6A 
-05D8D6  |Load Layer 2 pointer into $68-$6A
 05D8D9  |
 05D8DB   | 
-05D8DB  |
 05D8DE /
 05D8E0 16 bit A
 05D8E2 \
@@ -546,10 +538,8 @@
 05D8E5 / (Each sprite pointer table entry is 2 bytes long)
 05D8E9 8 bit A
 05D8EB  \ 
-05D8EB \
 05D8EE  |Store location of sprite level Y in $CE-$CF
 05D8F0   | 
-05D8F0  |
 05D8F3 /
 05D8F5 \ Set highest byte to x07
 05D8F7 / (All sprite data is stored in bank 07)

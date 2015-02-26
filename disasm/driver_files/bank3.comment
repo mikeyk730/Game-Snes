@@ -7,12 +7,10 @@
 03804D /
 038086 Return
 03809E / Change music
-03809E / Play sound effect
 0380A1 Return
 0380D4 Return
 0380E9 \ Play sound effect
 0380EB /
-0380EB / Play sound effect
 0380F9 Return
 03818A Return
 0381AD Return
@@ -23,12 +21,10 @@
 0381D8 Sprite X Speed = 0
 0381DE \ Play sound effect
 0381E0 /
-0381E0 / Play sound effect
 0381E3 Return
 0381F4 Return
 038233 \ Play sound effect
 038235 /
-038235 / Play sound effect
 038238 Return
 03827C X = Sprite index
 03827F Return
@@ -44,16 +40,10 @@
 0384F4 Return
 03852A Return
 038551 \ Branch if at max speed
-038551 \ Branch if at max speed
-038553  |
 038553  |
 038556 /
-038556 /
-038558 \ Otherwise, accelerate
 038558 \ Otherwise, accelerate
 038559  |
-038559  |
-03855C /
 03855C /
 038586 Return
 0385F3 Return
@@ -131,7 +121,6 @@
 038824 /   ...return
 038826 Hurt mario
 03882A Final return
-03882A Return
 038842 \ $02 = direction
 038845 /
 038847 \
@@ -191,7 +180,6 @@
 0388DF Return
 0388FF \ Play sound effect
 038901 /
-038901 / Play sound effect
 038904 Return
 038935 Return
 038968 Y = Index into sprite OAM
@@ -221,7 +209,6 @@
 038AD8 /
 038ADA \ Play sound effect
 038ADC /
-038ADC / Play sound effect
 038ADF \ Sprite status = Normal
 038AE1 /
 038AE4  \ Sprite = Bowser Statue Fireball
@@ -237,7 +224,6 @@
 038D65 Return
 038D7D \ Play sound effect
 038D7F /
-038D7F / Play sound effect
 038DAC Y = Index into sprite OAM
 038DBA Return
 038DEF Return
@@ -273,7 +259,6 @@
 039288 Y = Index into sprite OAM
 0392B8 \ Play sound effect
 0392BA /
-0392BA / Play sound effect
 03932B Return
 039386 Return
 03938A Return
@@ -288,7 +273,6 @@
 03939D /
 03939F Generate the tile
 0393A3 Return
-0393A3 Return
 039440 Return
 039457 Return
 039462 Return
@@ -299,7 +283,6 @@
 039470  |
 039472  | ...and goto next state
 039474 /
-039474 Return
 039483 Return
 03949E Return
 0394B0 Return
@@ -760,7 +743,6 @@
 039D41 Sprite X Speed = 0
 039D55 \ Play sound effect
 039D57 /
-039D57 / Play sound effect
 039D94 \ Branch if Mario has star
 039D97 /
 039D9D Return
@@ -779,7 +761,6 @@
 039FEC Return
 039FFA \ Play sound effect
 039FFC /
-039FFC / Play sound effect
 03A044 Return
 03A061 Return
 03A071 Y = Index into sprite OAM
@@ -837,11 +818,9 @@
 03A5BC Return
 03A5D0 \ Play sound effect
 03A5D2 /
-03A5D2 / Play sound effect
 03A5D7 Return
 03A603 \ Play sound effect
 03A605 /
-03A605 / Play sound effect
 03A60D Return
 03A61C Return
 03A64C Return
@@ -854,20 +833,16 @@
 03A6E9  /
 03A6EF Return
 03A703 / Change music
-03A703 / Play sound effect
 03A711 Sprite X Speed = 0
 03A713 Sprite Y Speed = 0
 03A71E Return
 03A7A9 / Change music
-03A7A9 / Play sound effect
 03A7AC Return
 03A7C3 / Change music
-03A7C3 / Play sound effect
 03A7DE Return
 03A7F5 Return
 03A7F6 \ Play sound effect
 03A7F8 /
-03A7F8 / Play sound effect
 03A7FB \ Sprite status = Normal
 03A7FD /
 03A83D / Play sound effect
@@ -877,19 +852,16 @@
 03A877 Sprite X Speed = 0
 03A879 Sprite Y Speed = 0
 03A88E / Change music
-03A88E / Play sound effect
 03A89C Return
 03A8A4 Sprite X Speed = 0
 03A8A6 Sprite Y Speed = 0
 03A8AD Return
 03A8B2 \ Play sound effect
 03A8B4 /
-03A8B4 / Play sound effect
 03A8BD Return
 03A8E2 Return
 03A8E3 \ Play sound effect
 03A8E5 /
-03A8E5 / Play sound effect
 03A8E8 \ Sprite status = Normal
 03A8EA /
 03A92D Return
@@ -898,7 +870,6 @@
 03AB61 Return
 03AB8C \ Play sound effect
 03AB8E /
-03AB8E / Play sound effect
 03AB99  \ Set ground shake timer
 03AB9B  /
 03AB9E Return
@@ -907,11 +878,9 @@
 03ABC3 Sprite Y Speed = 0
 03ABEA Return
 03ABF5 / Change music
-03ABF5 / Play sound effect
 03AC02 Return
 03AC4C Return
 03AC54 / Change music
-03AC54 / Play sound effect
 03AC62 Return
 03AC92 Return
 03AD18 Sprite X Speed = 0
@@ -936,23 +905,19 @@
 03B073 Return
 03B0B8 \ Play sound effect
 03B0BA /
-03B0BA / Play sound effect
 03B0DB Return
 03B0F2 Return
 03B129 \ Play sound effect
 03B12B /
-03B12B / Play sound effect
 03B155 \ Sprite status = Killed
 03B157 /
 03B160 Return
 03B1A3 \ Play sound effect
 03B1A5 /
-03B1A5 / Play sound effect
 03B1A8  \ Set ground shake timer
 03B1AA  /
 03B1B1 \ Play sound effect
 03B1B3 /
-03B1B3 / Play sound effect
 03B1D4 Return
 03B261 Y = Index into sprite OAM
 03B2A6 Return
@@ -1116,7 +1081,6 @@
 03B7CF \ Return from *main gfx routine* subroutine...
 03B7D0  |    ...(not just this subroutine)
 03B7D1 /
-03B7D1 /   Return
 03B7FB Sprite Y Speed = 0
 03B816 Return
 03B828 Return
@@ -1162,8 +1126,6 @@
 03B8FB \ If sprite is on screen, A = 0
 03B8FE  |
 03B901 / Return
-03B901 / Return
-03B901 Return
 03C000 $9C = tile to generate
 03C002 \ $9A = Sprite X position + #$08
 03C004  | for block creation
@@ -1185,13 +1147,11 @@
 03C02A Return
 03C037 \ Play sound effect
 03C039 /
-03C039 / Play sound effect
 03C05F No Yoshi wing ability
 03C067 \ Sprite status = Normal
 03C069 /
 03C06C \ Play sound effect
 03C06E /
-03C06E / Play sound effect
 03C09A Return
 03C0B1 Return
 03C111 Return
@@ -1235,7 +1195,6 @@
 03C1EB Return
 03C209 \ Play sound effect
 03C20B /
-03C20B / Play sound effect
 03C244 Y = Index into sprite OAM
 03C25A Return
 03C263 Wrapper
@@ -1249,7 +1208,6 @@
 03C2E2  |
 03C2E4  |
 03C2E5 /
-03C2E5 Return
 03C2E6 \ Sprite status = Normal
 03C2E8 /
 03C2EB \ Sprite = 1Up
@@ -1289,10 +1247,8 @@
 03C340 /
 03C342 \ Play sound effect
 03C344 /
-03C344 / Play sound effect
 03C347 Return
 03C34C  Draw sprite using the routine for sprites <= 53
-03C34C Draw sprite using the routine for sprites <= 53
 03C350 \ Return if sprites locked
 03C352 /
 03C354 \ Always face mario
@@ -1303,11 +1259,7 @@
 03C362 Update position based on speed values
 03C366 \ Branch if not on ground
 03C369   | Bug: Ninji can jump through ceiling.  See NinjiFix.asm
-03C369   | Bug: Ninji can jump through ceiling.  See NinjiFix.asm
-03C369  |
 03C36B  /       Should set Y Speed = 0 if ($1588,x & #$08)
-03C36B  /       Should set Y Speed = 0 if ($1588,x & #$08)
-03C36B /
 03C36D Sprite Y Speed = 0
 03C38F Return
 03C3AD Return
@@ -1319,7 +1271,6 @@
 03C45D  |
 03C45E  |
 03C460 / Return if no free slots
-03C460 Return
 03C461 \ Extended sprite = Bone
 03C463 /
 03C48E Return
@@ -1335,7 +1286,6 @@
 03C815 Return
 03C830 \ Play sound effect
 03C832 /
-03C832 / Play sound effect
 03C83C Return
 03C84F  \ Play sound effect
 03C852  /
@@ -1343,17 +1293,9 @@
 03C858  /
 03C888 Return
 03C896  \ Play sound effect
-03C896  \ Play sound effect
 03C899  /
-03C899  /
-03C899  / Play sound effect
-03C899 / Play sound effect
-03C89C  \ Play sound effect
 03C89C  \ Play sound effect
 03C89F  /
-03C89F  /
-03C89F  / Play sound effect
-03C89F / Play sound effect
 03C8E2 Sprite Y Speed = 0
 03C8F0 Return
 03C968 Return
@@ -1387,7 +1329,6 @@
 03CE55 Return
 03CE80 / Play sound effect
 03CE9B / Change music
-03CE9B / Play sound effect
 03CEA6 Return
 03CEC3 / Play sound effect
 03CECD / Play sound effect

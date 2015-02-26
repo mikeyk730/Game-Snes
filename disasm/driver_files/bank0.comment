@@ -8,7 +8,6 @@
 008013 /
 008016 \ Turn off screen
 008018 /
-008018 /
 00801B \ Turn off emulation mode
 00801C /
 00801D 16 bit A,X,Y, Decimal mode off
@@ -34,7 +33,6 @@
 00804A  |
 00804C  |
 00804E /
-00804E /
 008052 SPC700 Bank 02 + Main code upload handler
 008055 Set game mode to 0
 008058 Set secondary game mode to 0
@@ -59,16 +57,12 @@
 0080FF  |
 008102  |Loads The Address 0F:8000 to 00-02 	(SAMPLE DATA + PTRS)
 008104  |[SPC Sample Pointers/Data ROM Address, this is]
-008104  |[SPC700 Bank 1 (level) music ROM Address, this is]
 008107  |
 008109 /
 00810E \
-00810E \
 008110  |
 008113  |Loads the Bank 1 music data (Map) to 00-02
-008113  |Same as above, but for the Bank 2 music data
 008115  | ($0E:98B1)
-008115  | ($0E:B198)
 008118  |
 00811A /
 008148 \
@@ -105,7 +99,6 @@
 0081A4  |
 0081A7 /
 0081AA \ Screen off, brightness=0
-0081AC /
 0081AC /
 0081AF Zero The HDMA reg
 0081C6 \
@@ -314,12 +307,8 @@
 0085D4 \
 0085D7  |
 0085D9   |Load pointer
-0085D9   |Load pointer
-0085D9  |Load pointer
 0085DC  |
 0085DE   |
-0085DE   |
-0085DE  |
 0085E1 /
 0085F7 Do not reload the same thing next frame
 008601 Set "VRAM Address Increment Value" to x00
@@ -717,7 +706,6 @@
 009380 Turn off all HDMA
 009383 \
 009385 /Disable Screen
-009385 /Disable Screen
 009388 And return
 009389 Nintendo Presents X locations
 00938D Nintendo Presents tilemap
@@ -934,38 +922,27 @@
 00A302 We're using DMA channel 2
 00A309 \ Set Address for CG-RAM Write to x86
 00A30B /
-00A30B /
 00A314 \ Get location of palette from $0D82-$0D83
-00A317 /
 00A317 /
 00A31A \ Palette is stored in bank x00
 00A31C /
-00A31C /
 00A31F \ x14 bytes will be transferred
-00A322 /
 00A322 /
 00A325 Transfer the colors
 00A328 \ Set VRAM Address Increment Value to x80
 00A32A /
-00A32A /
 00A33F \ Set bank to x7E
 00A341 /
-00A341 /
 00A344 \ x20 bytes will be transferred
-00A347 /
 00A347 /
 00A34A Transfer
 00A34D \ Set Address for VRAM Read/Write to x6000
 00A350 /
-00A350 /
 00A355 \ Get address of graphics to copy
-00A358 /
 00A358 /
 00A35B \ x40 bytes will be transferred
 00A35E /
-00A35E /
 00A361 \ Transfer
-00A363 /
 00A363 /
 00A366 \ Move to next address
 00A367 /
@@ -973,15 +950,11 @@
 00A36B /
 00A36D \ Set Address for VRAM Read/Write to x6100
 00A370 /
-00A370 /
 00A375 \ Get address of graphics to copy
-00A378 /
 00A378 /
 00A37B \ x40 bytes will be transferred
 00A37E /
-00A37E /
 00A381 \ Transfer
-00A383 /
 00A383 /
 00A386 \ Move to next address
 00A387 /
@@ -1265,7 +1238,6 @@
 00B8E8  |Compressed graphics files ends with xFF IIRC
 00B8EA  |
 00B8EC /
-00B8EC /    Return
 00B983 Read the byte
 00B985 \ Go to next byte
 00B987  |
@@ -1334,12 +1306,9 @@
 00C500 \ Branch if sprites locked
 00C502 /
 00C527 / Change music
-00C527 / Play sound effect
 00C54C / Change music
-00C54C / Play sound effect
 00C557 \ Play sound effect
 00C559 /
-00C559 / Play sound effect
 00C576 Change to BEQ to reach debug routine below
 00C578 \ Unreachable
 00C57A  | Debug: Cycle through powerups
@@ -1367,22 +1336,16 @@
 00C6F2 /
 00C720 \ Play sound effect
 00C722 /
-00C722 / Play sound effect
 00C732 \ Play sound effect
 00C734 /
-00C734 / Play sound effect
 00C75F \ Play sound effect
 00C761 /
-00C761 / Play sound effect
 00C798 \ Play sound effect
 00C79A /
-00C79A / Play sound effect
 00C7AC \ Play sound effect
 00C7AE /
-00C7AE / Play sound effect
 00C7D1 \ Play sound effect
 00C7D3 /
-00C7D3 / Play sound effect
 00C7F8 Return
 00C807  \ Branch if Mario has downward speed
 00C809  /
@@ -1393,11 +1356,9 @@
 00C812  /
 00C90F \ Play sound effect
 00C911 /
-00C911 / Play sound effect
 00C914 Return
 00C96A Return
 00C9BE / Change music
-00C9BE / Play sound effect
 00C9C1 Return
 00C9D1  \ Branch if Goal Tape extra bits == #$02
 00C9D4   | (never happens)
@@ -1422,7 +1383,6 @@
 00CA66  |Load xCB12 into $04 and $06
 00CA68 /
 00CA6A 8 bit A
-00CA6C Return
 00CA6C Return
 00CA88 16 bit A
 00CA8A Keep lower byte of A
@@ -1458,7 +1418,6 @@
 00CCAE  |
 00CCB0  | Accum (8 bit)
 00CCB2 / Return
-00CCB2 Return
 00CCC6 \ Branch if sprites locked
 00CCC8 /
 00CCD0  \ If lock Mario timer is set...
@@ -1496,7 +1455,6 @@
 00CE06 /
 00CE3F \ Play sound effect
 00CE41 /
-00CE41 / Play sound effect
 00CEB1 Related to cape animation?
 00CEB6 Cape image
 00CEB9 If Mario isn't in air, branch to $CEDE
@@ -1668,7 +1626,6 @@
 00D02E  |End If
 00D030 Store in Current animation frame
 00D033 And Finish
-00D033 And Finish   Return
 00D04B 16 bit A
 00D04D \
 00D04F  |
@@ -1680,10 +1637,8 @@
 00D05C /
 00D05F 8 bit A
 00D061 Return
-00D061 Return
 00D07B \ Play sound effect
 00D07D /
-00D07D / Play sound effect
 00D080 Return
 00D0AA haha, I read this as "FEAR" at first
 00D0AD Return
@@ -1700,7 +1655,6 @@
 00D0D8 Decrease amount of lifes
 00D0DB If not Game Over, branch to $D0E6
 00D0DF / Change music
-00D0DF / Play sound effect
 00D0E2 Set X (Death message) to x14 (Game Over)
 00D0E6 Set Y (game mode) to x0B (Fade to overworld)
 00D0E8 \
@@ -1753,7 +1707,6 @@
 00D252  |
 00D254  | ...play sound effect
 00D256 /
-00D256 / Play sound effect
 00D259 \ Set X speed
 00D25C /
 00D25E \ Set Y speed
@@ -1769,10 +1722,8 @@
 00D282  |
 00D284  |
 00D286 / Return
-00D286 Return
 00D2A5 \ Play sound effect
 00D2A7 /
-00D2A7 / Play sound effect
 00D2B0  Set sprites not locked
 00D2B2  \ X speed = #$40
 00D2B4  /
@@ -1780,14 +1731,11 @@
 00D2B8  /
 00D649 \ Play sound effect
 00D64B /
-00D64B / Play sound effect
 00D65E \ Play sound effect
 00D660 /
-00D660 / Play sound effect
 00D7A4 Return
 00D8A8 \ Play sound effect
 00D8AA /
-00D8AA / Play sound effect
 00D8CD \ Branch if not flying
 00D8CF /
 00D8D1 X = #$00
@@ -1815,16 +1763,13 @@
 00DAA8 Return
 00DAA9 \ Play sound effect
 00DAAB /
-00DAAB / Play sound effect
 00DAB6 Return
 00DB95 Return
 00DB96 Mario is in Water flag
 00DBA5 \ Play sound effect
 00DBA7 /
-00DBA7 / Play sound effect
 00DBB2 \ Play sound effect
 00DBB4 /
-00DBB4 / Play sound effect
 00DBBA Mario X
 00DBC3 Mario's Direction
 00DBCD Store A in Mario image
@@ -1835,7 +1780,6 @@
 00DBFA /
 00DC00 Mario isn't climbing
 00DC02 Return
-00DC02 Return
 00DC2C Return
 00DC2D \ Store Mario's Y speed in $8A
 00DC2F /
@@ -1845,14 +1789,12 @@
 00E2D2 /
 00E2E0 Decrease star timer
 00E305 / Change music
-00E305 / Play sound effect
 00E384 Return
 00E45C Return
 00E4B8 Return
 00E9A0 Return
 00EA8D \ Play sound effect
 00EA8F /
-00EA8F / Play sound effect
 00EAA5 Return
 00EAB8 Return
 00EB21 Return
@@ -1860,7 +1802,6 @@
 00EB76 Return
 00EC10 \ Play sound effect
 00EC12 /
-00EC12 / Play sound effect
 00EC5B Current MAP16 tile number
 00EC83 Current MAP16 tile number
 00EC98 Current MAP16 tile number
@@ -1904,7 +1845,6 @@
 00EEB3 \ Activate switch block
 00EEB4 /
 00EEC4 / Change music
-00EEC4 / Play sound effect
 00EEC7 \
 00EEC9 / Set music to xFF
 00EF87 \ If Yoshi has stomp ability,
@@ -1912,12 +1852,10 @@
 00EF8C  | Run routine
 00EF90  | Play sound effect
 00EF92 /
-00EF92 / Play sound effect
 00EF98 Return
 00EFAD Return
 00EFB6 \ Play sound effect
 00EFB8 /
-00EFB8 / Play sound effect
 00EFBB Return
 00EFE7 Return
 00F004 Return
@@ -1981,14 +1919,12 @@
 00F5E0 /
 00F5E2 \ Break Mario out of soaring
 00F5E4  | (Play sound effect)
-00F5E4 / Play sound effect
 00F5E7  | (Set spin jump flag)
 00F5E9  |
 00F5EC  | (Set flashing timer)
 00F5EE /
 00F5F3 \ Play sound effect
 00F5F5 /
-00F5F5 / Play sound effect
 00F5FC \ Set power down animation
 00F5FE /
 00F600 Mario status = Small
@@ -1996,7 +1932,6 @@
 00F608 /
 00F60A \
 00F60C / Change music
-00F60C / Play sound effect
 00F614 \ Animation sequence = Kill Mario
 00F616 /
 00F618 Spin jump flag = 0
@@ -2022,17 +1957,13 @@
 00F9C8 Return
 00F9F4 Return
 00FA10 \ Unreachable
-00FA10 \ Unused code:
 00FA12  | Clear out sprite status table
 00FA15  |
 00FA16  |
 00FA18 /
-00FA18 Return
 00FA44 Return
 00FA45 \ Set "Time to shake ground" to x20
 00FA47  /
-00FA47  /
-00FA47 /
 00FA4A \
 00FA4C  |Set sprite x02 to x60 (Flat palace switch)
 00FA4E /
@@ -2053,7 +1984,6 @@
 00FA70 / (Carry carried over from previous addition)
 00FA7A \ Set sprite's "Spin Jump Death Frame Counter" to x5F
 00FA7C /
-00FA7F Return
 00FA7F Return
 00FA86  Don't respawn sprites
 00FA8F Loop over sprites:
@@ -2089,9 +2019,7 @@
 00FAD2 /
 00FAD4 \
 00FAD6  | Clear out all extended sprites
-00FAD6 \ Clear extended sprite
 00FAD8  |
-00FAD8 /
 00FADB  |
 00FADC /
 00FADE Return
@@ -2099,7 +2027,6 @@
 00FB02 \ If Mario has star, X = #$04.  However this never happens as $1490 is cleared earlier
 00FB05  | Otherwise Mario could get a star from carrying a sprite past the goal.
 00FB07  / Unreachable instruction
-00FB07 / <--Unreachable, unused
 00FB09 \ If Mario on Yoshi, X = #$05
 00FB0C  |
 00FB0E /
@@ -2125,7 +2052,6 @@
 00FC0C  Bug: Sprites glitch if too many near goal tape.  See goalsprites.asm
 00FC22 Return
 00FC23  \ Unreachable instructions
-00FC23 \ Unreachable
 00FC25 / Status = Carried
 00FC38 No Yoshi wings
 00FC72 Return
@@ -2164,7 +2090,6 @@
 00FD20  |
 00FD21  |
 00FD23 / Return if no free slots
-00FD23 Return
 00FD26 \ Extended sprite = Water buble
 00FD28 /
 00FD59 Return
@@ -2182,8 +2107,6 @@
 00FEB0  |
 00FEB2  |
 00FEB4 / Return if no free slots
-00FEB4 Return
-00FEB4 Return
 00FEB7 / Play sound effect
 00FEBF \ Extended sprite = Mario fireball
 00FEC1 /
