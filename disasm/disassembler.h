@@ -82,6 +82,9 @@ private:
 
     unsigned char m_current_bank;
     unsigned int m_current_addr;
+    bool m_accum_16;
+    bool m_index_16;
+
 
     int m_start;
     int m_end;

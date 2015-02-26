@@ -44,9 +44,9 @@ bool Request::get(istream & in, bool hirom)
         else if (current == "-q")
             m_properties.m_quiet = true;
         else if (current == "-a")
-            m_properties.m_accum_16 = true;
+            m_properties.m_start_w_accum_16 = true;
         else if (current == "-i")
-            m_properties.m_index_16 = true;
+            m_properties.m_start_w_index_16 = true;
         else if (current == "-r")
             m_properties.m_stop_at_rts = true;
         else if (current == "-e")

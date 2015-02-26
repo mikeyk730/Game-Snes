@@ -41,7 +41,7 @@ namespace InstructionHandler
         unsigned char j = context->read_next_byte(NULL);
         output->addInstructionBytes(i, j);
 
-        string msg = context->get_label(context->current_bank(), address_16bit(i, j));
+        string msg = context->get_label(context->address_bank(), address_16bit(i, j));
 
         if (msg.empty())
             output->setAddress("$%.4X", address_16bit(i, j));
@@ -72,7 +72,7 @@ namespace InstructionHandler
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
 
-        string msg = context->get_label(context->current_bank(), i);
+        string msg = context->get_label(context->address_bank(), i);
         if (msg.empty())
             output->setAddress("$%.2X", i);
         else
@@ -85,7 +85,7 @@ namespace InstructionHandler
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
 
-        string msg = context->get_label(context->current_bank(), i);
+        string msg = context->get_label(context->address_bank(), i);
         if (msg.empty())
             output->setAddress("($%.2X),Y", i);
         else
@@ -98,7 +98,7 @@ namespace InstructionHandler
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
 
-        string msg = context->get_label(context->current_bank(), i);
+        string msg = context->get_label(context->address_bank(), i);
         if (msg.empty())
             output->setAddress("[$%.2X],Y", i);
         else
@@ -111,7 +111,7 @@ namespace InstructionHandler
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
 
-        string msg = context->get_label(context->current_bank(), i);
+        string msg = context->get_label(context->address_bank(), i);
         if (msg.empty())
             output->setAddress("($%.2X,X)", i);
         else
@@ -124,7 +124,7 @@ namespace InstructionHandler
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
 
-        string msg = context->get_label(context->current_bank(), i);
+        string msg = context->get_label(context->address_bank(), i);
         if (msg.empty())
             output->setAddress("$%.2X,X", i);
         else
@@ -138,7 +138,7 @@ namespace InstructionHandler
         unsigned char j = context->read_next_byte(NULL);
         output->addInstructionBytes(i, j);
 
-        string msg = context->get_label(context->current_bank(), address_16bit(i, j));
+        string msg = context->get_label(context->address_bank(), address_16bit(i, j));
         if (msg.empty())
             output->setAddress("$%.4X,X", address_16bit(i, j));
         else
@@ -167,7 +167,7 @@ namespace InstructionHandler
         unsigned char j = context->read_next_byte(NULL);
         output->addInstructionBytes(i, j);
 
-        string msg = context->get_label(context->current_bank(), address_16bit(i, j));
+        string msg = context->get_label(context->address_bank(), address_16bit(i, j));
         if (msg.empty())
             output->setAddress("$%.4X,Y", address_16bit(i, j));
         else
@@ -180,7 +180,7 @@ namespace InstructionHandler
         unsigned char  i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
 
-        string msg = context->get_label(context->current_bank(), i);
+        string msg = context->get_label(context->address_bank(), i);
         if (msg.empty())
             output->setAddress("($%.2X)", i);
         else
@@ -193,7 +193,7 @@ namespace InstructionHandler
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
 
-        string msg = context->get_label(context->current_bank(), i);
+        string msg = context->get_label(context->address_bank(), i);
         if (msg.empty())
             output->setAddress("[$%.2X]", i);
         else
@@ -206,7 +206,7 @@ namespace InstructionHandler
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
 
-        string msg = context->get_label(context->current_bank(), i);
+        string msg = context->get_label(context->address_bank(), i);
         if (msg.empty())
             output->setAddress("$%.x,S", i);
         else
@@ -219,7 +219,7 @@ namespace InstructionHandler
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
 
-        string msg = context->get_label(context->current_bank(), i);
+        string msg = context->get_label(context->address_bank(), i);
         if (msg.empty())
             output->setAddress("($%.2X,S),Y", i);
         else
@@ -233,7 +233,7 @@ namespace InstructionHandler
         char r = context->read_next_byte(&pc);
         output->addInstructionBytes((unsigned char)r);
 
-        string msg = context->get_label(context->current_bank(), pc + r);
+        string msg = context->get_label(context->address_bank(), pc + r);
         if (msg.empty())
             output->setAddress("$%.4X", pc + r);
         else
@@ -250,7 +250,7 @@ namespace InstructionHandler
 
         long ll = address_16bit(i, j);
         if (ll > 32767) ll = -(65536 - ll);
-        long xx = full_address(context->current_bank(), pc) + ll;
+        long xx = full_address(context->address_bank(), pc) + ll;
         string msg = context->get_label(bank_from_addr24(xx), addr16_from_addr24(xx));
         if (msg.empty())
             output->setAddress("$%.6x", xx);
@@ -275,7 +275,7 @@ namespace InstructionHandler
         unsigned char j = context->read_next_byte(NULL);
         output->addInstructionBytes(i, j);
 
-        string msg = context->get_label(context->current_bank(), address_16bit(i, j));
+        string msg = context->get_label(context->address_bank(), address_16bit(i, j));
         if (msg.empty())
             output->setAddress("[$%.4X]", address_16bit(i, j));
         else
@@ -289,7 +289,7 @@ namespace InstructionHandler
         unsigned char j = context->read_next_byte(NULL);
         output->addInstructionBytes(i, j);
 
-        string msg = context->get_label(context->current_bank(), address_16bit(i, j));
+        string msg = context->get_label(context->address_bank(), address_16bit(i, j));
         if (msg.empty())
             output->setAddress("($%.4X)", address_16bit(i, j));
         else
@@ -303,7 +303,7 @@ namespace InstructionHandler
         unsigned char j = context->read_next_byte(NULL);
         output->addInstructionBytes(i, j);
 
-        string msg = context->get_label(context->current_bank(), address_16bit(i, j));
+        string msg = context->get_label(context->address_bank(), address_16bit(i, j));
         if (msg.empty())
             output->setAddress("($%.4X,X)", address_16bit(i, j));
         else
@@ -316,7 +316,7 @@ namespace InstructionHandler
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
 
-        string msg = context->get_label(context->current_bank(), i);
+        string msg = context->get_label(context->address_bank(), i);
         if (msg.empty())
             output->setAddress("$%.2X,Y", i);
         else
@@ -392,7 +392,7 @@ namespace InstructionHandler
 
         unsigned char oldk = k;
         if (k == 0xFF)
-            k = context->default_bank();
+            k = context->address_bank();
 
         string msg = context->get_label(k, address_16bit(i, j));
         if (msg.empty()){

@@ -50,7 +50,7 @@ public:
     }
 
     inline bool isBranch() const { return (m_bitmask & IS_BRANCH) != 0; }
-    inline bool neverUseAddrLabel() const { return (m_bitmask & NO_ADDR_LABEL) != 0; }
+    inline bool dontUseAddrLabel() const { return (m_bitmask & NO_ADDR_LABEL) != 0; }
     inline bool isLineLabel() const { return (m_bitmask & LINE_LABEL) != 0; }
     bool isCodeBreak() const{
         return (m_name == "RTS" || m_name == "RTI" || m_name == "RTL"

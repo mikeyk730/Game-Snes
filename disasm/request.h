@@ -8,8 +8,8 @@ struct DisassemblerProperties{
   DisassemblerProperties() :
     m_comment_level(1),
     m_quiet(false),
-    m_accum_16(false),
-    m_index_16(false),
+    m_start_w_accum_16(false),
+    m_start_w_index_16(false),
     m_stop_at_rts(false),
     m_use_extern_symbols(false),
     m_start_bank(0x00),
@@ -22,8 +22,8 @@ struct DisassemblerProperties{
   int m_comment_level;
 
   bool m_quiet;
-  bool m_accum_16;
-  bool m_index_16;
+  bool m_start_w_accum_16;
+  bool m_start_w_index_16;
   bool m_stop_at_rts;
   bool m_use_extern_symbols;
 

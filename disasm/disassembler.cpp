@@ -24,7 +24,9 @@ Disassembler::Disassembler() :
 m_hirom(false),
 m_current_pass(1),
 m_passes_to_make(1),
-m_flag(0)
+m_flag(0),
+m_accum_16(false),
+m_index_16(false)
 { 
     initialize_instruction_lookup(); 
     m_data = new unsigned char[MAX_FILE_SIZE];
@@ -75,6 +77,8 @@ istream& Disassembler::get_address(istream& in, unsigned char& bank, unsigned in
 
 void Disassembler::handleRequest(const Request& request, bool user_request)
 {
+    m_request_prop = request.m_properties;
+
     if (user_request) {
         m_passes_to_make = request.m_properties.m_passes;
 
@@ -83,11 +87,12 @@ void Disassembler::handleRequest(const Request& request, bool user_request)
 
         m_end = full_address(request.m_properties.m_end_bank,
             request.m_properties.m_end_addr);
+
+        m_accum_16 = m_request_prop.m_start_w_accum_16;
+        m_index_16 = m_request_prop.m_start_w_index_16;
     }
 
     do{
-        m_request_prop = request.m_properties;
-
         m_current_bank = m_request_prop.m_start_bank;
         m_current_addr = m_request_prop.m_start_addr;
 
@@ -198,14 +203,14 @@ void Disassembler::setProcessFlags()
 
     map<int, int>::iterator it = m_accum_lookup.find(full_address(bank,pc));
     if (it != m_accum_lookup.end()){
-        m_request_prop.m_accum_16 = ((it->second) == 16);
-        m_flag |= (m_request_prop.m_accum_16) ? 0x20 : 0x02;
+        m_accum_16 = ((it->second) == 16);
+        m_flag |= (m_accum_16) ? 0x20 : 0x02;
     }
 
     map<int, int>::iterator it2 = m_index_lookup.find(full_address(bank,pc));
     if (it2 != m_index_lookup.end()){
-        m_request_prop.m_index_16 = ((it2->second) == 16);    
-        m_flag |= (m_request_prop.m_index_16) ? 0x10 : 0x01;
+        m_index_16 = ((it2->second) == 16);    
+        m_flag |= (m_index_16) ? 0x10 : 0x01;
     }
 }
 
@@ -406,7 +411,7 @@ string Disassembler::get_label(const InstructionMetadata& instr, unsigned char b
             mark_label_used(bank, pc, label);
         }
 
-        else if( ( (pc >= 0x8000 && !instr.neverUseAddrLabel()) ||
+        else if( ( (pc >= 0x8000 && !instr.dontUseAddrLabel()) ||
             (pc < 0x8000 && instr.isBranch()) ) && bank < 0x7E){
                 label = "ADDR_" + to_string(bank, 2) + /*"_" +*/ to_string(pc, 4);
                 if (!instr.isLineLabel()) 
@@ -582,34 +587,26 @@ void Disassembler::doPtr(bool long_ptrs)
 
 void Disassembler::doType(const InstructionMetadata& instr, bool is_data, unsigned char default_bank)
 {
-    int high = 0, low = 0;
-
-    unsigned char& bank = default_bank; // m_current_bank;
-    unsigned int& pc = m_current_addr;
-    bool& accum16 = m_request_prop.m_accum_16;
-    bool& index16 = m_request_prop.m_index_16;
-
-    string msg;
-
     setProcessFlags();
-    string comment = get_comment(bank, pc);
 
     int offset = 0;
-    int full_addr = (bank << 16) + pc;
+    int full_addr = full_address(m_current_bank, m_current_addr);
     auto load_offset = m_load_offsets.find(full_addr);
     if (load_offset != m_load_offsets.end()){
         offset = load_offset->second;
     }
 
-    if (!is_data) ++pc;
+    if (!is_data) ++m_current_addr;
 
-    DisassemblerContext context(*((Disassembler*)this), instr, pc, m_flag, accum16, index16, low, high, bank, default_bank, offset);
+    int high = 0, low = 0;
+    DisassemblerContext context((Disassembler*)this, instr, &m_current_addr, &m_flag, &m_accum_16, &m_index_16, &low, &high, default_bank, offset);
     Instruction output(instr);
 
     auto f = instr.handler();
     f(&context, &output);
 
     //get comment
+    string comment = get_comment(m_current_bank, m_current_addr);
     if (comment != "")
         comment = ";" + comment + " ";
     if (m_flag != 0){
@@ -629,7 +626,7 @@ void Disassembler::doType(const InstructionMetadata& instr, bool is_data, unsign
             cout << setw(11) << output.getInstructionBytes();
         }
         
-        cout << setw(25) << output.toString(accum16, index16) << " " << comment << endl;
+        cout << setw(25) << output.toString(m_accum_16, m_index_16) << " " << comment << endl;
     
         string additional_instruction = output.getAdditionalInstruction();
         if (!additional_instruction.empty()){
