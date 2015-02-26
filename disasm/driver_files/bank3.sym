@@ -105,7 +105,6 @@
 03B69F GetSpriteClippingA
 03B6E5 GetSpriteClippingB
 03B72B CheckForContact
-03B72B CheckForContact
 03B760 GetDrawInfoBnk3
 03B817 SubHorzPosBnk3
 03B829 SubVertPosBnk3

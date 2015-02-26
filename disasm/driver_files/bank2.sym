@@ -8,7 +8,6 @@
 02849F IsOffScreenBnk2
 028663 ShatterBlock
 0286BF YoshiStompRoutine
-0286BF YoshiStompRoutine
 0286ED SprBlkInteract
 028758 BreakTurnBlock
 028792 NotBreakable
@@ -29,8 +28,7 @@
 029B51 VolcanoLotusFire
 029C3E SmokeTrail
 029C83 SpinJumpStars
-029CB5 CloudCoin
-029CB5 WigglerFlower
+029CB5 CloudCoin_Flower
 029D9D UnusedExtendedSpr
 029E3D LauncherArm
 029E86 LavaSplash
@@ -44,10 +42,8 @@
 02A143 FireRtNextSprite
 02A16B ReznorFireball
 02A219 FlameRemnant
-02A254 Baseball
-02A254 Bone
-02A2EF Hammer
-02A2EF PiranhaFireball
+02A254 Baseball_Bone
+02A2EF Hammer_PiranhaFire
 02A34F SmokePuff
 02A7FC LoadSprFromLevel
 02A82E LoadSpriteLoopStrt

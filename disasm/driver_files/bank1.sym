@@ -151,9 +151,7 @@
 0196A9 UnstunSprite
 0196CB SetNormalStatus2
 0196D7 IncrmntStunTimer
-0196E1 GeneralResetSpr
 0196E1 SpawnShelless
-0196E3 SpawnShelless
 019776 SpawnMovingCoin
 019913 HandleSprKicked
 0199DC BreakThrowBlock

@@ -24,13 +24,10 @@
 0086DF ExecutePtr
 0086FA ExecutePtrLong
 0087AD ExtSub0087AD
-0087AD ExtSub0087AD
 008A4E ClearStack
 008A79 SetUpScreen
 008CFF GM04DoDMA
 008DAC DrawStatusBar
-008DE7 DMAdata_StBr1
-008DEE DMAdata_StBr2
 009045 HexToDec
 009050 Return009050
 0090D0 Return0090D0
@@ -39,8 +36,6 @@
 009291 WindowHDMAenable
 009322 GetGameMode
 00937D TurnOffIO
-009389 NintendoPos
-00938D NintendoTile
 0093F7 Mode04Finish
 0093FD ScreenSettings
 00941A Return00941A
@@ -53,11 +48,8 @@
 009BA8 ExtSub009BA8
 009BC9 ExtSub009BC9
 009C13 ExtSub009C13
-009C20 ItrCntrlrSqnc
 009C64 GAMEMODE_07
 009CCA Return009CCA
-009EE0 TBL_009EE0
-009EF0 TBL_009EF0
 009F06 CODE_WRITEOW
 009F29 KeepModeActive
 009F37 TmpFade
@@ -73,8 +65,6 @@
 00A59C GM04Load
 00A715 Return00A715
 00A795 Return00A795
-00A8C3 SPRITEGFXLIST
-00A92B OBJECTGFXLIST
 00A9DA UploadSpriteGFX
 00A9F4 GFXTransferLoop
 00AA0B Don'tUploadSpr
@@ -380,9 +370,7 @@
 0196CB SetNormalStatus2
 0196D7 IncrmntStunTimer
 0196E0 Return0196E0
-0196E1 GeneralResetSpr
 0196E1 SpawnShelless
-0196E3 SpawnShelless
 019775 Return019775
 019776 SpawnMovingCoin
 019805 Return019805
@@ -694,7 +682,6 @@
 028662 Return028662
 028663 ShatterBlock
 0286BF YoshiStompRoutine
-0286BF YoshiStompRoutine
 0286EC Return0286EC
 0286ED SprBlkInteract
 028752 ExtSub028752
@@ -748,8 +735,7 @@
 029C7E Return029C7E
 029C83 SpinJumpStars
 029CAF Return029CAF
-029CB5 CloudCoin
-029CB5 WigglerFlower
+029CB5 CloudCoin_Flower
 029D5D Return029D5D
 029D9D UnusedExtendedSpr
 029E35 Return029E35
@@ -767,11 +753,9 @@
 02A16B ReznorFireball
 02A219 FlameRemnant
 02A253 Return02A253
-02A254 Baseball
-02A254 Bone
+02A254 Baseball_Bone
 02A2BE Return02A2BE
-02A2EF Hammer
-02A2EF PiranhaFireball
+02A2EF Hammer_PiranhaFire
 02A34F SmokePuff
 02A468 Return02A468
 02A751 ExtSub02A751
@@ -1202,7 +1186,6 @@
 03B664 GetMarioClipping
 03B69F GetSpriteClippingA
 03B6E5 GetSpriteClippingB
-03B72B CheckForContact
 03B72B CheckForContact
 03B760 GetDrawInfoBnk3
 03B816 Return03B816
