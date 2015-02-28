@@ -27,7 +27,8 @@ m_current_pass(1),
 m_passes_to_make(1),
 m_flag(0),
 m_accum_16(false),
-m_index_16(false)
+m_index_16(false),
+m_output_handler(new DefaultOutput())
 { 
     initialize_instruction_lookup(); 
     m_data = new unsigned char[MAX_FILE_SIZE];
@@ -36,6 +37,7 @@ m_index_16(false)
 
 Disassembler::~Disassembler()
 {
+    delete m_output_handler;
     delete [] m_data;
 }
 
@@ -504,10 +506,6 @@ void Disassembler::doDcb(int bytes_per_line)
         bool end_of_chunk = false;
 
         for (int j = 0; j < bytes_per_line && full_address(bank, pc) < full_address(end_bank, end_pc); ++j){
-            if (finalPass() && pc == 0x8000){
-                cout << ".BANK " << int(bank) << endl;
-            }
-
             string current_label = get_label(InstructionMetadata("", 0, &InstructionHandler::Implied, 0), bank, pc, 0, false, false);
             if (!current_label.empty()){
                 if (j == 0){
@@ -524,6 +522,10 @@ void Disassembler::doDcb(int bytes_per_line)
                 comment += (";" + comment_buffer + " ");
             }
 
+            if (finalPass() && pc == 0x8000){
+                cout << ".BANK " << int(bank) << endl;
+            }
+
             unsigned char c = read_char(srcfile);
             bytes.push_back(c);
 
@@ -533,8 +535,7 @@ void Disassembler::doDcb(int bytes_per_line)
         if (full_address(bank, pc) == full_address(end_bank, end_pc)){
             end_of_chunk = true;
         }
-        OutputHandler::DataPrinter(bytes, label, comment, !m_request_prop.m_quiet, end_of_chunk);
-        //OutputHandler::NullPrinter(bytes, label, comment, !m_request_prop.m_quiet, end_of_chunk);
+        m_output_handler->PrintData(bytes, label, comment, !m_request_prop.m_quiet, end_of_chunk);
     }
 }
 
@@ -545,6 +546,7 @@ void Disassembler::doPtr(bool long_ptrs)
     unsigned char end_bank = m_request_prop.m_end_bank;
     unsigned int end_pc = m_request_prop.m_end_addr;
 
+    cout << endl;
     for (int i = 0; full_address(bank, pc) < full_address(end_bank, end_pc); ++i){
         //adjust pc address
         fix_address(bank,pc);
@@ -568,8 +570,10 @@ void Disassembler::doPtr(bool long_ptrs)
             doType(m_instruction_lookup[0x100], true, default_bank, label);
        
     }
+    cout << endl;
 }
 
+//todo: bank msg printed twice
 
 void Disassembler::doType(const InstructionMetadata& instr, bool is_data, unsigned char default_bank, const string& label)
 {
@@ -608,8 +612,7 @@ void Disassembler::doType(const InstructionMetadata& instr, bool is_data, unsign
         comment += getRAMComment(address_16bit(low, high));
 
     if (finalPass()){
-        OutputHandler::InstructionPrinter(output, label, comment, !m_request_prop.m_quiet);
-        //OutputHandler::NullPrinter(output, label, comment, !m_request_prop.m_quiet);
+        m_output_handler->PrintInstruction(output, label, comment, !m_request_prop.m_quiet);
     }
 }
 

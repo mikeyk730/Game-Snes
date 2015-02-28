@@ -9,6 +9,7 @@
 #include "request.h"
 
 class InstructionMetadata;
+struct OutputHandler;
 
 struct Disassembler{
 private:    
@@ -85,9 +86,10 @@ private:
     bool m_accum_16;
     bool m_index_16;
 
-
     int m_start;
     int m_end;
+
+    OutputHandler* m_output_handler;
 };
 
 #endif
