@@ -4,11 +4,16 @@
 
 using namespace std;
 
-Instruction::Instruction(const InstructionMetadata& metadata)
-: m_metadata(metadata)
+Instruction::Instruction(const InstructionMetadata& metadata, bool accum_16, bool index_16)
+: m_metadata(metadata),
+m_accum_16(accum_16),
+m_index_16(index_16)
 {
     address[0] = 0;
     additional_instruction[0] = 0;
+    if (metadata.is_snes_instruction()){
+        addInstructionBytes(metadata.opcode());
+    }
 }
 
 void Instruction::addInstructionBytes(unsigned char a)
@@ -32,7 +37,7 @@ void Instruction::addInstructionBytes(unsigned char a, unsigned char b, unsigned
         << setw(2) << setfill('0') << uppercase << hex << (int)c << " ";
 }
 
-string Instruction::getInstructionBytes()
+string Instruction::getInstructionBytes() const
 {
     return instruction_bytes.str();
 }
@@ -49,9 +54,9 @@ string Instruction::getAddress() const
     return address;
 }
 
-string Instruction::toString(bool is_accum_16, bool is_index_16) const
+string Instruction::toString() const
 {
-    return m_metadata.annotated_name(is_accum_16, is_index_16) + " " + getAddress();
+    return m_metadata.annotated_name(m_accum_16, m_index_16) + " " + getAddress();
 }
 
 void Instruction::setAdditionalInstruction(const char* format, ...)

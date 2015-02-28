@@ -39,5 +39,5 @@ void DisassemblerContext::set_range(int low, int high)
 
 std::string DisassemblerContext::get_label(unsigned char bank, unsigned int pc)
 {
-    return d.get_label(i, bank, pc, m_offset);
+    return d.get_label(i, bank, pc, m_offset, true, true);
 }

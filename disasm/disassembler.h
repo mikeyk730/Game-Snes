@@ -25,7 +25,7 @@ public:
     void doDisasm();
     void doSmart();
 
-    void doType(const InstructionMetadata& instr, bool is_data, unsigned char default_bank);
+    void doType(const InstructionMetadata& instr, bool is_data, unsigned char default_bank, const std::string& label);
     void setProcessFlags();
 
     std::string getRAMComment(unsigned int addr);
@@ -40,7 +40,7 @@ public:
     bool is_comment(const std::string& line);    
     bool add_label(int bank, int pc, const std::string& label);
     void mark_label_used(int bank, int pc, const std::string& label);
-    std::string get_label(const InstructionMetadata& instr, unsigned char bank, int pc, int offset);
+    std::string get_label(const InstructionMetadata& instr, unsigned char bank, int pc, int offset, bool use_addr_label, bool mark_instruction_used);
 
     std::istream& get_address(std::istream& in, unsigned char& bank, unsigned int& addr);
     std::string get_comment(unsigned char bank, unsigned int pc);

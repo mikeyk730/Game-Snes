@@ -72,7 +72,7 @@ void main (int argc, char *argv[])
             break;
         disasm.handleRequest(request);
 
-        printf("\n");
+        cout << endl;
     }
 }
 

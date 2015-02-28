@@ -70,7 +70,7 @@ bool Request::get(istream & in, bool hirom)
             return true;
         }
         else if(current.length() > 2 && current[0] == '-' && current[1] == 'c'){
-            const char* s = &(current.c_str()[1]);  
+            const char* s = &(current.c_str()[2]);  
             m_properties.m_comment_level = hex(s);
         }
         else if(address_count == 0){
