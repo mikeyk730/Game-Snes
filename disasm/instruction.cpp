@@ -1,8 +1,41 @@
-#include "instruction.h"
 #include <cstdarg>
 #include <iomanip>
+#include "instruction.h"
 
 using namespace std;
+
+InstructionMetadata::InstructionMetadata() :
+m_name(""),
+m_opcode(0),
+m_instruction_handler(0),
+m_bitmask(0)
+{ }
+
+InstructionMetadata::InstructionMetadata(const std::string& name, unsigned int opcode, InstructionHandlerPtr address_mode_handler, AnnotationHandlerPtr annotation_handler, int bitmask) :
+m_name(name),
+m_opcode(opcode),
+m_instruction_handler(address_mode_handler),
+m_annotation_handler(annotation_handler),
+m_bitmask(bitmask)
+{ }
+
+std::string InstructionMetadata::annotated_name(bool is_accum_16, bool is_index_16) const {
+    if (m_annotation_handler){
+        return m_name + (*m_annotation_handler)(is_accum_16, is_index_16);
+    }
+    return m_name;
+}
+
+bool InstructionMetadata::isBranch() const 
+{
+    return (m_bitmask & IS_BRANCH) != 0;
+}
+
+bool InstructionMetadata::isCodeBreak() const
+{
+    return (m_name == "RTS" || m_name == "RTI" || m_name == "RTL"
+        || m_name == "JMP" || m_name == "BRA");
+}
 
 Instruction::Instruction(const InstructionMetadata& metadata, bool accum_16, bool index_16)
 : m_metadata(metadata),

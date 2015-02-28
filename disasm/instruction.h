@@ -1,7 +1,45 @@
 #include <string>
 #include <sstream>
-
 #include "proto.h"
+
+const int IS_BRANCH = 0x01;
+
+class InstructionMetadata{
+    typedef void(*InstructionHandlerPtr)(DisassemblerContext*, Instruction*);
+    typedef std::string(*AnnotationHandlerPtr)(bool, bool);
+public:
+    InstructionMetadata();
+    InstructionMetadata(const std::string& name, unsigned int opcode, InstructionHandlerPtr address_mode_handler, AnnotationHandlerPtr annotation_handler = 0, int bitmask = 0);
+
+    std::string name() const {
+        return m_name;
+    }
+
+    bool is_snes_instruction() const
+    {
+        return m_opcode < 0x100;
+    }
+
+    unsigned char opcode() const
+    {
+        return m_opcode;
+    }
+
+    std::string annotated_name(bool is_accum_16, bool is_index_16) const;
+    bool isBranch() const;
+    bool isCodeBreak() const;
+
+    InstructionHandlerPtr handler() const { return m_instruction_handler; }
+    AnnotationHandlerPtr annotationHandler() const { return m_annotation_handler; }
+
+private:
+    std::string m_name;
+    int m_bitmask;
+    unsigned int m_opcode;
+
+    InstructionHandlerPtr m_instruction_handler;
+    AnnotationHandlerPtr m_annotation_handler;
+};
 
 struct Instruction
 {
