@@ -2,7 +2,6 @@
 #define REQUEST_H
 
 #include <iostream>
-#include "proto.h"
 
 struct DisassemblerProperties{
   DisassemblerProperties() :

@@ -4,8 +4,6 @@
 #include <iostream>
 #include <string>
 #include <map>
-
-#include "proto.h"
 #include "request.h"
 
 class InstructionMetadata;
@@ -16,7 +14,7 @@ private:
     void initialize_instruction_lookup();
 
 public:
-    Disassembler();
+    Disassembler(FILE* rom_file);
     ~Disassembler();
  
     void handleRequest(const Request& request, bool user_request = true);
@@ -90,6 +88,7 @@ private:
     int m_end;
 
     OutputHandler* m_output_handler;
+    FILE* m_rom_file;
 };
 
 #endif

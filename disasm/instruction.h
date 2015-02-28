@@ -1,6 +1,8 @@
 #include <string>
 #include <sstream>
-#include "proto.h"
+
+struct DisassemblerContext;
+struct Instruction;
 
 const int IS_BRANCH = 0x01;
 

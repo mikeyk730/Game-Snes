@@ -32,4 +32,6 @@ namespace Address
         fread(&c, 1, 1, stream);
         return c;
     }
+
+    std::string to_string(int i, int length, bool in_hex = true);
 }

@@ -2,8 +2,6 @@
 #include <iomanip>
 #include <sstream>
 #include <fstream>
-
-#include "proto.h"
 #include "disassembler.h"
 #include "request.h"
 #include "utils.h"
@@ -21,14 +19,15 @@ namespace{
    const int MAX_FILE_SIZE = 0x400000;
 }
 
-Disassembler::Disassembler() :
+Disassembler::Disassembler(FILE* rom_file) :
 m_hirom(false),
 m_current_pass(1),
 m_passes_to_make(1),
 m_flag(0),
 m_accum_16(false),
 m_index_16(false),
-m_output_handler(new DefaultOutput())
+m_output_handler(new DefaultOutput()),
+m_rom_file(rom_file)
 { 
     initialize_instruction_lookup(); 
     m_data = new unsigned char[MAX_FILE_SIZE];
@@ -99,11 +98,11 @@ void Disassembler::handleRequest(const Request& request, bool user_request)
         m_current_bank = m_request_prop.m_start_bank;
         m_current_addr = m_request_prop.m_start_addr;
 
-        fseek(srcfile, 512, 0);
+        fseek(m_rom_file, 512, 0);
         if (m_hirom)
-            fseek(srcfile, full_address(m_current_bank, m_current_addr), 1);
+            fseek(m_rom_file, full_address(m_current_bank, m_current_addr), 1);
         else
-            fseek(srcfile, m_current_bank * 32768 + m_current_addr - 0x8000, 1);
+            fseek(m_rom_file, m_current_bank * 32768 + m_current_addr - 0x8000, 1);
 
         if (request.m_type == Request::Dcb)
             doDcb();
@@ -149,12 +148,12 @@ void Disassembler::doDisasm()
     unsigned int end_pc = m_request_prop.m_end_addr;
     unsigned char end_bank = m_request_prop.m_end_bank;
 
-    while ((!feof(srcfile)) && (full_address(bank, pc) < full_address(end_bank, end_pc))){
+    while ((!feof(m_rom_file)) && (full_address(bank, pc) < full_address(end_bank, end_pc))){
 
-        unsigned char code = read_char(srcfile);
+        unsigned char code = read_char(m_rom_file);
         InstructionMetadata instr = m_instruction_lookup[code];
 
-        if (!feof(srcfile)){
+        if (!feof(m_rom_file)){
 
             //adjust pc address
             fix_address(bank,pc);
@@ -171,7 +170,7 @@ void Disassembler::doDisasm()
                 (instr.name() == "RTS" || instr.name() == "RTI" || instr.name() == "RTL"))
                 break;            
         }
-        if (feof(srcfile)) cout << "; End of file." << endl;
+        if (feof(m_rom_file)) cout << "; End of file." << endl;
     }
 }
 
@@ -526,7 +525,7 @@ void Disassembler::doDcb(int bytes_per_line)
                 cout << ".BANK " << int(bank) << endl;
             }
 
-            unsigned char c = read_char(srcfile);
+            unsigned char c = read_char(m_rom_file);
             bytes.push_back(c);
 
             fix_address(bank, ++pc);
@@ -591,7 +590,7 @@ void Disassembler::doType(const InstructionMetadata& instr, bool is_data, unsign
     if (!is_data) ++m_current_addr;
 
     int high = 0, low = 0;
-    DisassemblerContext context((Disassembler*)this, instr, &m_current_addr, &m_flag, &m_accum_16, &m_index_16, &low, &high, default_bank, offset);
+    DisassemblerContext context((Disassembler*)this, instr, &m_current_addr, &m_flag, &m_accum_16, &m_index_16, &low, &high, default_bank, offset, m_rom_file);
     Instruction output(instr, m_accum_16, m_index_16);
 
     auto f = instr.handler();

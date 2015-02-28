@@ -5,29 +5,29 @@
 #include <iostream>
 #include <iomanip>
 #include <map>
-
-#include "proto.h"
 #include "disassembler.h"
 #include "request.h"
 
 using namespace std;
 
-FILE *srcfile;
+namespace{
+    const char* HELP = "disasm.exe ROM_FILENAME\n";
+}
 
 void main (int argc, char *argv[])
 {
-    Disassembler disasm;
-
     if (argc < 2 || string(argv[1]) == "--help"){
         printf(HELP);
         exit(-1);
     }  
 
+    FILE *srcfile;
     if (fopen_s(&srcfile, argv[--argc], "rb") != 0){
         printf("Could not open %s for reading.\n", argv[argc]);
         exit(-1);
     }
 
+    Disassembler disasm(srcfile);
     //process arguments
     for(int i = 1; i < argc; ++i){
         string current(argv[i]);

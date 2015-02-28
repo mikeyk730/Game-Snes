@@ -1,25 +1,32 @@
 #include <sstream>
-
+#include <iomanip>
 #include "request.h"
-#include "proto.h"
 #include "utils.h"
 
 using namespace std;
 using namespace Address;
 
 namespace{
-    unsigned int get_start_from_address(long offset, bool hirom){
-        if (hirom)
-            offset += 0x8000;
-        fseek(srcfile, offset, 1);
+    //unsigned int get_start_from_address(long offset, bool hirom){
+    //    if (hirom)
+    //        offset += 0x8000;
+    //    fseek(srcfile, offset, 1);
 
-        unsigned char a, b;
-        a = read_char(srcfile); b = read_char(srcfile);
-        if (feof(srcfile)){
-            printf("Error -- could not locate vector\n");
-            exit(-1);
-        }
-        return address_16bit(a, b);
+    //    unsigned char a, b;
+    //    a = read_char(srcfile); b = read_char(srcfile);
+    //    if (feof(srcfile)){
+    //        printf("Error -- could not locate vector\n");
+    //        exit(-1);
+    //    }
+    //    return address_16bit(a, b);
+    //}
+
+    unsigned int hex(const char *s)
+    {
+        istringstream ss(s);
+        unsigned int total;
+        ss >> std::hex >> total;
+        return total;
     }
 }
 
@@ -53,18 +60,18 @@ bool Request::get(istream & in, bool hirom)
             m_properties.m_use_extern_symbols = true;
         else if (current == "-p")
             m_properties.m_passes = 2;
-        else if (current == "nmi"){
-            pc = get_start_from_address(0x7fea, hirom);
-            address_count++;
-        }
-        else if (current == "reset"){
-            pc = get_start_from_address(0x7ffc, hirom);
-            address_count++;
-        }
-        else if (current == "irq"){
-            pc = get_start_from_address(0x7fee, hirom);
-            address_count++;
-        }
+        //else if (current == "nmi"){
+        //    pc = get_start_from_address(0x7fea, hirom);
+        //    address_count++;
+        //}
+        //else if (current == "reset"){
+        //    pc = get_start_from_address(0x7ffc, hirom);
+        //    address_count++;
+        //}
+        //else if (current == "irq"){
+        //    pc = get_start_from_address(0x7fee, hirom);
+        //    address_count++;
+        //}
         else if (current == "quit" || current == "exit"){
             m_quit = true;
             return true;

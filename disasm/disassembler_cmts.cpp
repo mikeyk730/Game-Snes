@@ -1,8 +1,17 @@
 #include <string>
-
 #include "disassembler.h"
+#include "utils.h"
 
-using namespace std;
+using std::string;
+using Address::to_string;
+
+namespace
+{
+    string spaces(int number)
+    {
+        return ("\n" + string(number, ' '));
+    }
+}
 
 std::string Disassembler::getRAMComment(unsigned int addr)
 {
