@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -86,24 +86,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="disassembler_context.cpp" />
-    <ClCompile Include="instruction.cpp" />
-    <ClCompile Include="instruction_handlers.cpp" />
-    <ClCompile Include="disassembler.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="output_handlers.cpp" />
-    <ClCompile Include="request.cpp" />
-    <ClCompile Include="utils.cpp" />
+    <ClCompile Include="src\disassembler_context.cpp" />
+    <ClCompile Include="src\instruction.cpp" />
+    <ClCompile Include="src\instruction_handlers.cpp" />
+    <ClCompile Include="src\disassembler.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\output_handlers.cpp" />
+    <ClCompile Include="src\request.cpp" />
+    <ClCompile Include="src\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="annotation_handlers.h" />
-    <ClInclude Include="disassembler_context.h" />
-    <ClInclude Include="instruction.h" />
-    <ClInclude Include="instruction_handlers.h" />
-    <ClInclude Include="disassembler.h" />
-    <ClInclude Include="output_handlers.h" />
-    <ClInclude Include="request.h" />
-    <ClInclude Include="utils.h" />
+    <ClInclude Include="src\annotation_handlers.h" />
+    <ClInclude Include="src\disassembler_context.h" />
+    <ClInclude Include="src\instruction.h" />
+    <ClInclude Include="src\instruction_handlers.h" />
+    <ClInclude Include="src\disassembler.h" />
+    <ClInclude Include="src\output_handlers.h" />
+    <ClInclude Include="src\request.h" />
+    <ClInclude Include="src\utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
