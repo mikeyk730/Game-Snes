@@ -555,6 +555,7 @@ void Disassembler::doPtr(bool long_ptrs)
         string label = get_line_label(m_current_bank, m_current_addr, false);
         string comment = get_comment(m_current_bank, m_current_addr);
         unsigned char default_bank = get_default_ptr_bank();
+        setProcessFlags();
 
         disassembleInstruction(m_instruction_lookup[long_ptrs ? 0x101 : 0x100], default_bank, label, comment, 0);
     }
@@ -575,6 +576,7 @@ void Disassembler::doDisasm()
         string label = get_line_label(m_current_bank, m_current_addr, true);
         string comment = get_comment(m_current_bank, m_current_addr);
         int offset = get_offset(m_current_bank, m_current_addr);
+        setProcessFlags();
 
         unsigned char code = read_next_byte();
         if (feof(m_rom_file)){
@@ -592,8 +594,6 @@ void Disassembler::doDisasm()
 
 void Disassembler::disassembleInstruction(const InstructionMetadata& instr, unsigned char default_bank, const string& label, const string& comment, int offset)
 {
-    setProcessFlags();
-
     DisassemblerContext context((Disassembler*)this, instr, &m_current_addr, &m_flag, &m_accum_16,
         &m_index_16, default_bank, offset);
     Instruction output(instr, m_accum_16, m_index_16, m_range_properties.m_comment_level);
