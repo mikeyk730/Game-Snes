@@ -4,14 +4,12 @@
 struct DisassemblerContext;
 struct Instruction;
 
-const int IS_BRANCH = 0x01;
-
 class InstructionMetadata{
     typedef void(*InstructionHandlerPtr)(DisassemblerContext*, Instruction*);
     typedef std::string(*AnnotationHandlerPtr)(bool, bool);
 public:
     InstructionMetadata();
-    InstructionMetadata(const std::string& name, unsigned int opcode, InstructionHandlerPtr address_mode_handler, AnnotationHandlerPtr annotation_handler = 0, int bitmask = 0);
+    InstructionMetadata(const std::string& name, unsigned int opcode, InstructionHandlerPtr address_mode_handler, AnnotationHandlerPtr annotation_handler = 0);
 
     std::string name() const {
         return m_name;
@@ -36,7 +34,6 @@ public:
 
 private:
     std::string m_name;
-    int m_bitmask;
     unsigned int m_opcode;
 
     InstructionHandlerPtr m_instruction_handler;

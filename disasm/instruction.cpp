@@ -7,16 +7,14 @@ using namespace std;
 InstructionMetadata::InstructionMetadata() :
 m_name(""),
 m_opcode(0),
-m_instruction_handler(0),
-m_bitmask(0)
+m_instruction_handler(0)
 { }
 
-InstructionMetadata::InstructionMetadata(const std::string& name, unsigned int opcode, InstructionHandlerPtr address_mode_handler, AnnotationHandlerPtr annotation_handler, int bitmask) :
+InstructionMetadata::InstructionMetadata(const std::string& name, unsigned int opcode, InstructionHandlerPtr address_mode_handler, AnnotationHandlerPtr annotation_handler) :
 m_name(name),
 m_opcode(opcode),
 m_instruction_handler(address_mode_handler),
-m_annotation_handler(annotation_handler),
-m_bitmask(bitmask)
+m_annotation_handler(annotation_handler)
 { }
 
 std::string InstructionMetadata::annotated_name(bool is_accum_16, bool is_index_16) const {
@@ -28,7 +26,16 @@ std::string InstructionMetadata::annotated_name(bool is_accum_16, bool is_index_
 
 bool InstructionMetadata::isBranch() const 
 {
-    return (m_bitmask & IS_BRANCH) != 0;
+    return 
+        m_opcode == 0x90 ||
+        m_opcode == 0xB0 ||
+        m_opcode == 0xF0 ||
+        m_opcode == 0x30 ||
+        m_opcode == 0xD0 ||
+        m_opcode == 0x10 ||
+        m_opcode == 0x80 ||
+        m_opcode == 0x50 ||
+        m_opcode == 0x70;
 }
 
 bool InstructionMetadata::isCodeBreak() const
