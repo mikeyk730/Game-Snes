@@ -1,3 +1,5 @@
+rm all.smc
+rm *.o
 wla -vo b0.asm b0.o
 wla -vo b1.asm b1.o
 wla -vo b2.asm b2.o

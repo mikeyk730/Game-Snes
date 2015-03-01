@@ -63,7 +63,8 @@ m_accum_16(false),
 m_index_16(false),
 m_output_handler(new DefaultOutput()),
 m_noop_handler(new NoOutput()),
-m_rom_file(rom_file)
+m_rom_file(rom_file),
+m_quiet(false)
 { 
     initialize_instruction_lookup(); 
     m_data = new unsigned char[MAX_FILE_SIZE];

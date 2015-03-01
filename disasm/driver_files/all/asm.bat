@@ -1,10 +1,3 @@
-cat ..\bank*.sym      | sort  1>all.sym 
-cat ..\bank*.data     | sort  1>all.data 
-cat ..\bank*.flags    | sort  1>all.flags 
-cat ..\bank*.trace    | sort  1>all.trace 
-cat ..\bank*.code     | sort  1>all.code 
-cat ..\bank*.comment          1>all.comment 
-
 echo  8000 10000 -p -e -q | disasm.exe --sym all.sym --ptr all.ptr --data all.data --accum all.flags --comment all.comment --offsets all.offsets --quiet mario.smc 1> b0.asm 2> null
 echo 18000 20000 -p -e -q | disasm.exe --sym all.sym --ptr all.ptr --data all.data --accum all.flags --comment all.comment --offsets all.offsets --quiet mario.smc 1> b1.asm 2> null
 echo 28000 30000 -p -e -q | disasm.exe --sym all.sym --ptr all.ptr --data all.data --accum all.flags --comment all.comment --offsets all.offsets --quiet mario.smc 1> b2.asm 2> null
