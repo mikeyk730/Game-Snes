@@ -1,56 +1,57 @@
 .INCLUDE "snes.cfg"
 .BANK 0
-ResetStart:         SEI                       ; Disable interrupts 
+ResetStart:         SEI                       ; Disable interrupts
                     STZ.W $4200               ; Clear NMI and V/H Count, disable joypad ; NMI, V/H Count, and Joypad Enable
                     STZ.W $420C               ; Disable HDMA ; H-DMA Channel Enable
                     STZ.W $420B               ; Disable DMA ; Regular DMA Channel Enable
-                    STZ.W $2140               ; \  ; APU I/O Port
+                    STZ.W $2140               ; \ ; APU I/O Port
                     STZ.W $2141               ;  |Clear APU I/O ports 1-4 ; APU I/O Port
                     STZ.W $2142               ;  | ; APU I/O Port
-                    STZ.W $2143               ; /  ; APU I/O Port
-                    LDA.B #$80                ; \ Turn off screen 
-                    STA.W $2100               ; /  ; Screen Display Register
-                    CLC                       ; \ Turn off emulation mode 
-                    XCE                       ; /  
+                    STZ.W $2143               ; / ; APU I/O Port
+                    LDA.B #$80                ; \ Turn off screen
+                    STA.W $2100               ; / ; Screen Display Register
+                    CLC                       ; \ Turn off emulation mode
+                    XCE                       ; /
                     REP #$38                  ; 16 bit A,X,Y, Decimal mode off ; Index (16 bit) Accum (16 bit) 
-                    LDA.W #$0000              ; \ Set direct page 
-                    TCD                       ; /  
-                    LDA.W #$01FF              ; \ Set stack location 
-                    TCS                       ; /  
-                    LDA.W #$F0A9              ; \  
-                    STA.L $7F8000             ;  | 
-                    LDX.W #$017D              ;  | 
-                    LDY.W #$03FD              ;  | 
-ADDR_008034:        LDA.W #$008D              ;  | 
-                    STA.L $7F8002,X           ;  | 
-                    TYA                       ;  | 
-                    STA.L $7F8003,X           ;  |Create routine in RAM 
-                    SEC                       ;  | 
-                    SBC.W #$0004              ;  | 
-                    TAY                       ;  | 
-                    DEX                       ;  | 
-                    DEX                       ;  | 
-                    DEX                       ;  | 
-                    BPL ADDR_008034           ;  | 
+                    LDA.W #$0000              ; \ Set direct page
+                    TCD                       ; /
+                    LDA.W #$01FF              ; \ Set stack location
+                    TCS                       ; /
+                    LDA.W #$F0A9              ; \
+                    STA.L $7F8000             ;  |
+                    LDX.W #$017D              ;  |
+                    LDY.W #$03FD              ;  |
+ADDR_008034:        LDA.W #$008D              ;  |
+                    STA.L $7F8002,X           ;  |
+                    TYA                       ;  |
+                    STA.L $7F8003,X           ;  |Create routine in RAM
+                    SEC                       ;  |
+                    SBC.W #$0004              ;  |
+                    TAY                       ;  |
+                    DEX                       ;  |
+                    DEX                       ;  |
+                    DEX                       ;  |
+                    BPL ADDR_008034           ;  |
                     SEP #$30                  ;  | ; Index (8 bit) Accum (8 bit) 
-                    LDA.B #$6B                ;  | 
-                    STA.L $7F8182             ; /  
-                    JSR.W ADDR_0080E8         ; SPC700 Bank 02 + Main code upload handler 
-                    STZ.W $0100               ; Set game mode to 0 
-                    STZ.W $0109               ; Set secondary game mode to 0 
+                    LDA.B #$6B                ;  |
+                    STA.L $7F8182             ; /
+                    JSR.W UploadSPCEngine     ; SPC700 Bank 02 + Main code upload handler
+                    STZ.W $0100               ; Set game mode to 0
+                    STZ.W $0109               ; Set secondary game mode to 0
                     JSR.W ClearStack          
-                    JSR.W UploadMusicBank1    
+                    JSR.W UploadSamples       
                     JSR.W ADDR_009250         
-                    LDA.B #$03                ; \ Set OAM Size and Data Area Designation to x03 
-                    STA.W $2101               ; /  ; OAM Size and Data Area Designation
-                    INC $10                   ; Skip the following loop 
-ADDR_00806B:        LDA $10                   ;  |Loop until the interrupt routine sets $10 
-                    BEQ ADDR_00806B           ; / to a non-zero value. 
-                    CLI                       ; Enable interrupts 
-                    INC $13                   ; Increase frame number 
-                    JSR.W GetGameMode         ; The actual game 
-                    STZ $10                   ; \ Wait for interrupt 
-                    BRA ADDR_00806B           ; /  
+                    LDA.B #$03                ; \ Set OAM Size and Data Area Designation to x03
+                    STA.W $2101               ; / ; OAM Size and Data Area Designation
+                    INC $10                   ; Skip the following loop
+ADDR_00806B:        LDA $10                   ;  |Loop until the interrupt routine sets $10
+                    BEQ ADDR_00806B           ; / to a non-zero value.
+                    CLI                       ; Enable interrupts
+                    INC $13                   ; Increase frame number
+                    JSR.W GetGameMode         ; The actual game
+                    STZ $10                   ; \ Wait for interrupt
+                    BRA ADDR_00806B           ; /
+
 SPC700UploadLoop:   PHP                       
                     REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     LDY.W #$0000              
@@ -58,13 +59,15 @@ SPC700UploadLoop:   PHP
 ADDR_008082:        CMP.W $2140               ; APU I/O Port
                     BNE ADDR_008082           
                     SEP #$20                  ; Accum (8 bit) 
-                    LDA.B #$CC                ; Load byte to start transfer 
+                    LDA.B #$CC                ; Load byte to start transfer
                     BRA ADDR_0080B3           
+
 ADDR_00808D:        LDA [$00],Y               
                     INY                       
                     XBA                       
                     LDA.B #$00                
                     BRA ADDR_0080A0           
+
 ADDR_008095:        XBA                       
                     LDA [$00],Y               
                     INY                       
@@ -109,30 +112,31 @@ ADDR_0080D3:        CMP.W $2140               ; APU I/O Port
                     PLP                       
                     RTS                       
 
-ADDR_0080E8:        LDA.B #$00                ; \ this address (0E:8000) is the start of the OW music bank 
-                    STA.W $0000               ;  |AND the code for both music banks. 
-                    LDA.B #$80                ;  | 
-                    STA.W $0001               ;  | 
-                    LDA.B #$0E                ;  | 
-                    STA.W $0002               ; /  
+UploadSPCEngine:    LDA.B #$00                ; \ this address (0E:8000) is the start of the SPC engine
+                    STA.W $0000               ;  | instrument settings/sound effect data
+                    LDA.B #$80                ;  | AND the code used for all music banks.
+                    STA.W $0001               ;  |
+                    LDA.B #$0E                ;  |
+                    STA.W $0002               ; /
 UploadDataToSPC:    SEI                       
                     JSR.W SPC700UploadLoop    
                     CLI                       
                     RTS                       
 
-UploadMusicBank1:   LDA.B #$00                ; \  ; Index (8 bit) 
-                    STA.W $0000               ;  | 
-                    LDA.B #$80                ;  |Loads The Address 0F:8000 to 00-02 
-                    STA.W $0001               ;  |[SPC700 Bank 1 (level) music ROM Address, this is] 
-                    LDA.B #$0F                ;  | 
-                    STA.W $0002               ; /  
+UploadSamples:      LDA.B #$00                ; \ ; Index (8 bit) 
+                    STA.W $0000               ;  |
+                    LDA.B #$80                ;  |Loads The Address 0F:8000 to 00-02 	(SAMPLE DATA + PTRS)
+                    STA.W $0001               ;  |[SPC Sample Pointers/Data ROM Address, this is]
+                    LDA.B #$0F                ;  |
+                    STA.W $0002               ; /
                     BRA StrtSPCMscUpld        
-UploadMusicBank2:   LDA.B #$B1                ; \  
-                    STA.W $0000               ;  | 
-                    LDA.B #$98                ;  |Same as above, but for the Bank 2 music data 
-                    STA.W $0001               ;  | ($0E:B198) 
-                    LDA.B #$0E                ;  | 
-                    STA.W $0002               ; /  
+
+UploadMusicBank1:   LDA.B #$B1                ; \
+                    STA.W $0000               ;  |
+                    LDA.B #$98                ;  |Loads the Bank 1 music data (Map) to 00-02
+                    STA.W $0001               ;  | ($0E:98B1)
+                    LDA.B #$0E                ;  |
+                    STA.W $0002               ; /
 StrtSPCMscUpld:     LDA.B #$FF                
                     STA.W $2141               ; APU I/O Port
                     JSR.W UploadDataToSPC     
@@ -142,32 +146,34 @@ SPC700ZeroLoop:     STZ.W $2140,X
                     STZ.W $1DFD,X             
                     DEX                       
                     BPL SPC700ZeroLoop        
-ADDR_008133:        RTS                       
+Return008133:       RTS                       
 
 ADDR_008134:        LDA.W $1425               
-                    BNE ADDR_008148           
+                    BNE UploadMusicBank2      
                     LDA.W $0109               
                     CMP.B #$E9                
-                    BEQ ADDR_008148           
+                    BEQ UploadMusicBank2      
                     ORA.W $141A               
                     ORA.W $141D               
-                    BNE ADDR_008133           
-ADDR_008148:        LDA.B #$D6                
-                    STA.W $0000               
-                    LDA.B #$AE                
-                    STA.W $0001               
-                    LDA.B #$0E                
-                    STA.W $0002               
+                    BNE Return008133          
+UploadMusicBank2:   LDA.B #$D6                ; \
+                    STA.W $0000               ;  |Loads the Bank 2 music address(Levels)
+                    LDA.B #$AE                ;  | (0E:AED6)
+                    STA.W $0001               ;  |
+                    LDA.B #$0E                ;  |
+                    STA.W $0002               ; /
                     BRA StrtSPCMscUpld        
-ADDR_008159:        LDA.B #$00                
-                    STA.W $0000               
-                    LDA.B #$E4                
-                    STA.W $0001               
-                    LDA.B #$03                
-                    STA.W $0002               
+
+UploadMusicBank3:   LDA.B #$00                ; \
+                    STA.W $0000               ;  |Bank 3 music(Ending) ROM address
+                    LDA.B #$E4                ;  |
+                    STA.W $0001               ;  | ($03:E400)
+                    LDA.B #$03                ;  |
+                    STA.W $0002               ; /
                     BRA StrtSPCMscUpld        
-NMIStart:           SEI                       ; Looks like this might be the NMI routine here. That is correct. 
-                    PHP                       ; I thought it was, just from the address, but I wasn't too sure. 
+
+NMIStart:           SEI                       ; Looks like this might be the NMI routine here. That is correct.
+                    PHP                       ; I thought it was, just from the address, but I wasn't too sure.
                     REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     PHA                       
                     PHX                       
@@ -177,25 +183,25 @@ NMIStart:           SEI                       ; Looks like this might be the NMI
                     PLB                       
                     SEP #$30                  ; 8 bit A,X,Y ; Index (8 bit) Accum (8 bit) 
                     LDA.W $4210               ; Load "NMI Enable."  This has the effect of clearing the Interrupt, so that ; NMI Enable
-                    LDA.W $1DFB               ; \  
-                    BNE ADDR_008186           ;  | 
+                    LDA.W $1DFB               ; \
+                    BNE ADDR_008186           ;  |
                     LDY.W $2142               ;  | ; APU I/O Port
-                    CPY.W $1DFF               ;  |Update SPC700 I/O port 2 
-                    BNE ADDR_00818F           ;  | 
+                    CPY.W $1DFF               ;  |Update SPC700 I/O port 2
+                    BNE ADDR_00818F           ;  |
 ADDR_008186:        STA.W $2142               ;  | ; APU I/O Port
-                    STA.W $1DFF               ;  | 
-                    STZ.W $1DFB               ;  | 
-ADDR_00818F:        LDA.W $1DF9               ; \  
+                    STA.W $1DFF               ;  |
+                    STZ.W $1DFB               ;  |
+ADDR_00818F:        LDA.W $1DF9               ; \
                     STA.W $2140               ;  | ; APU I/O Port
-                    LDA.W $1DFA               ;  | 
+                    LDA.W $1DFA               ;  |
                     STA.W $2141               ;  |Update SPC700 I/O ports 0, 1 and 3 ; APU I/O Port
-                    LDA.W $1DFC               ;  | 
+                    LDA.W $1DFC               ;  |
                     STA.W $2143               ;  | ; APU I/O Port
-                    STZ.W $1DF9               ;  | 
-                    STZ.W $1DFA               ;  | 
-                    STZ.W $1DFC               ; /  
-                    LDA.B #$80                ; \ Screen off, brightness=0 
-                    STA.W $2100               ; /  ; Screen Display Register
+                    STZ.W $1DF9               ;  |
+                    STZ.W $1DFA               ;  |
+                    STZ.W $1DFC               ; /
+                    LDA.B #$80                ; \ Screen off, brightness=0
+                    STA.W $2100               ; / ; Screen Display Register
                     STZ.W $420C               ; Zero The HDMA reg ; H-DMA Channel Enable
                     LDA $41                   
                     STA.W $2123               ; BG 1 and 2 Window Mask Settings
@@ -205,20 +211,22 @@ ADDR_00818F:        LDA.W $1DF9               ; \
                     STA.W $2125               ; OBJ and Color Window Settings
                     LDA $44                   
                     STA.W $2130               ; Initial Settings for Color Addition
-                    LDA.W $0D9B               ; \  
-                    BPL ADDR_0081CE           ;  |If in a "Special level", 
-                    JMP.W ADDR_0082C4         ;  |jump to $82C4 
-ADDR_0081CE:        LDA $40                   ; \ Get the CGADSUB byte... 
-                    AND.B #$FB                ;  |Get the Add/Subtract Select and Enable part... 
+                    LDA.W $0D9B               ; \
+                    BPL ADDR_0081CE           ;  |If in a "Special level",
+                    JMP.W ADDR_0082C4         ;  |jump to $82C4
+
+ADDR_0081CE:        LDA $40                   ; \ Get the CGADSUB byte...
+                    AND.B #$FB                ;  |Get the Add/Subtract Select and Enable part...
                     STA.W $2131               ; / ...and store it to the A/SSaE register... ; Add/Subtract Select and Enable
-                    LDA.B #$09                ; \ 8x8 tiles, Graphics mode 1 
-                    STA.W $2105               ; /  ; BG Mode and Tile Size Setting
-                    LDA $10                   ; \ If there isn't any lag, 
-                    BEQ ADDR_0081E7           ; / branch to $81E7 
-                    LDA.W $0D9B               ; \  
-                    LSR                       ;  |If not on a special level, branch to NMINotSpecialLv 
-                    BEQ NMINotSpecialLv       ; /  
+                    LDA.B #$09                ; \ 8x8 tiles, Graphics mode 1
+                    STA.W $2105               ; / ; BG Mode and Tile Size Setting
+                    LDA $10                   ; \ If there isn't any lag,
+                    BEQ ADDR_0081E7           ; / branch to $81E7
+                    LDA.W $0D9B               ; \
+                    LSR                       ;  |If not on a special level, branch to NMINotSpecialLv
+                    BEQ NMINotSpecialLv       ; /
                     JMP.W ADDR_00827A         
+
 ADDR_0081E7:        INC $10                   
                     JSR.W ADDR_00A488         
                     LDA.W $0D9B               
@@ -226,22 +234,25 @@ ADDR_0081E7:        INC $10
                     BNE ADDR_008222           
                     BCS ADDR_0081F7           
                     JSR.W DrawStatusBar       
-ADDR_0081F7:        LDA.W $13C6               ; \  
-                    CMP.B #$08                ;  |If the current cutscene isn't the ending, 
-                    BNE ADDR_008209           ; / branch to $8209 
-                    LDA.W $1FFE               ; \  
-                    BEQ ADDR_00821A           ;  |Related to reloading the palettes when switching 
-                    JSL.L ADDR_0C9567         ;  |to another background during the credits. 
-                    BRA ADDR_00821A           ; /  
-ADDR_008209:        JSL.L ADDR_0087AD         
+ADDR_0081F7:        LDA.W $13C6               ; \
+                    CMP.B #$08                ;  |If the current cutscene isn't the ending,
+                    BNE ADDR_008209           ; / branch to $8209
+                    LDA.W $1FFE               ; \
+                    BEQ ADDR_00821A           ;  |Related to reloading the palettes when switching
+                    JSL.L ExtSub0C9567        ;  |to another background during the credits.
+                    BRA ADDR_00821A           ; /
+
+ADDR_008209:        JSL.L ExtSub0087AD        
                     LDA.W $143A               
                     BEQ ADDR_008217           
                     JSR.W ADDR_00A7C2         
                     BRA ADDR_00823D           
+
 ADDR_008217:        JSR.W ADDR_00A390         
 ADDR_00821A:        JSR.W ADDR_00A436         
                     JSR.W MarioGFXDMA         
                     BRA ADDR_00823D           
+
 ADDR_008222:        LDA.W $13D9               
                     CMP.B #$0A                
                     BNE ADDR_008237           
@@ -252,71 +263,74 @@ ADDR_008222:        LDA.W $13D9
                     BCS ADDR_008237           
                     JSR.W ADDR_00A529         
                     BRA ADDR_008243           
+
 ADDR_008237:        JSR.W ADDR_00A4E3         
                     JSR.W MarioGFXDMA         
 ADDR_00823D:        JSR.W LoadScrnImage       
                     JSR.W DoSomeSpriteDMA     
 ADDR_008243:        JSR.W ControllerUpdate    
-NMINotSpecialLv:    LDA $1A                   ; \  
+NMINotSpecialLv:    LDA $1A                   ; \
                     STA.W $210D               ;  |Set BG 1 Horizontal Scroll Offset ; BG 1 Horizontal Scroll Offset
-                    LDA $1B                   ;  |to X position of screen boundry  
-                    STA.W $210D               ; /  ; BG 1 Horizontal Scroll Offset
-                    LDA $1C                   ; \  
-                    CLC                       ;  | 
-                    ADC.W $1888               ;  |Set BG 1 Vertical Scroll Offset 
+                    LDA $1B                   ;  |to X position of screen boundry
+                    STA.W $210D               ; / ; BG 1 Horizontal Scroll Offset
+                    LDA $1C                   ; \
+                    CLC                       ;  |
+                    ADC.W $1888               ;  |Set BG 1 Vertical Scroll Offset
                     STA.W $210E               ;  |to Y position of screen boundry + Layer 1 disposition ; BG 1 Vertical Scroll Offset
-                    LDA $1D                   ;  | 
-                    ADC.W $1889               ;  | 
-                    STA.W $210E               ; /  ; BG 1 Vertical Scroll Offset
-                    LDA $1E                   ; \  
+                    LDA $1D                   ;  |
+                    ADC.W $1889               ;  |
+                    STA.W $210E               ; / ; BG 1 Vertical Scroll Offset
+                    LDA $1E                   ; \
                     STA.W $210F               ;  |Set BG 2 Horizontal Scroll Offset ; BG 2 Horizontal Scroll Offset
-                    LDA $1F                   ;  |to X position of Layer 2 
-                    STA.W $210F               ; /  ; BG 2 Horizontal Scroll Offset
-                    LDA $20                   ; \  
+                    LDA $1F                   ;  |to X position of Layer 2
+                    STA.W $210F               ; / ; BG 2 Horizontal Scroll Offset
+                    LDA $20                   ; \
                     STA.W $2110               ;  |Set BG 2 Vertical Scroll Offset ; BG 2 Vertical Scroll Offset
-                    LDA $21                   ;  |to Y position of Layer 2 
-                    STA.W $2110               ; /  ; BG 2 Vertical Scroll Offset
-                    LDA.W $0D9B               ; \ If in a normal (not special) level, branch 
-                    BEQ ADDR_008292           ; /  
+                    LDA $21                   ;  |to Y position of Layer 2
+                    STA.W $2110               ; / ; BG 2 Vertical Scroll Offset
+                    LDA.W $0D9B               ; \ If in a normal (not special) level, branch
+                    BEQ ADDR_008292           ; /
 ADDR_00827A:        LDA.B #$81                
-                    LDY.W $13C6               ; \  
-                    CPY.B #$08                ;  |If not playing ending movie, branch to $82A1 
-                    BNE ADDR_0082A1           ; /  
-                    LDY.W $0DAE               ; \  
+                    LDY.W $13C6               ; \
+                    CPY.B #$08                ;  |If not playing ending movie, branch to $82A1
+                    BNE ADDR_0082A1           ; /
+                    LDY.W $0DAE               ; \
                     STY.W $2100               ; / Set brightness to $0DAE ; Screen Display Register
-                    LDY.W $0D9F               ; \  
+                    LDY.W $0D9F               ; \
                     STY.W $420C               ; / Set HDMA channel enable to $0D9F ; H-DMA Channel Enable
                     JMP.W IRQNMIEnding        
-ADDR_008292:        LDY.B #$24                ; \  
+
+ADDR_008292:        LDY.B #$24                ; \ IRQ timer, at which scanline the IRQ will be fired.
 ADDR_008294:        LDA.W $4211               ;  |(i.e. below the status bar) ; IRQ Flag By H/V Count Timer
                     STY.W $4209               ;  | ; V-Count Timer (Upper 8 Bits)
-                    STZ.W $420A               ; /  ; V-Count Timer MSB (Bit 0)
+                    STZ.W $420A               ; / ; V-Count Timer MSB (Bit 0)
                     STZ $11                   
                     LDA.B #$A1                
 ADDR_0082A1:        STA.W $4200               ; NMI, V/H Count, and Joypad Enable
-                    STZ.W $2111               ; \  ; BG 3 Horizontal Scroll Offset
-                    STZ.W $2111               ;  |Set Layer 3 horizontal and vertical ; BG 3 Horizontal Scroll Offset
-                    STZ.W $2112               ;  |scroll to x00 ; BG 3 Vertical Scroll Offset
-                    STZ.W $2112               ; /  ; BG 3 Vertical Scroll Offset
-                    LDA.W $0DAE               ; \  
+                    STZ.W $2111               ;  \ ; BG 3 Horizontal Scroll Offset
+                    STZ.W $2111               ;   |Set Layer 3 horizontal and vertical ; BG 3 Horizontal Scroll Offset
+                    STZ.W $2112               ;   |scroll to x00 ; Write twice register ; BG 3 Vertical Scroll Offset
+                    STZ.W $2112               ;  / ; BG 3 Vertical Scroll Offset
+                    LDA.W $0DAE               ; \
                     STA.W $2100               ; / Set brightness to $0DAE ; Screen Display Register
-                    LDA.W $0D9F               ; \  
+                    LDA.W $0D9F               ; \
                     STA.W $420C               ; / Set HDMA channel enable to $0D9F ; H-DMA Channel Enable
                     REP #$30                  ; \ Pull all ; Index (16 bit) Accum (16 bit) 
-                    PLB                       ;  | 
-                    PLY                       ;  | 
-                    PLX                       ;  | 
-                    PLA                       ;  | 
-                    PLP                       ; /  
-                    RTI                       ; And return 
+                    PLB                       ;  |
+                    PLY                       ;  |
+                    PLX                       ;  |
+                    PLA                       ;  |
+                    PLP                       ; /
+                    RTI                       ; And return
 
 ADDR_0082C4:        LDA $10                   ; \ If there is lag, ; Index (8 bit) Accum (8 bit) 
-                    BNE ADDR_0082F7           ; / branch to $82F7 
+                    BNE ADDR_0082F7           ; / branch to $82F7
                     INC $10                   
-                    LDA.W $143A               ; \ If Mario Start! graphics shouldn't be loaded, 
-                    BEQ ADDR_0082D4           ; / branch to $82D4 
+                    LDA.W $143A               ; \ If Mario Start! graphics shouldn't be loaded,
+                    BEQ ADDR_0082D4           ; / branch to $82D4
                     JSR.W ADDR_00A7C2         
                     BRA ADDR_0082E8           
+
 ADDR_0082D4:        JSR.W ADDR_00A436         
                     JSR.W MarioGFXDMA         
                     BIT.W $0D9B               
@@ -372,6 +386,7 @@ ADDR_0082F7:        LDA.B #$09
                     STA.W $420C               ; H-DMA Channel Enable
                     LDA.B #$81                
                     JMP.W ADDR_0083F3         
+
 ADDR_00835C:        LDY.B #$24                
                     BIT.W $0D9B               
                     BVC ADDR_008371           
@@ -383,107 +398,111 @@ ADDR_00835C:        LDY.B #$24
                     BNE ADDR_008371           
                     LDY.B #$2D                
 ADDR_008371:        JMP.W ADDR_008294         
-IRQHandler:         SEI                       ; Set Interrupt flag so routine can start 
-IRQStart:           PHP                       ; \ Save A/X/Y/P/B 
+
+IRQHandler:         SEI                       ; Set Interrupt flag so routine can start
+IRQStart:           PHP                       ; \ Save A/X/Y/P/B
                     REP #$30                  ;  |P = Processor Flags, B = bank number for all $xxxx operations ; Index (16 bit) Accum (16 bit) 
-                    PHA                       ;  |Set B to 0$0 
-                    PHX                       ;  | 
-                    PHY                       ;  | 
-                    PHB                       ;  | 
-                    PHK                       ;  | 
-                    PLB                       ; /  
+                    PHA                       ;  |Set B to 0$0
+                    PHX                       ;  |
+                    PHY                       ;  |
+                    PHB                       ;  |
+                    PHK                       ;  |
+                    PLB                       ; /
                     SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     LDA.W $4211               ; Read the IRQ register, 'unapply' the interrupt ; IRQ Flag By H/V Count Timer
-                    BPL ADDR_0083B2           ; If "Timer IRQ" is clear, skip the next code block 
+                    BPL ADDR_0083B2           ; If "Timer IRQ" is clear, skip the next code block
                     LDA.B #$81                
                     LDY.W $0D9B               
-                    BMI ADDR_0083BA           ; If Bit 7 (negative flag) is set, branch to a different IRQ mode 
+                    BMI ADDR_0083BA           ; If Bit 7 (negative flag) is set, branch to a different IRQ mode
 IRQNMIEnding:       STA.W $4200               ; Enable NMI Interrupt and Automatic Joypad reading ; NMI, V/H Count, and Joypad Enable
                     LDY.B #$1F                
                     JSR.W WaitForHBlank       
-                    LDA $22                   ; \ Adjust scroll settings for layer 3 
+                    LDA $22                   ; \ Adjust scroll settings for layer 3
                     STA.W $2111               ;  | ; BG 3 Horizontal Scroll Offset
-                    LDA $23                   ;  | 
+                    LDA $23                   ;  |
                     STA.W $2111               ;  | ; BG 3 Horizontal Scroll Offset
-                    LDA $24                   ;  | 
+                    LDA $24                   ;  |
                     STA.W $2112               ;  | ; BG 3 Vertical Scroll Offset
-                    LDA $25                   ;  | 
-                    STA.W $2112               ; /  ; BG 3 Vertical Scroll Offset
-ADDR_0083A8:        LDA $3E                   ; \Set the layer BG sizes, L3 priority, and BG mode 
+                    LDA $25                   ;  |
+                    STA.W $2112               ; / ; BG 3 Vertical Scroll Offset
+ADDR_0083A8:        LDA $3E                   ; \Set the layer BG sizes, L3 priority, and BG mode
                     STA.W $2105               ; /(Effectively, this is the screen mode) ; BG Mode and Tile Size Setting
-                    LDA $40                   ; \Write CGADSUB 
+                    LDA $40                   ; \Write CGADSUB
                     STA.W $2131               ; / ; Add/Subtract Select and Enable
 ADDR_0083B2:        REP #$30                  ; \ Pull everything back ; Index (16 bit) Accum (16 bit) 
-                    PLB                       ;  | 
-                    PLY                       ;  | 
-                    PLX                       ;  | 
-                    PLA                       ;  | 
-                    PLP                       ; / 
-EmptyHandler:       RTI                       ; And Return 
+                    PLB                       ;  |
+                    PLY                       ;  |
+                    PLX                       ;  |
+                    PLA                       ;  |
+                    PLP                       ; /
+EmptyHandler:       RTI                       ; And Return
 
 ADDR_0083BA:        BIT.W $0D9B               ; Get bit 6 of $0D9B ; Index (8 bit) Accum (8 bit) 
-                    BVC ADDR_0083E3           ; If clear, skip the next code section 
-                    LDY $11                   ; \Skip if $11 = 0 
-                    BEQ ADDR_0083D0           ; / 
+                    BVC ADDR_0083E3           ; If clear, skip the next code section
+                    LDY $11                   ; \Skip if $11 = 0
+                    BEQ ADDR_0083D0           ; /
                     STA.W $4200               ; #$81 -> NMI / Controller Enable reg ; NMI, V/H Count, and Joypad Enable
                     LDY.B #$14                
                     JSR.W WaitForHBlank       
                     JSR.W SETL1SCROLL         
                     BRA ADDR_0083A8           
-ADDR_0083D0:        INC $11                   ; $11++ 
+
+ADDR_0083D0:        INC $11                   ; $11++
                     LDA.W $4211               ; \ Set up the IRQ routine for layer 3 ; IRQ Flag By H/V Count Timer
-                    LDA.B #$AE                ;  |-\  
-                    SEC                       ;  |  |Vertical Counter trigger at 174 - $1888 
-                    SBC.W $1888               ;  |-/ Oddly enough, $1888 seems to be 16-bit, but the 
+                    LDA.B #$AE                ;  |-\
+                    SEC                       ;  |  |Vertical Counter trigger at 174 - $1888
+                    SBC.W $1888               ;  |-/ Oddly enough, $1888 seems to be 16-bit, but the
                     STA.W $4209               ;  |Store to Vertical Counter Timer ; V-Count Timer (Upper 8 Bits)
                     STZ.W $420A               ; / Make the high byte of said timer 0 ; V-Count Timer MSB (Bit 0)
-                    LDA.B #$A1                ; A = NMI enable, V count enable, joypad automatic read enable, H count disable 
-ADDR_0083E3:        LDY.W $1493               ; if $1493 = 0 skip down 
+                    LDA.B #$A1                ; A = NMI enable, V count enable, joypad automatic read enable, H count disable
+ADDR_0083E3:        LDY.W $1493               ; if $1493 = 0 skip down
                     BEQ ADDR_0083F3           
-                    LDY.W $1495               ; \ If $1495 is <#$40 
-                    CPY.B #$40                ;  | 
-                    BCC ADDR_0083F3           ; / Skip down 
+                    LDY.W $1495               ; \ If $1495 is <#$40
+                    CPY.B #$40                ;  |
+                    BCC ADDR_0083F3           ; / Skip down
                     LDA.B #$81                
-                    BRA IRQNMIEnding          ; Jump up to IRQNMIEnding 
+                    BRA IRQNMIEnding          ; Jump up to IRQNMIEnding
+
 ADDR_0083F3:        STA.W $4200               ; A -> NMI/Joypad Auto-Read/HV-Count Control Register ; NMI, V/H Count, and Joypad Enable
                     JSR.W ADDR_008439         
-                    NOP                       ; \Not often you see NOP, I think there was a JSL here at one point maybe 
-                    NOP                       ; / 
-                    LDA.B #$07                ; \Write Screen register 
+                    NOP                       ; \Not often you see NOP, I think there was a JSL here at one point maybe
+                    NOP                       ; /
+                    LDA.B #$07                ; \Write Screen register
                     STA.W $2105               ; / ; BG Mode and Tile Size Setting
-                    LDA $3A                   ; \ Write L1 Horizontal scroll 
+                    LDA $3A                   ; \ Write L1 Horizontal scroll
                     STA.W $210D               ;  | ; BG 1 Horizontal Scroll Offset
-                    LDA $3B                   ;  | 
-                    STA.W $210D               ; /  ; BG 1 Horizontal Scroll Offset
-                    LDA $3C                   ; \ Write L1 Vertical Scroll 
-                    STA.W $210E               ;  | ; BG 1 Vertical Scroll Offset
-                    LDA $3D                   ;  | 
-                    STA.W $210E               ; /  ; BG 1 Vertical Scroll Offset
-                    BRA ADDR_0083B2           ; And exit IRQ 
-SETL1SCROLL:        LDA.B #$59                ; \ 
-                    STA.W $2107               ; /Write L1 GFX source address ; BG 1 Address and Size
-                    LDA.B #$07                ; \Write L1/L2 Tilemap address 
-                    STA.W $210B               ; / ; BG 1 & 2 Tile Data Designation
-                    LDA $1A                   ; \ Write L1 Horizontal scroll 
-                    STA.W $210D               ;  | ; BG 1 Horizontal Scroll Offset
-                    LDA $1B                   ;  | 
+                    LDA $3B                   ;  |
                     STA.W $210D               ; / ; BG 1 Horizontal Scroll Offset
-                    LDA $1C                   ; \ $1C + $1888 -> L1 Vert scroll 
-                    CLC                       ;  |$1888 = Some sort of vertioffset 
-                    ADC.W $1888               ;  | 
+                    LDA $3C                   ; \ Write L1 Vertical Scroll
+                    STA.W $210E               ;  | ; BG 1 Vertical Scroll Offset
+                    LDA $3D                   ;  |
                     STA.W $210E               ; / ; BG 1 Vertical Scroll Offset
-                    LDA $1D                   ; \Other half of L1 vert scroll 
-                    STA.W $210E               ; / ; BG 1 Vertical Scroll Offset
-                    RTS                       ; Return 
+                    BRA ADDR_0083B2           ; And exit IRQ
 
-ADDR_008439:        LDY.B #$20                ; <<- Could this be just to waste time? 
+SETL1SCROLL:        LDA.B #$59                ; \
+                    STA.W $2107               ; /Write L1 GFX source address ; BG 1 Address and Size
+                    LDA.B #$07                ; \Write L1/L2 Tilemap address
+                    STA.W $210B               ; / ; BG 1 & 2 Tile Data Designation
+                    LDA $1A                   ; \ Write L1 Horizontal scroll
+                    STA.W $210D               ;  | ; BG 1 Horizontal Scroll Offset
+                    LDA $1B                   ;  |
+                    STA.W $210D               ; / ; BG 1 Horizontal Scroll Offset
+                    LDA $1C                   ; \ $1C + $1888 -> L1 Vert scroll
+                    CLC                       ;  |$1888 = Some sort of vertioffset
+                    ADC.W $1888               ;  |
+                    STA.W $210E               ; / ; BG 1 Vertical Scroll Offset
+                    LDA $1D                   ; \Other half of L1 vert scroll
+                    STA.W $210E               ; / ; BG 1 Vertical Scroll Offset
+                    RTS                       ; Return
+
+ADDR_008439:        LDY.B #$20                ; <<- Could this be just to waste time?
 WaitForHBlank:      BIT.W $4212               ; So... LDY gets set with 20 if there is a H-Blank...? ; H/V Blank Flags and Joypad Status
-                    BVS ADDR_008439           ; if in H-Blank, make Y #$20 and try again 
+                    BVS ADDR_008439           ; if in H-Blank, make Y #$20 and try again
 ADDR_008440:        BIT.W $4212               ; Now wait until not in H-Blank ; H/V Blank Flags and Joypad Status
                     BVC ADDR_008440           
-ADDR_008445:        DEY                       ;  |Y = 0 
-                    BNE ADDR_008445           ; / ...wait a second... why didn't they just do LDY #$00? ...waste more time? 
-                    RTS                       ; return 
+ADDR_008445:        DEY                       ;  |Y = 0
+                    BNE ADDR_008445           ; / ...wait a second... why didn't they just do LDY #$00? ...waste more time?
+                    RTS                       ; return
 
 DoSomeSpriteDMA:    STZ.W $4300               ; Parameters for DMA Transfer
                     REP #$20                  ; Accum (16 bit) 
@@ -497,12 +516,11 @@ DoSomeSpriteDMA:    STZ.W $4300               ; Parameters for DMA Transfer
                     LDY.B #$01                
                     STY.W $420B               ; Start DMA ; Regular DMA Channel Enable
                     SEP #$20                  ; Accum (8 bit) 
-                    LDA.B #$80                ; \  
-                    STA.W $2103               ;  | 
-                    LDA $3F                   ;  |Change the OAM read/write address to #$8000 + $3F 
-                    STA.W $2102               ; /  ; Address for Accessing OAM
-                    RTS                       ; Return 
-
+                    LDA.B #$80                ; \
+                    STA.W $2103               ;  |
+                    LDA $3F                   ;  |Change the OAM read/write address to #$8000 + $3F
+                    STA.W $2102               ; / ; Address for Accessing OAM
+                    RTS                       ; Return
 
 DATA_008475:        .db $00,$00,$08,$00,$10,$00,$18,$00
                     .db $20,$00,$28,$00,$30,$00,$38,$00
@@ -538,7 +556,7 @@ ADDR_008496:        LDX.W DATA_008475,Y
                     BPL ADDR_008496           
                     RTS                       
 
-ADDR_0084C8:        PHB                       
+ExtSub0084C8:       PHB                       ; Wrapper
                     PHK                       
                     PLB                       
                     JSR.W LoadScrnImage       
@@ -546,50 +564,186 @@ ADDR_0084C8:        PHB
                     RTL                       
 
 
-ImagePointers:      .db $7D
+ImagePointers:      .dw $7F837D & $FFFF       ; Not used?
+                    .db $7F837D >> 16
+                    .dw DATA_05B375           ; Title screen
+                    .db :DATA_05B375
+                    .dw DATA_04A400           ; OW border
+                    .db :DATA_04A400
+                    .dw DATA_05B0FF           
+                    .db :DATA_05B0FF
+                    .dw DATA_05B91C           ; CONTINUE/END
+                    .db :DATA_05B91C
+                    .dw DATA_0CB800           
+                    .db :DATA_0CB800
+                    .dw DATA_05B872           ; 1 PLAYER GAME/2 PLAYER GAME
+                    .db :DATA_05B872
+                    .dw DATA_04819F           ; OW scroll arrows
+                    .db :DATA_04819F
+                    .dw DATA_0481E0           ; Remove OW scroll arrows
+                    .db :DATA_0481E0
+                    .dw DATA_04F499           
+                    .db :DATA_04F499
+                    .dw DATA_05B8C7           ; CONTINUE AND SAVE
+                    .db :DATA_05B8C7
+                    .dw DATA_0CBFF1           
+                    .db :DATA_0CBFF1
+                    .dw DATA_0CBFC3           ; Cutscene 1 text: Line 7
+                    .db :DATA_0CBFC3
+                    .dw DATA_0CBF8E           ; Cutscene 1 text: Line 6
+                    .db :DATA_0CBF8E
+                    .dw DATA_0CBF59           ; Cutscene 1 text: Line 5
+                    .db :DATA_0CBF59
+                    .dw DATA_0CBF24           ; Cutscene 1 text: Line 4
+                    .db :DATA_0CBF24
+                    .dw DATA_0CBEEF           ; Cutscene 1 text: Line 3
+                    .db :DATA_0CBEEF
+                    .dw DATA_0CBEBA           ; Cutscene 1 text: Line 2
+                    .db :DATA_0CBEBA
+                    .dw DATA_0CBE85           ; Cutscene 1 text: Line 1
+                    .db :DATA_0CBE85
+                    .dw DATA_0CC165           ; Cutscene 2 text: Line 8
+                    .db :DATA_0CC165
+                    .dw DATA_0CC130           ; Cutscene 2 text: Line 7
+                    .db :DATA_0CC130
+                    .dw DATA_0CC0FB           ; Cutscene 2 text: Line 6
+                    .db :DATA_0CC0FB
+                    .dw DATA_0CC0C6           
+                    .db :DATA_0CC0C6
+                    .dw DATA_0CC091           ; ...etc...
+                    .db :DATA_0CC091
+                    .dw DATA_0CC05C           
+                    .db :DATA_0CC05C
+                    .dw DATA_0CC027           
+                    .db :DATA_0CC027
+                    .dw DATA_0CBFF2           
+                    .db :DATA_0CBFF2
+                    .dw DATA_0CBFF1           
+                    .db :DATA_0CBFF1
+                    .dw DATA_0CC2CE           
+                    .db :DATA_0CC2CE
+                    .dw DATA_0CC299           
+                    .db :DATA_0CC299
+                    .dw DATA_0CC264           
+                    .db :DATA_0CC264
+                    .dw DATA_0CC22F           
+                    .db :DATA_0CC22F
+                    .dw DATA_0CC1FA           
+                    .db :DATA_0CC1FA
+                    .dw DATA_0CC1C5           
+                    .db :DATA_0CC1C5
+                    .dw DATA_0CC190           
+                    .db :DATA_0CC190
+                    .dw DATA_0CC46C           
+                    .db :DATA_0CC46C
+                    .dw DATA_0CC437           
+                    .db :DATA_0CC437
+                    .dw DATA_0CC402           
+                    .db :DATA_0CC402
+                    .dw DATA_0CC3CD           
+                    .db :DATA_0CC3CD
+                    .dw DATA_0CC398           
+                    .db :DATA_0CC398
+                    .dw DATA_0CC363           
+                    .db :DATA_0CC363
+                    .dw DATA_0CC32E           
+                    .db :DATA_0CC32E
+                    .dw DATA_0CC2F9           
+                    .db :DATA_0CC2F9
+                    .dw DATA_0CBFF1           
+                    .db :DATA_0CBFF1
+                    .dw DATA_0CC5DD           
+                    .db :DATA_0CC5DD
+                    .dw DATA_0CC5A8           
+                    .db :DATA_0CC5A8
+                    .dw DATA_0CC573           
+                    .db :DATA_0CC573
+                    .dw DATA_0CC53E           
+                    .db :DATA_0CC53E
+                    .dw DATA_0CC509           
+                    .db :DATA_0CC509
+                    .dw DATA_0CC4D4           
+                    .db :DATA_0CC4D4
+                    .dw DATA_0CC49F           
+                    .db :DATA_0CC49F
+                    .dw DATA_0CC785           
+                    .db :DATA_0CC785
+                    .dw DATA_0CC750           
+                    .db :DATA_0CC750
+                    .dw DATA_0CC71B           
+                    .db :DATA_0CC71B
+                    .dw DATA_0CC6E6           
+                    .db :DATA_0CC6E6
+                    .dw DATA_0CC6B1           
+                    .db :DATA_0CC6B1
+                    .dw DATA_0CC67C           
+                    .db :DATA_0CC67C
+                    .dw DATA_0CC647           
+                    .db :DATA_0CC647
+                    .dw DATA_0CC612           
+                    .db :DATA_0CC612
+                    .dw DATA_0CC92D           
+                    .db :DATA_0CC92D
+                    .dw DATA_0CC8F8           
+                    .db :DATA_0CC8F8
+                    .dw DATA_0CC8C3           
+                    .db :DATA_0CC8C3
+                    .dw DATA_0CC88E           
+                    .db :DATA_0CC88E
+                    .dw DATA_0CC859           
+                    .db :DATA_0CC859
+                    .dw DATA_0CC824           
+                    .db :DATA_0CC824
+                    .dw DATA_0CC7EF           
+                    .db :DATA_0CC7EF
+                    .dw DATA_0CC7BA           
+                    .db :DATA_0CC7BA
+                    .dw DATA_0CBA56           ; Cutscene border, cave ground
+                    .db :DATA_0CBA56
+                    .dw DATA_0CBBB9           
+                    .db :DATA_0CBBB9
+                    .dw DATA_0CB9BF           
+                    .db :DATA_0CB9BF
+                    .dw DATA_0C9380           
+                    .db :DATA_0C9380
+                    .dw DATA_0CB636           ; Ending: THE END
+                    .db :DATA_0CB636
+                    .dw DATA_0DF300           ; Ending: Enemies: Lakitu
+                    .db :DATA_0DF300
+                    .dw DATA_0DF42D           ; Ending: Enemies: Hammer Bro.
+                    .db :DATA_0DF42D
+                    .dw DATA_0DF572           ; Ending: Enemies: Pokey
+                    .db :DATA_0DF572
+                    .dw DATA_0DF66B           ; Ending: Enemies: Rex
+                    .db :DATA_0DF66B
+                    .dw DATA_0DF742           ; Ending: Enemies: Dino-Rhino
+                    .db :DATA_0DF742
+                    .dw DATA_0DF837           ; Ending: Enemies: Blargg
+                    .db :DATA_0DF837
+                    .dw DATA_0DF8FA           ; Ending: Enemies: Urchin
+                    .db :DATA_0DF8FA
+                    .dw DATA_0DF9CD           ; Ending: Enemies: Boo
+                    .db :DATA_0DF9CD
+                    .dw DATA_0DFA98           ; Ending: Enemies: Dry Bones
+                    .db :DATA_0DFA98
+                    .dw DATA_0DFB73           ; Ending: Enemies: Grinder
+                    .db :DATA_0DFB73
+                    .dw DATA_0DFC58           ; Ending: Enemies: Reznor
+                    .db :DATA_0DFC58
+                    .dw DATA_0DFCD5           ; Ending: Enemies: Mechakoopa
+                    .db :DATA_0DFCD5
+                    .dw DATA_0DFD5C           ; Ending: Enemies: Bowser
+                    .db :DATA_0DFD5C
+                    .dw DATA_0CBD02           
+                    .db :DATA_0CBD02
 
-DATA_0084D1:        .db $83
-
-DATA_0084D2:        .db $7F,$75,$B3,$05,$00,$A4,$04,$FF
-                    .db $B0,$05,$1C,$B9,$05,$00,$B8,$0C
-                    .db $72,$B8,$05,$9F,$81,$04,$E0,$81
-                    .db $04,$99,$F4,$04,$C7,$B8,$05,$F1
-                    .db $BF,$0C,$C3,$BF,$0C,$8E,$BF,$0C
-                    .db $59,$BF,$0C,$24,$BF,$0C,$EF,$BE
-                    .db $0C,$BA,$BE,$0C,$85,$BE,$0C,$65
-                    .db $C1,$0C,$30,$C1,$0C,$FB,$C0,$0C
-                    .db $C6,$C0,$0C,$91,$C0,$0C,$5C,$C0
-                    .db $0C,$27,$C0,$0C,$F2,$BF,$0C,$F1
-                    .db $BF,$0C,$CE,$C2,$0C,$99,$C2,$0C
-                    .db $64,$C2,$0C,$2F,$C2,$0C,$FA,$C1
-                    .db $0C,$C5,$C1,$0C,$90,$C1,$0C,$6C
-                    .db $C4,$0C,$37,$C4,$0C,$02,$C4,$0C
-                    .db $CD,$C3,$0C,$98,$C3,$0C,$63,$C3
-                    .db $0C,$2E,$C3,$0C,$F9,$C2,$0C,$F1
-                    .db $BF,$0C,$DD,$C5,$0C,$A8,$C5,$0C
-                    .db $73,$C5,$0C,$3E,$C5,$0C,$09,$C5
-                    .db $0C,$D4,$C4,$0C,$9F,$C4,$0C,$85
-                    .db $C7,$0C,$50,$C7,$0C,$1B,$C7,$0C
-                    .db $E6,$C6,$0C,$B1,$C6,$0C,$7C,$C6
-                    .db $0C,$47,$C6,$0C,$12,$C6,$0C,$2D
-                    .db $C9,$0C,$F8,$C8,$0C,$C3,$C8,$0C
-                    .db $8E,$C8,$0C,$59,$C8,$0C,$24,$C8
-                    .db $0C,$EF,$C7,$0C,$BA,$C7,$0C,$56
-                    .db $BA,$0C,$B9,$BB,$0C,$BF,$B9,$0C
-                    .db $80,$93,$0C,$36,$B6,$0C,$00,$F3
-                    .db $0D,$2D,$F4,$0D,$72,$F5,$0D,$6B
-                    .db $F6,$0D,$42,$F7,$0D,$37,$F8,$0D
-                    .db $FA,$F8,$0D,$CD,$F9,$0D,$98,$FA
-                    .db $0D,$73,$FB,$0D,$58,$FC,$0D,$D5
-                    .db $FC,$0D,$5C,$FD,$0D,$02,$BD,$0C
-
-LoadScrnImage:      LDY $12                   ; 12 = Image loader 
-                    LDA.W ImagePointers,Y     ; \  
-                    STA $00                   ;  | 
-                    LDA.W DATA_0084D1,Y       ;  |Load pointer 
-                    STA $01                   ;  | 
-                    LDA.W DATA_0084D2,Y       ;  | 
-                    STA $02                   ; /  
+LoadScrnImage:      LDY $12                   ; 12 = Image loader
+                    LDA.W ImagePointers,Y     ; \
+                    STA $00                   ;  |
+                    LDA.W ImagePointers+1,Y   ;   |Load pointer
+                    STA $01                   ;  |
+                    LDA.W ImagePointers+2,Y   ;   |
+                    STA $02                   ; /
                     JSR.W ADDR_00871E         
                     LDA $12                   
                     BNE ADDR_0085F7           
@@ -597,7 +751,7 @@ LoadScrnImage:      LDY $12                   ; 12 = Image loader
                     STA.L $7F837C             
                     DEC A                     
                     STA.L $7F837D             
-ADDR_0085F7:        STZ $12                   ; Do not reload the same thing next frame 
+ADDR_0085F7:        STZ $12                   ; Do not reload the same thing next frame
                     RTS                       
 
 ADDR_0085FA:        JSR.W TurnOffIO           
@@ -605,82 +759,82 @@ ADDR_0085FA:        JSR.W TurnOffIO
                     STA $00                   
                     STZ.W $2115               ; Set "VRAM Address Increment Value" to x00 ; VRAM Address Increment Value
                     STZ.W $2116               ; Set "Address for VRAM Read/Write (Low Byte)" to x00 ; Address for VRAM Read/Write (Low Byte)
-                    LDA.B #$50                ; \ Set "Address for VRAM Read/Write (High Byte)" to x50 
-                    STA.W $2117               ; /  ; Address for VRAM Read/Write (High Byte)
+                    LDA.B #$50                ; \ Set "Address for VRAM Read/Write (High Byte)" to x50
+                    STA.W $2117               ; / ; Address for VRAM Read/Write (High Byte)
                     LDX.B #$06                
 ADDR_00860E:        LDA.W DATA_008649,X       
                     STA.W $4310,X             
                     DEX                       
                     BPL ADDR_00860E           
-                    LDY.B #$02                ; DMA something to VRAM, my guess is a tilemap... 
+                    LDY.B #$02                ; DMA something to VRAM, my guess is a tilemap...
                     STY.W $420B               ; Regular DMA Channel Enable
                     LDA.B #$38                
                     STA $00                   
                     LDA.B #$80                
                     STA.W $2115               ; VRAM Address Increment Value
                     STZ.W $2116               ; \Change CRAM address ; Address for VRAM Read/Write (Low Byte)
-                    LDA.B #$50                ;  | 
+                    LDA.B #$50                ;  |
                     STA.W $2117               ; / ; Address for VRAM Read/Write (High Byte)
-                    LDX.B #$06                ; And Repeat the DMA 
+                    LDX.B #$06                ; And Repeat the DMA
 ADDR_00862F:        LDA.W DATA_008649,X       
                     STA.W $4310,X             
                     DEX                       
                     BPL ADDR_00862F           
-                    LDA.B #$19                ; \but change desination address to $2119 
+                    LDA.B #$19                ; \but change desination address to $2119
                     STA.W $4311               ; / ; B Address
                     STY.W $420B               ; Start DMA ; Regular DMA Channel Enable
-                    STZ $3F                   ; $3B = 0 (not sure what $3B is) 
-                    JSL.L $7F8000             ; and JSL to a RAM routine 
-                    JMP.W DoSomeSpriteDMA     ; Jump to the next part of this routine 
+                    STZ $3F                   ; $3B = 0 (not sure what $3B is)
+                    JSL.L $7F8000             ; and JSL to a RAM routine
+                    JMP.W DoSomeSpriteDMA     ; Jump to the next part of this routine
 
 DATA_008649:        .db $08,$18,$00,$00,$00,$00,$10
 
-ControllerUpdate:   LDA.W $4218               ; \  ; Joypad 1Data (Low Byte)
-                    AND.B #$F0                ;  | 
-                    STA.W $0DA4               ;  | 
-                    TAY                       ;  | 
-                    EOR.W $0DAC               ;  | 
-                    AND.W $0DA4               ;  | 
-                    STA.W $0DA8               ;  | 
-                    STY.W $0DAC               ;  | 
+ControllerUpdate:   LDA.W $4218               ; \ ; Joypad 1Data (Low Byte)
+                    AND.B #$F0                ;  |
+                    STA.W $0DA4               ;  |
+                    TAY                       ;  |
+                    EOR.W $0DAC               ;  |
+                    AND.W $0DA4               ;  |
+                    STA.W $0DA8               ;  |
+                    STY.W $0DAC               ;  |
                     LDA.W $4219               ;  | ; Joypad 1Data (High Byte)
-                    STA.W $0DA2               ;  | 
-                    TAY                       ;  | 
-                    EOR.W $0DAA               ;  | 
-                    AND.W $0DA2               ;  | 
-                    STA.W $0DA6               ;  | 
-                    STY.W $0DAA               ;  |Read controller data 
+                    STA.W $0DA2               ;  |
+                    TAY                       ;  |
+                    EOR.W $0DAA               ;  |
+                    AND.W $0DA2               ;  |
+                    STA.W $0DA6               ;  |
+                    STY.W $0DAA               ;  |Read controller data
                     LDA.W $421A               ;  | ; Joypad 2Data (Low Byte)
-                    AND.B #$F0                ;  | 
-                    STA.W $0DA5               ;  | 
-                    TAY                       ;  | 
-                    EOR.W $0DAD               ;  | 
-                    AND.W $0DA5               ;  | 
-                    STA.W $0DA9               ;  | 
-                    STY.W $0DAD               ;  | 
+                    AND.B #$F0                ;  |
+                    STA.W $0DA5               ;  |
+                    TAY                       ;  |
+                    EOR.W $0DAD               ;  |
+                    AND.W $0DA5               ;  |
+                    STA.W $0DA9               ;  |
+                    STY.W $0DAD               ;  |
                     LDA.W $421B               ;  | ; Joypad 2Data (High Byte)
-                    STA.W $0DA3               ;  | 
-                    TAY                       ;  | 
-                    EOR.W $0DAB               ;  | 
-                    AND.W $0DA3               ;  | 
-                    STA.W $0DA7               ;  | 
-                    STY.W $0DAB               ; /  
-                    LDX.W $0DA0               ; \  
-                    BPL ADDR_0086A8           ;  |If $0DA0 is positive, set X to $0DA0 
-                    LDX.W $0DB3               ;  |Otherwise, set X to current character 
-ADDR_0086A8:        LDA.W $0DA4,X             ; \  
-                    AND.B #$C0                ;  | 
-                    ORA.W $0DA2,X             ;  | 
-                    STA $15                   ;  | 
-                    LDA.W $0DA4,X             ;  | 
-                    STA $17                   ;  |Update controller data bytes 
-                    LDA.W $0DA8,X             ;  | 
-                    AND.B #$40                ;  | 
-                    ORA.W $0DA6,X             ;  | 
-                    STA $16                   ;  | 
-                    LDA.W $0DA8,X             ;  | 
-                    STA $18                   ; /  
-                    RTS                       ; Return 
+                    STA.W $0DA3               ;  |
+                    TAY                       ;  |
+                    EOR.W $0DAB               ;  |
+                    AND.W $0DA3               ;  |
+                    STA.W $0DA7               ;  |
+                    STY.W $0DAB               ; /
+                    LDX.W $0DA0               ; \
+                    BPL ADDR_0086A8           ;  |If $0DA0 is positive, set X to $0DA0
+                    LDX.W $0DB3               ;  |Otherwise, set X to current character
+ADDR_0086A8:        LDA.W $0DA4,X             ; \
+                    AND.B #$C0                ;  |
+                    ORA.W $0DA2,X             ;  |
+                    STA $15                   ;  |
+                    LDA.W $0DA4,X             ;  |
+                    STA $17                   ;  |Update controller data bytes
+                    LDA.W $0DA8,X             ;  |
+                    AND.B #$40                ;  |
+                    ORA.W $0DA6,X             ;  |
+                    STA $16                   ;  |
+                    LDA.W $0DA8,X             ;  |
+                    STA $18                   ; /
+                    RTS                       ; Return
 
 ADDR_0086C7:        REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     LDX.W #$0062              
@@ -694,30 +848,31 @@ ADDR_0086CF:        STA.W $0420,X
                     JSL.L $7F812E             
                     RTS                       
 
-ExecutePtr:         STY $03                   ; "Push" Y 
+ExecutePtr:         STY $03                   ; "Push" Y
                     PLY                       
                     STY $00                   
                     REP #$30                  ; 16 bit A ; Index (16 bit) Accum (16 bit) 
-                    AND.W #$00FF              ; A = Game mode 
-                    ASL                       ; Multiply game mode by 2 
+                    AND.W #$00FF              ; A = Game mode
+                    ASL                       ; Multiply game mode by 2
                     TAY                       
                     PLA                       
                     STA $01                   
                     INY                       
                     LDA [$00],Y               
-                    STA $00                   ; A is 16-bit 
+                    STA $00                   ; A is 16-bit
                     SEP #$30                  ; Index (8 bit) Accum (8 bit) 
-                    LDY $03                   ; "Pull" Y 
-                    JMP [$0000]               ; Jump to the game mode's routine, which has been loaded into $00-02 
+                    LDY $03                   ; "Pull" Y
+                    JMP [$0000]               ; Jump to the game mode's routine, which has been loaded into $00-02
+
 ExecutePtrLong:     STY $05                   
                     PLY                       
                     STY $02                   
                     REP #$30                  ; 16 bit A,X,Y ; Index (16 bit) Accum (16 bit) 
-                    AND.W #$00FF              ; \ A = Tileset/byte 3 (TB3) 
-                    STA $03                   ; / Store A in $03 
-                    ASL                       ; \ Multiply A by 2 
-                    ADC $03                   ;  |Add TB3 to A 
-                    TAY                       ; / Set Y to A 
+                    AND.W #$00FF              ; \ A = Tileset/byte 3 (TB3)
+                    STA $03                   ; / Store A in $03
+                    ASL                       ; \ Multiply A by 2
+                    ADC $03                   ;  |Add TB3 to A
+                    TAY                       ; / Set Y to A
                     PLA                       
                     STA $03                   
                     INY                       
@@ -729,31 +884,32 @@ ExecutePtrLong:     STY $05
                     SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     LDY $05                   
                     JMP [$0000]               
+
 ADDR_00871E:        REP #$10                  ; 16 bit X,Y ; Index (16 bit) 
                     STA.W $4314               ; A Address Bank
-                    LDY.W #$0000              ; Set index to 0 
-ADDR_008726:        LDA [$00],Y               ; \ Read line header byte 1 
-                    BPL ADDR_00872D           ;  |If the byte & %10000000 is true, 
+                    LDY.W #$0000              ; Set index to 0
+ADDR_008726:        LDA [$00],Y               ; \ Read line header byte 1
+                    BPL ADDR_00872D           ;  |If the byte & %10000000 is true,
                     SEP #$30                  ;  |Set A,X,Y to 8 bit and return ; Index (8 bit) Accum (8 bit) 
-                    RTS                       ;  | 
+                    RTS                       ;  |
 
 ADDR_00872D:        STA $04                   ; Store byte in $04 ; Index (16 bit) 
-                    INY                       ; Move onto the next byte 
-                    LDA [$00],Y               ; Read line header byte 2 
-                    STA $03                   ; Store byte in $03 
-                    INY                       ; Move onto the next byte 
-                    LDA [$00],Y               ; Read line header byte 3 
-                    STZ $07                   ; \  
-                    ASL                       ;  |Store direction bit in $07 
-                    ROL $07                   ; /  
-                    LDA.B #$18                ; \ Set B address (DMA) to x18 
-                    STA.W $4311               ; /  ; B Address
-                    LDA [$00],Y               ; Re-read line header byte 3 
-                    AND.B #$40                ; \  
-                    LSR                       ;  | 
-                    LSR                       ;  |Store RLE bit << 3 in $05 
-                    LSR                       ;  | 
-                    STA $05                   ; /  
+                    INY                       ; Move onto the next byte
+                    LDA [$00],Y               ; Read line header byte 2
+                    STA $03                   ; Store byte in $03
+                    INY                       ; Move onto the next byte
+                    LDA [$00],Y               ; Read line header byte 3
+                    STZ $07                   ; \
+                    ASL                       ;  |Store direction bit in $07
+                    ROL $07                   ; /
+                    LDA.B #$18                ; \ Set B address (DMA) to x18
+                    STA.W $4311               ; / ; B Address
+                    LDA [$00],Y               ; Re-read line header byte 3
+                    AND.B #$40                ; \
+                    LSR                       ;  |
+                    LSR                       ;  |Store RLE bit << 3 in $05
+                    LSR                       ;  |
+                    STA $05                   ; /
                     STZ $06                   
                     ORA.B #$01                
                     STA.W $4310               ; Parameters for DMA Transfer
@@ -802,16 +958,19 @@ ADDR_008795:        STX $03
                     LDA.B #$02                
                     STA.W $420B               ; Regular DMA Channel Enable
                     JMP.W ADDR_008726         
-ADDR_0087AD:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
-                    LDA.W $1BE4               ; \  
-                    BNE ADDR_0087B7           ;  |If Layer 1 has to be updated, 
-                    JMP.W ADDR_0088DD         ;  |jump to $88DD 
-ADDR_0087B7:        LDA $5B                   ; \  
-                    AND.B #$01                ;  | 
-                    BEQ ADDR_0087C0           ;  |If on a vertical level, 
-                    JMP.W ADDR_008849         ;  |jump to $8849 
-ADDR_0087C0:        LDY.B #$81                ; \ Set "VRAM Address Increment Value" to x81 
-                    STY.W $2115               ; /  ; VRAM Address Increment Value
+
+ExtSub0087AD:       SEP #$30                  ; Index (8 bit) Accum (8 bit) 
+                    LDA.W $1BE4               ; \
+                    BNE ADDR_0087B7           ;  |If Layer 1 has to be updated,
+                    JMP.W ADDR_0088DD         ;  |jump to $88DD
+
+ADDR_0087B7:        LDA $5B                   ; \
+                    AND.B #$01                ;  |
+                    BEQ ADDR_0087C0           ;  |If on a vertical level,
+                    JMP.W ADDR_008849         ;  |jump to $8849
+
+ADDR_0087C0:        LDY.B #$81                ; \ Set "VRAM Address Increment Value" to x81
+                    STY.W $2115               ; / ; VRAM Address Increment Value
                     LDA.W $1BE5               
                     STA.W $2116               ; Address for VRAM Read/Write (Low Byte)
                     LDA.W $1BE4               
@@ -821,8 +980,8 @@ ADDR_0087D3:        LDA.W DATA_008A16,X
                     STA.W $4310,X             
                     DEX                       
                     BPL ADDR_0087D3           
-                    LDA.B #$02                ; \ Enable DMA channel 1 
-                    STA.W $420B               ; /  ; Regular DMA Channel Enable
+                    LDA.B #$02                ; \ Enable DMA channel 1
+                    STA.W $420B               ; / ; Regular DMA Channel Enable
                     STY.W $2115               ; VRAM Address Increment Value
                     LDA.W $1BE5               
                     STA.W $2116               ; Address for VRAM Read/Write (Low Byte)
@@ -837,7 +996,7 @@ ADDR_0087F5:        LDA.W DATA_008A1D,X
                     BPL ADDR_0087F5           
                     LDA.B #$02                
                     STA.W $420B               ; \ Enable DMA channel 1 ; Regular DMA Channel Enable
-                    STY.W $2115               ; /  ; VRAM Address Increment Value
+                    STY.W $2115               ; / ; VRAM Address Increment Value
                     LDA.W $1BE5               
                     INC A                     
                     STA.W $2116               ; Address for VRAM Read/Write (Low Byte)
@@ -848,8 +1007,8 @@ ADDR_008815:        LDA.W DATA_008A24,X
                     STA.W $4310,X             
                     DEX                       
                     BPL ADDR_008815           
-                    LDA.B #$02                ; \ Enable DMA channel 1 
-                    STA.W $420B               ; /  ; Regular DMA Channel Enable
+                    LDA.B #$02                ; \ Enable DMA channel 1
+                    STA.W $420B               ; / ; Regular DMA Channel Enable
                     STY.W $2115               ; VRAM Address Increment Value
                     LDA.W $1BE5               
                     INC A                     
@@ -863,9 +1022,10 @@ ADDR_008838:        LDA.W DATA_008A2B,X
                     STA.W $4310,X             
                     DEX                       
                     BPL ADDR_008838           
-                    LDA.B #$02                ; \ Enable DMA channel 1 
-                    STA.W $420B               ; /  ; Regular DMA Channel Enable
+                    LDA.B #$02                ; \ Enable DMA channel 1
+                    STA.W $420B               ; / ; Regular DMA Channel Enable
                     JMP.W ADDR_0088DD         
+
 ADDR_008849:        LDY.B #$80                
                     STY.W $2115               ; VRAM Address Increment Value
                     LDA.W $1BE5               
@@ -932,10 +1092,12 @@ ADDR_0088DD:        LDA.B #$00
                     LDA.W $1CE6               
                     BNE ADDR_0088EA           
                     JMP.W ADDR_008A10         
+
 ADDR_0088EA:        LDA $5B                   
                     AND.B #$02                
                     BEQ ADDR_0088F3           
                     JMP.W ADDR_00897C         
+
 ADDR_0088F3:        LDY.B #$81                
                     STY.W $2115               ; VRAM Address Increment Value
                     LDA.W $1CE7               
@@ -992,6 +1154,7 @@ ADDR_00896B:        LDA.W DATA_008A47,X
                     LDA.B #$02                
                     STA.W $420B               ; Regular DMA Channel Enable
                     JMP.W ADDR_008A10         
+
 ADDR_00897C:        LDY.B #$80                
                     STY.W $2115               ; VRAM Address Increment Value
                     LDA.W $1CE7               
@@ -1057,7 +1220,6 @@ ADDR_008A10:        LDA.B #$00
                     STA.W $1CE6               
                     RTL                       
 
-
 DATA_008A16:        .db $01,$18,$E6,$1B,$00,$40,$00
 
 DATA_008A1D:        .db $01,$18,$26,$1C,$00,$2C,$00
@@ -1114,10 +1276,9 @@ SetUpScreen:        STZ.W $2133               ; Set "Screen Initial Settings" to
                     STZ.W $212F               ; Window Mask Designation for Sub Screen
                     LDA.B #$02                
                     STA $44                   
-                    LDA.B #$80                ; \ Set Mode7 "Screen Over" to %10000000, disable Mode7 flipping 
-                    STA.W $211A               ; /  ; Initial Setting for Mode 7
-                    RTS                       ; Return 
-
+                    LDA.B #$80                ; \ Set Mode7 "Screen Over" to %10000000, disable Mode7 flipping
+                    STA.W $211A               ; / ; Initial Setting for Mode 7
+                    RTS                       ; Return
 
 DATA_008AB4:        .db $00,$00,$FE,$00,$00,$00,$FE,$00
 DATA_008ABC:        .db $00,$00,$02,$00,$00,$00,$02,$00
@@ -1199,7 +1360,6 @@ ADDR_008B34:        STA $01
                     LSR                       
                     RTS                       
 
-
 DATA_008B57:        .db $00
 
 DATA_008B58:        .db $00,$03,$00,$06,$00,$09,$00,$0C
@@ -1260,68 +1420,67 @@ DATA_008C89:        .db $30,$28,$31,$28,$32,$28,$33,$28
 
 GM04DoDMA:          LDA.B #$80                ; More DMA ; Accum (8 bit) 
                     STA.W $2115               ; Increment when $2119 accessed ; VRAM Address Increment Value
-                    LDA.B #$2E                ; \VRAM address = #$502E 
+                    LDA.B #$2E                ; \VRAM address = #$502E
                     STA.W $2116               ;  | ; Address for VRAM Read/Write (Low Byte)
-                    LDA.B #$50                ;  | 
+                    LDA.B #$50                ;  |
                     STA.W $2117               ; / ; Address for VRAM Read/Write (High Byte)
                     LDX.B #$06                
 ADDR_008D10:        LDA.W DATA_008D90,X       
-                    STA.W $4310,X             ; Load up the DMA regs 
-                    DEX                       ; DMA Source = 8C:8118 (...) 
-                    BPL ADDR_008D10           ; Dest = $2118, Transfer: #$08 bytes 
+                    STA.W $4310,X             ; Load up the DMA regs
+                    DEX                       ; DMA Source = 8C:8118 (...)
+                    BPL ADDR_008D10           ; Dest = $2118, Transfer: #$08 bytes
                     LDA.B #$02                
                     STA.W $420B               ; Do the DMA ; Regular DMA Channel Enable
-                    LDA.B #$80                ; \ Set VRAM mode = same as above 
+                    LDA.B #$80                ; \ Set VRAM mode = same as above
                     STA.W $2115               ;  |Address = #$5042 ; VRAM Address Increment Value
-                    LDA.B #$42                ;  | 
+                    LDA.B #$42                ;  |
                     STA.W $2116               ;  | ; Address for VRAM Read/Write (Low Byte)
-                    LDA.B #$50                ;  | 
-                    STA.W $2117               ; /  ; Address for VRAM Read/Write (High Byte)
-                    LDX.B #$06                ; \ Set up more DMA 
-ADDR_008D2F:        LDA.W DATA_008D97,X       ;  |Dest = $2100 
-                    STA.W $4310,X             ;  |Fixed source address = $89:1801 (Lunar Address: 7E:1801) 
-                    DEX                       ;  |#$808C bytes to transfer 
-                    BPL ADDR_008D2F           ; /Type = One reg write once 
+                    LDA.B #$50                ;  |
+                    STA.W $2117               ; / ; Address for VRAM Read/Write (High Byte)
+                    LDX.B #$06                ; \ Set up more DMA
+ADDR_008D2F:        LDA.W DATA_008D97,X       ;  |Dest = $2100
+                    STA.W $4310,X             ;  |Fixed source address = $89:1801 (Lunar Address: 7E:1801)
+                    DEX                       ;  |#$808C bytes to transfer
+                    BPL ADDR_008D2F           ; /Type = One reg write once
                     LDA.B #$02                
                     STA.W $420B               ; Start DMA ; Regular DMA Channel Enable
-                    LDA.B #$80                ; \prep VRAM for another write 
+                    LDA.B #$80                ; \prep VRAM for another write
                     STA.W $2115               ;  | ; VRAM Address Increment Value
-                    LDA.B #$63                ;  | 
+                    LDA.B #$63                ;  |
                     STA.W $2116               ;  | ; Address for VRAM Read/Write (Low Byte)
-                    LDA.B #$50                ;  | 
+                    LDA.B #$50                ;  |
                     STA.W $2117               ; / ; Address for VRAM Read/Write (High Byte)
-                    LDX.B #$06                ; \ Load up DMA again 
-ADDR_008D4E:        LDA.W DATA_008D9E,X       ;  |Dest = $2118 
-                    STA.W $4310,X             ;  |Source Address = $39:8CC1 
-                    DEX                       ;  |Size = #$0100 bytes 
-                    BPL ADDR_008D4E           ; /Type = Two reg write once 
-                    LDA.B #$02                ; \Start Transfer 
+                    LDX.B #$06                ; \ Load up DMA again
+ADDR_008D4E:        LDA.W DATA_008D9E,X       ;  |Dest = $2118
+                    STA.W $4310,X             ;  |Source Address = $39:8CC1
+                    DEX                       ;  |Size = #$0100 bytes
+                    BPL ADDR_008D4E           ; /Type = Two reg write once
+                    LDA.B #$02                ; \Start Transfer
                     STA.W $420B               ; / ; Regular DMA Channel Enable
-                    LDA.B #$80                ; \ 
+                    LDA.B #$80                ; \
                     STA.W $2115               ;  |Set up VRAM once more ; VRAM Address Increment Value
-                    LDA.B #$8E                ;  | 
+                    LDA.B #$8E                ;  |
                     STA.W $2116               ;  | ; Address for VRAM Read/Write (Low Byte)
-                    LDA.B #$50                ;  | 
+                    LDA.B #$50                ;  |
                     STA.W $2117               ; / ; Address for VRAM Read/Write (High Byte)
-                    LDX.B #$06                ; \Last DMA... 
-ADDR_008D6D:        LDA.W DATA_008DA5,X       ;  |Reg = $2118 Type = Two reg write once 
-                    STA.W $4310,X             ;  |Source Address = $08:8CF7 
-                    DEX                       ;  |Size = #$9C00 bytes (o_o) 
-                    BPL ADDR_008D6D           ; / 
-                    LDA.B #$02                ; \Transfer 
+                    LDX.B #$06                ; \Last DMA...
+ADDR_008D6D:        LDA.W DATA_008DA5,X       ;  |Reg = $2118 Type = Two reg write once
+                    STA.W $4310,X             ;  |Source Address = $08:8CF7
+                    DEX                       ;  |Size = #$9C00 bytes (o_o)
+                    BPL ADDR_008D6D           ; /
+                    LDA.B #$02                ; \Transfer
                     STA.W $420B               ; / ; Regular DMA Channel Enable
-                    LDX.B #$36                ; \Copy some data into RAM 
-                    LDY.B #$6C                ;  | 
-ADDR_008D7F:        LDA.W DATA_008C89,Y       ;  | 
-                    STA.W $0EF9,X             ;  | 
-                    DEY                       ;  | 
-                    DEY                       ;  | 
-                    DEX                       ;  | 
-                    BPL ADDR_008D7F           ; / 
+                    LDX.B #$36                ; \Copy some data into RAM
+                    LDY.B #$6C                ;  |
+ADDR_008D7F:        LDA.W DATA_008C89,Y       ;  |
+                    STA.W $0EF9,X             ;  |
+                    DEY                       ;  |
+                    DEY                       ;  |
+                    DEX                       ;  |
+                    BPL ADDR_008D7F           ; /
                     LDA.B #$28                
-                    STA.W $0F30               ; #$28 -> Timer frame counter 
-                    RTS                       ; Return 
-
+                    STA.W $0F30               ; #$28 -> Timer frame counter
+                    RTS                       ; Return
 
 DATA_008D90:        .db $01,$18,$81,$8C,$00,$08,$00
 
@@ -1332,35 +1491,34 @@ DATA_008D9E:        .db $01,$18,$C1,$8C,$00,$36,$00
 DATA_008DA5:        .db $01,$18,$F7,$8C,$00,$08,$00
 
 DrawStatusBar:      STZ.W $2115               ; Set VRAM Address Increment Value to x00 ; VRAM Address Increment Value
-                    LDA.B #$42                ; \  
+                    LDA.B #$42                ; \
                     STA.W $2116               ;  |Set Address for VRAM Read/Write to x5042 ; Address for VRAM Read/Write (Low Byte)
-                    LDA.B #$50                ;  | 
-                    STA.W $2117               ; /  ; Address for VRAM Read/Write (High Byte)
-                    LDX.B #$06                ; \  
-ADDR_008DBB:        LDA.W DMAdata_StBr1,X     ;  |Load settings from DMAdata_StBr1 into DMA channel 1 
-                    STA.W $4310,X             ;  | 
-                    DEX                       ;  | 
-                    BPL ADDR_008DBB           ; /  
-                    LDA.B #$02                ; \ Activate DMA channel 1 
-                    STA.W $420B               ; /  ; Regular DMA Channel Enable
+                    LDA.B #$50                ;  |
+                    STA.W $2117               ; / ; Address for VRAM Read/Write (High Byte)
+                    LDX.B #$06                ; \
+ADDR_008DBB:        LDA.W DMAdata_StBr1,X     ;  |Load settings from DMAdata_StBr1 into DMA channel 1
+                    STA.W $4310,X             ;  |
+                    DEX                       ;  |
+                    BPL ADDR_008DBB           ; /
+                    LDA.B #$02                ; \ Activate DMA channel 1
+                    STA.W $420B               ; / ; Regular DMA Channel Enable
                     STZ.W $2115               ; Set VRAM Address Increment Value to x00 ; VRAM Address Increment Value
-                    LDA.B #$63                ; \  
+                    LDA.B #$63                ; \
                     STA.W $2116               ;  |Set Address for VRAM Read/Write to x5063 ; Address for VRAM Read/Write (Low Byte)
-                    LDA.B #$50                ;  | 
-                    STA.W $2117               ; /  ; Address for VRAM Read/Write (High Byte)
-                    LDX.B #$06                ; \  
-ADDR_008DD8:        LDA.W DMAdata_StBr2,X     ;  |Load settings from DMAdata_StBr2 into DMA channel 1 
-                    STA.W $4310,X             ;  | 
-                    DEX                       ;  | 
-                    BPL ADDR_008DD8           ; /  
-                    LDA.B #$02                ; \ Activate DMA channel 1 
-                    STA.W $420B               ; /  ; Regular DMA Channel Enable
-                    RTS                       ; Return 
+                    LDA.B #$50                ;  |
+                    STA.W $2117               ; / ; Address for VRAM Read/Write (High Byte)
+                    LDX.B #$06                ; \
+ADDR_008DD8:        LDA.W DMAdata_StBr2,X     ;  |Load settings from DMAdata_StBr2 into DMA channel 1
+                    STA.W $4310,X             ;  |
+                    DEX                       ;  |
+                    BPL ADDR_008DD8           ; /
+                    LDA.B #$02                ; \ Activate DMA channel 1
+                    STA.W $420B               ; / ; Regular DMA Channel Enable
+                    RTS                       ; Return
 
+DMAdata_StBr1:      .db $00,$18,$F9,$0E,$00,$1C,$00     ; DMA settings for copying the top half ; of the status bar to VRAM
 
-DMAdata_StBr1:      .db $00,$18,$F9,$0E,$00,$1C,$00
-
-DMAdata_StBr2:      .db $00,$18,$15,$0F,$00,$1B,$00
+DMAdata_StBr2:      .db $00,$18,$15,$0F,$00,$1B,$00     ; DMA settings for copying the bottom half ; of the status bar to VRAM
 
 DATA_008DF5:        .db $40,$41,$42,$43
 
@@ -1376,9 +1534,9 @@ DATA_008E07:        .db $C3,$B8,$B9,$BA,$BB,$BA,$BF,$BC
                     .db $BD,$BE,$BF,$C0,$C3,$C1,$B9,$C2
                     .db $C4,$B7,$C5
 
-ADDR_008E1A:        LDA.W $1493               ; \  
-                    ORA $9D                   ;  |If level is ending or sprites are locked, 
-                    BNE ADDR_008E6F           ; / branch to $8E6F 
+ADDR_008E1A:        LDA.W $1493               ; \
+                    ORA $9D                   ;  |If level is ending or sprites are locked,
+                    BNE ADDR_008E6F           ; / branch to $8E6F
                     LDA.W $0D9B               
                     CMP.B #$C1                
                     BEQ ADDR_008E6F           
@@ -1386,10 +1544,10 @@ ADDR_008E1A:        LDA.W $1493               ; \
                     BPL ADDR_008E6F           
                     LDA.B #$28                
                     STA.W $0F30               
-                    LDA.W $0F31               ; \  
-                    ORA.W $0F32               ;  |If time is 0, 
-                    ORA.W $0F33               ;  |branch to $8E6F 
-                    BEQ ADDR_008E6F           ; /  
+                    LDA.W $0F31               ; \
+                    ORA.W $0F32               ;  |If time is 0,
+                    ORA.W $0F33               ;  |branch to $8E6F
+                    BEQ ADDR_008E6F           ; /
                     LDX.B #$02                
 ADDR_008E3F:        DEC.W $0F31,X             
                     BPL ADDR_008E4C           
@@ -1397,25 +1555,25 @@ ADDR_008E3F:        DEC.W $0F31,X
                     STA.W $0F31,X             
                     DEX                       
                     BPL ADDR_008E3F           
-ADDR_008E4C:        LDA.W $0F31               ; \  
-                    BNE ADDR_008E60           ;  | 
-                    LDA.W $0F32               ;  | 
-                    AND.W $0F33               ;  |If time is 99, 
-                    CMP.B #$09                ;  |speed up the music 
-                    BNE ADDR_008E60           ;  | 
-                    LDA.B #$FF                ;  | 
-                    STA.W $1DF9               ;  | 
-ADDR_008E60:        LDA.W $0F31               ; \  
-                    ORA.W $0F32               ;  | 
-                    ORA.W $0F33               ;  |If time is 0, 
-                    BNE ADDR_008E6F           ;  |JSL to $00F606 
-                    JSL.L KillMario           ;  | 
-ADDR_008E6F:        LDA.W $0F31               ; \  
-                    STA.W $0F25               ;  | 
-                    LDA.W $0F32               ;  |Copy time to $0F25-$0F27 
-                    STA.W $0F26               ;  | 
-                    LDA.W $0F33               ;  | 
-                    STA.W $0F27               ; /  
+ADDR_008E4C:        LDA.W $0F31               ; \
+                    BNE ADDR_008E60           ;  |
+                    LDA.W $0F32               ;  |
+                    AND.W $0F33               ;  |If time is 99,
+                    CMP.B #$09                ;  |speed up the music
+                    BNE ADDR_008E60           ;  |
+                    LDA.B #$FF                ;  |
+                    STA.W $1DF9               ;  |
+ADDR_008E60:        LDA.W $0F31               ; \
+                    ORA.W $0F32               ;  |
+                    ORA.W $0F33               ;  |If time is 0,
+                    BNE ADDR_008E6F           ;  |JSL to $00F606
+                    JSL.L KillMario           ;  |
+ADDR_008E6F:        LDA.W $0F31               ; \
+                    STA.W $0F25               ;  |
+                    LDA.W $0F32               ;  |Copy time to $0F25-$0F27
+                    STA.W $0F26               ;  |
+                    LDA.W $0F33               ;  |
+                    STA.W $0F27               ; /
                     LDX.B #$10                
                     LDY.B #$00                
 ADDR_008E85:        LDA.W $0F31,Y             
@@ -1449,89 +1607,89 @@ ADDR_008EBF:        SEP #$20                  ; 8 bit A ; Accum (8 bit)
                     DEX                       
                     DEX                       
                     BPL ADDR_008E97           
-                    LDA.W $0F36               ; \ Store high byte of Mario's score in $00 
-                    STA $00                   ; /  
-                    STZ $01                   ; Store x00 in $01 
-                    LDA.W $0F35               ; \ Store mid byte of Mario's score in $03 
-                    STA $03                   ; / 
-                    LDA.W $0F34               ; \ Store low byte of Mario's score in $02 
-                    STA $02                   ; / 
+                    LDA.W $0F36               ; \ Store high byte of Mario's score in $00
+                    STA $00                   ; /
+                    STZ $01                   ; Store x00 in $01
+                    LDA.W $0F35               ; \ Store mid byte of Mario's score in $03
+                    STA $03                   ; /
+                    LDA.W $0F34               ; \ Store low byte of Mario's score in $02
+                    STA $02                   ; /
                     LDX.B #$14                
                     LDY.B #$00                
                     JSR.W ADDR_009012         
-                    LDX.B #$00                ; \  
-ADDR_008EE0:        LDA.W $0F29,X             ;  | 
-                    BNE ADDR_008EEF           ;  | 
-                    LDA.B #$FC                ;  |Replace all leading zeroes in the score with spaces 
-                    STA.W $0F29,X             ;  | 
-                    INX                       ;  | 
-                    CPX.B #$06                ;  | 
-                    BNE ADDR_008EE0           ;  | 
-ADDR_008EEF:        LDA.W $0DB3               ; Get current player 
-                    BEQ ADDR_008F1D           ; If player is Mario, branch to $8F1D 
-                    LDA.W $0F39               ; \ Store high byte of Luigi's score in $00 
-                    STA $00                   ; /  
-                    STZ $01                   ; Store x00 in $01 
-                    LDA.W $0F38               ; \ Store mid byte of Luigi's score in $03 
-                    STA $03                   ; /  
-                    LDA.W $0F37               ; \ Store low byte of Luigi's score in $02 
-                    STA $02                   ; /  
+                    LDX.B #$00                ; \
+ADDR_008EE0:        LDA.W $0F29,X             ;  |
+                    BNE ADDR_008EEF           ;  |
+                    LDA.B #$FC                ;  |Replace all leading zeroes in the score with spaces
+                    STA.W $0F29,X             ;  |
+                    INX                       ;  |
+                    CPX.B #$06                ;  |
+                    BNE ADDR_008EE0           ;  |
+ADDR_008EEF:        LDA.W $0DB3               ; Get current player
+                    BEQ ADDR_008F1D           ; If player is Mario, branch to $8F1D
+                    LDA.W $0F39               ; \ Store high byte of Luigi's score in $00
+                    STA $00                   ; /
+                    STZ $01                   ; Store x00 in $01
+                    LDA.W $0F38               ; \ Store mid byte of Luigi's score in $03
+                    STA $03                   ; /
+                    LDA.W $0F37               ; \ Store low byte of Luigi's score in $02
+                    STA $02                   ; /
                     LDX.B #$14                
                     LDY.B #$00                
                     JSR.W ADDR_009012         
-                    LDX.B #$00                ; \  
-ADDR_008F0E:        LDA.W $0F29,X             ;  | 
-                    BNE ADDR_008F1D           ;  | 
-                    LDA.B #$FC                ;  |Replace all leading zeroes in the score with spaces 
-                    STA.W $0F29,X             ;  | 
-                    INX                       ;  | 
-                    CPX.B #$06                ;  | 
-                    BNE ADDR_008F0E           ; /  
-ADDR_008F1D:        LDA.W $13CC               ; \ If Coin increase isn't x00, 
-                    BEQ ADDR_008F3B           ; / branch to $8F3B 
-                    DEC.W $13CC               ; Decrease "Coin increase" 
-                    INC.W $0DBF               ; Increase coins by 1 
-                    LDA.W $0DBF               ; \  
-                    CMP.B #$64                ;  |If coins<100, branch to $8F3B 
-                    BCC ADDR_008F3B           ; /  
-                    INC.W $18E4               ; Increase lives by 1 
-                    LDA.W $0DBF               ; \  
-                    SEC                       ;  |Decrease coins by 100 
-                    SBC.B #$64                ;  | 
-                    STA.W $0DBF               ; /  
-ADDR_008F3B:        LDA.W $0DBE               ; \ If amount of lives is negative, 
-                    BMI ADDR_008F49           ; / branch to $8F49 
-                    CMP.B #$62                ; \ If amount of lives is less than 98, 
-                    BCC ADDR_008F49           ; / branch to $8F49 
-                    LDA.B #$62                ; \ Set amount of lives to 98 
-                    STA.W $0DBE               ; /  
-ADDR_008F49:        LDA.W $0DBE               ; \  
-                    INC A                     ;  |Get amount of lives in decimal 
-                    JSR.W HexToDec            ; /  
-                    TXY                       ; \  
-                    BNE ADDR_008F55           ;  |If 10s is 0, replace with space 
-                    LDX.B #$FC                ;  | 
-ADDR_008F55:        STX.W $0F16               ; \ Write lives to status bar 
-                    STA.W $0F17               ; /  
-                    LDX.W $0DB3               ; \ Get bonus stars 
-                    LDA.W $0F48,X             ; /  
-                    CMP.B #$64                ; \ If bonus stars is less than 100, 
-                    BCC ADDR_008F73           ; / branch to $8F73 
-                    LDA.B #$FF                ; \ Start bonus game when the level ends 
-                    STA.W $1425               ; /  
-                    LDA.W $0F48,X             ; \  
-                    SEC                       ;  |Subtract bonus stars by 100 
-                    SBC.B #$64                ;  | 
-                    STA.W $0F48,X             ; /  
-ADDR_008F73:        LDA.W $0DBF               ; \ Get amount of coins in decimal 
-                    JSR.W HexToDec            ; /  
-                    TXY                       ; \ 
-                    BNE ADDR_008F7E           ;  |If 10s is 0, replace with space 
-                    LDX.B #$FC                ;  | 
-ADDR_008F7E:        STA.W $0F14               ; \ Write coins to status bar 
-                    STX.W $0F13               ; /  
+                    LDX.B #$00                ; \
+ADDR_008F0E:        LDA.W $0F29,X             ;  |
+                    BNE ADDR_008F1D           ;  |
+                    LDA.B #$FC                ;  |Replace all leading zeroes in the score with spaces
+                    STA.W $0F29,X             ;  |
+                    INX                       ;  |
+                    CPX.B #$06                ;  |
+                    BNE ADDR_008F0E           ; /
+ADDR_008F1D:        LDA.W $13CC               ; \ If Coin increase isn't x00,
+                    BEQ ADDR_008F3B           ; / branch to $8F3B
+                    DEC.W $13CC               ; Decrease "Coin increase"
+                    INC.W $0DBF               ; Increase coins by 1
+                    LDA.W $0DBF               ; \
+                    CMP.B #$64                ;  |If coins<100, branch to $8F3B
+                    BCC ADDR_008F3B           ; /
+                    INC.W $18E4               ; Increase lives by 1
+                    LDA.W $0DBF               ; \
+                    SEC                       ;  |Decrease coins by 100
+                    SBC.B #$64                ;  |
+                    STA.W $0DBF               ; /
+ADDR_008F3B:        LDA.W $0DBE               ; \ If amount of lives is negative,
+                    BMI ADDR_008F49           ; / branch to $8F49
+                    CMP.B #$62                ; \ If amount of lives is less than 98,
+                    BCC ADDR_008F49           ; / branch to $8F49
+                    LDA.B #$62                ; \ Set amount of lives to 98
+                    STA.W $0DBE               ; /
+ADDR_008F49:        LDA.W $0DBE               ; \
+                    INC A                     ;  |Get amount of lives in decimal
+                    JSR.W HexToDec            ; /
+                    TXY                       ; \
+                    BNE ADDR_008F55           ;  |If 10s is 0, replace with space
+                    LDX.B #$FC                ;  |
+ADDR_008F55:        STX.W $0F16               ; \ Write lives to status bar
+                    STA.W $0F17               ; /
+                    LDX.W $0DB3               ; \ Get bonus stars
+                    LDA.W $0F48,X             ; /
+                    CMP.B #$64                ; \ If bonus stars is less than 100,
+                    BCC ADDR_008F73           ; / branch to $8F73
+                    LDA.B #$FF                ; \ Start bonus game when the level ends
+                    STA.W $1425               ; /
+                    LDA.W $0F48,X             ; \
+                    SEC                       ;  |Subtract bonus stars by 100
+                    SBC.B #$64                ;  |
+                    STA.W $0F48,X             ; /
+ADDR_008F73:        LDA.W $0DBF               ; \ Get amount of coins in decimal
+                    JSR.W HexToDec            ; /
+                    TXY                       ; \
+                    BNE ADDR_008F7E           ;  |If 10s is 0, replace with space
+                    LDX.B #$FC                ;  |
+ADDR_008F7E:        STA.W $0F14               ; \ Write coins to status bar
+                    STX.W $0F13               ; /
                     SEP #$20                  ; 8 bit A ; Accum (8 bit) 
-                    LDX.W $0DB3               ; Load Character into X 
+                    LDX.W $0DB3               ; Load Character into X
                     STZ $00                   
                     STZ $01                   
                     STZ $03                   
@@ -1586,7 +1744,6 @@ ADDR_008FEE:        TYA
                     BNE ADDR_008FE6           
                     RTS                       
 
-
 DATA_008FFA:        .db $01,$00
 
 DATA_008FFC:        .db $A0,$86,$00,$00,$10,$27,$00,$00
@@ -1611,6 +1768,7 @@ ADDR_009017:        REP #$20                  ; 16 bit A ; Accum (16 bit)
                     SEP #$20                  ; 8 bit A ; Accum (8 bit) 
                     INC.W $0F15,X             
                     BRA ADDR_009017           
+
 ADDR_009039:        INX                       
                     INY                       
                     INY                       
@@ -1621,13 +1779,14 @@ ADDR_009039:        INX
                     SEP #$20                  ; 8 bit A ; Accum (8 bit) 
                     RTS                       
 
-HexToDec:           LDX.B #$00                ;  | 
-ADDR_009047:        CMP.B #$0A                ;  | 
-                    BCC ADDR_009050           ;  |Sets A to 10s of original A 
-                    SBC.B #$0A                ;  |Sets X to 1s of original A 
-                    INX                       ;  | 
-                    BRA ADDR_009047           ;  | 
-ADDR_009050:        RTS                       ; /  
+HexToDec:           LDX.B #$00                ;  |
+ADDR_009047:        CMP.B #$0A                ;  |
+                    BCC Return009050          ;  |Sets A to 10s of original A
+                    SBC.B #$0A                ;  |Sets X to 1s of original A
+                    INX                       ;  |
+                    BRA ADDR_009047           ;  |
+
+Return009050:       RTS                       ; /
 
 ADDR_009051:        SEP #$20                  ; Accum (8 bit) 
                     STZ.W $0F15,X             
@@ -1642,6 +1801,7 @@ ADDR_009056:        REP #$20                  ; Accum (16 bit)
                     SEP #$20                  ; Accum (8 bit) 
                     INC.W $0F15,X             
                     BRA ADDR_009056           
+
 ADDR_00906D:        INX                       
                     INY                       
                     INY                       
@@ -1663,8 +1823,8 @@ ADDR_009079:        LDY.B #$E0
                     STA.W $0201,Y             
 ADDR_00908E:        STY $01                   
                     LDY.W $0DC2               
-                    BEQ ADDR_0090D0           
-                    LDA.W DATA_008E01,Y       
+                    BEQ Return0090D0          
+                    LDA.W DATA_008E01,Y       ;  Bug: Most sprites have glitched gfx if put in item reserve.  See ItemFix.asm
                     STA $00                   
                     CPY.B #$03                
                     BNE ADDR_0090AB           
@@ -1693,8 +1853,7 @@ ADDR_0090AB:        LDY $01
                     TAY                       
                     LDA.B #$02                
                     STA.W $0420,Y             
-ADDR_0090D0:        RTS                       
-
+Return0090D0:       RTS                       
 
 DATA_0090D1:        .db $00,$FF,$4D,$4C,$03,$4D,$5D,$FF
                     .db $03,$00,$4C,$03,$04,$15,$00,$02
@@ -1732,21 +1891,22 @@ ADDR_00919B:        LDA $71
                     CMP.B #$0A                
                     BNE ADDR_0091A6           
                     JSR.W ADDR_00C593         
-                    BRA ADDR_0091B0           
+                    BRA Return0091B0          
+
 ADDR_0091A6:        LDA.W $141A               
-                    BNE ADDR_0091B0           
+                    BNE Return0091B0          
                     LDA.B #$1E                
                     STA.W $0DC0               
-ADDR_0091B0:        RTS                       
+Return0091B0:       RTS                       
 
 ADDR_0091B1:        JSR.W ADDR_00A82D         
                     LDX.B #$00                
                     LDA.B #$B0                
                     LDY.W $1425               
                     BEQ ADDR_0091CA           
-                    STZ.W $0F31               ; \  
-                    STZ.W $0F32               ;  |Set timer to 000 
-                    STZ.W $0F33               ; /  
+                    STZ.W $0F31               ; \
+                    STZ.W $0F32               ;  |Set timer to 000
+                    STZ.W $0F33               ; /
                     LDX.B #$26                
                     LDA.B #$A4                
 ADDR_0091CA:        STA $00                   
@@ -1765,6 +1925,7 @@ ADDR_0091DF:        TYA
                     TAY                       
                     BNE ADDR_0091D0           
                     JMP.W ADDR_008494         
+
 ADDR_0091E9:        LDA.W DATA_009139,X       
                     STA.W $030B,Y             
                     LDA.W DATA_00916A,X       
@@ -1788,7 +1949,7 @@ ADDR_009206:        PHY
                     STA.W $0463,Y             
                     PLY                       
                     LDA.W DATA_0090D1,X       
-                    BMI ADDR_00922E           
+                    BMI Return00922E          
                     STA.W $030A,Y             
                     LDA.W DATA_009105,X       
                     STA.W $030E,Y             
@@ -1796,7 +1957,7 @@ ADDR_009206:        PHY
                     STA.W $0309,Y             
                     LDA.B #$70                
                     STA.W $030D,Y             
-ADDR_00922E:        RTS                       
+Return00922E:       RTS                       
 
 ADDR_00922F:        STZ.W $0703               
                     STZ.W $0704               
@@ -1810,7 +1971,6 @@ ADDR_00923A:        LDA.W DATA_009249,X
                     STA.W $420B               ; Regular DMA Channel Enable
                     RTS                       
 
-
 DATA_009249:        .db $00,$22,$03,$07,$00,$00,$02
 
 ADDR_009250:        LDX.B #$04                
@@ -1820,18 +1980,17 @@ ADDR_009252:        LDA.W DATA_009277,X
                     BPL ADDR_009252           
                     LDA.B #$00                
                     STA.W $4377               ; Data Bank (H-DMA)
-ADDR_009260:        STZ.W $0D9F               ; Disable all HDMA channels 
+ADDR_009260:        STZ.W $0D9F               ; Disable all HDMA channels
 ADDR_009263:        REP #$10                  ; 16 bit A ; Index (16 bit) 
-                    LDX.W #$01BE              ; \  
-                    LDA.B #$FF                ;  | 
-ADDR_00926A:        STA.W $04A0,X             ;  |Clear "HDMA table for windowing effects" 
-                    STZ.W $04A1,X             ;  |...hang on again.  It clears one set of RAM here, but not the same 
-                    DEX                       ;  | 
-                    DEX                       ;  | 
-                    BPL ADDR_00926A           ; /  
+                    LDX.W #$01BE              ; \
+                    LDA.B #$FF                ;  |
+ADDR_00926A:        STA.W $04A0,X             ;  |Clear "HDMA table for windowing effects"
+                    STZ.W $04A1,X             ;  |...hang on again.  It clears one set of RAM here, but not the same
+                    DEX                       ;  |
+                    DEX                       ;  |
+                    BPL ADDR_00926A           ; /
                     SEP #$10                  ; \ Set A to 8bit and return ; Index (8 bit) 
-                    RTS                       ; /  
-
+                    RTS                       ; /
 
 DATA_009277:        .db $41,$26,$7C,$92,$00,$F0,$A0,$04
                     .db $F0,$80,$05,$00
@@ -1842,22 +2001,23 @@ ADDR_009283:        JSR.W ADDR_009263
                     BCS ADDR_0092A0           
                     REP #$10                  ; Index (16 bit) 
                     LDX.W #$01BE              
-WindowHDMAenable:   STZ.W $04A0,X             ; out? 
-                    LDA.B #$FF                ; *note to self: ctrl+insert, not shift+insert* 
-                    STA.W $04A1,X             ; ...  This is, uh, strange.  It pastes $00FF into the $04A0,x table 
-                    INX                       ; instead of $FF00 o_O 
+WindowHDMAenable:   STZ.W $04A0,X             ; out?
+                    LDA.B #$FF                ; *note to self: ctrl+insert, not shift+insert*
+                    STA.W $04A1,X             ; ...  This is, uh, strange.  It pastes $00FF into the $04A0,x table
+                    INX                       ; instead of $FF00 o_O
                     INX                       
                     CPX.W #$01C0              
                     BCC WindowHDMAenable      
-ADDR_0092A0:        LDA.B #$80                ;  Enable channel 7 in HDMA, disable all other HDMA channels 
-                    STA.W $0D9F               ;  $7E:0D9F - H-DMA Channel Enable RAM Mirror 
+ADDR_0092A0:        LDA.B #$80                ;  Enable channel 7 in HDMA, disable all other HDMA channels
+                    STA.W $0D9F               ;  $7E:0D9F - H-DMA Channel Enable RAM Mirror
                     SEP #$10                  ; Index (8 bit) 
                     RTS                       
 
-ADDR_0092A8:        JSR.W ADDR_009263         ; these are somewhat the same subroutine, but also not >_> 
+ADDR_0092A8:        JSR.W ADDR_009263         ; these are somewhat the same subroutine, but also not >_>
                     REP #$10                  ; Index (16 bit) 
                     LDX.W #$0198              
                     BRA WindowHDMAenable      
+
 ADDR_0092B2:        LDA.B #$58                ; Index (8 bit) 
                     STA.W $04A0               
                     STA.W $04AA               
@@ -1900,129 +2060,127 @@ ADDR_0092F5:        LDA.W $001A,Y
                     SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     RTS                       
 
-
 DATA_009313:        .db $02,$0D,$A0,$04,$00
 
 DATA_009318:        .db $02,$0F,$AA,$04,$00
 
 DATA_00931D:        .db $02,$11,$B4,$04,$00
 
-GetGameMode:        LDA.W $0100               ; Load game mode 
+GetGameMode:        LDA.W $0100               ; Load game mode
                     JSL.L ExecutePtr          
 
-Ptrs009329:         .dw ADDR_009391           
-                    .dw ADDR_00940F           
-                    .dw ADDR_009F6F           
-                    .dw ADDR_0096AE           
-                    .dw ADDR_009A8B           
-                    .dw ADDR_009F6F           
-                    .dw ADDR_00941B           
-                    .dw GAMEMODE_07           
-                    .dw ADDR_009CD1           
-                    .dw ADDR_009B1A           
-                    .dw ADDR_009DFA           
-                    .dw ADDR_009F6F           
-                    .dw ADDR_00A087           
-                    .dw ADDR_009F6F           
-                    .dw ADDR_00A1BE           
-                    .dw TmpFade               
-                    .dw ADDR_00968E           
-                    .dw ADDR_0096D5           
-                    .dw GM04Load              
-                    .dw TmpFade               
-                    .dw ADDR_00A1DA           
-                    .dw ADDR_009F6F           
-                    .dw ADDR_009750           
-                    .dw ADDR_009759           
-                    .dw ADDR_009F6F           
-                    .dw ADDR_009468           
-                    .dw ADDR_009F6F           
-                    .dw ADDR_0094FD           
-                    .dw ADDR_009F6F           
-                    .dw ADDR_009583           
-                    .dw ADDR_009F6F           
-                    .dw ADDR_0095AB           
-                    .dw ADDR_009F6F           
-                    .dw ADDR_0095BC           
-                    .dw ADDR_009F6F           
-                    .dw ADDR_0095C1           
-                    .dw ADDR_009F6F           
-                    .dw ADDR_00962C           
-                    .dw ADDR_009F6F           
-                    .dw ADDR_00963D           
-                    .dw ADDR_009F7C           
-                    .dw ADDR_00968D           
+Ptrs009329:         .dw ADDR_009391           ; 00 -
+                    .dw ADDR_00940F           ; 01 -
+                    .dw ADDR_009F6F           ; 02 -
+                    .dw ADDR_0096AE           ; 03 -
+                    .dw ADDR_009A8B           ; 04 -
+                    .dw ADDR_009F6F           ; 05 -
+                    .dw ADDR_00941B           ; 06 -
+                    .dw GAMEMODE_07           ; 07 -
+                    .dw ADDR_009CD1           ; 08 -
+                    .dw ADDR_009B1A           ; 09 -
+                    .dw ADDR_009DFA           ; 0A -
+                    .dw ADDR_009F6F           ; 0B -
+                    .dw ADDR_00A087           ; 0C -
+                    .dw ADDR_009F6F           ; 0D -
+                    .dw ADDR_00A1BE           ; 0E -
+                    .dw TmpFade               ; 0F -
+                    .dw ADDR_00968E           ; 10 -
+                    .dw ADDR_0096D5           ; 11 -
+                    .dw GM04Load              ; 12 -
+                    .dw TmpFade               ; 13 -
+                    .dw ADDR_00A1DA           ; 14 -
+                    .dw ADDR_009F6F           ; 15 -
+                    .dw ADDR_009750           ; 16 -
+                    .dw ADDR_009759           ; 17 -
+                    .dw ADDR_009F6F           ; 18 -
+                    .dw ADDR_009468           ; 19 -
+                    .dw ADDR_009F6F           ; 1A -
+                    .dw ADDR_0094FD           ; 1B -
+                    .dw ADDR_009F6F           ; 1C -
+                    .dw ADDR_009583           ; 1D -
+                    .dw ADDR_009F6F           ; 1E -
+                    .dw ADDR_0095AB           ; 1F -
+                    .dw ADDR_009F6F           ; 20 -
+                    .dw ADDR_0095BC           ; 21 -
+                    .dw ADDR_009F6F           ; 22 -
+                    .dw ADDR_0095C1           ; 23 -
+                    .dw ADDR_009F6F           ; 24 -
+                    .dw ADDR_00962C           ; 25 -
+                    .dw ADDR_009F6F           ; 26 -
+                    .dw ADDR_00963D           ; 27 -
+                    .dw ADDR_009F7C           ; 28 -
+                    .dw Return00968D          ; 29 -
 
 TurnOffIO:          STZ.W $4200               ; Disable NMI ,VIRQ, HIRQ, Joypads ; NMI, V/H Count, and Joypad Enable
                     STZ.W $420C               ; Turn off all HDMA ; H-DMA Channel Enable
-                    LDA.B #$80                ; \ 
+                    LDA.B #$80                ; \
                     STA.W $2100               ; /Disable Screen ; Screen Display Register
-                    RTS                       ; And return 
+                    RTS                       ; And return
 
+LogoDispX:          .db $60,$70,$80,$90     ; Nintendo Presents X locations
 
-NintendoPos:        .db $60,$70,$80,$90
-
-NintendoTile:       .db $02,$04,$06,$08
+LogoTiles:          .db $02,$04,$06,$08     ; Nintendo Presents tilemap
 
 ADDR_009391:        JSR.W ADDR_0085FA         
                     JSR.W SetUpScreen         
                     JSR.W ADDR_00A993         
-                    LDY.B #$0C                ; \ Load Nintendo Presents logo 
-                    LDX.B #$03                ;  | 
-ADDR_00939E:        LDA.W NintendoPos,X       ;  | 
-                    STA.W $0200,Y             ;  | 
-                    LDA.B #$70                ;  |   <-Y position of logo 
-                    STA.W $0201,Y             ;  | 
-                    LDA.W NintendoTile,X      ;  | 
-                    STA.W $0202,Y             ;  | 
-                    LDA.B #$30                ;  | 
-                    STA.W $0203,Y             ;  | 
-                    DEY                       ;  | 
-                    DEY                       ;  | 
-                    DEY                       ;  | 
-                    DEY                       ;  | 
-                    DEX                       ;  | 
-                    BPL ADDR_00939E           ; /  
-                    LDA.B #$AA                ; \ Related to making the sprites 16x16? 
-                    STA.W $0400               ; /  
-                    LDA.B #$01                ; \ Play "Bing" sound? 
-                    STA.W $1DFC               ; /  
-                    LDA.B #$40                ; \ Set timer to x40 
-                    STA.W $1DF5               ; /  
-ADDR_0093CA:        LDA.B #$0F                ; \ Set brightness to max 
-                    STA.W $0DAE               ; /  
+                    LDY.B #$0C                ; \ Load Nintendo Presents logo
+                    LDX.B #$03                ;  |
+ADDR_00939E:        LDA.W LogoDispX,X         ;  |
+                    STA.W $0200,Y             ;  |
+                    LDA.B #$70                ;  |   <-Y position of logo
+                    STA.W $0201,Y             ;  |
+                    LDA.W LogoTiles,X         ;  |
+                    STA.W $0202,Y             ;  |
+                    LDA.B #$30                ;  |
+                    STA.W $0203,Y             ;  |
+                    DEY                       ;  |
+                    DEY                       ;  |
+                    DEY                       ;  |
+                    DEY                       ;  |
+                    DEX                       ;  |
+                    BPL ADDR_00939E           ; /
+                    LDA.B #$AA                ; \ Related to making the sprites 16x16?
+                    STA.W $0400               ; /
+                    LDA.B #$01                ; \ Play "Bing" sound?
+                    STA.W $1DFC               ; /
+                    LDA.B #$40                ; \ Set timer to x40
+                    STA.W $1DF5               ; /
+ADDR_0093CA:        LDA.B #$0F                ; \ Set brightness to max
+                    STA.W $0DAE               ; /
                     LDA.B #$01                
                     STA.W $0DAF               
-                    STZ.W $192E               ; Sprite palette setting = 0 
-                    JSR.W LoadPalette         ; Load the palette 
-                    STZ.W $0701               ; \ Black background 
-                    STZ.W $0702               ; / 
+                    STZ.W $192E               ; Sprite palette setting = 0
+                    JSR.W LoadPalette         ; Load the palette
+                    STZ.W $0701               ; \ Black background
+                    STZ.W $0702               ; /
                     JSR.W ADDR_00922F         
-                    STZ.W $1B92               ; Set menu pointer position to 0 
-                    LDX.B #$10                ; Enable sprites, disable layers 
-                    LDY.B #$04                ; Set Layer 3 to subscreen 
+                    STZ.W $1B92               ; Set menu pointer position to 0
+                    LDX.B #$10                ; Enable sprites, disable layers
+                    LDY.B #$04                ; Set Layer 3 to subscreen
 ADDR_0093EA:        LDA.B #$01                
                     STA.W $0D9B               
-                    LDA.B #$20                ; CGADSUB = 20 
-                    JSR.W ScreenSettings      ; Apply above settings 
-ADDR_0093F4:        INC.W $0100               ; Move on to Game Mode 01 
-Mode04Finish:       LDA.B #$81                ; \ Enable NMI and joypad, Disable V-count and H-cout 
-                    STA.W $4200               ; /  ; NMI, V/H Count, and Joypad Enable
+                    LDA.B #$20                ; CGADSUB = 20
+                    JSR.W ScreenSettings      ; Apply above settings
+ADDR_0093F4:        INC.W $0100               ; Move on to Game Mode 01
+Mode04Finish:       LDA.B #$81                ; \ Enable NMI and joypad, Disable V-count and H-cout
+                    STA.W $4200               ; / ; NMI, V/H Count, and Joypad Enable
                     RTS                       
 
 ScreenSettings:     STA.W $2131               ; \ Set CGADSUB settings to A ; Add/Subtract Select and Enable
-                    STA $40                   ; /  
+                    STA $40                   ; /
                     STX.W $212C               ; Set "Background and Object Enable" to X ; Background and Object Enable
                     STY.W $212D               ; Set "Sub Screen Designation" Y ; Sub Screen Designation
                     STZ.W $212E               ; \ Set "Window Mask Designation" for main and sub screen to x00 ; Window Mask Designation for Main Screen
-                    STZ.W $212F               ; /  ; Window Mask Designation for Sub Screen
-                    RTS                       ; Return 
+                    STZ.W $212F               ; / ; Window Mask Designation for Sub Screen
+                    RTS                       ; Return
 
-ADDR_00940F:        DEC.W $1DF5               ; Decrease timer 
-                    BNE ADDR_00941A           ; \ If timer is 0: 
-                    JSR.W ADDR_00B888         ;  |Jump to sub $B888 
-ADDR_009417:        INC.W $0100               ;  |Move on to Game Mode 02 
-ADDR_00941A:        RTS                       ; Return 
+ADDR_00940F:        DEC.W $1DF5               ; Decrease timer
+                    BNE Return00941A          ; \ If timer is 0:
+                    JSR.W ADDR_00B888         ;  |Jump to sub $B888
+ADDR_009417:        INC.W $0100               ;  |Move on to Game Mode 02
+Return00941A:       RTS                       ; Return
 
 ADDR_00941B:        JSR.W SetUp0DA0GM4        
                     JSR.W ADDR_009CBE         
@@ -2031,8 +2189,9 @@ ADDR_00941B:        JSR.W SetUp0DA0GM4
                     JSR.W ADDR_009440         
                     INC.W $0100               
                     JMP.W ADDR_009C9F         
+
 ADDR_00942E:        DEC.W $1DF5               
-                    BNE ADDR_00941A           
+                    BNE Return00941A          
                     INC.W $1DF5               
                     LDA.W $1433               
                     CLC                       
@@ -2041,31 +2200,28 @@ ADDR_00942E:        DEC.W $1DF5
                     BCS ADDR_009417           
 ADDR_009440:        STA.W $1433               
 ADDR_009443:        JSR.W ADDR_00CA61         
-                    LDA.B #$80                ; \  
-                    STA $00                   ;  |Store x80 in $00, 
-                    LDA.B #$70                ;  |Store x70 in $01 
-                    STA $01                   ; /  
+                    LDA.B #$80                ; \
+                    STA $00                   ;  |Store x80 in $00,
+                    LDA.B #$70                ;  |Store x70 in $01
+                    STA $01                   ; /
+                    JMP.W ADDR_00CA88         
 
-Instr00944E:        .db $4C,$88
+CutsceneBgColor:    .db $02,$00,$04,$01,$00,$06,$04     ; Purpose of first byte is unknown
 
-CutsceneBGCol:      .db $CA
-
-DATA_009451:        .db $02,$00,$04,$01,$00,$06,$04
-
-CutsceneCsPal:      .db $03,$06,$05,$06,$03,$03,$06,$06
+CutsceneCastlePal:  .db $03,$06,$05,$06,$03,$03,$06,$06     ; Castle palette to use for cutscenes ; Purpose of first byte is unknown
 DATA_009460:        .db $03,$FF,$FF,$C9,$0F,$FF,$CC,$C9
 
 ADDR_009468:        JSR.W ADDR_0085FA         
                     JSR.W Clear_1A_13D3       
                     JSR.W SetUpScreen         
-                    LDX.W $13C6               ; Cutscene number 
+                    LDX.W $13C6               ; Cutscene number
                     LDA.B #$18                
                     STA.W $1931               
                     LDA.B #$14                
                     STA.W $192B               
-                    LDA.W CutsceneBGCol,X     
+                    LDA.W CutsceneBgColor-1,X 
                     STA.W $192F               
-                    LDA.W CutsceneCsPal,X     
+                    LDA.W CutsceneCastlePal,X 
                     STA.W $1930               
                     STZ.W $192E               
                     LDA.B #$01                
@@ -2076,12 +2232,13 @@ ADDR_009468:        JSR.W ADDR_0085FA
                     LDA.B #$D2                
                     STA $12                   
                     JSR.W LoadScrnImage       
-                    JSR.W ADDR_008159         
-                    JSL.L ADDR_0C93DD         
+                    JSR.W UploadMusicBank3    
+                    JSL.L ExtSub0C93DD        
                     JSR.W ADDR_009260         
                     INC.W $1931               
                     INC.W $192B               
                     BRA ADDR_0094D7           
+
 ADDR_0094B2:        LDA.B #$15                
                     STA.W $1DFB               
                     LDA.W DATA_009460,X       
@@ -2109,7 +2266,7 @@ ADDR_0094E2:        STZ $1A,X
                     JSR.W ADDR_00A635         
                     STZ $76                   
                     STZ $72                   
-                    JSL.L ADDR_00CEB1         
+                    JSL.L ExtSub00CEB1        
                     LDX.B #$17                
                     LDY.B #$00                
                     JSR.W ADDR_009622         
@@ -2118,23 +2275,23 @@ ADDR_0094FD:        JSL.L $7F8000
                     CMP.B #$08                
                     BEQ ADDR_009557           
                     LDA $17                   
-                    AND.B #$00                
+                    AND.B #$00                ; Change to #$30 to enter debug region below
                     CMP.B #$30                
                     BNE ADDR_009529           
-                    LDA $15                   
-                    AND.B #$08                
-                    BEQ ADDR_009523           
-                    LDA.W $13C6               
-                    INC A                     
-                    CMP.B #$09                
-                    BCC ADDR_009520           
-                    LDA.B #$01                
-ADDR_009520:        STA.W $13C6               
-ADDR_009523:        LDA.B #$18                
-                    STA.W $0100               
-                    RTS                       
+                    LDA $15                   ; \ Unreachable
+                    AND.B #$08                ;  | Debug: Boss defeated scene select
+                    BEQ ADDR_009523           ;  |
+                    LDA.W $13C6               ;  |
+                    INC A                     ;  |
+                    CMP.B #$09                ;  |
+                    BCC ADDR_009520           ;  |
+                    LDA.B #$01                ;  |
+ADDR_009520:        STA.W $13C6               ;  |
+ADDR_009523:        LDA.B #$18                ;  |
+                    STA.W $0100               ;  |
+                    RTS                       ; /
 
-ADDR_009529:        JSL.L ADDR_0CC97E         
+ADDR_009529:        JSL.L ExtSub0CC97E        
                     REP #$20                  ; Accum (16 bit) 
                     LDA $1A                   
                     PHA                       
@@ -2145,7 +2302,7 @@ ADDR_009529:        JSL.L ADDR_0CC97E
                     LDA $20                   
                     STA $1C                   
                     SEP #$20                  ; Accum (8 bit) 
-                    JSL.L ADDR_00E2BD         
+                    JSL.L ExtSub00E2BD        
                     REP #$20                  ; Accum (16 bit) 
                     PLA                       
                     STA $1C                   
@@ -2156,10 +2313,12 @@ ADDR_009529:        JSL.L ADDR_0CC97E
                     STA $71                   
                     JSR.W ADDR_00C47E         
                     JMP.W ADDR_008494         
-ADDR_009557:        JSL.L ADDR_0C938D         
+
+ADDR_009557:        JSL.L ExtSub0C938D        
                     JMP.W ADDR_008494         
+
 ADDR_00955E:        LDY.B #$2F                
-                    JSL.L ADDR_00BA28         
+                    JSL.L ExtSub00BA28        
                     LDA.B #$80                
                     STA.W $2115               ; VRAM Address Increment Value
                     REP #$30                  ; Index (16 bit) Accum (16 bit) 
@@ -2187,41 +2346,43 @@ ADDR_009583:        INC.W $13C6
                     JSR.W TurnOffIO           
                     JSR.W ADDR_0085FA         
                     JSR.W ADDR_00A993         
-                    JSL.L ADDR_0CA3C9         
+                    JSL.L ExtSub0CA3C9        
                     JSR.W ADDR_00961E         
 ADDR_0095AB:        JSL.L $7F8000             
-                    JSL.L ADDR_0C939A         
+                    JSL.L ExtSub0C939A        
                     INC $14                   
-                    JSL.L ADDR_05BB39         
+                    JSL.L ExtSub05BB39        
                     JMP.W ADDR_008494         
-ADDR_0095BC:        JSL.L ADDR_0C93AD         
+
+ADDR_0095BC:        JSL.L ExtSub0C93AD        
                     RTS                       
 
 ADDR_0095C1:        JSR.W ADDR_0085FA         
                     JSR.W Clear_1A_13D3       
                     JSR.W SetUpScreen         
-                    JSL.L ADDR_0CAD8C         
-                    JSL.L ADDR_05801E         
+                    JSL.L ExtSub0CAD8C        
+                    JSL.L ExtSub05801E        
                     LDA.W $1DE9               
                     CMP.B #$0A                
                     BNE ADDR_0095E0           
                     LDA.B #$13                
                     STA.W $192B               
                     BRA ADDR_0095E9           
+
 ADDR_0095E0:        CMP.B #$0C                
                     BNE ADDR_0095E9           
                     LDA.B #$17                
                     STA.W $192B               
 ADDR_0095E9:        JSR.W UploadSpriteGFX     
                     JSR.W LoadPalette         
-                    JSL.L ADDR_05809E         
+                    JSL.L ExtSub05809E        
                     JSR.W ADDR_00A5F9         
-                    JSL.L ADDR_0CADF6         
+                    JSL.L ExtSub0CADF6        
                     LDA.W $1DE9               
                     CMP.B #$0C                
                     BNE ADDR_009612           
                     LDX.B #$0B                
-ADDR_009603:        LDA.W DATA_00B3C0,X       
+ADDR_009603:        LDA.W BowserEndPalette,X  
                     STA.W $0807,X             
                     LDA.W DATA_00B3CC,X       
                     STA.W $0827,X             
@@ -2237,11 +2398,13 @@ ADDR_009622:        JSR.W KeepModeActive
                     LDA.B #$09                
                     STA $3E                   
                     JMP.W ADDR_0093EA         
+
 ADDR_00962C:        STZ.W $0D84               
                     JSR.W ADDR_0092ED         
                     JSL.L $7F8000             
-                    JSL.L ADDR_0C93A5         
+                    JSL.L ExtSub0C93A5        
                     JMP.W ADDR_008494         
+
 ADDR_00963D:        JSR.W ADDR_0085FA         
                     JSR.W Clear_1A_13D3       
                     JSR.W SetUpScreen         
@@ -2255,7 +2418,7 @@ ADDR_00963D:        JSR.W ADDR_0085FA
                     JSR.W UploadSpriteGFX     
                     JSR.W LoadPalette         
                     LDX.B #$0B                
-ADDR_009660:        LDA.W DATA_00B70E,X       
+ADDR_009660:        LDA.W TheEndPalettes,X    
                     STA.W $08A7,X             
                     LDA.W DATA_00B71A,X       
                     STA.W $08C7,X             
@@ -2267,12 +2430,13 @@ ADDR_009660:        LDA.W DATA_00B70E,X
                     LDA.B #$D5                
                     STA $12                   
                     JSR.W LoadScrnImage       
-                    JSL.L ADDR_0CAADF         
+                    JSL.L ExtSub0CAADF        
                     JSR.W ADDR_008494         
                     LDX.B #$14                
                     LDY.B #$00                
                     JMP.W ADDR_009622         
-ADDR_00968D:        RTS                       
+
+Return00968D:       RTS                       
 
 ADDR_00968E:        JSR.W ADDR_0085FA         
                     LDA.W $1425               
@@ -2286,6 +2450,7 @@ ADDR_00968E:        JSR.W ADDR_0085FA
                     BEQ ADDR_0096AB           
 ADDR_0096A8:        JSR.W ADDR_0091B1         
 ADDR_0096AB:        JMP.W ADDR_0093CA         
+
 ADDR_0096AE:        STZ.W $4200               ; NMI, V/H Count, and Joypad Enable
                     JSR.W ClearStack          
                     LDX.B #$07                
@@ -2295,9 +2460,9 @@ ADDR_0096B8:        STA.W $0101,X
                     BPL ADDR_0096B8           
                     LDA.W $0109               
                     BNE ADDR_0096CB           
-                    JSR.W UploadMusicBank2    
-                    LDA.B #$01                
-                    STA.W $1DFB               
+                    JSR.W UploadMusicBank1    
+                    LDA.B #$01                ; \ Set title screen music
+                    STA.W $1DFB               ; /
 ADDR_0096CB:        LDA.B #$EB                
                     LDY.B #$00                
 ADDR_0096CF:        STA.W $0109               
@@ -2308,12 +2473,12 @@ ADDR_0096D5:        STZ.W $4200               ; NMI, V/H Count, and Joypad Enabl
                     BNE ADDR_0096E9           
                     LDA.W $141D               
                     BEQ ADDR_0096E9           
-                    JSL.L ADDR_04DC09         
+                    JSL.L ExtSub04DC09        
 ADDR_0096E9:        STZ.W $13D5               
                     STZ.W $13D9               
                     LDA.B #$50                
                     STA.W $13D6               
-                    JSL.L ADDR_05D796         
+                    JSL.L ExtSub05D796        
                     LDX.B #$07                
 ADDR_0096FA:        LDA $1A,X                 
                     STA.W $1462,X             
@@ -2326,7 +2491,7 @@ ADDR_0096FA:        LDA $1A,X
                     JSR.W ADDR_00A796         
                     INC.W $1404               
                     JSL.L ADDR_00F6DB         
-                    JSL.L ADDR_05801E         
+                    JSL.L ExtSub05801E        
                     LDA.W $0109               
                     BEQ ADDR_009728           
                     CMP.B #$E9                
@@ -2347,12 +2512,14 @@ ADDR_009740:        STZ.W $0DAE
                     STZ.W $0DAF               
                     INC.W $0100               
                     JMP.W Mode04Finish        
-ADDR_00974C:        JSR.W HexToDec            
+
+ExtSub00974C:       JSR.W HexToDec            
                     RTL                       
 
 ADDR_009750:        JSR.W ADDR_0085FA         
                     JSR.W ADDR_00A82D         
                     JMP.W ADDR_0093CA         
+
 ADDR_009759:        JSL.L $7F8000             
                     LDA.W $143C               
                     BNE ADDR_00978B           
@@ -2372,6 +2539,7 @@ ADDR_009779:        STZ.W $1F2F,X
                     BPL ADDR_009779           
                     INC.W $13C9               
 ADDR_009788:        JMP.W ADDR_009E62         
+
 ADDR_00978B:        SEC                       
                     SBC.B #$04                
 ADDR_00978E:        STA.W $143C               
@@ -2398,18 +2566,19 @@ ADDR_0097AE:        JSR.W ADDR_0091E9
                     TAY                       
                     BNE ADDR_00979D           
                     JMP.W ADDR_008494         
+
 ADDR_0097BC:        LDA.B #$0F                
-                    STA.W $0DAE               ; Set brightness to full (RAM mirror) 
+                    STA.W $0DAE               ; Set brightness to full (RAM mirror)
                     STZ.W $0DB0               
-                    JSR.W GM++Mosaic          
-                    LDA.B #$20                ; \ 
-                    STA $38                   ; |Not sure what these bytes are used for yet, unless they're just more  
-                    STA $39                   ; /scratch (I find that unlikely) 
+                    JSR.W GM__Mosaic          
+                    LDA.B #$20                ; \
+                    STA $38                   ; |Not sure what these bytes are used for yet, unless they're just more
+                    STA $39                   ; /scratch (I find that unlikely)
                     STZ.W $1888               
                     JSR.W ADDR_0085FA         
                     LDA.B #$FF                
                     STA.W $1931               
-                    JSL.L ADDR_03D958         
+                    JSL.L ExtSub03D958        
                     BIT.W $0D9B               
                     BVC ADDR_009801           
                     JSR.W ADDR_009925         
@@ -2419,6 +2588,7 @@ ADDR_0097BC:        LDA.B #$0F
                     BNE ADDR_00983B           
                     LDA.B #$18                
                     BRA ADDR_0097FC           
+
 ADDR_0097F1:        LDA.B #$03                
                     STA.W $13F9               
                     LDA.B #$C8                
@@ -2426,6 +2596,7 @@ ADDR_0097F1:        LDA.B #$03
                     LDA.B #$12                
 ADDR_0097FC:        DEC.W $1931               
                     BRA ADDR_00983D           
+
 ADDR_009801:        JSR.W ADDR_00ADD9         
                     JSR.W ADDR_0092A8         
                     LDX.B #$50                
@@ -2464,14 +2635,13 @@ ADDR_00983D:        STA.W $192B
                     STA $44                   
                     JSR.W GM04DoDMA           
                     JSR.W ADDR_008ACD         
-ADDR_009860:        JSL.L ADDR_00E2BD         
+ADDR_009860:        JSL.L ExtSub00E2BD        
                     JSR.W ADDR_00A2F3         
                     JSR.W ADDR_00C593         
-                    STZ $7D                   
-                    JSL.L ADDR_01808C         
+                    STZ $7D                   ;  Y speed = 0
+                    JSL.L ExtSub01808C        
                     JSL.L $7F8000             
                     RTS                       
-
 
 DATA_009875:        .db $01,$00,$FF,$FF,$40,$00,$C0,$01
 
@@ -2479,18 +2649,18 @@ ADDR_00987D:        JSR.W ADDR_008ACD
                     BIT.W $0D9B               
                     BVC ADDR_009888           
                     JMP.W ADDR_009A52         
-ADDR_009888:        JSL.L $7F8000             
-                    JSL.L ADDR_03C0C6         
-                    RTS                       
 
+ADDR_009888:        JSL.L $7F8000             
+                    JSL.L ExtSub03C0C6        
+                    RTS                       
 
 DATA_009891:        .db $9E,$12,$1E,$12,$9E,$11,$1E,$11
                     .db $1E,$16,$9E,$15,$1E,$15,$9E,$14
                     .db $1E,$14,$9E,$13,$1E,$13,$9E,$16
 
-ADDR_0098A9:        LDA.W $0D9B               ; \  
-                    LSR                       ;  |If "Special level" is even, 
-                    BCS ADDR_0098E1           ; / branch to $98E1 
+ADDR_0098A9:        LDA.W $0D9B               ; \
+                    LSR                       ;  |If "Special level" is even,
+                    BCS ADDR_0098E1           ; / branch to $98E1
                     LDA $14                   
                     LSR                       
                     LSR                       
@@ -2557,7 +2727,7 @@ ADDR_009925:        STZ $97
                     STA $2C                   
                     SEP #$20                  ; Accum (8 bit) 
                     JSR.W ADDR_00AE15         
-                    JSL.L ADDR_01808C         
+                    JSL.L ExtSub01808C        
                     LDA.W $0D9B               
                     LSR                       
                     LDX.B #$C0                
@@ -2565,6 +2735,7 @@ ADDR_009925:        STZ $97
                     BCC ADDR_00995B           
                     STZ.W $1411               
                     JMP.W ADDR_009A17         
+
 ADDR_00995B:        REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     LDA.W $13FC               
                     AND.W #$00FF              
@@ -2634,6 +2805,7 @@ ADDR_0099A9:        LDA.W #$38A2
                     CPX.W #$0318              
                     BCS ADDR_009A07           
                     JMP.W ADDR_009980         
+
 ADDR_009A07:        LDA.W #$00FF              
                     STA.L $7F837D,X           
                     SEP #$30                  ; Index (8 bit) Accum (8 bit) 
@@ -2643,6 +2815,7 @@ ADDR_009A07:        LDA.W #$00FF
 ADDR_009A17:        STA $96                   
                     JSR.W ADDR_009A1F         
                     JMP.W ADDR_009283         
+
 ADDR_009A1F:        LDY.B #$10                
                     LDA.B #$32                
 ADDR_009A23:        STA.L $7EC800,X           
@@ -2653,7 +2826,7 @@ ADDR_009A23:        STA.L $7EC800,X
                     DEY                       
                     BNE ADDR_009A23           
                     CPX.B #$C0                
-                    BNE ADDR_009A4D           
+                    BNE Return009A4D          
                     LDX.B #$D0                
 ADDR_009A3D:        LDY.B #$10                
                     LDA.B #$05                
@@ -2662,8 +2835,7 @@ ADDR_009A41:        STA.L $7EC800,X
                     INX                       
                     DEY                       
                     BNE ADDR_009A41           
-ADDR_009A4D:        RTS                       
-
+Return009A4D:       RTS                       
 
 DATA_009A4E:        .db $FF,$01,$18,$30
 
@@ -2671,42 +2843,42 @@ ADDR_009A52:        LDA.W $0D9B
                     LSR                       
                     BCS ADDR_009A6F           
                     JSL.L ADDR_00F6DB         
-                    JSL.L ADDR_05BC00         
+                    JSL.L ExtSub05BC00        
                     LDA.W $13FC               
                     CMP.B #$04                
                     BEQ ADDR_009A6F           
                     JSR.W ADDR_0086C7         
-                    JSL.L ADDR_02827D         
+                    JSL.L ExtSub02827D        
                     RTS                       
 
 ADDR_009A6F:        JSL.L $7F8000             
                     RTS                       
 
-SetUp0DA0GM4:       LDA.W $4016               ; \Read old-style controller register for player 1 
-                    LSR                       ; /LSR A, but then discard (Is this for carry flag or something?) 
-                    LDA.W $4017               ; \Load And Rotate left A (player 2 old-style controller regs) 
-                    ROL                       ; / 
-                    AND.B #$03                ; AND A with #$03 
-                    BEQ ADDR_009A87           ; If A AND #$03 = 0 Then STA $0DA0 (A=0) 
+SetUp0DA0GM4:       LDA.W $4016               ; \Read old-style controller register for player 1
+                    LSR                       ; /LSR A, but then discard (Is this for carry flag or something?)
+                    LDA.W $4017               ; \Load And Rotate left A (player 2 old-style controller regs)
+                    ROL                       ; /
+                    AND.B #$03                ; AND A with #$03
+                    BEQ ADDR_009A87           ; If A AND #$03 = 0 Then STA $0DA0 (A=0)
                     CMP.B #$03                
                     BNE ADDR_009A86           
                     ORA.B #$80                
 ADDR_009A86:        DEC A                     
 ADDR_009A87:        STA.W $0DA0               
-                    RTS                       ; *yawn* 
+                    RTS                       ; *yawn*
 
 ADDR_009A8B:        JSR.W SetUp0DA0GM4        
                     JSR.W GM04Load            
-                    STZ.W $0F31               ; Zero the timer 
+                    STZ.W $0F31               ; Zero the timer
                     JSR.W ADDR_0085FA         
-                    LDA.B #$03                ; \ Load title screen Layer 3 image 
-                    STA $12                   ;  | 
-                    JSR.W LoadScrnImage       ; /  
+                    LDA.B #$03                ; \ Load title screen Layer 3 image
+                    STA $12                   ;  |
+                    JSR.W LoadScrnImage       ; /
                     JSR.W ADDR_00ADA6         
                     JSR.W ADDR_00922F         
-                    JSL.L ADDR_04F675         ; todo: NOTE TO SELF: Check this routine out after making Bank4.asm 
-                    LDA.B #$01                ; \ Set special level to x01 
-                    STA.W $0D9B               ; /  
+                    JSL.L ExtSub04F675        ; todo: NOTE TO SELF: Check this routine out after making Bank4.asm
+                    LDA.B #$01                ; \ Set special level to x01
+                    STA.W $0D9B               ; /
                     LDA.B #$33                
                     STA $41                   
                     LDA.B #$00                
@@ -2718,17 +2890,14 @@ ADDR_009A8B:        JSR.W SetUp0DA0GM4
                     JSR.W ADDR_009443         
                     LDA.B #$10                
                     STA.W $1DF5               
-
-Instr009AC5:        .db $4C,$F7
-
-ADDR_009AC7:        .db $93
+                    JMP.W Mode04Finish        
 
 DATA_009AC8:        .db $01,$FF,$FF
 
 ADDR_009ACB:        PHY                       
                     JSR.W SetUp0DA0GM4        
                     PLY                       
-ADDR_009AD0:        INC.W $1B91               ; Blinking cursor frame counter (file select, save prompt, etc) 
+ADDR_009AD0:        INC.W $1B91               ; Blinking cursor frame counter (file select, save prompt, etc)
                     JSR.W ADDR_009E82         
                     LDX.W $1B92               
                     LDA $16                   
@@ -2739,6 +2908,7 @@ ADDR_009AD0:        INC.W $1B91               ; Blinking cursor frame counter (f
 ADDR_009AE3:        LDA.B #$01                
                     STA.W $1DFC               
                     BRA ADDR_009B11           
+
 ADDR_009AEA:        PLA                       
                     PLA                       
                     LDA $16                   
@@ -2748,7 +2918,7 @@ ADDR_009AEA:        PLA
                     LSR                       
                     ORA $16                   
                     AND.B #$0C                
-                    BEQ ADDR_009B16           
+                    BEQ Return009B16          
                     LDY.B #$06                
                     STY.W $1DFC               
                     STZ.W $1B91               
@@ -2756,7 +2926,7 @@ ADDR_009AEA:        PLA
                     LSR                       
                     TAY                       
                     TXA                       
-                    ADC.W ADDR_009AC7,Y       
+                    ADC.W DATA_009AC8-1,Y     
                     BPL ADDR_009B0D           
                     LDA $8A                   
                     DEC A                     
@@ -2764,8 +2934,7 @@ ADDR_009B0D:        CMP $8A
                     BCC ADDR_009B13           
 ADDR_009B11:        LDA.B #$00                
 ADDR_009B13:        STA.W $1B92               
-ADDR_009B16:        RTS                       
-
+Return009B16:       RTS                       
 
 DATA_009B17:        .db $04,$02,$01
 
@@ -2781,6 +2950,7 @@ ADDR_009B2C:        DEC.W $0100
                     DEC.W $0100               
                     JSR.W ADDR_009B11         
                     JMP.W ADDR_009CB0         
+
 ADDR_009B38:        LDY.B #$08                
                     JSR.W ADDR_009AD0         
                     CPX.B #$03                
@@ -2806,6 +2976,7 @@ ADDR_009B58:        STA.L $700000,X
 ADDR_009B67:        DEY                       
                     BPL ADDR_009B43           
                     JMP.W ADDR_009C89         
+
 ADDR_009B6D:        STX.W $1B92               
                     LDA.W DATA_009B17,X       
                     ORA.W $0DDE               
@@ -2813,7 +2984,8 @@ ADDR_009B6D:        STX.W $1B92
                     STA $05                   
                     LDX.B #$00                
                     JMP.W ADDR_009D3C         
-ADDR_009B80:        PHB                       
+
+ExtSub009B80:       PHB                       ; Wrapper
                     PHK                       
                     PLB                       
                     JSR.W ADDR_009B88         
@@ -2836,8 +3008,10 @@ ADDR_009B9A:        LDY.B #$00
                     TXA                       
                     BNE ADDR_009BA5           
                     JMP.W ADDR_009E17         
+
 ADDR_009BA5:        JMP.W ADDR_009C89         
-ADDR_009BA8:        PHB                       
+
+ExtSub009BA8:       PHB                       ; Wrapper
                     PHK                       
                     PLB                       
                     JSR.W ADDR_009BB0         
@@ -2851,11 +3025,11 @@ ADDR_009BB0:        LDY.B #$06
                     STZ.W $1DFC               
                     LDA.B #$05                
                     STA.W $1DF9               
-                    JSL.L ADDR_009BC9         
-ADDR_009BC4:        JSL.L ADDR_009C13         
+                    JSL.L ExtSub009BC9        
+ADDR_009BC4:        JSL.L ExtSub009C13        
                     RTS                       
 
-ADDR_009BC9:        PHB                       
+ExtSub009BC9:       PHB                       
                     PHK                       
                     PLB                       
                     LDX.W $010A               
@@ -2889,22 +3063,18 @@ ADDR_009BEE:        INX
                     TAX                       
                     SEP #$20                  ; Accum (8 bit) 
                     BRA ADDR_009BD9           
+
 ADDR_009C0F:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     PLB                       
                     RTL                       
 
-ADDR_009C13:        INC.W $1B87               
+ExtSub009C13:       INC.W $1B87               
                     INC.W $1B88               
                     LDY.B #$1B                
-
-Instr009C1B:        .db $20,$29
-
-ADDR_009C1D:        .db $9D
-
+                    JSR.W ADDR_009D29         
                     RTL                       
 
-
-DATA_009C1F:        .db $41
+IntroControlData:   .db $41
 
 ItrCntrlrSqnc:      .db $0F,$C1,$30,$00,$10,$42,$20,$41
                     .db $70,$81,$11,$00,$80,$82,$0C,$00
@@ -2919,48 +3089,49 @@ ItrCntrlrSqnc:      .db $0F,$C1,$30,$00,$10,$42,$20,$41
 GAMEMODE_07:        JSR.W SetUp0DA0GM4        
                     JSR.W ADDR_009CBE         
                     BNE ADDR_009C9F           
-                    JSR.W NoButtons           ; Zero controller RAM mirror 
-                    LDX.W $1DF4               ; (Unknown byte) -> X 
-                    DEC.W $1DF5               ; Decrement $1DF5 (unknown byte) 
-                    BNE ADDR_009C82           ; if !=  0 branch forward 
-                    LDA.W ItrCntrlrSqnc,X     ; Load $00/9C20,$1DF4 
-                    STA.W $1DF5               ; And store to $1DF5 
+                    JSR.W NoButtons           ; Zero controller RAM mirror
+                    LDX.W $1DF4               ; (Unknown byte) -> X
+                    DEC.W $1DF5               ; Decrement $1DF5 (unknown byte)
+                    BNE ADDR_009C82           ; if !=  0 branch forward
+                    LDA.W ItrCntrlrSqnc,X     ; Load $00/9C20,$1DF4
+                    STA.W $1DF5               ; And store to $1DF5
                     INX                       
-                    INX                       ; $1DF4+=2 
+                    INX                       ; $1DF4+=2
                     STX.W $1DF4               
-ADDR_009C82:        LDA.W ADDR_009C1D,X       ; With the +=2 above, this is effectively LDA $9C20,$1DF4 
+ADDR_009C82:        LDA.W IntroControlData-2,X; With the +=2 above, this is effectively LDA $9C20,$1DF4
                     CMP.B #$FF                
                     BNE ADDR_009C8F           
-ADDR_009C89:        LDY.B #$02                ; If = #$FF, switch to game mode #$02... 
+ADDR_009C89:        LDY.B #$02                ; If = #$FF, switch to game mode #$02...
 ADDR_009C8B:        STY.W $0100               
-                    RTS                       ; ...And finish 
+                    RTS                       ; ...And finish
 
 ADDR_009C8F:        AND.B #$DF                
-                    STA $15                   ; Write to controller RAM byte 01 
-                    CMP.W ADDR_009C1D,X       
+                    STA $15                   ; Write to controller RAM byte 01
+                    CMP.W IntroControlData-2,X
                     BNE ADDR_009C9A           
                     AND.B #$9F                
-ADDR_009C9A:        STA $16                   ; Write to byte 01, Just-pressed variant 
-                    JMP.W ADDR_00A1DA         ; Jump to another section of this routine 
-ADDR_009C9F:        JSL.L $7F8000             ; IIRC, this contains a lot of STZ instructions 
+ADDR_009C9A:        STA $16                   ; Write to byte 01, Just-pressed variant
+                    JMP.W ADDR_00A1DA         ; Jump to another section of this routine
+
+ADDR_009C9F:        JSL.L $7F8000             ; IIRC, this contains a lot of STZ instructions
                     LDA.B #$04                
                     STA.W $212C               ; Zero something related to PPU ; Background and Object Enable
                     LDA.B #$13                
                     STA.W $212D               ; Sub Screen Designation
-                    STZ.W $0D9F               ; Disable all HDMA 
+                    STZ.W $0D9F               ; Disable all HDMA
 ADDR_009CB0:        LDA.B #$E9                
-                    STA.W $0109               ; #$E9 -> Uknown RAM byte 
+                    STA.W $0109               ; #$E9 -> Uknown RAM byte
                     JSR.W CODE_WRITEOW        
-                    JSR.W ADDR_009D38         ; -> here 
-                    JMP.W ADDR_009417         ; Increase the Game mode and return (at jump point) 
+                    JSR.W ADDR_009D38         ; -> here
+                    JMP.W ADDR_009417         ; Increase the Game mode and return (at jump point)
+
 ADDR_009CBE:        LDA $17                   
                     AND.B #$C0                
-                    BNE ADDR_009CCA           
+                    BNE Return009CCA          
                     LDA $15                   
                     AND.B #$F0                
-                    BNE ADDR_009CCA           
-ADDR_009CCA:        RTS                       
-
+                    BNE Return009CCA          
+Return009CCA:       RTS                       
 
 DATA_009CCB:        .db $00,$00,$01
 
@@ -2978,6 +3149,7 @@ ADDR_009CD1:        REP #$20                  ; 16 bit A ; Accum (16 bit)
                     STZ.W $0DDE               
                     LDX.B #$00                
                     JMP.W ADDR_009D3A         
+
 ADDR_009CEF:        STX.W $010A               ; Index (16 bit) Accum (8 bit) 
                     JSR.W ADDR_009DB5         
                     BNE ADDR_009D22           
@@ -3003,13 +3175,14 @@ ADDR_009D14:        LDA.L $700000,X
                     CPY.W #$008D              
                     BCC ADDR_009D14           
 ADDR_009D22:        SEP #$10                  ; Index (8 bit) 
-                    LDY.B #$12                ; \ Draw 1 PLAYER GAME/2 PLAYER GAME text 
-                    INC.W $0100               ;  |Increase Game Mode 
-ADDR_009D29:        STY $12                   ; /  
+                    LDY.B #$12                ; \ Draw 1 PLAYER GAME/2 PLAYER GAME text
+                    INC.W $0100               ;  |Increase Game Mode
+ADDR_009D29:        STY $12                   ; /
                     LDX.B #$00                
                     JMP.W ADDR_009ED4         
-ADDR_009D30:        STA.W $0701               ; Store A in BG color 
-                    STY $40                   ; Store Y in CGADSUB 
+
+ADDR_009D30:        STA.W $0701               ; Store A in BG color
+                    STY $40                   ; Store Y in CGADSUB
                     SEP #$20                  ; 8 bit A ; Accum (8 bit) 
                     RTS                       
 
@@ -3017,21 +3190,21 @@ ADDR_009D38:        LDX.B #$CB
 ADDR_009D3A:        STZ $05                   
 ADDR_009D3C:        REP #$10                  ; Index (16 bit) 
                     LDY.W #$0000              
-ADDR_009D41:        LDA.L DATA_05B6FE,X       ; X =  read index 
-                    PHX                       ; Y = write index 
+ADDR_009D41:        LDA.L DATA_05B6FE,X       ; X =  read index
+                    PHX                       ; Y = write index
                     TYX                       
-                    STA.L $7F837D,X           ; Layer 3-related table 
+                    STA.L $7F837D,X           ; Layer 3-related table
                     PLX                       
                     INX                       
                     INY                       
-                    CPY.W #$00CC              ; If not at end of loop, continue 
+                    CPY.W #$00CC              ; If not at end of loop, continue
                     BNE ADDR_009D41           
                     SEP #$10                  ; Index (8 bit) 
                     LDA.B #$84                
                     STA $00                   
                     LDX.B #$02                
 ADDR_009D5B:        STX $04                   
-                    LSR $05                   ;  $05 = $05 / 2 
+                    LSR $05                   ;  $05 = $05 / 2
                     BCS ADDR_009DA6           
                     JSR.W ADDR_009DB5         
                     BNE ADDR_009DA6           
@@ -3042,6 +3215,7 @@ ADDR_009D5B:        STX $04
                     LDY.B #$87                
                     LDA.B #$88                
                     BRA ADDR_009D7A           
+
 ADDR_009D76:        JSR.W HexToDec            
                     TXY                       
 ADDR_009D7A:        LDX $00                   
@@ -3108,6 +3282,7 @@ ADDR_009DDE:        INX
                     TYX                       
                     PLY                       
                     BRA ADDR_009DC4           
+
 ADDR_009DF7:        SEP #$20                  ; Accum (8 bit) 
                     RTS                       
 
@@ -3117,11 +3292,12 @@ ADDR_009DFA:        LDA $16                   ; Index (8 bit)
                     BEQ ADDR_009E08           
                     DEC.W $0100               
                     JMP.W ADDR_009B2C         
+
 ADDR_009E08:        LDY.B #$04                
                     JSR.W ADDR_009ACB         
                     STX.W $0DB2               
                     JSR.W ADDR_00A195         
-                    JSL.L ADDR_04DAAD         
+                    JSL.L ExtSub04DAAD        
 ADDR_009E17:        LDA.B #$80                
                     STA.W $1DFB               
                     LDA.B #$FF                
@@ -3207,13 +3383,12 @@ ADDR_009ED4:        TXA
                     STA.L $7F837D,X           
                     RTS                       
 
-
-TBL_009EE0:         .db $28
+DATA_009EE0:        .db $28
 
 DATA_009EE1:        .db $03,$4D,$01,$52,$01,$53,$01,$5B
                     .db $08,$5C,$02,$57,$04,$30,$01
 
-TBL_009EF0:         .db $01,$01,$02,$00,$02,$00,$68,$00
+DATA_009EF0:        .db $01,$01,$02,$00,$02,$00,$68,$00
                     .db $78,$00,$68,$00,$78,$00,$06,$00
                     .db $07,$00,$06,$00,$07,$00
 
@@ -3222,15 +3397,15 @@ ADDR_009F08:        STZ.W $1F48,X
                     DEX                       
                     BNE ADDR_009F08           
                     LDX.B #$0E                
-ADDR_009F10:        LDY.W TBL_009EE0,X        ; \ 
-                    LDA.W DATA_009EE1,X       ; |Write overworld settings to OW L1 table 
-                    STA.W $1F49,Y             ; / 
+ADDR_009F10:        LDY.W DATA_009EE0,X       ; \
+                    LDA.W DATA_009EE1,X       ; |Write overworld settings to OW L1 table
+                    STA.W $1F49,Y             ; /
                     DEX                       
                     DEX                       
                     BPL ADDR_009F10           
                     LDX.B #$15                
-ADDR_009F1F:        LDA.W TBL_009EF0,X        
-                    STA.W $1FB8,X             ; <- This probably means that the table above ends at 1FB7 
+ADDR_009F1F:        LDA.W DATA_009EF0,X       
+                    STA.W $1FB8,X             ; <- This probably means that the table above ends at 1FB7
                     DEX                       
                     BPL ADDR_009F1F           
                     RTS                       
@@ -3239,43 +3414,43 @@ KeepModeActive:     LDA.B #$01
 ADDR_009F2B:        STA.W $0DB1               
                     RTS                       
 
-
 DATA_009F2F:        .db $01,$FF
 
 DATA_009F31:        .db $F0,$10
 
 DATA_009F33:        .db $0F,$00,$00,$F0
 
-TmpFade:            DEC.W $0DB1               ; \If 0DB1 = 0 Then Exit Ssub 
-                    BPL ADDR_009F6E           ; /Decrease it either way. 
-                    JSR.W KeepModeActive      ; #$01 -> $0DB1 
+TmpFade:            DEC.W $0DB1               ; \If 0DB1 = 0 Then Exit Ssub
+                    BPL Return009F6E          ; /Decrease it either way.
+                    JSR.W KeepModeActive      ; #$01 -> $0DB1
                     LDY.W $0DAF               
-                    LDA.W $0DB0               ; \  
-                    CLC                       ;  |Increase $0DB0 (mosaic size) by $9F31,y 
-                    ADC.W DATA_009F31,Y       ;  | 
-                    STA.W $0DB0               ; /  
-ADDR_009F4C:        LDA.W $0DAE               ; Load Brightness byte from RAM 
-                    CLC                       ; \Add $9F2F,Y 
-                    ADC.W DATA_009F2F,Y       ; / 
-                    STA.W $0DAE               ; Store back to brightness RAM byte 
+                    LDA.W $0DB0               ; \
+                    CLC                       ;  |Increase $0DB0 (mosaic size) by $9F31,y
+                    ADC.W DATA_009F31,Y       ;  |
+                    STA.W $0DB0               ; /
+ADDR_009F4C:        LDA.W $0DAE               ; Load Brightness byte from RAM
+                    CLC                       ; \Add $9F2F,Y
+                    ADC.W DATA_009F2F,Y       ; /
+                    STA.W $0DAE               ; Store back to brightness RAM byte
                     CMP.W DATA_009F33,Y       
                     BNE ADDR_009F66           
-GM++Mosaic:         INC.W $0100               ; Game Mode += 1 
-                    LDA.W $0DAF               ; \  
-                    EOR.B #$01                ;  |$0DAF = $0DAF XOR 1 
-                    STA.W $0DAF               ; /  
-ADDR_009F66:        LDA.B #$03                ; \  
-                    ORA.W $0DB0               ;  |Set mosaic size to $0DB0, enable mosaic on Layer 1 and 2. 
-                    STA.W $2106               ; /  ; Mosaic Size and BG Enable
-ADDR_009F6E:        RTS                       ; I think we're done here 
+GM__Mosaic:         INC.W $0100               ; Game Mode += 1
+                    LDA.W $0DAF               ; \
+                    EOR.B #$01                ;  |$0DAF = $0DAF XOR 1
+                    STA.W $0DAF               ; /
+ADDR_009F66:        LDA.B #$03                ; \
+                    ORA.W $0DB0               ;  |Set mosaic size to $0DB0, enable mosaic on Layer 1 and 2.
+                    STA.W $2106               ; / ; Mosaic Size and BG Enable
+Return009F6E:       RTS                       ; I think we're done here
 
 ADDR_009F6F:        DEC.W $0DB1               ; Decrement something...  Seems like it might be a timing counter ; Index (8 bit) 
-                    BPL ADDR_009F6E           ; If positive, return from subroutine. 
-                    JSR.W KeepModeActive      ; Remain in this mode 
-ADDR_009F77:        LDY.W $0DAF               ; $0DAF -> Y, 
-                    BRA ADDR_009F4C           ; BRA to the fade control routine 
+                    BPL Return009F6E          ; If positive, return from subroutine.
+                    JSR.W KeepModeActive      ; Remain in this mode
+ADDR_009F77:        LDY.W $0DAF               ; $0DAF -> Y,
+                    BRA ADDR_009F4C           ; BRA to the fade control routine
+
 ADDR_009F7C:        DEC.W $0DB1               
-                    BPL ADDR_009F6E           
+                    BPL Return009F6E          
                     LDA.B #$08                
                     JSR.W ADDR_009F2B         
                     BRA ADDR_009F77           
@@ -3287,11 +3462,11 @@ DATA_009F88:        .db $01,$02,$C0,$01,$80,$81,$01,$02
                     .db $80,$01,$02,$80,$01,$02,$80,$01
                     .db $02,$81,$01,$02,$81,$01,$02,$80
 
-ADDR_009FB8:        LDA.W $1931               ; \  
-                    ASL                       ;  |Get (Tileset*3), store in $00 
-                    CLC                       ;  | 
-                    ADC.W $1931               ;  | 
-                    STA $00                   ; /  
+ADDR_009FB8:        LDA.W $1931               ; \
+                    ASL                       ;  |Get (Tileset*3), store in $00
+                    CLC                       ;  |
+                    ADC.W $1931               ;  |
+                    STA $00                   ; /
                     LDA.W $1BE3               
                     BEQ ADDR_00A012           
                     DEC A                     
@@ -3310,8 +3485,9 @@ ADDR_009FB8:        LDA.W $1931               ; \
                     LDA.B #$40                
 ADDR_009FE0:        STA $24                   
                     STZ $25                   
-                    JSL.L ADDR_05BC72         
+                    JSL.L ExtSub05BC72        
                     BRA ADDR_00A01B           
+
 ADDR_009FEA:        ASL                       
                     BMI ADDR_00A012           
                     BEQ ADDR_00A007           
@@ -3327,6 +3503,7 @@ ADDR_009FFA:        REP #$20                  ; Accum (16 bit)
                     SEP #$20                  ; Accum (8 bit) 
                     LDA.B #$C0                
                     BRA ADDR_00A017           
+
 ADDR_00A007:        LDX.B #$07                
 ADDR_00A009:        LDA.W DATA_00B66C,X       
                     STA.W $071B,X             
@@ -3339,7 +3516,7 @@ ADDR_00A017:        STA $24
 ADDR_00A01B:        LDA.B #$04                
                     TRB $40                   
 ADDR_00A01F:        LDA.W $1BE3               
-                    BEQ ADDR_00A044           
+                    BEQ Return00A044          
                     DEC A                     
                     CLC                       
                     ADC $00                   
@@ -3348,14 +3525,14 @@ ADDR_00A01F:        LDA.W $1BE3
                     CLC                       
                     ADC $01                   
                     TAX                       
-                    LDA.L DATA_059000,X       
+                    LDA.L Layer3Ptr,X         
                     STA $00                   
-                    LDA.L DATA_059001,X       
+                    LDA.L Layer3Ptr+1,X       
                     STA $01                   
-                    LDA.L DATA_059002,X       
+                    LDA.L Layer3Ptr+2,X       
                     STA $02                   
                     JSR.W ADDR_00871E         
-ADDR_00A044:        RTS                       
+Return00A044:       RTS                       
 
 ADDR_00A045:        REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     LDX.W #$0100              
@@ -3377,7 +3554,6 @@ ADDR_00A050:        STA.L $7EE300,X
                     TSB $5B                   
                     RTS                       
 
-
 DATA_00A06B:        .db $00,$00,$EF,$FF,$EF,$FF,$EF,$FF
                     .db $F0,$00,$F0,$00,$F0,$00
 
@@ -3387,7 +3563,7 @@ DATA_00A079:        .db $00,$00,$D8,$FF,$80,$00,$28,$01
 ADDR_00A087:        JSR.W TurnOffIO           
                     LDA.W $1B9C               
                     BEQ ADDR_00A093           
-                    JSL.L ADDR_04853B         
+                    JSL.L ExtSub04853B        
 ADDR_00A093:        JSR.W Clear_1A_13D3       
                     LDA.W $0109               
                     BEQ ADDR_00A0B0           
@@ -3399,8 +3575,9 @@ ADDR_00A093:        JSR.W Clear_1A_13D3
                     LDA.B #$10                
                     STA.W $0100               
                     JMP.W Mode04Finish        
+
 ADDR_00A0B0:        JSR.W ADDR_0085FA         
-                    JSR.W UploadMusicBank2    
+                    JSR.W UploadMusicBank1    
                     JSR.W SetUpScreen         
                     STZ.W $0DDA               
                     LDX.W $0DB3               
@@ -3429,7 +3606,8 @@ ADDR_00A0DD:        STA.W $0DBA,X
                     BNE ADDR_00A101           
                     JSR.W ADDR_009C89         
                     JMP.W ADDR_0093F4         
-ADDR_00A101:        JSL.L ADDR_04DAAD         
+
+ADDR_00A101:        JSL.L ExtSub04DAAD        
                     REP #$20                  ; Accum (16 bit) 
                     LDA.W #$318C              
                     STA.W $0701               
@@ -3444,7 +3622,7 @@ ADDR_00A11B:        LDY.B #$02
                     JSR.W ScreenSettings      
                     STX.W $212E               ; Window Mask Designation for Main Screen
                     STY.W $212F               ; Window Mask Designation for Sub Screen
-                    JSL.L ADDR_04DC09         
+                    JSL.L ExtSub04DC09        
                     LDX.W $0DB3               
                     LDA.W $1F11,X             
                     ASL                       
@@ -3459,16 +3637,16 @@ ADDR_00A11B:        LDY.B #$02
                     SEP #$20                  ; Accum (8 bit) 
                     JSR.W UploadSpriteGFX     
                     LDY.B #$14                
-                    JSL.L ADDR_00BA28         
+                    JSL.L ExtSub00BA28        
                     JSR.W ADDR_00AD25         
                     JSR.W ADDR_00922F         
-                    LDA.B #$06                ; \ Load overworld border 
-                    STA $12                   ;  | 
-                    JSR.W LoadScrnImage       ; /  
-                    JSL.L ADDR_05DBF2         
+                    LDA.B #$06                ; \ Load overworld border
+                    STA $12                   ;  |
+                    JSR.W LoadScrnImage       ; /
+                    JSL.L ExtSub05DBF2        
                     JSR.W LoadScrnImage       
-                    JSL.L ADDR_048D91         
-                    JSL.L ADDR_04D6E9         
+                    JSL.L ExtSub048D91        
+                    JSL.L ExtSub04D6E9        
                     LDA.B #$F0                
                     STA $3F                   
                     JSR.W ADDR_008494         
@@ -3487,6 +3665,7 @@ ADDR_00A185:        STZ.W $04A0,X
                     BPL ADDR_00A185           
                     JSR.W ADDR_0092A0         
                     JMP.W ADDR_0093F4         
+
 ADDR_00A195:        REP #$10                  ; Index (16 bit) 
                     LDX.W #$008C              
 ADDR_00A19A:        LDA.W $1F49,X             
@@ -3498,30 +3677,32 @@ ADDR_00A19A:        LDA.W $1F49,X
 
 Clear_1A_13D3:      REP #$10                  ; 16 bit X,Y ; Index (16 bit) 
                     SEP #$20                  ; 8 bit A ; Accum (8 bit) 
-                    LDX.W #$00BD              ; \  
-ADDR_00A1AD:        STZ $1A,X                 ;  |Clear RAM addresses $1A-$D7 
-                    DEX                       ;  | 
-                    BPL ADDR_00A1AD           ; /  
-                    LDX.W #$07CE              ; \  
-ADDR_00A1B5:        STZ.W $13D3,X             ;  |Clear RAM addresses $13D3-$1BA1 
-                    DEX                       ;  | 
-                    BPL ADDR_00A1B5           ; /  
+                    LDX.W #$00BD              ; \
+ADDR_00A1AD:        STZ $1A,X                 ;  |Clear RAM addresses $1A-$D7
+                    DEX                       ;  |
+                    BPL ADDR_00A1AD           ; /
+                    LDX.W #$07CE              ; \
+ADDR_00A1B5:        STZ.W $13D3,X             ;  |Clear RAM addresses $13D3-$1BA1
+                    DEX                       ;  |
+                    BPL ADDR_00A1B5           ; /
                     SEP #$10                  ; 16 bit X,Y ; Index (8 bit) 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00A1BE:        JSR.W SetUp0DA0GM4        
-                    INC $14                   ; Increase alternate frame counter 
+                    INC $14                   ; Increase alternate frame counter
                     JSL.L $7F8000             
-                    JSL.L ADDR_048241         ; (Bank 4.asm) 
+                    JSL.L GameMode_0E_Prim    ; (Bank 4.asm)
                     JMP.W ADDR_008494         
 
-DATA_00A1CE:        .db $FE,$00,$02,$00
+GrndShakeDispYLo:   .db $FE,$00,$02,$00
 
-DATA_00A1D2:        .db $FF,$00,$00,$00,$12,$22,$12,$02
+GrndShakeDispYHi:   .db $FF,$00,$00,$00
+
+DATA_00A1D6:        .db $12,$22,$12,$02
 
 ADDR_00A1DA:        LDA.W $1426               
                     BEQ ADDR_00A1E4           
-                    JSL.L ADDR_05B10C         
+                    JSL.L ExtSub05B10C        
                     RTS                       
 
 ADDR_00A1E4:        LDA.W $1425               
@@ -3533,7 +3714,7 @@ ADDR_00A1E4:        LDA.W $1425
                     JSR.W NoButtons           
                     CMP.B #$1C                
                     BCS ADDR_00A200           
-                    JSR.W ADDR_00CA31         
+                    JSR.W SetMarioPeaceImg    
                     LDA.B #$0D                
                     STA $71                   
 ADDR_00A200:        ORA $71                   
@@ -3548,6 +3729,7 @@ ADDR_00A211:        LDA.W $13D3
                     BEQ ADDR_00A21B           
                     DEC.W $13D3               
                     BRA ADDR_00A242           
+
 ADDR_00A21B:        LDA $16                   
                     AND.B #$10                
                     BEQ ADDR_00A242           
@@ -3568,76 +3750,81 @@ ADDR_00A23F:        STY.W $1DF9
 ADDR_00A242:        LDA.W $13D4               
                     BEQ ADDR_00A28A           
                     BRA ADDR_00A25B           
-                    BIT.W $0DA7               
-                    BVS ADDR_00A259           
-                    LDA.W $0DA3               
-                    BPL ADDR_00A25B           
-                    LDA $13                   
-                    AND.B #$0F                
-                    BNE ADDR_00A25B           
-ADDR_00A259:        BRA ADDR_00A28A           
+
+                    BIT.W $0DA7               ; \ Unreachable
+                    BVS ADDR_00A259           ;  | Debug: Slow motion
+                    LDA.W $0DA3               ;  |
+                    BPL ADDR_00A25B           ;  |
+                    LDA $13                   ;  |
+                    AND.B #$0F                ;  |
+                    BNE ADDR_00A25B           ;  |
+ADDR_00A259:        BRA ADDR_00A28A           ; /
+
 ADDR_00A25B:        LDA $15                   
                     AND.B #$20                
-                    BEQ ADDR_00A289           
+                    BEQ Return00A289          
                     LDY.W $13BF               
                     LDA.W $1EA2,Y             
-                    BPL ADDR_00A289           
+                    BPL Return00A289          
                     LDA.W $0DD5               
                     BEQ ADDR_00A270           
-                    BPL ADDR_00A289           
+                    BPL Return00A289          
 ADDR_00A270:        LDA.B #$80                
                     BRA ADDR_00A27E           
-                    LDA.B #$01                
-                    BIT $15                   
-                    BPL ADDR_00A27B           
-                    INC A                     
+
+                    LDA.B #$01                ; \ Unreachable
+                    BIT $15                   ;  | Debug: Beat level with Start+Select
+                    BPL ADDR_00A27B           ;  |
+                    INC A                     ; /
 ADDR_00A27B:        STA.W $13CE               
 ADDR_00A27E:        STA.W $0DD5               
                     INC.W $1DE9               
                     LDA.B #$0B                
                     STA.W $0100               
-ADDR_00A289:        RTS                       
+Return00A289:       RTS                       
 
 ADDR_00A28A:        LDA.W $0D9B               
                     BPL ADDR_00A295           
                     JSR.W ADDR_00987D         
                     JMP.W ADDR_00A2A9         
+
 ADDR_00A295:        JSL.L $7F8000             
                     JSL.L ADDR_00F6DB         
-                    JSL.L ADDR_05BC00         
-                    JSL.L ADDR_0586F1         
-                    JSL.L ADDR_05BB39         
+                    JSL.L ExtSub05BC00        
+                    JSL.L ExtSub0586F1        
+                    JSL.L ExtSub05BB39        
 ADDR_00A2A9:        LDA $1C                   
                     PHA                       
                     LDA $1D                   
                     PHA                       
-                    STZ.W $1888               
-                    STZ.W $1889               
-                    LDA.W $1887               
-                    BEQ ADDR_00A2D5           
-                    DEC.W $1887               
-                    AND.B #$03                
-                    TAY                       
-                    LDA.W DATA_00A1CE,Y       
-                    STA.W $1888               
-                    CLC                       
-                    ADC $1C                   
-                    STA $1C                   
-                    LDA.W DATA_00A1D2,Y       
-                    STA.W $1889               
-                    ADC $1D                   
-                    STA $1D                   
+                    STZ.W $1888               ;  \ Reset amout to shift level
+                    STZ.W $1889               ;  /
+                    LDA.W $1887               ;  \ If shake ground timer is set
+                    BEQ ADDR_00A2D5           ;   |
+                    DEC.W $1887               ;   | Decrement timer
+                    AND.B #$03                ;   |
+                    TAY                       ;   |
+                    LDA.W GrndShakeDispYLo,Y  ;   |
+                    STA.W $1888               ;   | $1888-$1889 = Amount to shift level
+                    CLC                       ;   |
+                    ADC $1C                   ;   |
+                    STA $1C                   ;   | Adjust screen boundry accordingly
+                    LDA.W GrndShakeDispYHi,Y  ;   |
+                    STA.W $1889               ;   |
+                    ADC $1D                   ;   |
+                    STA $1D                   ;  /
 ADDR_00A2D5:        JSR.W ADDR_008E1A         
-                    JSL.L ADDR_00E2BD         
+                    JSL.L ExtSub00E2BD        
                     JSR.W ADDR_00A2F3         
                     JSR.W ADDR_00C47E         
-                    JSL.L ADDR_01808C         
-                    JSL.L ADDR_028AB1         
+                    JSL.L ExtSub01808C        
+                    JSL.L ExtSub028AB1        
                     PLA                       
                     STA $1D                   
                     PLA                       
                     STA $1C                   
                     JMP.W ADDR_008494         
+
 ADDR_00A2F3:        REP #$20                  ; Accum (16 bit) 
                     LDA $94                   
                     STA $D1                   
@@ -3647,61 +3834,61 @@ ADDR_00A2F3:        REP #$20                  ; Accum (16 bit)
                     RTS                       
 
 MarioGFXDMA:        REP #$20                  ; 16 bit A ; Accum (16 bit) 
-                    LDX.B #$04                ; We're using DMA channel 2 
+                    LDX.B #$04                ; We're using DMA channel 2
                     LDY.W $0D84               
                     BEQ ADDR_00A328           
-                    LDY.B #$86                ; \ Set Address for CG-RAM Write to x86 
-                    STY.W $2121               ; /  ; Address for CG-RAM Write
+                    LDY.B #$86                ; \ Set Address for CG-RAM Write to x86
+                    STY.W $2121               ; / ; Address for CG-RAM Write
                     LDA.W #$2200              
                     STA.W $4320               ; Parameters for DMA Transfer
-                    LDA.W $0D82               ; \ Get location of palette from $0D82-$0D83 
-                    STA.W $4322               ; /  ; A Address (Low Byte)
-                    LDY.B #$00                ; \ Palette is stored in bank x00 
-                    STY.W $4324               ; /  ; A Address Bank
-                    LDA.W #$0014              ; \ x14 bytes will be transferred 
-                    STA.W $4325               ; /  ; Number Bytes to Transfer (Low Byte) (DMA)
+                    LDA.W $0D82               ; \ Get location of palette from $0D82-$0D83
+                    STA.W $4322               ; / ; A Address (Low Byte)
+                    LDY.B #$00                ; \ Palette is stored in bank x00
+                    STY.W $4324               ; / ; A Address Bank
+                    LDA.W #$0014              ; \ x14 bytes will be transferred
+                    STA.W $4325               ; / ; Number Bytes to Transfer (Low Byte) (DMA)
                     STX.W $420B               ; Transfer the colors ; Regular DMA Channel Enable
-ADDR_00A328:        LDY.B #$80                ; \ Set VRAM Address Increment Value to x80 
-                    STY.W $2115               ; /  ; VRAM Address Increment Value
+ADDR_00A328:        LDY.B #$80                ; \ Set VRAM Address Increment Value to x80
+                    STY.W $2115               ; / ; VRAM Address Increment Value
                     LDA.W #$1801              
                     STA.W $4320               ; Parameters for DMA Transfer
                     LDA.W #$67F0              
                     STA.W $2116               ; Address for VRAM Read/Write (Low Byte)
                     LDA.W $0D99               
                     STA.W $4322               ; A Address (Low Byte)
-                    LDY.B #$7E                ; \ Set bank to x7E 
-                    STY.W $4324               ; /  ; A Address Bank
-                    LDA.W #$0020              ; \ x20 bytes will be transferred 
-                    STA.W $4325               ; /  ; Number Bytes to Transfer (Low Byte) (DMA)
+                    LDY.B #$7E                ; \ Set bank to x7E
+                    STY.W $4324               ; / ; A Address Bank
+                    LDA.W #$0020              ; \ x20 bytes will be transferred
+                    STA.W $4325               ; / ; Number Bytes to Transfer (Low Byte) (DMA)
                     STX.W $420B               ; Transfer ; Regular DMA Channel Enable
-                    LDA.W #$6000              ; \ Set Address for VRAM Read/Write to x6000 
-                    STA.W $2116               ; /  ; Address for VRAM Read/Write (Low Byte)
+                    LDA.W #$6000              ; \ Set Address for VRAM Read/Write to x6000
+                    STA.W $2116               ; / ; Address for VRAM Read/Write (Low Byte)
                     LDX.B #$00                
-ADDR_00A355:        LDA.W $0D85,X             ; \ Get address of graphics to copy 
-                    STA.W $4322               ; /  ; A Address (Low Byte)
-                    LDA.W #$0040              ; \ x40 bytes will be transferred 
-                    STA.W $4325               ; /  ; Number Bytes to Transfer (Low Byte) (DMA)
-                    LDY.B #$04                ; \ Transfer 
-                    STY.W $420B               ; /  ; Regular DMA Channel Enable
-                    INX                       ; \ Move to next address 
-                    INX                       ; /  
-                    CPX.W $0D84               ; \ Repeat last segment while X<$0D84 
-                    BCC ADDR_00A355           ; /  
-                    LDA.W #$6100              ; \ Set Address for VRAM Read/Write to x6100 
-                    STA.W $2116               ; /  ; Address for VRAM Read/Write (Low Byte)
+ADDR_00A355:        LDA.W $0D85,X             ; \ Get address of graphics to copy
+                    STA.W $4322               ; / ; A Address (Low Byte)
+                    LDA.W #$0040              ; \ x40 bytes will be transferred
+                    STA.W $4325               ; / ; Number Bytes to Transfer (Low Byte) (DMA)
+                    LDY.B #$04                ; \ Transfer
+                    STY.W $420B               ; / ; Regular DMA Channel Enable
+                    INX                       ; \ Move to next address
+                    INX                       ; /
+                    CPX.W $0D84               ; \ Repeat last segment while X<$0D84
+                    BCC ADDR_00A355           ; /
+                    LDA.W #$6100              ; \ Set Address for VRAM Read/Write to x6100
+                    STA.W $2116               ; / ; Address for VRAM Read/Write (Low Byte)
                     LDX.B #$00                
-ADDR_00A375:        LDA.W $0D8F,X             ; \ Get address of graphics to copy 
-                    STA.W $4322               ; /  ; A Address (Low Byte)
-                    LDA.W #$0040              ; \ x40 bytes will be transferred 
-                    STA.W $4325               ; /  ; Number Bytes to Transfer (Low Byte) (DMA)
-                    LDY.B #$04                ; \ Transfer 
-                    STY.W $420B               ; /  ; Regular DMA Channel Enable
-                    INX                       ; \ Move to next address 
-                    INX                       ; /  
-                    CPX.W $0D84               ; \ Repeat last segment while X<$0D84 
-                    BCC ADDR_00A375           ; /  
+ADDR_00A375:        LDA.W $0D8F,X             ; \ Get address of graphics to copy
+                    STA.W $4322               ; / ; A Address (Low Byte)
+                    LDA.W #$0040              ; \ x40 bytes will be transferred
+                    STA.W $4325               ; / ; Number Bytes to Transfer (Low Byte) (DMA)
+                    LDY.B #$04                ; \ Transfer
+                    STY.W $420B               ; / ; Regular DMA Channel Enable
+                    INX                       ; \ Move to next address
+                    INX                       ; /
+                    CPX.W $0D84               ; \ Repeat last segment while X<$0D84
+                    BCC ADDR_00A375           ; /
                     SEP #$20                  ; 8 bit A ; Accum (8 bit) 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00A390:        REP #$20                  ; Accum (16 bit) 
                     LDY.B #$80                
@@ -3738,6 +3925,7 @@ ADDR_00A3D2:        LDA.W $0D7C
                     STA.W $4325               ; Number Bytes to Transfer (Low Byte) (DMA)
                     STX.W $420B               ; Regular DMA Channel Enable
                     BRA ADDR_00A418           
+
 ADDR_00A3F0:        LDA.W $0D76               
                     STA.W $4322               ; A Address (Low Byte)
                     LDA.W #$0040              
@@ -3761,14 +3949,14 @@ ADDR_00A41E:        STA.W $2121               ; Address for CG-RAM Write
                     LSR                       
                     ADC $00                   
                     TAY                       
-                    LDA.W DATA_00B60C,Y       
+                    LDA.W MorePalettes,Y      
                     STA.W $2122               ; Data for CG-RAM Write
                     LDA.W DATA_00B60D,Y       
                     STA.W $2122               ; Data for CG-RAM Write
                     RTS                       
 
 ADDR_00A436:        LDA.W $1935               
-                    BEQ ADDR_00A47E           
+                    BEQ Return00A47E          
                     STZ.W $1935               
                     REP #$20                  ; 16 bit A ; Accum (16 bit) 
                     LDY.B #$80                
@@ -3793,8 +3981,7 @@ ADDR_00A436:        LDA.W $1935
                     STA.W $4325               ; Number Bytes to Transfer (Low Byte) (DMA)
                     STX.W $420B               ; Regular DMA Channel Enable
                     SEP #$20                  ; 8 bit A ; Accum (8 bit) 
-ADDR_00A47E:        RTS                       
-
+Return00A47E:       RTS                       
 
 DATA_00A47F:        .db $82
 
@@ -3835,6 +4022,7 @@ ADDR_00A4A0:        LDA [$00],Y
                     LDA.B #$04                
                     STA.W $420B               ; Regular DMA Channel Enable
                     BRA ADDR_00A4A0           
+
 ADDR_00A4CF:        SEP #$10                  ; Index (8 bit) 
                     JSR.W ADDR_00AE47         
                     LDA.W $0680               
@@ -3842,7 +4030,7 @@ ADDR_00A4CF:        SEP #$10                  ; Index (8 bit)
                     STZ.W $0681               
                     STZ.W $0682               
 ADDR_00A4DF:        STZ.W $0680               
-ADDR_00A4E2:        RTS                       
+Return00A4E2:       RTS                       
 
 ADDR_00A4E3:        REP #$10                  ; Index (16 bit) 
                     LDA.B #$80                
@@ -3861,7 +4049,7 @@ ADDR_00A4E3:        REP #$10                  ; Index (16 bit)
                     SEP #$10                  ; Index (8 bit) 
                     LDA.W $13D9               
                     CMP.B #$0A                
-                    BEQ ADDR_00A4E2           
+                    BEQ Return00A4E2          
                     LDA.B #$6D                
                     JSR.W ADDR_00A41C         
                     LDA.B #$10                
@@ -3915,31 +4103,31 @@ ADDR_00A577:        LDA.W DATA_00A58D,X
                     STA.W $420B               ; Regular DMA Channel Enable
                     RTS                       
 
-
 DATA_00A586:        .db $01,$18,$00,$40,$7F,$00,$08
 
 DATA_00A58D:        .db $01,$18,$00,$E4,$7E,$00,$08
 
-ADDR_00A594:        PHB                       
+ExtSub00A594:       PHB                       ; Wrapper
                     PHK                       
                     PLB                       
                     JSR.W ADDR_00AD25         
                     PLB                       
                     RTL                       
 
-GM04Load:           JSR.W ADDR_0085FA         ; gah, stupid keyboard >_< 
+GM04Load:           JSR.W ADDR_0085FA         ; gah, stupid keyboard >_<
                     JSR.W NoButtons           
                     STZ.W $143A               
                     JSR.W SetUpScreen         
                     JSR.W GM04DoDMA           
-                    JSL.L ADDR_05809E         ; ->here 
+                    JSL.L ExtSub05809E        ; ->here
                     LDA.W $0D9B               
                     BPL ADDR_00A5B9           
-                    JSR.W ADDR_0097BC         ; Working on this routine 
+                    JSR.W ADDR_0097BC         ; Working on this routine
                     BRA ADDR_00A5CF           
+
 ADDR_00A5B9:        JSR.W UploadSpriteGFX     
                     JSR.W LoadPalette         
-                    JSL.L ADDR_05BE8A         
+                    JSL.L ExtSub05BE8A        
                     JSR.W ADDR_009FB8         
                     JSR.W ADDR_00A5F9         
                     JSR.W ADDR_009260         
@@ -3960,20 +4148,16 @@ ADDR_00A5CF:        JSR.W ADDR_00922F
                     JSR.W ADDR_00919B         
                     JSR.W ADDR_008494         
                     JMP.W ADDR_0093F4         
+
 ADDR_00A5F9:        LDA.B #$E7                
                     TRB $14                   
-ADDR_00A5FD:        JSL.L ADDR_05BB39         
+ADDR_00A5FD:        JSL.L ExtSub05BB39        
                     JSR.W ADDR_00A390         
                     INC $14                   
                     LDA $14                   
-
-Instr00A608:        .db $29
-
-ADDR_00A609:        .db $07
-
+                    AND.B #$07                
                     BNE ADDR_00A5FD           
                     RTS                       
-
 
 DATA_00A60D:        .db $00,$01,$01,$01
 
@@ -3984,22 +4168,22 @@ DATA_00A61D:        .db $0A,$00,$00,$00,$1A,$1A,$0A,$0A
 DATA_00A625:        .db $00,$80,$40,$00,$01,$02,$40,$00
                     .db $40,$00,$00,$00,$00,$02,$00,$00
 
-ADDR_00A635:        LDA.W $14AD               
-                    ORA.W $14AE               
+ADDR_00A635:        LDA.W $14AD               ;  If blue pow...
+                    ORA.W $14AE               ;  ...or silver pow...
                     ORA.W $190C               
                     BNE ADDR_00A64A           
-                    LDA.W $1490               
-                    BEQ ADDR_00A660           
+                    LDA.W $1490               ; \ Branch if Mario doesn't have star
+                    BEQ ADDR_00A660           ; /
                     LDA.W $0DDA               
                     BPL ADDR_00A64F           
 ADDR_00A64A:        LDA.W $0DDA               
                     AND.B #$7F                
 ADDR_00A64F:        ORA.B #$40                
                     STA.W $0DDA               
-                    STZ.W $14AD               
-                    STZ.W $14AE               
+                    STZ.W $14AD               ;  Zero out POW timer
+                    STZ.W $14AE               ;  Zero out silver POW timer
                     STZ.W $190C               
-                    STZ.W $1490               
+                    STZ.W $1490               ; Zero out star timer
 ADDR_00A660:        LDA.W $13F4               
                     ORA.W $13F5               
                     ORA.W $13F6               
@@ -4035,6 +4219,7 @@ ADDR_00A67D:        STZ.W $13D9,X
                     BEQ ADDR_00A6B6           
                     JSR.W ADDR_00C90A         
                     BRA ADDR_00A6CC           
+
 ADDR_00A6B6:        STZ $72                   
                     STY $76                   
                     STY $89                   
@@ -4073,14 +4258,14 @@ ADDR_00A6E0:        STY $76
                     ADC.B #$10                
                     STA.W $1438               
 ADDR_00A704:        LDA.W $1B95               
-                    BEQ ADDR_00A715           
-                    LDA.B #$08                
-                    STA $71                   
+                    BEQ Return00A715          
+                    LDA.B #$08                ;  \ Animation = Rise off screen,
+                    STA $71                   ;  / for Yoshi Wing bonus stage
                     LDA.B #$A0                
                     STA $96                   
-                    LDA.B #$90                
-                    STA $7D                   
-ADDR_00A715:        RTS                       
+                    LDA.B #$90                ;  \ Set upward speed, #$90
+                    STA $7D                   ;  /
+Return00A715:       RTS                       
 
 ADDR_00A716:        CMP.B #$06                
                     BCC ADDR_00A740           
@@ -4096,6 +4281,7 @@ ADDR_00A716:        CMP.B #$06
                     LDX.B #$07                
                     LDY.B #$20                
                     BRA ADDR_00A6C7           
+
 ADDR_00A734:        STY $85                   
                     LDA.W $13CF               
                     ORA.W $1434               
@@ -4108,7 +4294,7 @@ ADDR_00A740:        CLC
                     LSR                       
                     DEC A                     
                     STA.W $1419               
-                    LDA.W ADDR_00A609,Y       
+                    LDA.W DATA_00A60D-4,Y     
                     STA $76                   
                     LDX.B #$05                
                     CPY.B #$06                
@@ -4122,11 +4308,11 @@ ADDR_00A740:        CLC
                     LDY.B #$0F                
                     LDA $19                   
                     BEQ ADDR_00A76A           
-ADDR_00A768:        LDY.B #$1C                
-ADDR_00A76A:        STY $7D                   
+ADDR_00A768:        LDY.B #$1C                ;  \ Set downward speed, #$1C
+ADDR_00A76A:        STY $7D                   ;  /
                     JSR.W ADDR_00A6C7         
                     LDA.W $187A               
-                    BEQ ADDR_00A795           
+                    BEQ Return00A795          
                     LDX $89                   
                     LDA $88                   
                     CLC                       
@@ -4138,14 +4324,14 @@ ADDR_00A76A:        STY $7D
                     REP #$20                  ; Accum (16 bit) 
                     LDA $94                   
                     CLC                       
-                    ADC.W ADDR_00A609,X       
+                    ADC.W DATA_00A60D-4,X     
                     STA $94                   
                     LDA $96                   
                     CLC                       
                     ADC.W DATA_00A611,X       
                     STA $96                   
                     SEP #$20                  ; Accum (8 bit) 
-ADDR_00A795:        RTS                       
+Return00A795:       RTS                       
 
 ADDR_00A796:        REP #$20                  ; Accum (16 bit) 
                     LDY.W $1414               
@@ -4156,6 +4342,7 @@ ADDR_00A796:        REP #$20                  ; Accum (16 bit)
                     SEC                       
                     SBC $1C                   
                     BRA ADDR_00A7B6           
+
 ADDR_00A7A7:        LDA $1C                   
                     LSR                       
                     DEY                       
@@ -4212,7 +4399,7 @@ ADDR_00A7C2:        REP #$20                  ; 16 bit A ; Accum (16 bit)
                     RTS                       
 
 ADDR_00A82D:        LDY.B #$0F                
-                    JSL.L ADDR_00BA28         
+                    JSL.L ExtSub00BA28        
                     LDA.W $1425               
                     REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     BEQ ADDR_00A842           
@@ -4243,7 +4430,7 @@ ADDR_00A85A:        LDA [$00]
                     BCC ADDR_00A845           
                     SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     LDY.B #$00                
-                    JSL.L ADDR_00BA28         
+                    JSL.L ExtSub00BA28        
                     REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     LDA.W #$B3F0              
                     STA $00                   
@@ -4280,44 +4467,43 @@ ADDR_00A8B3:        CPX.W #$0180
                     STA.W $1935               
                     RTS                       
 
-
-SPRITEGFXLIST:      .db $00,$01,$13,$02,$00,$01,$12,$03
-                    .db $00,$01,$13,$05,$00,$01,$13,$04
-                    .db $00,$01,$13,$06,$00,$01,$13,$09
-                    .db $00,$01,$13,$04,$00,$01,$06,$11
-                    .db $00,$01,$13,$20,$00,$01,$13,$0F
-                    .db $00,$01,$13,$23,$00,$01,$0D,$14
-                    .db $00,$01,$24,$0E,$00,$01,$0A,$22
-                    .db $00,$01,$13,$0E,$00,$01,$13,$14
+SpriteGfxList:      .db $00,$01,$13,$02,$00,$01,$12,$03     ; Forest ; Castle
+                    .db $00,$01,$13,$05,$00,$01,$13,$04     ; Mushroom ; Underground
+                    .db $00,$01,$13,$06,$00,$01,$13,$09     ; Water ; Pokey
+                    .db $00,$01,$13,$04,$00,$01,$06,$11     ; Underground 2 ; Ghost House
+                    .db $00,$01,$13,$20,$00,$01,$13,$0F     ; Banzai Bill ; Yoshi's House
+                    .db $00,$01,$13,$23,$00,$01,$0D,$14     ; Dino-Rhino ; Switch Palace
+                    .db $00,$01,$24,$0E,$00,$01,$0A,$22     ; Mechakoopa ; Wendy/Lemmy
+                    .db $00,$01,$13,$0E,$00,$01,$13,$14     ; Ninji ; Unused
                     .db $00,$00,$00,$08,$10,$0F,$1C,$1D
                     .db $00,$01,$24,$22,$00,$01,$25,$22
                     .db $00,$22,$13,$2D,$00,$01,$0F,$22
                     .db $00,$26,$2E,$22,$21,$0B,$25,$0A
                     .db $00,$0D,$24,$22,$2C,$30,$2D,$0E
-OBJECTGFXLIST:      .db $14,$17,$19,$15,$14,$17,$1B,$18
-                    .db $14,$17,$1B,$16,$14,$17,$0C,$1A
-                    .db $14,$17,$1B,$08,$14,$17,$0C,$07
-                    .db $14,$17,$0C,$16,$14,$17,$1B,$15
-                    .db $14,$17,$19,$16,$14,$17,$0D,$1A
-                    .db $14,$17,$1B,$08,$14,$17,$1B,$18
-                    .db $14,$17,$19,$1F,$14,$17,$0D,$07
-                    .db $14,$17,$19,$1A,$14,$17,$14,$14
+ObjectGfxList:      .db $14,$17,$19,$15,$14,$17,$1B,$18     ; Normal 1 ; Castle 1
+                    .db $14,$17,$1B,$16,$14,$17,$0C,$1A     ; Rope 1 ; Underground 1
+                    .db $14,$17,$1B,$08,$14,$17,$0C,$07     ; Switch Palace 1 ; Ghost House 1
+                    .db $14,$17,$0C,$16,$14,$17,$1B,$15     ; Rope 2 ; Normal 2
+                    .db $14,$17,$19,$16,$14,$17,$0D,$1A     ; Rope 3 ; Underground 2
+                    .db $14,$17,$1B,$08,$14,$17,$1B,$18     ; Switch Palace 2 ; Castle 2
+                    .db $14,$17,$19,$1F,$14,$17,$0D,$07     ; Cloud/Forest ; Ghost House 2
+                    .db $14,$17,$19,$1A,$14,$17,$14,$14     ; Underground 2
                     .db $0E,$0F,$17,$17,$1C,$1D,$08,$1E
                     .db $1C,$1D,$08,$1E,$1C,$1D,$08,$1E
                     .db $1C,$1D,$08,$1E,$1C,$1D,$08,$1E
                     .db $1C,$1D,$08,$1E,$1C,$1D,$08,$1E
                     .db $14,$17,$19,$2C,$19,$17,$1B,$18
 
-ADDR_00A993:        STZ.W $2116               ; \  ; Address for VRAM Read/Write (Low Byte)
-                    LDA.B #$40                ;  |Set "Address for VRAM Read/Write" to x4000 
-                    STA.W $2117               ; /  ; Address for VRAM Read/Write (High Byte)
+ADDR_00A993:        STZ.W $2116               ; \ ; Address for VRAM Read/Write (Low Byte)
+                    LDA.B #$40                ;  |Set "Address for VRAM Read/Write" to x4000
+                    STA.W $2117               ; / ; Address for VRAM Read/Write (High Byte)
                     LDA.B #$03                
                     STA $0F                   
                     LDA.B #$28                
                     STA $0E                   
 ADDR_00A9A3:        LDA $0E                   
                     TAY                       
-                    JSL.L ADDR_00BA28         
+                    JSL.L ExtSub00BA28        
                     REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     LDX.W #$03FF              
                     LDY.W #$0000              
@@ -4331,109 +4517,109 @@ ADDR_00A9B2:        LDA [$00],Y
                     INC $0E                   
                     DEC $0F                   
                     BPL ADDR_00A9A3           
-                    STZ.W $2116               ; \  ; Address for VRAM Read/Write (Low Byte)
-                    LDA.B #$60                ;  |Set "Address for VRAM Read/Write" to x6000 
-                    STA.W $2117               ; /  ; Address for VRAM Read/Write (High Byte)
+                    STZ.W $2116               ; \ ; Address for VRAM Read/Write (Low Byte)
+                    LDA.B #$60                ;  |Set "Address for VRAM Read/Write" to x6000
+                    STA.W $2117               ; / ; Address for VRAM Read/Write (High Byte)
                     LDY.B #$00                
                     JSR.W UploadGFXFile       
                     RTS                       
-
 
 DATA_00A9D2:        .db $78,$70,$68,$60
 
 DATA_00A9D6:        .db $18,$10,$08,$00
 
-UploadSpriteGFX:    LDA.B #$80                ; Decompression as well? 
+UploadSpriteGFX:    LDA.B #$80                ; Decompression as well?
                     STA.W $2115               ; VRAM transfer control port ; VRAM Address Increment Value
                     LDX.B #$03                
-                    LDA.W $192B               ; $192B = current sprite GFX list index 
-                    ASL                       ; \ 
-                    ASL                       ;  }4A -> Y 
-                    TAY                       ; / 
-ADDR_00A9E7:        LDA.W SPRITEGFXLIST,Y     ;  | 
-                    STA $04,X                 ;  | 
-                    INY                       ;  | 
-                    DEX                       ;  | 
-                    BPL ADDR_00A9E7           ; / 
-                    LDA.B #$03                ; #$03 -> A -> $0F 
+                    LDA.W $192B               ; $192B = current sprite GFX list index
+                    ASL                       ; \
+                    ASL                       ;  }4A -> Y
+                    TAY                       ; /
+ADDR_00A9E7:        LDA.W SpriteGfxList,Y     ;  |
+                    STA $04,X                 ;  |
+                    INY                       ;  |
+                    DEX                       ;  |
+                    BPL ADDR_00A9E7           ; /
+                    LDA.B #$03                ; #$03 -> A -> $0F
                     STA $0F                   
-GFXTransferLoop:    LDX $0F                   ; $0F -> X 
+GFXTransferLoop:    LDX $0F                   ; $0F -> X
                     STZ.W $2116               ; #$00 -> $2116 ; Address for VRAM Read/Write (Low Byte)
-                    LDA.W DATA_00A9D2,X       ; My guess: Locations in VRAM to upload GFX to 
+                    LDA.W DATA_00A9D2,X       ; My guess: Locations in VRAM to upload GFX to
                     STA.W $2117               ; Set VRAM address to $??00 ; Address for VRAM Read/Write (High Byte)
-                    LDY $04,X                 ; Y is possibly which GFX file 
-                    LDA.W $0101,X             ; to upload to a section in VRAM, used in 
-                    CMP $04,X                 ; the subroutine $00:BA28 
-                    BEQ Don'tUploadSpr        ; don't upload when it''s not needed 
-                    JSR.W UploadGFXFile       ; JSR to a JSL... 
-Don'tUploadSpr:     DEC $0F                   ; Decrement $0F 
-                    BPL GFXTransferLoop       ; if >= #$00, continue transfer 
-                    LDX.B #$03                ; \ 
-UpdtCrrntSpritGFX:  LDA $04,X                 ;  |Update $0101-$0104 to reflect the new sprite GFX 
-                    STA.W $0101,X             ;  |That's loaded now. 
-                    DEX                       ;  | 
-                    BPL UpdtCrrntSpritGFX     ; / 
-                    LDA.W $1931               ; LDA Tileset 
+                    LDY $04,X                 ; Y is possibly which GFX file
+                    LDA.W $0101,X             ; to upload to a section in VRAM, used in
+                    CMP $04,X                 ; the subroutine $00:BA28
+                    BEQ Don'tUploadSpr        ; don't upload when it''s not needed
+                    JSR.W UploadGFXFile       ; JSR to a JSL...
+Don'tUploadSpr:     DEC $0F                   ; Decrement $0F
+                    BPL GFXTransferLoop       ; if >= #$00, continue transfer
+                    LDX.B #$03                ; \
+UpdtCrrntSpritGFX:  LDA $04,X                 ;  |Update $0101-$0104 to reflect the new sprite GFX
+                    STA.W $0101,X             ;  |That's loaded now.
+                    DEX                       ;  |
+                    BPL UpdtCrrntSpritGFX     ; /
+                    LDA.W $1931               ; LDA Tileset
                     CMP.B #$FE                
-                    BCS SetallFGBG80          ; Branch to a routine that uploads file #$80 to every slot in FG/BG 
+                    BCS SetallFGBG80          ; Branch to a routine that uploads file #$80 to every slot in FG/BG
                     LDX.B #$03                
-                    LDA.W $1931               ; this routine is pretty close to the above 
-                    ASL                       ; one, I'm guessing this does 
-                    ASL                       ; object/BG GFX. 
-                    TAY                       ; 4A -> Y 
-PrepLoadFGBG:       LDA.W OBJECTGFXLIST,Y     ; FG/BG GFX table 
+                    LDA.W $1931               ; this routine is pretty close to the above
+                    ASL                       ; one, I'm guessing this does
+                    ASL                       ; object/BG GFX.
+                    TAY                       ; 4A -> Y
+PrepLoadFGBG:       LDA.W ObjectGfxList,Y     ; FG/BG GFX table
                     STA $04,X                 
                     INY                       
                     DEX                       
-                    BPL PrepLoadFGBG          ; FG/Bg to upload -> $04 - $07 
+                    BPL PrepLoadFGBG          ; FG/Bg to upload -> $04 - $07
                     LDA.B #$03                
-                    STA $0F                   ; #$03 -> $0F 
-ADDR_00AA35:        LDX $0F                   ; $0F -> X 
+                    STA $0F                   ; #$03 -> $0F
+ADDR_00AA35:        LDX $0F                   ; $0F -> X
                     STZ.W $2116               ; Address for VRAM Read/Write (Low Byte)
-                    LDA.W DATA_00A9D6,X       ; Load + Store VRAM upload positions 
+                    LDA.W DATA_00A9D6,X       ; Load + Store VRAM upload positions
                     STA.W $2117               ; Address for VRAM Read/Write (High Byte)
                     LDY $04,X                 
-                    LDA.W $0105,X             ; Check to see if the file to be uploaded already 
-                    CMP $04,X                 ; exists in the slot in VRAM - if so, 
-                    BEQ NoUploadFGBG          ; don't bother uploading it again. 
-                    JSR.W UploadGFXFile       ; Upload the GFX file 
-NoUploadFGBG:       DEC $0F                   ; Next GFX file 
+                    LDA.W $0105,X             ; Check to see if the file to be uploaded already
+                    CMP $04,X                 ; exists in the slot in VRAM - if so,
+                    BEQ NoUploadFGBG          ; don't bother uploading it again.
+                    JSR.W UploadGFXFile       ; Upload the GFX file
+NoUploadFGBG:       DEC $0F                   ; Next GFX file
                     BPL ADDR_00AA35           
                     LDX.B #$03                
 UpdateCurrentFGBG:  LDA $04,X                 
                     STA.W $0105,X             
                     DEX                       
                     BPL UpdateCurrentFGBG     
-                    RTS                       ; Return from uploading the GFX 
+                    RTS                       ; Return from uploading the GFX
 
-SetallFGBG80:       BEQ NoUpdateVRAM80        ; If zero flag set, don't update the tileset 
+SetallFGBG80:       BEQ NoUpdateVRAM80        ; If zero flag set, don't update the tileset
                     JSR.W ADDR_00AB42         
 NoUpdateVRAM80:     LDX.B #$03                
-                    LDA.B #$80                ; my guess is that it gets called in the same set of routines 
+                    LDA.B #$80                ; my guess is that it gets called in the same set of routines
 Store80:            STA.W $0105,X             
                     DEX                       
                     BPL Store80               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-UploadGFXFile:      JSL.L ADDR_00BA28         
+UploadGFXFile:      JSL.L ExtSub00BA28        
                     CPY.B #$01                
                     BNE SkipSpecial           
                     LDA.W $1EEB               
-                    BPL SkipSpecial           ; handle the post-special world graphics and koopa color swap. 
+                    BPL SkipSpecial           ; handle the post-special world graphics and koopa color swap.
                     LDY.B #$31                
-                    JSL.L ADDR_00BA28         
+                    JSL.L ExtSub00BA28        
                     LDY.B #$01                
 SkipSpecial:        REP #$20                  ; A = 16bit ; Accum (16 bit) 
                     LDA.W #$0000              
-                    LDX.W $1931               ; LDX Tileset 
-                    CPX.B #$11                ; CPX #$11 
-                    BCC ADDR_00AA90           ; If Tileset < #$11 skip to lower area 
-                    CPY.B #$08                ; if Y = #$08 skip to JSR 
+                    LDX.W $1931               ; LDX Tileset
+                    CPX.B #$11                ; CPX #$11
+                    BCC ADDR_00AA90           ; If Tileset < #$11 skip to lower area
+                    CPY.B #$08                ; if Y = #$08 skip to JSR
                     BEQ JumpTo_____           
-ADDR_00AA90:        CPY.B #$1E                ; If Y = #$1E then 
-                    BEQ JumpTo_____           ; JMP otherwise 
-                    BNE ADDR_00AA99           ; don't JMP 
+ADDR_00AA90:        CPY.B #$1E                ; If Y = #$1E then
+                    BEQ JumpTo_____           ; JMP otherwise
+                    BNE ADDR_00AA99           ; don't JMP
 JumpTo_____:        JMP.W FilterSomeRAM       
+
 ADDR_00AA99:        STA $0A                   
                     LDA.W #$FFFF              
                     CPY.B #$01                
@@ -4483,43 +4669,43 @@ ADDR_00AAE3:        LDA [$00]
                     DEY                       
                     BPL ADDR_00AAAE           
                     SEP #$20                  ; Accum (8 bit) 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 FilterSomeRAM:      LDA.W #$FF00              ; Accum (16 bit) 
                     STA $0A                   
                     LDY.B #$7F                
-Upload????ToVRAM:   CPY.B #$08                ; \Completely pointless code. 
-                    BCS ADDR_00AB0D           ; /(Why not just NOPing it out, Nintendo?) 
+Upload????ToVRAM:   CPY.B #$08                ; \Completely pointless code.
+                    BCS ADDR_00AB0D           ; /(Why not just NOPing it out, Nintendo?)
 ADDR_00AB0D:        LDX.B #$07                
-AddressWrite1:      LDA [$00]                 ; \ Okay, so take [$00], store 
+AddressWrite1:      LDA [$00]                 ; \ Okay, so take [$00], store
                     STA.W $2118               ;  |it to VRAM, then bitwise ; Data for VRAM Write (Low Byte)
-                    XBA                       ;  |OR the high and low bytes together 
-                    ORA [$00]                 ;  |store in both bytes of A 
-                    STA.W $1BB2,X             ; /and store to $1BB2,x 
-                    INC $00                   ; \Increment $7E:0000 by 2 
-                    INC $00                   ; / 
-                    DEX                       ; \And continue on another 7 times (or 8 times total) 
-                    BPL AddressWrite1         ; / 
-                    LDX.B #$07                ; hm..  It's like a FOR Y{FOR X{ } } thing ...yeah... 
+                    XBA                       ;  |OR the high and low bytes together
+                    ORA [$00]                 ;  |store in both bytes of A
+                    STA.W $1BB2,X             ; /and store to $1BB2,x
+                    INC $00                   ; \Increment $7E:0000 by 2
+                    INC $00                   ; /
+                    DEX                       ; \And continue on another 7 times (or 8 times total)
+                    BPL AddressWrite1         ; /
+                    LDX.B #$07                ; hm..  It's like a FOR Y{FOR X{ } } thing ...yeah...
 AddressWrite2:      LDA [$00]                 
-                    AND.W #$00FF              ; A normal byte becomes 2 anti-compressed bytes. 
-                    STA $0C                   ; I'm going up, to try and find out what's supposed to set $00-$02 for this routine. 
-                    LDA [$00]                 ; AHA, check $00/BA28.  It writes a RAM address to $00-$02, $7EAD00 
-                    XBA                       ; So...  Now to find otu what sets *That* 
-                    ORA.W $1BB2,X             ; ...this place gives me headaches... Can't we work on some other code? :( 
-                    AND $0A                   ; Sure, go ahead.  anyways, this seems to upload the decompressed GFX 
-                    ORA $0C                   ; while scrambling it afterwards (o_O). 
+                    AND.W #$00FF              ; A normal byte becomes 2 anti-compressed bytes.
+                    STA $0C                   ; I'm going up, to try and find out what's supposed to set $00-$02 for this routine.
+                    LDA [$00]                 ; AHA, check $00/BA28.  It writes a RAM address to $00-$02, $7EAD00
+                    XBA                       ; So...  Now to find otu what sets *That*
+                    ORA.W $1BB2,X             ; ...this place gives me headaches... Can't we work on some other code? :(
+                    AND $0A                   ; Sure, go ahead.  anyways, this seems to upload the decompressed GFX
+                    ORA $0C                   ; while scrambling it afterwards (o_O).
                     STA.W $2118               ; Okay... WHAT THE HELL? ; Data for VRAM Write (Low Byte)
-                    INC $00                   ; I'll have nightmares about this routine for a few years. :( 
+                    INC $00                   ; I'll have nightmares about this routine for a few years. :(
                     DEX                       
-                    BPL AddressWrite2         ; Ouch. 
+                    BPL AddressWrite2         ; Ouch.
                     DEY                       
                     BPL Upload????ToVRAM      
                     SEP #$20                  ; Accum (8 bit) 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00AB42:        LDY.B #$27                
-                    JSL.L ADDR_00BA28         
+                    JSL.L ExtSub00BA28        
                     REP #$10                  ; Index (16 bit) 
                     LDY.W #$0000              
                     LDX.W #$03FF              
@@ -4575,7 +4761,7 @@ ADDR_00ABBB:        STZ.W $2119               ; Data for VRAM Write (High Byte)
                     DEX                       
                     BNE ADDR_00ABBB           
                     SEP #$10                  ; Index (8 bit) 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00ABC4:        STZ $04                   
                     ROL $0F                   
@@ -4584,8 +4770,7 @@ ADDR_00ABC4:        STZ $04
                     ROL $04                   
                     ROL $0F                   
                     ROL $04                   
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_00ABD3:        .db $00,$18,$30,$48,$60,$78,$90,$A8
                     .db $00,$14,$28,$3C
@@ -4594,109 +4779,109 @@ DATA_00ABDF:        .db $00,$00,$38,$00,$70,$00,$A8,$00
                     .db $E0,$00,$18,$01,$50,$01
 
 LoadPalette:        REP #$30                  ; 16 bit A, X and Y ; Index (16 bit) Accum (16 bit) 
-                    LDA.W #$7FDD              ; \  
-                    STA $04                   ;  |Set color 1 in all object palettes to white 
-                    LDX.W #$0002              ;  | 
-                    JSR.W LoadCol8Pal         ; /  
-                    LDA.W #$7FFF              ; \  
-                    STA $04                   ;  |Set color 1 in all sprite palettes to white 
-                    LDX.W #$0102              ;  | 
-                    JSR.W LoadCol8Pal         ; /  
-                    LDA.W #$B170              ; \  
-                    STA $00                   ;  | 
-                    LDA.W #$0010              ;  |Load colors 8-16 in the first two object palettes from 00/B170 
-                    STA $04                   ;  |(Layer 3 palettes) 
-                    LDA.W #$0007              ;  | 
-                    STA $06                   ;  | 
-                    LDA.W #$0001              ;  | 
-                    STA $08                   ;  | 
-                    JSR.W LoadColors          ; /  
-                    LDA.W #$B250              ; \  
-                    STA $00                   ;  | 
-                    LDA.W #$0084              ;  |Load colors 2-7 in palettes 4-D from 00/B250 
-                    STA $04                   ;  |(Object and sprite palettes) 
-                    LDA.W #$0005              ;  | 
-                    STA $06                   ;  | 
-                    LDA.W #$0009              ;  | 
-                    STA $08                   ;  | 
-                    JSR.W LoadColors          ; /  
-                    LDA.W $192F               ; \  
-                    AND.W #$000F              ;  | 
-                    ASL                       ;  |Load background color 
-                    TAY                       ;  | 
-                    LDA.W DATA_00B0A0,Y       ;  | 
-                    STA.W $0701               ; /  
-                    LDA.W #$B190              ; \Store base address in $00, ... 
-                    STA $00                   ; / 
-                    LDA.W $192D               ; \...get current object palette, ... 
-                    AND.W #$000F              ; / 
-                    TAY                       ; \  
-                    LDA.W DATA_00ABD3,Y       ;  | 
-                    AND.W #$00FF              ;  |...use it to figure out where to load from, ... 
-                    CLC                       ;  | 
-                    ADC $00                   ;  |...add it to the base address... 
-                    STA $00                   ; / ...and store it in $00 
-                    LDA.W #$0044              ; \  
-                    STA $04                   ;  | 
-                    LDA.W #$0005              ;  | 
-                    STA $06                   ;  |Load colors 2-7 in object palettes 2 and 3 from the address in $00 
-                    LDA.W #$0001              ;  | 
-                    STA $08                   ;  | 
-                    JSR.W LoadColors          ; /  
-                    LDA.W #$B318              ; \Store base address in $00, ... 
-                    STA $00                   ; / 
-                    LDA.W $192E               ; \...get current sprite palette, ... 
-                    AND.W #$000F              ; / 
-                    TAY                       ; \  
-                    LDA.W DATA_00ABD3,Y       ;  | 
-                    AND.W #$00FF              ;  |...use it to figure out where to load from, ... 
-                    CLC                       ;  | 
-                    ADC $00                   ;  |...add it to the base address... 
-                    STA $00                   ; / ...and store it in $00 
-                    LDA.W #$01C4              ; \  
-                    STA $04                   ;  | 
-                    LDA.W #$0005              ;  | 
-                    STA $06                   ;  |Load colors 2-7 in sprite palettes 6 and 7 from the address in $00 
-                    LDA.W #$0001              ;  | 
-                    STA $08                   ;  | 
-                    JSR.W LoadColors          ; /  
-                    LDA.W #$B0B0              ; \Store bade address in $00, ... 
-                    STA $00                   ; / 
-                    LDA.W $1930               ; \...get current background palette, ... 
-                    AND.W #$000F              ; / 
-                    TAY                       ; \  
-                    LDA.W DATA_00ABD3,Y       ;  | 
-                    AND.W #$00FF              ;  |...use it to figure out where to load from, ... 
-                    CLC                       ;  | 
-                    ADC $00                   ;  |...add it to the base address... 
-                    STA $00                   ; / ...and store it in $00 
-                    LDA.W #$0004              ; \  
-                    STA $04                   ;  | 
-                    LDA.W #$0005              ;  | 
-                    STA $06                   ;  |Load colors 2-7 in object palettes 0 and 1 from the address in $00 
-                    LDA.W #$0001              ;  | 
-                    STA $08                   ;  | 
-                    JSR.W LoadColors          ; /  
-                    LDA.W #$B674              ; \  
-                    STA $00                   ;  | 
-                    LDA.W #$0052              ;  | 
-                    STA $04                   ;  | 
-                    LDA.W #$0006              ;  |Load colors 9-F in object palettes 2-4 from 00/B674 
-                    STA $06                   ;  | 
-                    LDA.W #$0002              ;  | 
-                    STA $08                   ;  | 
-                    JSR.W LoadColors          ; /  
-                    LDA.W #$B674              ; \  
-                    STA $00                   ;  | 
-                    LDA.W #$0132              ;  | 
-                    STA $04                   ;  | 
-                    LDA.W #$0006              ;  |Load colors 9-F in sprite palettes 1-3 from 00/B674 
-                    STA $06                   ;  | 
-                    LDA.W #$0002              ;  | 
-                    STA $08                   ;  | 
-                    JSR.W LoadColors          ; /  
+                    LDA.W #$7FDD              ; \
+                    STA $04                   ;  |Set color 1 in all object palettes to white
+                    LDX.W #$0002              ;  |
+                    JSR.W LoadCol8Pal         ; /
+                    LDA.W #$7FFF              ; \
+                    STA $04                   ;  |Set color 1 in all sprite palettes to white
+                    LDX.W #$0102              ;  |
+                    JSR.W LoadCol8Pal         ; /
+                    LDA.W #$B170              ; \
+                    STA $00                   ;  |
+                    LDA.W #$0010              ;  |Load colors 8-16 in the first two object palettes from 00/B170
+                    STA $04                   ;  |(Layer 3 palettes)
+                    LDA.W #$0007              ;  |
+                    STA $06                   ;  |
+                    LDA.W #$0001              ;  |
+                    STA $08                   ;  |
+                    JSR.W LoadColors          ; /
+                    LDA.W #$B250              ; \
+                    STA $00                   ;  |
+                    LDA.W #$0084              ;  |Load colors 2-7 in palettes 4-D from 00/B250
+                    STA $04                   ;  |(Object and sprite palettes)
+                    LDA.W #$0005              ;  |
+                    STA $06                   ;  |
+                    LDA.W #$0009              ;  |
+                    STA $08                   ;  |
+                    JSR.W LoadColors          ; /
+                    LDA.W $192F               ; \
+                    AND.W #$000F              ;  |
+                    ASL                       ;  |Load background color
+                    TAY                       ;  |
+                    LDA.W Palettes,Y          ;  |
+                    STA.W $0701               ; /
+                    LDA.W #$B190              ; \Store base address in $00, ...
+                    STA $00                   ; /
+                    LDA.W $192D               ; \...get current object palette, ...
+                    AND.W #$000F              ; /
+                    TAY                       ; \
+                    LDA.W DATA_00ABD3,Y       ;  |
+                    AND.W #$00FF              ;  |...use it to figure out where to load from, ...
+                    CLC                       ;  |
+                    ADC $00                   ;  |...add it to the base address...
+                    STA $00                   ; / ...and store it in $00
+                    LDA.W #$0044              ; \
+                    STA $04                   ;  |
+                    LDA.W #$0005              ;  |
+                    STA $06                   ;  |Load colors 2-7 in object palettes 2 and 3 from the address in $00
+                    LDA.W #$0001              ;  |
+                    STA $08                   ;  |
+                    JSR.W LoadColors          ; /
+                    LDA.W #$B318              ; \Store base address in $00, ...
+                    STA $00                   ; /
+                    LDA.W $192E               ; \...get current sprite palette, ...
+                    AND.W #$000F              ; /
+                    TAY                       ; \
+                    LDA.W DATA_00ABD3,Y       ;  |
+                    AND.W #$00FF              ;  |...use it to figure out where to load from, ...
+                    CLC                       ;  |
+                    ADC $00                   ;  |...add it to the base address...
+                    STA $00                   ; / ...and store it in $00
+                    LDA.W #$01C4              ; \
+                    STA $04                   ;  |
+                    LDA.W #$0005              ;  |
+                    STA $06                   ;  |Load colors 2-7 in sprite palettes 6 and 7 from the address in $00
+                    LDA.W #$0001              ;  |
+                    STA $08                   ;  |
+                    JSR.W LoadColors          ; /
+                    LDA.W #$B0B0              ; \Store bade address in $00, ...
+                    STA $00                   ; /
+                    LDA.W $1930               ; \...get current background palette, ...
+                    AND.W #$000F              ; /
+                    TAY                       ; \
+                    LDA.W DATA_00ABD3,Y       ;  |
+                    AND.W #$00FF              ;  |...use it to figure out where to load from, ...
+                    CLC                       ;  |
+                    ADC $00                   ;  |...add it to the base address...
+                    STA $00                   ; / ...and store it in $00
+                    LDA.W #$0004              ; \
+                    STA $04                   ;  |
+                    LDA.W #$0005              ;  |
+                    STA $06                   ;  |Load colors 2-7 in object palettes 0 and 1 from the address in $00
+                    LDA.W #$0001              ;  |
+                    STA $08                   ;  |
+                    JSR.W LoadColors          ; /
+                    LDA.W #$B674              ; \
+                    STA $00                   ;  |
+                    LDA.W #$0052              ;  |
+                    STA $04                   ;  |
+                    LDA.W #$0006              ;  |Load colors 9-F in object palettes 2-4 from 00/B674
+                    STA $06                   ;  |
+                    LDA.W #$0002              ;  |
+                    STA $08                   ;  |
+                    JSR.W LoadColors          ; /
+                    LDA.W #$B674              ; \
+                    STA $00                   ;  |
+                    LDA.W #$0132              ;  |
+                    STA $04                   ;  |
+                    LDA.W #$0006              ;  |Load colors 9-F in sprite palettes 1-3 from 00/B674
+                    STA $06                   ;  |
+                    LDA.W #$0002              ;  |
+                    STA $08                   ;  |
+                    JSR.W LoadColors          ; /
                     SEP #$30                  ; 8 bit A, X and Y ; Index (8 bit) Accum (8 bit) 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 LoadCol8Pal:        LDY.W #$0007              ; Index (16 bit) Accum (16 bit) 
 ADDR_00ACF0:        LDA $04                   
@@ -4707,7 +4892,7 @@ ADDR_00ACF0:        LDA $04
                     TAX                       
                     DEY                       
                     BPL ADDR_00ACF0           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 LoadColors:         LDX $04                   
                     LDY $06                   
@@ -4725,8 +4910,7 @@ ADDR_00AD03:        LDA ($00)
                     STA $04                   
                     DEC $08                   
                     BPL LoadColors            
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_00AD1E:        .db $01,$00,$03,$04,$03,$05,$02
 
@@ -4783,7 +4967,7 @@ ADDR_00AD32:        STY $00
                     STA $08                   
                     JSR.W LoadColors          
                     SEP #$30                  ; Index (8 bit) Accum (8 bit) 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00ADA6:        REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     LDA.W #$B63C              
@@ -4805,7 +4989,7 @@ ADDR_00ADA6:        REP #$30                  ; Index (16 bit) Accum (16 bit)
                     STA $08                   
                     JSR.W LoadColors          
                     SEP #$30                  ; Index (8 bit) Accum (8 bit) 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00ADD9:        JSR.W LoadPalette         
                     REP #$30                  ; Index (16 bit) Accum (16 bit) 
@@ -4830,7 +5014,7 @@ ADDR_00ADD9:        JSR.W LoadPalette
                     STA $08                   
                     JSR.W LoadColors          
                     SEP #$30                  ; Index (8 bit) Accum (8 bit) 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00AE15:        LDA.B #$02                
                     STA.W $192E               
@@ -4849,8 +5033,7 @@ ADDR_00AE15:        LDA.B #$02
                     STZ $08                   
                     JSR.W LoadColors          
                     SEP #$30                  ; Index (8 bit) Accum (8 bit) 
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_00AE41:        .db $00,$05,$0A
 
@@ -4864,14 +5047,14 @@ ADDR_00AE51:        DEY
                     BMI ADDR_00AE57           
                     LSR                       
                     BRA ADDR_00AE51           
+
 ADDR_00AE57:        SEP #$20                  ; Accum (8 bit) 
                     AND.B #$1F                
                     ORA.W DATA_00AE44,X       
                     STA.W $2132               ; Fixed Color Data
                     DEX                       
                     BPL ADDR_00AE49           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_00AE65:        .db $1F,$00,$E0,$03,$00,$7C
 
@@ -4913,13 +5096,13 @@ ADDR_00AF25:        CPY.B #$A0
                     TRB $40                   
                     LDA.B #$09                
                     STA $3E                   
-                    JSL.L ADDR_05CBFF         
+                    JSL.L ExtSub05CBFF        
 ADDR_00AF35:        LDA $13                   
                     AND.B #$03                
-                    BNE ADDR_00AFA2           
+                    BNE Return00AFA2          
                     LDA.W $1495               
                     CMP.B #$40                
-                    BCS ADDR_00AFA2           
+                    BCS Return00AFA2          
                     JSR.W ADDR_00AFA3         ; Index (16 bit) Accum (16 bit) 
                     LDA.W #$01FE              
                     STA.W $0905               
@@ -4961,7 +5144,7 @@ ADDR_00AF74:        LDA.W $091F,X
                     STZ.W $0A05               
                     LDA.B #$03                
                     STA.W $0680               
-ADDR_00AFA2:        RTS                       ; Return 
+Return00AFA2:       RTS                       ; Return
 
 ADDR_00AFA3:        TAY                       
                     INC A                     
@@ -4980,7 +5163,7 @@ ADDR_00AFA3:        TAY
                     TAY                       
                     LDA.W DATA_00AEF7,Y       
                     STA $0E                   
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00AFC0:        STA $0A                   
                     AND.W #$001F              
@@ -5017,9 +5200,9 @@ ADDR_00AFF9:        CLC
                     DEY                       
                     DEY                       
                     BPL ADDR_00AFDF           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_00B006:        PHB                       
+ExtSub00B006:       PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_00AFA3         
@@ -5048,12 +5231,12 @@ ADDR_00B012:        LDA.W $0907,X
                     BPL ADDR_00B00F           
                     SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_00B03E:        JSR.W ADDR_00AF35         
                     LDA.W $0680               
                     CMP.B #$03                
-                    BNE ADDR_00B090           
+                    BNE Return00B090          
                     LDA.B #$00                
                     STA $02                   
                     REP #$30                  ; Index (16 bit) Accum (16 bit) 
@@ -5087,13 +5270,12 @@ ADDR_00B06D:        LDA.W $0A25,X
                     BPL ADDR_00B068           
                     SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     STZ.W $0AF5               
-ADDR_00B090:        RTS                       ; Return 
-
+Return00B090:       RTS                       ; Return
 
 DATA_00B091:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF
 
-DATA_00B0A0:        .db $9F,$5B,$FB,$6F,$80,$5D,$00,$00
+Palettes:           .db $9F,$5B,$FB,$6F,$80,$5D,$00,$00
                     .db $22,$1D,$C3,$24,$93,$73,$FF,$7F
                     .db $49,$3A,$8B,$42,$CD,$4A,$0F,$53
                     .db $51,$5B,$93,$63,$FF,$7F,$00,$00
@@ -5162,17 +5344,23 @@ DATA_00B0A0:        .db $9F,$5B,$FB,$6F,$80,$5D,$00,$00
                     .db $00,$00,$11,$00,$17,$00,$1F,$00
                     .db $B7,$00,$3F,$02,$00,$00,$E0,$01
                     .db $E0,$02,$E0,$03,$B7,$00,$3F,$02
-                    .db $5F,$63,$1D,$58,$0A,$00,$1F,$39
+MarioPalette:       .db $5F,$63,$1D,$58,$0A,$00,$1F,$39
                     .db $C4,$44,$08,$4E,$70,$67,$B6,$30
-                    .db $DF,$35,$FF,$03,$3F,$4F,$1D,$58
-                    .db $40,$11,$E0,$3F,$07,$3C,$AE,$7C
-                    .db $B3,$7D,$00,$2F,$5F,$16,$FF,$03
-                    .db $5F,$63,$1D,$58,$29,$25,$FF,$7F
+                    .db $DF,$35,$FF,$03
+
+LuigiPalette:       .db $3F,$4F,$1D,$58,$40,$11,$E0,$3F
+                    .db $07,$3C,$AE,$7C,$B3,$7D,$00,$2F
+                    .db $5F,$16,$FF,$03
+
+FireMarioPalette:   .db $5F,$63,$1D,$58,$29,$25,$FF,$7F
                     .db $08,$00,$17,$00,$1F,$00,$7B,$57
-                    .db $DF,$0D,$FF,$03,$1F,$3B,$1D,$58
-                    .db $29,$25,$FF,$7F,$40,$11,$E0,$01
-                    .db $E0,$02,$7B,$57,$DF,$0D,$FF,$03
-                    .db $00,$00,$C5,$24,$49,$2D,$AD,$2D
+                    .db $DF,$0D,$FF,$03
+
+FireLuigiPalette:   .db $1F,$3B,$1D,$58,$29,$25,$FF,$7F
+                    .db $40,$11,$E0,$01,$E0,$02,$7B,$57
+                    .db $DF,$0D,$FF,$03
+
+DATA_00B318:        .db $00,$00,$C5,$24,$49,$2D,$AD,$2D
                     .db $53,$22,$18,$3F,$23,$25,$C4,$35
                     .db $25,$3E,$86,$46,$E7,$4E,$1F,$40
                     .db $00,$00,$C6,$41,$54,$73,$FA,$7F
@@ -5193,7 +5381,7 @@ DATA_00B0A0:        .db $9F,$5B,$FB,$6F,$80,$5D,$00,$00
                     .db $00,$00,$DF,$4E,$DE,$5A,$BD,$66
                     .db $7C,$72,$1F,$40,$00,$00,$F5,$7F
                     .db $F7,$7F,$F9,$7F,$FC,$7F,$FF,$7F
-DATA_00B3C0:        .db $00,$00,$FB,$63,$0C,$03,$0B,$02
+BowserEndPalette:   .db $00,$00,$FB,$63,$0C,$03,$0B,$02
                     .db $35,$15,$5F,$1A
 
 DATA_00B3CC:        .db $00,$00,$34,$34,$3A,$44,$9F,$65
@@ -5271,7 +5459,7 @@ DATA_00B5DE:        .db $00,$00,$E7,$2C,$6B,$3D,$EF,$4D
                     .db $3B,$57,$FF,$7F,$00,$00,$93,$73
                     .db $00,$00,$3B,$57,$6C,$7E
 
-DATA_00B60C:        .db $DF
+MorePalettes:       .db $DF
 
 DATA_00B60D:        .db $02,$5F,$03,$FF,$27,$FF,$5F,$FF
                     .db $73,$FF,$5F,$FF,$27,$5F,$03,$BF
@@ -5308,7 +5496,7 @@ DATA_00B69E:        .db $FF,$7F,$C0,$18,$FB,$63,$0C,$03
                     .db $A3,$31,$C0,$00,$00,$00,$00,$00
                     .db $07,$00,$43,$45,$00,$00,$40,$29
                     .db $60,$00,$00,$00,$00,$00,$03,$00
-DATA_00B70E:        .db $C4,$44,$20,$03,$DF,$4A,$00,$02
+TheEndPalettes:     .db $C4,$44,$20,$03,$DF,$4A,$00,$02
                     .db $3B,$01,$08,$4E
 
 DATA_00B71A:        .db $C4,$44,$1F,$39,$DF,$4A,$74,$28
@@ -5361,20 +5549,20 @@ DATA_00B726:        .db $D2,$28,$1E,$55,$5F,$63,$1F,$7B
                     .db $80,$08
 
 ADDR_00B888:        REP #$10                  ; Index (16 bit) 
-                    LDY.W #$BFC0              ; \  
-                    STY $8A                   ;  |Store the address 08/BFC0 at $8A-$8C 
-                    LDA.B #$08                ;  | 
-                    STA $8C                   ; /  
-                    LDY.W #$2000              ; \  
-                    STY $00                   ;  |Store the address 7E/2000 at $00-$02 
-                    LDA.B #$7E                ;  | 
-                    STA $02                   ; /  
+                    LDY.W #$BFC0              ; \
+                    STY $8A                   ;  |Store the address 08/BFC0 at $8A-$8C
+                    LDA.B #$08                ;  |
+                    STA $8C                   ; /
+                    LDY.W #$2000              ; \
+                    STY $00                   ;  |Store the address 7E/2000 at $00-$02
+                    LDA.B #$7E                ;  |
+                    STA $02                   ; /
                     JSR.W ADDR_00B8DE         
-                    LDA.B #$7E                ; \  
-                    STA $8F                   ;  | 
+                    LDA.B #$7E                ; \
+                    STA $8F                   ;  |
                     REP #$30                  ;  |Store the address 7E/ACFE at $8D-$8F ; Index (16 bit) Accum (16 bit) 
-                    LDA.W #$ACFE              ;  | 
-                    STA $8D                   ; /  
+                    LDA.W #$ACFE              ;  |
+                    STA $8D                   ; /
                     LDX.W #$23FF              
 ADDR_00B8AD:        LDY.W #$0008              
 ADDR_00B8B0:        LDA.L $7E2000,X           
@@ -5396,16 +5584,17 @@ ADDR_00B8C4:        DEX
                     DEY                       
                     BNE ADDR_00B8C4           
                     BRA ADDR_00B8AD           
+
 ADDR_00B8D7:        LDA.W #$8000              
                     STA $8A                   
                     SEP #$20                  ; Accum (8 bit) 
 ADDR_00B8DE:        REP #$10                  ; Index (16 bit) 
-                    LDY.W #$0000              ; \  
-ADDR_00B8E3:        JSR.W ReadByte            ;  | 
-                    CMP.B #$FF                ;  |If the next byte is xFF, return. 
-                    BNE ADDR_00B8ED           ;  |Compressed graphics files ends with xFF IIRC 
+                    LDY.W #$0000              ; \
+ADDR_00B8E3:        JSR.W ReadByte            ;  |
+                    CMP.B #$FF                ;  |If the next byte is xFF, return.
+                    BNE ADDR_00B8ED           ;  |Compressed graphics files ends with xFF IIRC
                     SEP #$10                  ;  | ; Index (8 bit) 
-                    RTS                       ; /  
+                    RTS                       ; /
 
 ADDR_00B8ED:        STA $8F                   
                     AND.B #$E0                
@@ -5416,6 +5605,7 @@ ADDR_00B8ED:        STA $8F
                     REP #$20                  ; Accum (16 bit) 
                     AND.W #$001F              
                     BRA ADDR_00B911           
+
 ADDR_00B8FF:        LDA $8F                   ; Accum (8 bit) 
                     ASL                       
                     ASL                       
@@ -5445,6 +5635,7 @@ ADDR_00B926:        STA [$00],Y
                     DEX                       
                     BNE ADDR_00B926           
                     JMP.W ADDR_00B8E3         
+
 ADDR_00B930:        JSR.W ReadByte            
                     STA [$00],Y               
                     INY                       
@@ -5453,6 +5644,7 @@ ADDR_00B930:        JSR.W ReadByte
                     STX $8D                   
                     BNE ADDR_00B930           
                     BRA ADDR_00B8E3           
+
 ADDR_00B93F:        JSR.W ReadByte            
                     LDX $8D                   
 ADDR_00B944:        STA [$00],Y               
@@ -5460,6 +5652,7 @@ ADDR_00B944:        STA [$00],Y
                     DEX                       
                     BNE ADDR_00B944           
                     BRA ADDR_00B8E3           
+
 ADDR_00B94C:        JSR.W ReadByte            
                     XBA                       
                     JSR.W ReadByte            
@@ -5475,6 +5668,7 @@ ADDR_00B955:        XBA
                     DEX                       
                     BNE ADDR_00B955           
 ADDR_00B963:        JMP.W ADDR_00B8E3         
+
 ADDR_00B966:        JSR.W ReadByte            
                     XBA                       
                     JSR.W ReadByte            
@@ -5492,15 +5686,15 @@ ADDR_00B96E:        PHY
                     SEP #$20                  ; Accum (8 bit) 
                     BNE ADDR_00B96E           
                     JMP.W ADDR_00B8E3         
-ReadByte:           LDA [$8A]                 ; Read the byte ; Index (16 bit) 
-                    LDX $8A                   ; \ Go to next byte 
-                    INX                       ;  | 
-                    BNE ADDR_00B98F           ;  |   \  
-                    LDX.W #$8000              ;  |    |Handle bank crossing 
-                    INC $8C                   ;  |   /  
-ADDR_00B98F:        STX $8A                   ; /  
-                    RTS                       ; Return 
 
+ReadByte:           LDA [$8A]                 ; Read the byte ; Index (16 bit) 
+                    LDX $8A                   ; \ Go to next byte
+                    INX                       ;  |
+                    BNE ADDR_00B98F           ;  |   \
+                    LDX.W #$8000              ;  |    |Handle bank crossing
+                    INC $8C                   ;  |   /
+ADDR_00B98F:        STX $8A                   ; /
+                    RTS                       ; Return
 
 DATA_00B992:        .db $F9,$31,$BB,$52,$7D,$63,$6C,$10
                     .db $57,$A1,$15,$9C,$63,$D2,$CB,$E5
@@ -5526,7 +5720,7 @@ DATA_00B9F6:        .db $08,$08,$08,$08,$08,$09,$09,$09
                     .db $0B,$0B,$0B,$0B,$0B,$0B,$0B,$0B
                     .db $0B,$0B
 
-ADDR_00BA28:        PHB                       ; Accum (8 bit) 
+ExtSub00BA28:       PHB                       ; Accum (8 bit) 
                     PHY                       
                     PHK                       
                     PLB                       
@@ -5545,8 +5739,7 @@ ADDR_00BA28:        PHB                       ; Accum (8 bit)
                     JSR.W ADDR_00B8DE         
                     PLY                       
                     PLB                       
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 DATA_00BA4D:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
@@ -5570,155 +5763,632 @@ DATA_00BABC:        .db $C8,$CA,$CC,$CE,$D0,$D2,$D4,$D6
                     .db $D8,$DA,$DC,$DE,$E0,$E2
 
 DATA_00BACA:        .db $E4,$E6,$E8,$EA,$EC,$EE,$F0,$F2
-                    .db $F4,$F6,$F8,$FA,$FC,$FE,$00,$C8
-                    .db $7E,$B0,$C9,$7E,$60,$CB,$7E,$10
-                    .db $CD,$7E,$C0,$CE,$7E,$70,$D0,$7E
-                    .db $20,$D2,$7E,$D0,$D3,$7E,$80,$D5
-                    .db $7E,$30,$D7,$7E,$E0,$D8,$7E,$90
-                    .db $DA,$7E,$40,$DC,$7E,$F0,$DD,$7E
-                    .db $A0,$DF,$7E,$50,$E1,$7E,$00,$E3
-                    .db $7E,$B0,$E4,$7E,$60,$E6,$7E,$10
-                    .db $E8,$7E,$C0,$E9,$7E,$70,$EB,$7E
-                    .db $20,$ED,$7E,$D0,$EE,$7E,$80,$F0
-                    .db $7E,$30,$F2,$7E,$E0,$F3,$7E,$90
-                    .db $F5,$7E,$40,$F7,$7E,$F0,$F8,$7E
-                    .db $A0,$FA,$7E,$50,$FC,$7E,$00,$C8
-                    .db $7E,$00,$CA,$7E,$00,$CC,$7E,$00
-                    .db $CE,$7E,$00,$D0,$7E,$00,$D2,$7E
-                    .db $00,$D4,$7E,$00,$D6,$7E,$00,$D8
-                    .db $7E,$00,$DA,$7E,$00,$DC,$7E,$00
-                    .db $DE,$7E,$00,$E0,$7E,$00,$E2,$7E
-                    .db $00,$E3,$7E,$B0,$E4,$7E,$60,$E6
-                    .db $7E,$10,$E8,$7E,$C0,$E9,$7E,$70
-                    .db $EB,$7E,$20,$ED,$7E,$D0,$EE,$7E
-                    .db $80,$F0,$7E,$30,$F2,$7E,$E0,$F3
-                    .db $7E,$90,$F5,$7E,$40,$F7,$7E,$F0
-                    .db $F8,$7E,$A0,$FA,$7E,$50,$FC,$7E
-                    .db $00,$C8,$7E,$B0,$C9,$7E,$60,$CB
-                    .db $7E,$10,$CD,$7E,$C0,$CE,$7E,$70
-                    .db $D0,$7E,$20,$D2,$7E,$D0,$D3,$7E
-                    .db $80,$D5,$7E,$30,$D7,$7E,$E0,$D8
-                    .db $7E,$90,$DA,$7E,$40,$DC,$7E,$F0
-                    .db $DD,$7E,$A0,$DF,$7E,$50,$E1,$7E
-                    .db $00,$E4,$7E,$00,$E6,$7E,$00,$E8
-                    .db $7E,$00,$EA,$7E,$00,$EC,$7E,$00
-                    .db $EE,$7E,$00,$F0,$7E,$00,$F2,$7E
-                    .db $00,$F4,$7E,$00,$F6,$7E,$00,$F8
-                    .db $7E,$00,$FA,$7E,$00,$FC,$7E,$00
-                    .db $FE,$7E,$00,$C8,$7E,$00,$CA,$7E
-                    .db $00,$CC,$7E,$00,$CE,$7E,$00,$D0
-                    .db $7E,$00,$D2,$7E,$00,$D4,$7E,$00
-                    .db $D6,$7E,$00,$D8,$7E,$00,$DA,$7E
-                    .db $00,$DC,$7E,$00,$DE,$7E,$00,$E0
-                    .db $7E,$00,$E2,$7E,$00,$E4,$7E,$00
-                    .db $E6,$7E,$00,$E8,$7E,$00,$EA,$7E
-                    .db $00,$EC,$7E,$00,$EE,$7E,$00,$F0
-                    .db $7E,$00,$F2,$7E,$00,$F4,$7E,$00
-                    .db $F6,$7E,$00,$F8,$7E,$00,$FA,$7E
-                    .db $00,$FC,$7E,$00,$FE,$7E,$00,$C8
-                    .db $7F,$B0,$C9,$7F,$60,$CB,$7F,$10
-                    .db $CD,$7F,$C0,$CE,$7F,$70,$D0,$7F
-                    .db $20,$D2,$7F,$D0,$D3,$7F,$80,$D5
-                    .db $7F,$30,$D7,$7F,$E0,$D8,$7F,$90
-                    .db $DA,$7F,$40,$DC,$7F,$F0,$DD,$7F
-                    .db $A0,$DF,$7F,$50,$E1,$7F,$00,$E3
-                    .db $7F,$B0,$E4,$7F,$60,$E6,$7F,$10
-                    .db $E8,$7F,$C0,$E9,$7F,$70,$EB,$7F
-                    .db $20,$ED,$7F,$D0,$EE,$7F,$80,$F0
-                    .db $7F,$30,$F2,$7F,$E0,$F3,$7F,$90
-                    .db $F5,$7F,$40,$F7,$7F,$F0,$F8,$7F
-                    .db $A0,$FA,$7F,$50,$FC,$7F,$00,$C8
-                    .db $7F,$00,$CA,$7F,$00,$CC,$7F,$00
-                    .db $CE,$7F,$00,$D0,$7F,$00,$D2,$7F
-                    .db $00,$D4,$7F,$00,$D6,$7F,$00,$D8
-                    .db $7F,$00,$DA,$7F,$00,$DC,$7F,$00
-                    .db $DE,$7F,$00,$E0,$7F,$00,$E2,$7F
-                    .db $00,$E3,$7F,$B0,$E4,$7F,$60,$E6
-                    .db $7F,$10,$E8,$7F,$C0,$E9,$7F,$70
-                    .db $EB,$7F,$20,$ED,$7F,$D0,$EE,$7F
-                    .db $80,$F0,$7F,$30,$F2,$7F,$E0,$F3
-                    .db $7F,$90,$F5,$7F,$40,$F7,$7F,$F0
-                    .db $F8,$7F,$A0,$FA,$7F,$50,$FC,$7F
-                    .db $00,$C8,$7F,$B0,$C9,$7F,$60,$CB
-                    .db $7F,$10,$CD,$7F,$C0,$CE,$7F,$70
-                    .db $D0,$7F,$20,$D2,$7F,$D0,$D3,$7F
-                    .db $80,$D5,$7F,$30,$D7,$7F,$E0,$D8
-                    .db $7F,$90,$DA,$7F,$40,$DC,$7F,$F0
-                    .db $DD,$7F,$A0,$DF,$7F,$50,$E1,$7F
-                    .db $00,$E4,$7F,$00,$E6,$7F,$00,$E8
-                    .db $7F,$00,$EA,$7F,$00,$EC,$7F,$00
-                    .db $EE,$7F,$00,$F0,$7F,$00,$F2,$7F
-                    .db $00,$F4,$7F,$00,$F6,$7F,$00,$F8
-                    .db $7F,$00,$FA,$7F,$00,$FC,$7F,$00
-                    .db $FE,$7F,$00,$C8,$7F,$00,$CA,$7F
-                    .db $00,$CC,$7F,$00,$CE,$7F,$00,$D0
-                    .db $7F,$00,$D2,$7F,$00,$D4,$7F,$00
-                    .db $D6,$7F,$00,$D8,$7F,$00,$DA,$7F
-                    .db $00,$DC,$7F,$00,$DE,$7F,$00,$E0
-                    .db $7F,$00,$E2,$7F,$00,$E4,$7F,$00
-                    .db $E6,$7F,$00,$E8,$7F,$00,$EA,$7F
-                    .db $00,$EC,$7F,$00,$EE,$7F,$00,$F0
-                    .db $7F,$00,$F2,$7F,$00,$F4,$7F,$00
-                    .db $F6,$7F,$00,$F8,$7F,$00,$FA,$7F
-                    .db $00,$FC,$7F,$00,$FE,$7F
+                    .db $F4,$F6,$F8,$FA,$FC,$FE
 
-DATA_00BDA8:        .db $D8
 
-DATA_00BDA9:        .db $BA,$D8,$BA,$D8,$BA,$38,$BB,$38
-                    .db $BB,$92,$BB,$92,$BB,$EC,$BB,$EC
-                    .db $BB,$00,$00,$EC,$BB,$00,$00,$D8
-                    .db $BA,$EC,$BB,$D8,$BA,$D8,$BA,$00
-                    .db $00,$D8,$BA,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$D8,$BA,$D8,$BA
+PtrsLong00BAD8:     .dw $7EC800 & $FFFF       
+                    .db $7EC800 >> 16
+                    .dw $7EC9B0 & $FFFF       
+                    .db $7EC9B0 >> 16
+                    .dw $7ECB60 & $FFFF       
+                    .db $7ECB60 >> 16
+                    .dw $7ECD10 & $FFFF       
+                    .db $7ECD10 >> 16
+                    .dw $7ECEC0 & $FFFF       
+                    .db $7ECEC0 >> 16
+                    .dw $7ED070 & $FFFF       
+                    .db $7ED070 >> 16
+                    .dw $7ED220 & $FFFF       
+                    .db $7ED220 >> 16
+                    .dw $7ED3D0 & $FFFF       
+                    .db $7ED3D0 >> 16
+                    .dw $7ED580 & $FFFF       
+                    .db $7ED580 >> 16
+                    .dw $7ED730 & $FFFF       
+                    .db $7ED730 >> 16
+                    .dw $7ED8E0 & $FFFF       
+                    .db $7ED8E0 >> 16
+                    .dw $7EDA90 & $FFFF       
+                    .db $7EDA90 >> 16
+                    .dw $7EDC40 & $FFFF       
+                    .db $7EDC40 >> 16
+                    .dw $7EDDF0 & $FFFF       
+                    .db $7EDDF0 >> 16
+                    .dw $7EDFA0 & $FFFF       
+                    .db $7EDFA0 >> 16
+                    .dw $7EE150 & $FFFF       
+                    .db $7EE150 >> 16
+PtrsLong00BB08:     .dw $7EE300 & $FFFF       
+                    .db $7EE300 >> 16
+                    .dw $7EE4B0 & $FFFF       
+                    .db $7EE4B0 >> 16
+                    .dw $7EE660 & $FFFF       
+                    .db $7EE660 >> 16
+                    .dw $7EE810 & $FFFF       
+                    .db $7EE810 >> 16
+                    .dw $7EE9C0 & $FFFF       
+                    .db $7EE9C0 >> 16
+                    .dw $7EEB70 & $FFFF       
+                    .db $7EEB70 >> 16
+                    .dw $7EED20 & $FFFF       
+                    .db $7EED20 >> 16
+                    .dw $7EEED0 & $FFFF       
+                    .db $7EEED0 >> 16
+                    .dw $7EF080 & $FFFF       
+                    .db $7EF080 >> 16
+                    .dw $7EF230 & $FFFF       
+                    .db $7EF230 >> 16
+                    .dw $7EF3E0 & $FFFF       
+                    .db $7EF3E0 >> 16
+                    .dw $7EF590 & $FFFF       
+                    .db $7EF590 >> 16
+                    .dw $7EF740 & $FFFF       
+                    .db $7EF740 >> 16
+                    .dw $7EF8F0 & $FFFF       
+                    .db $7EF8F0 >> 16
+                    .dw $7EFAA0 & $FFFF       
+                    .db $7EFAA0 >> 16
+                    .dw $7EFC50 & $FFFF       
+                    .db $7EFC50 >> 16
+PtrsLong00BB38:     .dw $7EC800 & $FFFF       
+                    .db $7EC800 >> 16
+                    .dw $7ECA00 & $FFFF       
+                    .db $7ECA00 >> 16
+                    .dw $7ECC00 & $FFFF       
+                    .db $7ECC00 >> 16
+                    .dw $7ECE00 & $FFFF       
+                    .db $7ECE00 >> 16
+                    .dw $7ED000 & $FFFF       
+                    .db $7ED000 >> 16
+                    .dw $7ED200 & $FFFF       
+                    .db $7ED200 >> 16
+                    .dw $7ED400 & $FFFF       
+                    .db $7ED400 >> 16
+                    .dw $7ED600 & $FFFF       
+                    .db $7ED600 >> 16
+                    .dw $7ED800 & $FFFF       
+                    .db $7ED800 >> 16
+                    .dw $7EDA00 & $FFFF       
+                    .db $7EDA00 >> 16
+                    .dw $7EDC00 & $FFFF       
+                    .db $7EDC00 >> 16
+                    .dw $7EDE00 & $FFFF       
+                    .db $7EDE00 >> 16
+                    .dw $7EE000 & $FFFF       
+                    .db $7EE000 >> 16
+                    .dw $7EE200 & $FFFF       
+                    .db $7EE200 >> 16
+PtrsLong00BB62:     .dw $7EE300 & $FFFF       
+                    .db $7EE300 >> 16
+                    .dw $7EE4B0 & $FFFF       
+                    .db $7EE4B0 >> 16
+                    .dw $7EE660 & $FFFF       
+                    .db $7EE660 >> 16
+                    .dw $7EE810 & $FFFF       
+                    .db $7EE810 >> 16
+                    .dw $7EE9C0 & $FFFF       
+                    .db $7EE9C0 >> 16
+                    .dw $7EEB70 & $FFFF       
+                    .db $7EEB70 >> 16
+                    .dw $7EED20 & $FFFF       
+                    .db $7EED20 >> 16
+                    .dw $7EEED0 & $FFFF       
+                    .db $7EEED0 >> 16
+                    .dw $7EF080 & $FFFF       
+                    .db $7EF080 >> 16
+                    .dw $7EF230 & $FFFF       
+                    .db $7EF230 >> 16
+                    .dw $7EF3E0 & $FFFF       
+                    .db $7EF3E0 >> 16
+                    .dw $7EF590 & $FFFF       
+                    .db $7EF590 >> 16
+                    .dw $7EF740 & $FFFF       
+                    .db $7EF740 >> 16
+                    .dw $7EF8F0 & $FFFF       
+                    .db $7EF8F0 >> 16
+                    .dw $7EFAA0 & $FFFF       
+                    .db $7EFAA0 >> 16
+                    .dw $7EFC50 & $FFFF       
+                    .db $7EFC50 >> 16
+PtrsLong00BB92:     .dw $7EC800 & $FFFF       
+                    .db $7EC800 >> 16
+                    .dw $7EC9B0 & $FFFF       
+                    .db $7EC9B0 >> 16
+                    .dw $7ECB60 & $FFFF       
+                    .db $7ECB60 >> 16
+                    .dw $7ECD10 & $FFFF       
+                    .db $7ECD10 >> 16
+                    .dw $7ECEC0 & $FFFF       
+                    .db $7ECEC0 >> 16
+                    .dw $7ED070 & $FFFF       
+                    .db $7ED070 >> 16
+                    .dw $7ED220 & $FFFF       
+                    .db $7ED220 >> 16
+                    .dw $7ED3D0 & $FFFF       
+                    .db $7ED3D0 >> 16
+                    .dw $7ED580 & $FFFF       
+                    .db $7ED580 >> 16
+                    .dw $7ED730 & $FFFF       
+                    .db $7ED730 >> 16
+                    .dw $7ED8E0 & $FFFF       
+                    .db $7ED8E0 >> 16
+                    .dw $7EDA90 & $FFFF       
+                    .db $7EDA90 >> 16
+                    .dw $7EDC40 & $FFFF       
+                    .db $7EDC40 >> 16
+                    .dw $7EDDF0 & $FFFF       
+                    .db $7EDDF0 >> 16
+                    .dw $7EDFA0 & $FFFF       
+                    .db $7EDFA0 >> 16
+                    .dw $7EE150 & $FFFF       
+                    .db $7EE150 >> 16
+PtrsLong00BBC2:     .dw $7EE400 & $FFFF       
+                    .db $7EE400 >> 16
+                    .dw $7EE600 & $FFFF       
+                    .db $7EE600 >> 16
+                    .dw $7EE800 & $FFFF       
+                    .db $7EE800 >> 16
+                    .dw $7EEA00 & $FFFF       
+                    .db $7EEA00 >> 16
+                    .dw $7EEC00 & $FFFF       
+                    .db $7EEC00 >> 16
+                    .dw $7EEE00 & $FFFF       
+                    .db $7EEE00 >> 16
+                    .dw $7EF000 & $FFFF       
+                    .db $7EF000 >> 16
+                    .dw $7EF200 & $FFFF       
+                    .db $7EF200 >> 16
+                    .dw $7EF400 & $FFFF       
+                    .db $7EF400 >> 16
+                    .dw $7EF600 & $FFFF       
+                    .db $7EF600 >> 16
+                    .dw $7EF800 & $FFFF       
+                    .db $7EF800 >> 16
+                    .dw $7EFA00 & $FFFF       
+                    .db $7EFA00 >> 16
+                    .dw $7EFC00 & $FFFF       
+                    .db $7EFC00 >> 16
+                    .dw $7EFE00 & $FFFF       
+                    .db $7EFE00 >> 16
+PtrsLong00BBEC:     .dw $7EC800 & $FFFF       
+                    .db $7EC800 >> 16
+                    .dw $7ECA00 & $FFFF       
+                    .db $7ECA00 >> 16
+                    .dw $7ECC00 & $FFFF       
+                    .db $7ECC00 >> 16
+                    .dw $7ECE00 & $FFFF       
+                    .db $7ECE00 >> 16
+                    .dw $7ED000 & $FFFF       
+                    .db $7ED000 >> 16
+                    .dw $7ED200 & $FFFF       
+                    .db $7ED200 >> 16
+                    .dw $7ED400 & $FFFF       
+                    .db $7ED400 >> 16
+                    .dw $7ED600 & $FFFF       
+                    .db $7ED600 >> 16
+                    .dw $7ED800 & $FFFF       
+                    .db $7ED800 >> 16
+                    .dw $7EDA00 & $FFFF       
+                    .db $7EDA00 >> 16
+                    .dw $7EDC00 & $FFFF       
+                    .db $7EDC00 >> 16
+                    .dw $7EDE00 & $FFFF       
+                    .db $7EDE00 >> 16
+                    .dw $7EE000 & $FFFF       
+                    .db $7EE000 >> 16
+                    .dw $7EE200 & $FFFF       
+                    .db $7EE200 >> 16
+PtrsLong00BC16:     .dw $7EE400 & $FFFF       
+                    .db $7EE400 >> 16
+                    .dw $7EE600 & $FFFF       
+                    .db $7EE600 >> 16
+                    .dw $7EE800 & $FFFF       
+                    .db $7EE800 >> 16
+                    .dw $7EEA00 & $FFFF       
+                    .db $7EEA00 >> 16
+                    .dw $7EEC00 & $FFFF       
+                    .db $7EEC00 >> 16
+                    .dw $7EEE00 & $FFFF       
+                    .db $7EEE00 >> 16
+                    .dw $7EF000 & $FFFF       
+                    .db $7EF000 >> 16
+                    .dw $7EF200 & $FFFF       
+                    .db $7EF200 >> 16
+                    .dw $7EF400 & $FFFF       
+                    .db $7EF400 >> 16
+                    .dw $7EF600 & $FFFF       
+                    .db $7EF600 >> 16
+                    .dw $7EF800 & $FFFF       
+                    .db $7EF800 >> 16
+                    .dw $7EFA00 & $FFFF       
+                    .db $7EFA00 >> 16
+                    .dw $7EFC00 & $FFFF       
+                    .db $7EFC00 >> 16
+                    .dw $7EFE00 & $FFFF       
+                    .db $7EFE00 >> 16
+PtrsLong00BC40:     .dw $7FC800 & $FFFF       
+                    .db $7FC800 >> 16
+                    .dw $7FC9B0 & $FFFF       
+                    .db $7FC9B0 >> 16
+                    .dw $7FCB60 & $FFFF       
+                    .db $7FCB60 >> 16
+                    .dw $7FCD10 & $FFFF       
+                    .db $7FCD10 >> 16
+                    .dw $7FCEC0 & $FFFF       
+                    .db $7FCEC0 >> 16
+                    .dw $7FD070 & $FFFF       
+                    .db $7FD070 >> 16
+                    .dw $7FD220 & $FFFF       
+                    .db $7FD220 >> 16
+                    .dw $7FD3D0 & $FFFF       
+                    .db $7FD3D0 >> 16
+                    .dw $7FD580 & $FFFF       
+                    .db $7FD580 >> 16
+                    .dw $7FD730 & $FFFF       
+                    .db $7FD730 >> 16
+                    .dw $7FD8E0 & $FFFF       
+                    .db $7FD8E0 >> 16
+                    .dw $7FDA90 & $FFFF       
+                    .db $7FDA90 >> 16
+                    .dw $7FDC40 & $FFFF       
+                    .db $7FDC40 >> 16
+                    .dw $7FDDF0 & $FFFF       
+                    .db $7FDDF0 >> 16
+                    .dw $7FDFA0 & $FFFF       
+                    .db $7FDFA0 >> 16
+                    .dw $7FE150 & $FFFF       
+                    .db $7FE150 >> 16
+PtrsLong00BC70:     .dw $7FE300 & $FFFF       
+                    .db $7FE300 >> 16
+                    .dw $7FE4B0 & $FFFF       
+                    .db $7FE4B0 >> 16
+                    .dw $7FE660 & $FFFF       
+                    .db $7FE660 >> 16
+                    .dw $7FE810 & $FFFF       
+                    .db $7FE810 >> 16
+                    .dw $7FE9C0 & $FFFF       
+                    .db $7FE9C0 >> 16
+                    .dw $7FEB70 & $FFFF       
+                    .db $7FEB70 >> 16
+                    .dw $7FED20 & $FFFF       
+                    .db $7FED20 >> 16
+                    .dw $7FEED0 & $FFFF       
+                    .db $7FEED0 >> 16
+                    .dw $7FF080 & $FFFF       
+                    .db $7FF080 >> 16
+                    .dw $7FF230 & $FFFF       
+                    .db $7FF230 >> 16
+                    .dw $7FF3E0 & $FFFF       
+                    .db $7FF3E0 >> 16
+                    .dw $7FF590 & $FFFF       
+                    .db $7FF590 >> 16
+                    .dw $7FF740 & $FFFF       
+                    .db $7FF740 >> 16
+                    .dw $7FF8F0 & $FFFF       
+                    .db $7FF8F0 >> 16
+                    .dw $7FFAA0 & $FFFF       
+                    .db $7FFAA0 >> 16
+                    .dw $7FFC50 & $FFFF       
+                    .db $7FFC50 >> 16
+PtrsLong00BCA0:     .dw $7FC800 & $FFFF       
+                    .db $7FC800 >> 16
+                    .dw $7FCA00 & $FFFF       
+                    .db $7FCA00 >> 16
+                    .dw $7FCC00 & $FFFF       
+                    .db $7FCC00 >> 16
+                    .dw $7FCE00 & $FFFF       
+                    .db $7FCE00 >> 16
+                    .dw $7FD000 & $FFFF       
+                    .db $7FD000 >> 16
+                    .dw $7FD200 & $FFFF       
+                    .db $7FD200 >> 16
+                    .dw $7FD400 & $FFFF       
+                    .db $7FD400 >> 16
+                    .dw $7FD600 & $FFFF       
+                    .db $7FD600 >> 16
+                    .dw $7FD800 & $FFFF       
+                    .db $7FD800 >> 16
+                    .dw $7FDA00 & $FFFF       
+                    .db $7FDA00 >> 16
+                    .dw $7FDC00 & $FFFF       
+                    .db $7FDC00 >> 16
+                    .dw $7FDE00 & $FFFF       
+                    .db $7FDE00 >> 16
+                    .dw $7FE000 & $FFFF       
+                    .db $7FE000 >> 16
+                    .dw $7FE200 & $FFFF       
+                    .db $7FE200 >> 16
+PtrsLong00BCCA:     .dw $7FE300 & $FFFF       
+                    .db $7FE300 >> 16
+                    .dw $7FE4B0 & $FFFF       
+                    .db $7FE4B0 >> 16
+                    .dw $7FE660 & $FFFF       
+                    .db $7FE660 >> 16
+                    .dw $7FE810 & $FFFF       
+                    .db $7FE810 >> 16
+                    .dw $7FE9C0 & $FFFF       
+                    .db $7FE9C0 >> 16
+                    .dw $7FEB70 & $FFFF       
+                    .db $7FEB70 >> 16
+                    .dw $7FED20 & $FFFF       
+                    .db $7FED20 >> 16
+                    .dw $7FEED0 & $FFFF       
+                    .db $7FEED0 >> 16
+                    .dw $7FF080 & $FFFF       
+                    .db $7FF080 >> 16
+                    .dw $7FF230 & $FFFF       
+                    .db $7FF230 >> 16
+                    .dw $7FF3E0 & $FFFF       
+                    .db $7FF3E0 >> 16
+                    .dw $7FF590 & $FFFF       
+                    .db $7FF590 >> 16
+                    .dw $7FF740 & $FFFF       
+                    .db $7FF740 >> 16
+                    .dw $7FF8F0 & $FFFF       
+                    .db $7FF8F0 >> 16
+                    .dw $7FFAA0 & $FFFF       
+                    .db $7FFAA0 >> 16
+                    .dw $7FFC50 & $FFFF       
+                    .db $7FFC50 >> 16
+PtrsLong00BCFA:     .dw $7FC800 & $FFFF       
+                    .db $7FC800 >> 16
+                    .dw $7FC9B0 & $FFFF       
+                    .db $7FC9B0 >> 16
+                    .dw $7FCB60 & $FFFF       
+                    .db $7FCB60 >> 16
+                    .dw $7FCD10 & $FFFF       
+                    .db $7FCD10 >> 16
+                    .dw $7FCEC0 & $FFFF       
+                    .db $7FCEC0 >> 16
+                    .dw $7FD070 & $FFFF       
+                    .db $7FD070 >> 16
+                    .dw $7FD220 & $FFFF       
+                    .db $7FD220 >> 16
+                    .dw $7FD3D0 & $FFFF       
+                    .db $7FD3D0 >> 16
+                    .dw $7FD580 & $FFFF       
+                    .db $7FD580 >> 16
+                    .dw $7FD730 & $FFFF       
+                    .db $7FD730 >> 16
+                    .dw $7FD8E0 & $FFFF       
+                    .db $7FD8E0 >> 16
+                    .dw $7FDA90 & $FFFF       
+                    .db $7FDA90 >> 16
+                    .dw $7FDC40 & $FFFF       
+                    .db $7FDC40 >> 16
+                    .dw $7FDDF0 & $FFFF       
+                    .db $7FDDF0 >> 16
+                    .dw $7FDFA0 & $FFFF       
+                    .db $7FDFA0 >> 16
+                    .dw $7FE150 & $FFFF       
+                    .db $7FE150 >> 16
+PtrsLong00BD2A:     .dw $7FE400 & $FFFF       
+                    .db $7FE400 >> 16
+                    .dw $7FE600 & $FFFF       
+                    .db $7FE600 >> 16
+                    .dw $7FE800 & $FFFF       
+                    .db $7FE800 >> 16
+                    .dw $7FEA00 & $FFFF       
+                    .db $7FEA00 >> 16
+                    .dw $7FEC00 & $FFFF       
+                    .db $7FEC00 >> 16
+                    .dw $7FEE00 & $FFFF       
+                    .db $7FEE00 >> 16
+                    .dw $7FF000 & $FFFF       
+                    .db $7FF000 >> 16
+                    .dw $7FF200 & $FFFF       
+                    .db $7FF200 >> 16
+                    .dw $7FF400 & $FFFF       
+                    .db $7FF400 >> 16
+                    .dw $7FF600 & $FFFF       
+                    .db $7FF600 >> 16
+                    .dw $7FF800 & $FFFF       
+                    .db $7FF800 >> 16
+                    .dw $7FFA00 & $FFFF       
+                    .db $7FFA00 >> 16
+                    .dw $7FFC00 & $FFFF       
+                    .db $7FFC00 >> 16
+                    .dw $7FFE00 & $FFFF       
+                    .db $7FFE00 >> 16
+PtrsLong00BD54:     .dw $7FC800 & $FFFF       
+                    .db $7FC800 >> 16
+                    .dw $7FCA00 & $FFFF       
+                    .db $7FCA00 >> 16
+                    .dw $7FCC00 & $FFFF       
+                    .db $7FCC00 >> 16
+                    .dw $7FCE00 & $FFFF       
+                    .db $7FCE00 >> 16
+                    .dw $7FD000 & $FFFF       
+                    .db $7FD000 >> 16
+                    .dw $7FD200 & $FFFF       
+                    .db $7FD200 >> 16
+                    .dw $7FD400 & $FFFF       
+                    .db $7FD400 >> 16
+                    .dw $7FD600 & $FFFF       
+                    .db $7FD600 >> 16
+                    .dw $7FD800 & $FFFF       
+                    .db $7FD800 >> 16
+                    .dw $7FDA00 & $FFFF       
+                    .db $7FDA00 >> 16
+                    .dw $7FDC00 & $FFFF       
+                    .db $7FDC00 >> 16
+                    .dw $7FDE00 & $FFFF       
+                    .db $7FDE00 >> 16
+                    .dw $7FE000 & $FFFF       
+                    .db $7FE000 >> 16
+                    .dw $7FE200 & $FFFF       
+                    .db $7FE200 >> 16
+PtrsLong00BD7E:     .dw $7FE400 & $FFFF       
+                    .db $7FE400 >> 16
+                    .dw $7FE600 & $FFFF       
+                    .db $7FE600 >> 16
+                    .dw $7FE800 & $FFFF       
+                    .db $7FE800 >> 16
+                    .dw $7FEA00 & $FFFF       
+                    .db $7FEA00 >> 16
+                    .dw $7FEC00 & $FFFF       
+                    .db $7FEC00 >> 16
+                    .dw $7FEE00 & $FFFF       
+                    .db $7FEE00 >> 16
+                    .dw $7FF000 & $FFFF       
+                    .db $7FF000 >> 16
+                    .dw $7FF200 & $FFFF       
+                    .db $7FF200 >> 16
+                    .dw $7FF400 & $FFFF       
+                    .db $7FF400 >> 16
+                    .dw $7FF600 & $FFFF       
+                    .db $7FF600 >> 16
+                    .dw $7FF800 & $FFFF       
+                    .db $7FF800 >> 16
+                    .dw $7FFA00 & $FFFF       
+                    .db $7FFA00 >> 16
+                    .dw $7FFC00 & $FFFF       
+                    .db $7FFC00 >> 16
+                    .dw $7FFE00 & $FFFF       
+                    .db $7FFE00 >> 16
 
-DATA_00BDE8:        .db $08
 
-DATA_00BDE9:        .db $BB,$08,$BB,$08,$BB,$62,$BB,$62
-                    .db $BB,$C2,$BB,$C2,$BB,$16,$BC,$16
-                    .db $BC,$00,$00,$16,$BC,$00,$00,$08
-                    .db $BB,$16,$BC,$08,$BB,$08,$BB,$00
-                    .db $00,$08,$BB,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$08,$BB,$08,$BB
+Ptrs00BDA8:         .dw PtrsLong00BAD8        
+                    .dw PtrsLong00BAD8        
+                    .dw PtrsLong00BAD8        
+                    .dw PtrsLong00BB38        
+                    .dw PtrsLong00BB38        
+                    .dw PtrsLong00BB92        
+                    .dw PtrsLong00BB92        
+                    .dw PtrsLong00BBEC        
+                    .dw PtrsLong00BBEC        
+                    .dw $0000                 
+                    .dw PtrsLong00BBEC        
+                    .dw $0000                 
+                    .dw PtrsLong00BAD8        
+                    .dw PtrsLong00BBEC        
+                    .dw PtrsLong00BAD8        
+                    .dw PtrsLong00BAD8        
+                    .dw $0000                 
+                    .dw PtrsLong00BAD8        
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw PtrsLong00BAD8        
+                    .dw PtrsLong00BAD8        
+Ptrs00BDE8:         .dw PtrsLong00BB08        
+                    .dw PtrsLong00BB08        
+                    .dw PtrsLong00BB08        
+                    .dw PtrsLong00BB62        
+                    .dw PtrsLong00BB62        
+                    .dw PtrsLong00BBC2        
+                    .dw PtrsLong00BBC2        
+                    .dw PtrsLong00BC16        
+                    .dw PtrsLong00BC16        
+                    .dw $0000                 
+                    .dw PtrsLong00BC16        
+                    .dw $0000                 
+                    .dw PtrsLong00BB08        
+                    .dw PtrsLong00BC16        
+                    .dw PtrsLong00BB08        
+                    .dw PtrsLong00BB08        
+                    .dw $0000                 
+                    .dw PtrsLong00BB08        
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw PtrsLong00BB08        
+                    .dw PtrsLong00BB08        
+Ptrs00BE28:         .dw PtrsLong00BC40        
+                    .dw PtrsLong00BC40        
+                    .dw PtrsLong00BC40        
+                    .dw PtrsLong00BCA0        
+                    .dw PtrsLong00BCA0        
+                    .dw PtrsLong00BCFA        
+                    .dw PtrsLong00BCFA        
+                    .dw PtrsLong00BD54        
+                    .dw PtrsLong00BD54        
+                    .dw $0000                 
+                    .dw PtrsLong00BD54        
+                    .dw $0000                 
+                    .dw PtrsLong00BC40        
+                    .dw PtrsLong00BD54        
+                    .dw PtrsLong00BC40        
+                    .dw PtrsLong00BC40        
+                    .dw $0000                 
+                    .dw PtrsLong00BC40        
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw PtrsLong00BC40        
+                    .dw PtrsLong00BC40        
+Ptrs00BE68:         .dw PtrsLong00BC70        
+                    .dw PtrsLong00BC70        
+                    .dw PtrsLong00BC70        
+                    .dw PtrsLong00BCCA        
+                    .dw PtrsLong00BCCA        
+                    .dw PtrsLong00BD2A        
+                    .dw PtrsLong00BD2A        
+                    .dw PtrsLong00BD7E        
+                    .dw PtrsLong00BD7E        
+                    .dw $0000                 
+                    .dw PtrsLong00BD7E        
+                    .dw $0000                 
+                    .dw PtrsLong00BC70        
+                    .dw PtrsLong00BD7E        
+                    .dw PtrsLong00BC70        
+                    .dw PtrsLong00BC70        
+                    .dw $0000                 
+                    .dw PtrsLong00BC70        
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw $0000                 
+                    .dw PtrsLong00BC70        
+                    .dw PtrsLong00BC70        
+LoadBlkPtrs:        .dw Ptrs00BDA8            
+                    .dw Ptrs00BDE8            
+LoadBlkTable2:      .dw Ptrs00BE28            
+                    .dw Ptrs00BE68            
 
-DATA_00BE28:        .db $40
-
-DATA_00BE29:        .db $BC,$40,$BC,$40,$BC,$A0,$BC,$A0
-                    .db $BC,$FA,$BC,$FA,$BC,$54,$BD,$54
-                    .db $BD,$00,$00,$54,$BD,$00,$00,$40
-                    .db $BC,$54,$BD,$40,$BC,$40,$BC,$00
-                    .db $00,$40,$BC,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$40,$BC,$40,$BC
-
-DATA_00BE68:        .db $70
-
-DATA_00BE69:        .db $BC,$70,$BC,$70,$BC,$CA,$BC,$CA
-                    .db $BC,$2A,$BD,$2A,$BD,$7E,$BD,$7E
-                    .db $BD,$00,$00,$7E,$BD,$00,$00,$70
-                    .db $BC,$7E,$BD,$70,$BC,$70,$BC,$00
-                    .db $00,$70,$BC,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$70,$BC,$70,$BC
-
-LoadBlkTable1:      .db $A8
-
-DATA_00BEA9:        .db $BD,$E8,$BD
-
-LoadBlkTable2:      .db $28,$BE,$68,$BE
-
-ADDR_00BEB0:        PHP                       
+GenerateTile:       PHP                       
                     REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     PHX                       
                     LDA $9C                   
                     AND.W #$00FF              
                     BNE ADDR_00BEBE           
 ADDR_00BEBB:        JMP.W ADDR_00BFB9         
+
 ADDR_00BEBE:        LDA $9A                   
                     STA $0C                   
                     LDA $98                   
@@ -5746,11 +6416,11 @@ ADDR_00BEEC:        CPY.W #$0200
                     LDA.W $1933               
                     ASL                       
                     TAX                       
-                    LDA.L LoadBlkTable1,X     
+                    LDA.L LoadBlkPtrs,X       ;  Set low byte of pointer
                     STA $65                   
-                    LDA.L DATA_00BEA9,X       
+                    LDA.L LoadBlkPtrs+1,X     ;  Set middle byte of pointer
                     STA $66                   
-                    STZ $67                   
+                    STZ $67                   ;  High byte of pointer = #$00
                     LDA.W $1925               
                     ASL                       
                     TAY                       
@@ -5785,6 +6455,7 @@ ADDR_00BEEC:        CPY.W #$0200
                     LDA $9B                   
                     AND.B #$01                
                     JMP.W ADDR_00BF46         
+
 ADDR_00BF41:        LDA $9B                   
                     LSR                       
                     LDA $99                   
@@ -5835,6 +6506,7 @@ ADDR_00BF57:        LDA $98
                     SBC.W #$0080              
                     TAY                       
                     JMP.W ADDR_00BFB2         
+
 ADDR_00BF9B:        LDX $1A                   
                     LDA $1C                   
                     SEC                       
@@ -5852,42 +6524,43 @@ ADDR_00BFB2:        STX $08
                     JSR.W ADDR_00BFBC         
 ADDR_00BFB9:        PLX                       
                     PLP                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_00BFBC:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     LDA $9C                   
                     DEC A                     
                     PHK                       
                     PER $0003                 
-                    JMP.L ExecutePtr          
+                    JMP.L ExecutePtr          ; $9C - Tile generated
 
-Ptrs00BFC9:         .dw ADDR_00C074           
-                    .dw ADDR_00C077           
-                    .dw ADDR_00C077           
-                    .dw ADDR_00C077           
-                    .dw ADDR_00C077           
-                    .dw ADDR_00C077           
-                    .dw ADDR_00C077           
-                    .dw ADDR_00C077           
-                    .dw ADDR_00C0C4           
-                    .dw ADDR_00C0C4           
-                    .dw ADDR_00C0C4           
-                    .dw ADDR_00C0C4           
-                    .dw ADDR_00C0C4           
-                    .dw ADDR_00C0C4           
-                    .dw ADDR_00C0C4           
-                    .dw ADDR_00C0C4           
-                    .dw ADDR_00C0C4           
-                    .dw ADDR_00C0C4           
-                    .dw ADDR_00C0C4           
-                    .dw ADDR_00C0C4           
-                    .dw ADDR_00C0C4           
-                    .dw ADDR_00C0C1           
-                    .dw ADDR_00C0C1           
-                    .dw ADDR_00C1AC           
-                    .dw ADDR_00C334           
-                    .dw ADDR_00C334           
-                    .dw ADDR_00C3D1           
+
+TileGenerationPtr:  .dw ADDR_00C074           ; 01 - empty space
+                    .dw ADDR_00C077           ; 02 - empty space
+                    .dw ADDR_00C077           ; 03 - vine
+                    .dw ADDR_00C077           ; 04 - tree background, for berries
+                    .dw ADDR_00C077           ; 05 - always turning block
+                    .dw ADDR_00C077           ; 06 - coin
+                    .dw ADDR_00C077           ; 07 - Mushroom scale base
+                    .dw ADDR_00C077           ; 08 - mole hole
+                    .dw ADDR_00C0C4           ; 09 - invisible solid
+                    .dw ADDR_00C0C4           ; 0a - multiple coin turnblock
+                    .dw ADDR_00C0C4           ; 0b - multiple coin q block
+                    .dw ADDR_00C0C4           ; 0c - turn block
+                    .dw ADDR_00C0C4           ; 0d - used block
+                    .dw ADDR_00C0C4           ; 0e - music block
+                    .dw ADDR_00C0C4           ; 0f - music
+                    .dw ADDR_00C0C4           ; 10 - all way music block
+                    .dw ADDR_00C0C4           ; 11 - sideways turn block
+                    .dw ADDR_00C0C4           ; 12 - tranlucent
+                    .dw ADDR_00C0C4           ; 13 - on off
+                    .dw ADDR_00C0C4           ; 14 - side of pipe, left
+                    .dw ADDR_00C0C4           ; 15 - side of pipe, right
+                    .dw ADDR_00C0C1           ; 16 - used
+                    .dw ADDR_00C0C1           ; 17 - O block from 1up game
+                    .dw ADDR_00C1AC           ; 18 - invisible block containing wings
+                    .dw ADDR_00C334           ; 19 - cage
+                    .dw ADDR_00C334           ; 1a - cage
+                    .dw ADDR_00C3D1           ; 1b -
 
 DATA_00BFFF:        .db $00,$00,$80,$00,$00,$01
 
@@ -5940,15 +6613,12 @@ ADDR_00C03A:        LDA.W $13BE
                     LDA.W $19F8,Y             
                     ORA.L DATA_00C005,X       
                     STA.W $19F8,Y             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_00C063:        .db $7F,$BF,$DF,$EF,$F7,$FB,$FD,$FE
-DATA_00C06B:        .db $25,$25,$25,$06,$49
+TileToGeneratePg0:  .db $25,$25,$25,$06,$49,$48,$2B,$A2
+                    .db $C6
 
-                    PHA                       ; Index (8 bit) 
-                    PLD                       
-                    LDX.B #$C6                
 ADDR_00C074:        JSR.W ADDR_00C00D         
 ADDR_00C077:        REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     LDA $98                   
@@ -5962,15 +6632,15 @@ ADDR_00C077:        REP #$30                  ; Index (16 bit) Accum (16 bit)
                     AND.W #$000F              
                     ORA $04                   
                     TAY                       
-                    LDA $9C                   
-                    AND.W #$00FF              
-                    TAX                       
+                    LDA $9C                   ; \ X = index of tile to generate
+                    AND.W #$00FF              ;  |
+                    TAX                       ; /
                     SEP #$20                  ; Accum (8 bit) 
-                    LDA [$6E],Y               
-                    AND.B #$FE                
-                    STA [$6E],Y               
-                    LDA.L DATA_00C06B,X       
-                    STA [$6B],Y               
+                    LDA [$6E],Y               ; \ Reset #$01 bit
+                    AND.B #$FE                ;  |
+                    STA [$6E],Y               ; /
+                    LDA.L TileToGeneratePg0,X ; \ Store tile
+                    STA [$6B],Y               ; /
                     REP #$20                  ; Accum (16 bit) 
                     AND.W #$00FF              
                     ASL                       
@@ -5978,7 +6648,7 @@ ADDR_00C077:        REP #$30                  ; Index (16 bit) Accum (16 bit)
                     JMP.W ADDR_00C0FB         
 
 DATA_00C0AA:        .db $80,$40,$20,$10,$08,$04,$02,$01
-DATA_00C0B2:        .db $52,$1B,$23,$1E,$32,$13,$15,$16
+TileToGeneratePg1:  .db $52,$1B,$23,$1E,$32,$13,$15,$16
                     .db $2B,$2C,$12,$68,$69,$32,$5E
 
 ADDR_00C0C1:        JSR.W ADDR_00C00D         
@@ -5994,17 +6664,17 @@ ADDR_00C0C4:        REP #$30                  ; Index (16 bit) Accum (16 bit)
                     AND.W #$000F              
                     ORA $04                   
                     TAY                       
-                    LDA $9C                   
-                    SEC                       
-                    SBC.W #$0009              
-                    AND.W #$00FF              
-                    TAX                       
+                    LDA $9C                   ; \ X = index of tile to generate
+                    SEC                       ;  |
+                    SBC.W #$0009              ;  |
+                    AND.W #$00FF              ;  |
+                    TAX                       ; /
                     SEP #$20                  ; Accum (8 bit) 
-                    LDA [$6E],Y               
-                    ORA.B #$01                
-                    STA [$6E],Y               
-                    LDA.L DATA_00C0B2,X       
-                    STA [$6B],Y               
+                    LDA [$6E],Y               ; \ Set #$01 bit
+                    ORA.B #$01                ;  |
+                    STA [$6E],Y               ; /
+                    LDA.L TileToGeneratePg1,X ; \ Store tile
+                    STA [$6B],Y               ; /
                     REP #$20                  ; Accum (16 bit) 
                     AND.W #$00FF              
                     ORA.W #$0100              
@@ -6029,18 +6699,19 @@ ADDR_00C11A:        CLC
                     CMP $0C                   
                     BEQ ADDR_00C124           
                     BCS ADDR_00C13E           
-ADDR_00C124:        JMP.W ADDR_00C1AB         
+ADDR_00C124:        JMP.W Return00C1AB        
+
 ADDR_00C127:        LDA $0A                   
                     AND.W #$FFF0              
                     BMI ADDR_00C134           
                     CMP $0E                   
                     BEQ ADDR_00C13E           
-                    BCS ADDR_00C1AB           
+                    BCS Return00C1AB          
 ADDR_00C134:        CLC                       
                     ADC.W #$0200              
                     CMP $0E                   
-                    BEQ ADDR_00C1AB           
-                    BCC ADDR_00C1AB           
+                    BEQ Return00C1AB          
+                    BCC Return00C1AB          
 ADDR_00C13E:        LDA.L $7F837B             
                     TAX                       
                     SEP #$20                  ; Accum (8 bit) 
@@ -6084,7 +6755,7 @@ ADDR_00C13E:        LDA.L $7F837B
                     CLC                       
                     ADC.W #$0010              
                     STA.L $7F837B             
-ADDR_00C1AB:        RTS                       ; Return 
+Return00C1AB:       RTS                       ; Return
 
 ADDR_00C1AC:        JSR.W ADDR_00C00D         
                     REP #$30                  ; Index (16 bit) Accum (16 bit) 
@@ -6127,24 +6798,25 @@ ADDR_00C1EA:        LDA $00
                     BMI ADDR_00C1FE           
                     CMP $0C                   
                     BEQ ADDR_00C222           
-                    BCS ADDR_00C1AB           
+                    BCS Return00C1AB          
 ADDR_00C1FE:        CLC                       
                     ADC.W #$0200              
                     CMP $0C                   
-                    BCC ADDR_00C1AB           
-                    BEQ ADDR_00C1AB           
+                    BCC Return00C1AB          
+                    BEQ Return00C1AB          
                     JMP.W ADDR_00C222         
+
 ADDR_00C20B:        LDA $0A                   
                     AND.W #$FFF0              
                     BMI ADDR_00C218           
                     CMP $0E                   
                     BEQ ADDR_00C222           
-                    BCS ADDR_00C1AB           
+                    BCS Return00C1AB          
 ADDR_00C218:        CLC                       
                     ADC.W #$0200              
                     CMP $0E                   
-                    BEQ ADDR_00C1AB           
-                    BCC ADDR_00C1AB           
+                    BEQ Return00C1AB          
+                    BCC Return00C1AB          
 ADDR_00C222:        LDA.L $7F837B             
                     TAX                       
                     SEP #$20                  ; Accum (8 bit) 
@@ -6191,10 +6863,9 @@ ADDR_00C222:        LDA.L $7F837B
                     CLC                       
                     ADC.W #$0018              
                     STA.L $7F837B             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-
-DATA_00C29E:        .db $99,$9C,$8B,$1C,$8B,$1C,$8B,$1C
+FlippedGateBgTiles?:.db $99,$9C,$8B,$1C,$8B,$1C,$8B,$1C
                     .db $8B,$1C,$99,$DC,$9B,$1C,$F8,$1C
                     .db $F8,$1C,$F8,$1C,$F8,$1C,$9B,$5C
                     .db $9B,$1C,$F8,$1C,$F8,$1C,$F8,$1C
@@ -6288,7 +6959,7 @@ ADDR_00C3A4:        LDA [$02],Y
                     CLC                       
                     ADC.W #$0060              
                     STA.L $7F837B             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00C3D1:        REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     LDA $98                   
@@ -6352,8 +7023,7 @@ ADDR_00C40C:        LDA $06
                     REP #$20                  ; Accum (16 bit) 
                     TXA                       
                     STA.L $7F837B             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_00C453:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$80,$40,$20
@@ -6369,7 +7039,7 @@ DATA_00C478:        .db $30,$33,$33,$30,$01,$00
 ADDR_00C47E:        STZ $78                   ; Index (8 bit) Accum (8 bit) 
                     LDA.W $13CB               
                     BPL ADDR_00C48C           
-                    JSL.L ADDR_01C580         
+                    JSL.L ExtSub01C580        
                     STZ.W $13CB               
 ADDR_00C48C:        LDY.W $1434               
                     BEQ ADDR_00C4BA           
@@ -6392,6 +7062,7 @@ ADDR_00C48C:        LDY.W $1434
                     LDY.B #$00                
 ADDR_00C4B7:        STY.W $1434               
 ADDR_00C4BA:        BRA ADDR_00C4F8           
+
 ADDR_00C4BC:        CLC                       
                     ADC.W DATA_00C474,X       
                     STA.W $1433               
@@ -6421,11 +7092,12 @@ ADDR_00C4BC:        CLC
                     ADC.B #$10                
                     STA $01                   
                     JSR.W ADDR_00CA88         
-ADDR_00C4F8:        LDA.W $13FB               
+ADDR_00C4F8:        LDA.W $13FB               ;  Bug: Crash?  Should clear $13FB if animation is in progress ($71 non-zero).  See fireberryfix.asm
                     BEQ ADDR_00C500           
                     JMP.W ADDR_00C58F         
-ADDR_00C500:        LDA $9D                   
-                    BNE ADDR_00C569           
+
+ADDR_00C500:        LDA $9D                   ; \ Branch if sprites locked
+                    BNE ADDR_00C569           ; /
                     INC $14                   
                     LDX.B #$13                
 ADDR_00C508:        LDA.W $1495,X             
@@ -6442,7 +7114,7 @@ ADDR_00C510:        DEX
                     CMP.B #$44                
                     BNE ADDR_00C52A           
                     LDY.B #$14                
-                    STY.W $1DFB               ; / Play sound effect 
+                    STY.W $1DFB               ; / Change music
 ADDR_00C52A:        CMP.B #$01                
                     BNE ADDR_00C533           
                     LDY.B #$0B                
@@ -6457,13 +7129,13 @@ ADDR_00C53E:        LDA.W $0DDA
                     BNE ADDR_00C54F           
                     LDY.W $190C               
                     BNE ADDR_00C54F           
-                    STA.W $1DFB               ; / Play sound effect 
+                    STA.W $1DFB               ; / Change music
 ADDR_00C54F:        CMP.B #$FF                
                     BEQ ADDR_00C55C           
                     CPY.B #$1E                
                     BNE ADDR_00C55C           
-                    LDA.B #$24                
-                    STA.W $1DFC               ; / Play sound effect 
+                    LDA.B #$24                ; \ Play sound effect
+                    STA.W $1DFC               ; /
 ADDR_00C55C:        LDX.B #$06                
 ADDR_00C55E:        LDA.W $14A8,X             
                     BEQ ADDR_00C566           
@@ -6476,59 +7148,58 @@ ADDR_00C569:        JSR.W ADDR_00C593
                     BEQ ADDR_00C58F           
                     LDA $15                   
                     AND.B #$08                
-                    BRA ADDR_00C585           
-                    LDA $19                   
-                    INC A                     
-                    CMP.B #$04                
-                    BCC ADDR_00C581           
-                    LDA.B #$00                
-ADDR_00C581:        STA $19                   
-                    BRA ADDR_00C58F           
+                    BRA ADDR_00C585           ; Change to BEQ to reach debug routine below
+
+                    LDA $19                   ; \ Unreachable
+                    INC A                     ;  | Debug: Cycle through powerups
+                    CMP.B #$04                ;  |
+                    BCC ADDR_00C581           ;  |
+                    LDA.B #$00                ;  |
+ADDR_00C581:        STA $19                   ;  |
+                    BRA ADDR_00C58F           ; /
+
 ADDR_00C585:        PHB                       
                     LDA.B #$02                
                     PHA                       
                     PLB                       
-                    JSL.L ADDR_028008         
+                    JSL.L ExtSub028008        
                     PLB                       
 ADDR_00C58F:        STZ.W $1402               
-ADDR_00C592:        RTS                       ; Return 
+Return00C592:       RTS                       ; Return
 
 ADDR_00C593:        LDA $71                   
                     JSL.L ExecutePtr          
 
-Ptrs00C599:         .dw ADDR_00CC68           
-                    .dw ADDR_00D129           
-                    .dw ADDR_00D147           
-                    .dw ADDR_00D15F           
-                    .dw ADDR_00D16F           
-                    .dw ADDR_00D197           
-                    .dw ADDR_00D203           
-                    .dw ADDR_00D287           
-                    .dw ADDR_00C7FD           
-                    .dw MarioDeath            
-                    .dw ADDR_00C870           
-                    .dw ADDR_00C5B5           
-                    .dw ADDR_00C6E7           
-                    .dw ADDR_00C592           
+AnimationSeqPtr:    .dw ResetAni              ; 0 - Reset                  
+                    .dw PowerDownAni          ; 1 - Power down             
+                    .dw MushroomAni           ; 2 - Mushroom power up      
+                    .dw CapeAni               ; 3 - Cape power up          
+                    .dw FlowerAni             ; 4 - Flower power up        
+                    .dw DoorPipeAni           ; 5 - Door/Horizontal pipe exit
+                    .dw VertPipeAni           ; 6 - Vertical pipe exit     
+                    .dw PipeCannonAni         ; 7 - Shot out of diagonal pipe
+                    .dw YoshiWingsAni         ; 8 - Yoshi wings exit       
+                    .dw MarioDeathAni         ; 9 - Mario Death            
+                    .dw EnterCastleAni        ; A - Enter Castle           
+                    .dw UnknownAniB           ; B - freeze forever         
+                    .dw UnknownAniC           ; C - random movement??      
+                    .dw Return00C592          ; D - freeze forever         
 
-ADDR_00C5B5:        STZ.W $13DE               
+UnknownAniB:        STZ.W $13DE               
                     STZ.W $13ED               
                     LDA.W $1493               
                     BEQ ADDR_00C5CE           
-                    JSL.L ADDR_0CAB13         
+                    JSL.L ExtSub0CAB13        
                     LDA.W $0100               
                     CMP.B #$14                
                     BEQ ADDR_00C5D1           
                     JMP.W ADDR_00C95B         
+
 ADDR_00C5CE:        STZ.W $0D9F               
 ADDR_00C5D1:        LDA.B #$01                
                     STA.W $1B88               
                     LDA.B #$07                
-
-Instr00C5D8:        .db $8D,$28
-
-ADDR_00C5DA:        .db $19
-
+                    STA.W $1928               
                     JSR.W NoButtons           
                     JMP.W ADDR_00CD24         
 
@@ -6570,11 +7241,11 @@ DATA_00C5E9:        .db $11,$02,$48,$00,$60,$01,$09,$80
 
 DATA_00C6DF:        .db $01,$00,$10,$A0,$84,$50,$BC,$D8
 
-ADDR_00C6E7:        JSR.W NoButtons           
+UnknownAniC:        JSR.W NoButtons           
                     STZ.W $13DE               
                     JSR.W ADDR_00DC2D         
-                    LDA $7D                   
-                    BMI ADDR_00C73F           
+                    LDA $7D                   ; \ Branch if Mario has upward speed
+                    BMI ADDR_00C73F           ; /
                     LDA $96                   
                     CMP.B #$58                
                     BCS ADDR_00C739           
@@ -6596,19 +7267,21 @@ ADDR_00C6E7:        JSR.W NoButtons
                     BEQ ADDR_00C730           
                     LDY.B #$00                
                     BRA ADDR_00C72E           
+
 ADDR_00C71C:        CMP.B #$4C                
                     BCC ADDR_00C73F           
-                    LDA.B #$1B                
-                    STA.W $1DFC               ; / Play sound effect 
+                    LDA.B #$1B                ; \ Play sound effect
+                    STA.W $1DFC               ; /
                     INC.W $143E               
                     LDA.B #$4C                
                     LDY.B #$F4                
                     LDX.B #$C0                
 ADDR_00C72E:        STY $7B                   
 ADDR_00C730:        STX $7D                   
-                    LDX.B #$01                
-                    STX.W $1DF9               ; / Play sound effect 
+                    LDX.B #$01                ; \ Play sound effect
+                    STX.W $1DF9               ; /
                     BRA ADDR_00C73D           
+
 ADDR_00C739:        STZ $72                   
                     LDA.B #$58                
 ADDR_00C73D:        STA $96                   
@@ -6628,16 +7301,17 @@ ADDR_00C73F:        LDX.W $13C6
                     LDA.W DATA_00C5E8,X       
                     CMP.B #$2D                
                     BNE ADDR_00C764           
-                    LDA.B #$1E                
-                    STA.W $1DF9               ; / Play sound effect 
+                    LDA.B #$1E                ; \ Play sound effect
+                    STA.W $1DF9               ; /
 ADDR_00C764:        LDA.W DATA_00C5E8,X       
                     CMP.B #$FF                
                     BNE ADDR_00C76E           
-                    JMP.W ADDR_00C7F8         
+                    JMP.W Return00C7F8        
+
 ADDR_00C76E:        PHA                       
                     AND.B #$10                
                     BEQ ADDR_00C777           
-                    JSL.L ADDR_0CD4A4         
+                    JSL.L ExtSub0CD4A4        
 ADDR_00C777:        PLA                       
                     TAY                       
                     AND.B #$20                
@@ -6648,6 +7322,7 @@ ADDR_00C777:        PLA
                     STA $16                   
                     JSR.W ADDR_00CD39         
                     BRA ADDR_00C7F6           
+
 ADDR_00C789:        TYA                       
                     AND.B #$0F                
                     CMP.B #$07                
@@ -6656,24 +7331,28 @@ ADDR_00C789:        TYA
                     BPL ADDR_00C7A2           
                     LDA.W $1498               
                     BEQ ADDR_00C79D           
-                    LDA.B #$09                
-                    STA.W $1DF9               ; / Play sound effect 
+                    LDA.B #$09                ; \ Play sound effect
+                    STA.W $1DF9               ; /
 ADDR_00C79D:        INC.W $143E               
                     BRA ADDR_00C7F6           
+
 ADDR_00C7A2:        BNE ADDR_00C7A9           
                     INC.W $1445               
                     BRA ADDR_00C7F6           
+
 ADDR_00C7A9:        DEC A                     
                     BNE ADDR_00C7B6           
-                    LDA.B #$0E                
-                    STA.W $1DF9               ; / Play sound effect 
+                    LDA.B #$0E                ; \ Play sound effect
+                    STA.W $1DF9               ; /
                     INC.W $1446               
                     BRA ADDR_00C7F6           
+
 ADDR_00C7B6:        DEC A                     
                     BNE ADDR_00C7C0           
                     LDY.B #$88                
                     STY.W $1445               
                     BRA ADDR_00C7F6           
+
 ADDR_00C7C0:        DEC A                     
                     BNE ADDR_00C7CE           
                     LDA.B #$38                
@@ -6681,41 +7360,42 @@ ADDR_00C7C0:        DEC A
                     LDA.B #$07                
                     TRB $94                   
                     BRA ADDR_00C7F6           
+
 ADDR_00C7CE:        DEC A                     
                     BNE ADDR_00C7DF           
-                    LDA.B #$09                
-                    STA.W $1DFC               ; / Play sound effect 
+                    LDA.B #$09                ; \ Play sound effect
+                    STA.W $1DFC               ; /
                     LDA.B #$D8                
                     STA $7B                   
                     INC.W $143E               
                     BRA ADDR_00C79D           
+
 ADDR_00C7DF:        LDA.B #$20                
                     STA.W $1498               
                     INC.W $148F               
                     BRA ADDR_00C7F6           
+
 ADDR_00C7E9:        TAY                       
-                    LDA.W ADDR_00C5DA,Y       
+                    LDA.W DATA_00C5E1-7,Y     
                     STA.W $13E0               
                     STZ.W $148F               
                     JSR.W ADDR_00D7E4         
 ADDR_00C7F6:        DEC $88                   
-ADDR_00C7F8:        RTS                       ; Return 
+Return00C7F8:       RTS                       ; Return
 
+DATA_00C7F9:        .db $C0,$FF,$A0,$00
 
-DATA_00C7F9:        .db $C0,$FF
-
-                    LDY.B #$00                
-ADDR_00C7FD:        JSR.W NoButtons           
+YoshiWingsAni:      JSR.W NoButtons           
                     LDA.B #$0B                
                     STA $72                   
                     JSR.W ADDR_00D7E4         
-                    LDA $7D                   
-                    BPL ADDR_00C80F           
-                    CMP.B #$90                
-                    BCC ADDR_00C814           
-ADDR_00C80F:        SEC                       
-                    SBC.B #$0D                
-                    STA $7D                   
+                    LDA $7D                   ;  \ Branch if Mario has downward speed
+                    BPL ADDR_00C80F           ;  /
+                    CMP.B #$90                ;  \ Branch if Y speed < #$90
+                    BCC ADDR_00C814           ;  /
+ADDR_00C80F:        SEC                       ;  \ Y Speed -= #$0D
+                    SBC.B #$0D                ;   |
+                    STA $7D                   ;  /
 ADDR_00C814:        LDA.B #$02                
                     LDY $7B                   
                     BEQ ADDR_00C827           
@@ -6732,20 +7412,15 @@ ADDR_00C827:        JSR.W ADDR_00DC2D
                     LDA $80                   
                     CMP.W DATA_00C7F9,Y       
                     SEP #$20                  ; Accum (8 bit) 
-                    BPL Instr00C845           
+                    BPL ADDR_00C845           
                     STZ $71                   
                     TYA                       
-                    BNE Instr00C845           
+                    BNE ADDR_00C845           
                     INY                       
                     INY                       
                     STY.W $1B95               
                     JSR.W ADDR_00D273         
-
-Instr00C845:        .db $4C
-
-ADDR_00C846:        .db $8F
-
-ADDR_00C847:        .db $CD
+ADDR_00C845:        JMP.W ADDR_00CD8F         
 
 DATA_00C848:        .db $01,$5F,$00,$30,$08,$30,$00,$20
                     .db $40,$01,$00,$30,$01,$80,$FF,$01
@@ -6753,16 +7428,18 @@ DATA_00C848:        .db $01,$5F,$00,$30,$08,$30,$00,$20
                     .db $3A,$01,$38,$00,$30,$08,$30,$00
                     .db $20,$40,$01,$00,$30,$01,$80,$FF
 
-ADDR_00C870:        STZ.W $13E2               
+EnterCastleAni:     STZ.W $13E2               
                     LDX.W $1931               
                     BIT.W DATA_00A625,X       
                     BMI ADDR_00C889           
                     BVS ADDR_00C883           
-                    JSL.L ADDR_02F57C         
+                    JSL.L ExtSub02F57C        
                     BRA ADDR_00C88D           
-ADDR_00C883:        JSL.L ADDR_02F58C         
+
+ADDR_00C883:        JSL.L ExtSub02F58C        
                     BRA ADDR_00C88D           
-ADDR_00C889:        JSL.L ADDR_02F584         
+
+ADDR_00C889:        JSL.L ExtSub02F584        
 ADDR_00C88D:        LDX $88                   
                     LDA $16                   
                     ORA $18                   
@@ -6774,14 +7451,14 @@ ADDR_00C88D:        LDX $88
                     INX                       
                     INX                       
                     STX $88                   
-                    LDA.W ADDR_00C847,X       
+                    LDA.W DATA_00C848-1,X     
                     STA $89                   
-ADDR_00C8A8:        LDA.W ADDR_00C846,X       
+ADDR_00C8A8:        LDA.W DATA_00C848-2,X     
                     CMP.B #$FF                
                     BEQ ADDR_00C8FB           
                     AND.B #$DF                
                     STA $15                   
-                    CMP.W ADDR_00C846,X       
+                    CMP.W DATA_00C848-2,X     
                     BEQ ADDR_00C8BC           
                     LDY.B #$80                
                     STY $18                   
@@ -6813,6 +7490,7 @@ ADDR_00C8EC:        CMP $96
                     STZ $72                   
                     STZ.W $140D               
 ADDR_00C8F8:        JMP.W ADDR_00CD82         
+
 ADDR_00C8FB:        INC.W $141D               
                     LDA.B #$0F                
                     STA.W $0100               
@@ -6821,9 +7499,9 @@ ADDR_00C8FB:        INC.W $141D
                     INC.W $0DC1               
 ADDR_00C90A:        LDA.B #$01                
                     STA.W $1B9B               
-                    LDA.B #$03                
-                    STA.W $1DFA               ; / Play sound effect 
-                    RTS                       ; Return 
+                    LDA.B #$03                ; \ Play sound effect
+                    STA.W $1DFA               ; /
+                    RTS                       ; Return
 
 ADDR_00C915:        JSR.W NoButtons           
                     STZ.W $18C2               
@@ -6843,24 +7521,25 @@ ADDR_00C935:        LDA.W $13D2
                     JSR.W ADDR_00B03E         
                     LDA.W $1495               
                     CMP.B #$40                
-                    BCC ADDR_00C96A           
-ADDR_00C944:        JSL.L ADDR_05CBFF         
+                    BCC Return00C96A          
+ADDR_00C944:        JSL.L ExtSub05CBFF        
 ADDR_00C948:        LDY.B #$01                
                     STY $9D                   
                     LDA $13                   
                     LSR                       
-                    BCC ADDR_00C96A           
+                    BCC Return00C96A          
                     DEC.W $1493               
-                    BNE ADDR_00C96A           
+                    BNE Return00C96A          
                     LDA.W $13D2               
                     BNE ADDR_00C962           
 ADDR_00C95B:        LDY.B #$0B                
                     LDA.B #$01                
                     JMP.W ADDR_00C9FE         
+
 ADDR_00C962:        LDA.B #$A0                
                     STA.W $1DF5               
                     INC.W $1426               
-ADDR_00C96A:        RTS                       ; Return 
+Return00C96A:       RTS                       ; Return
 
 ADDR_00C96B:        JSR.W ADDR_00AF17         
                     LDA.W $1B99               
@@ -6877,7 +7556,7 @@ ADDR_00C984:        LDA $72
                     BEQ ADDR_00C98B           
                     JSR.W ADDR_00D76B         
 ADDR_00C98B:        LDA $7B                   
-                    BNE Instr00C9A4           
+                    BNE ADDR_00C9A4           
                     STZ.W $1411               
                     JSR.W ADDR_00CA3E         
                     INC.W $1B99               
@@ -6886,35 +7565,32 @@ ADDR_00C98B:        LDA $7B
                     ASL                       
                     STA.W $1494               
                     STZ.W $1495               
-
-Instr00C9A4:        .db $4C,$24
-
-ADDR_00C9A6:        .db $CD
+ADDR_00C9A4:        JMP.W ADDR_00CD24         
 
 DATA_00C9A7:        .db $25,$07,$40,$0E,$20,$1A,$34,$32
 
-ADDR_00C9AF:        JSR.W ADDR_00CA31         
+ADDR_00C9AF:        JSR.W SetMarioPeaceImg    
                     LDA.W $1492               
                     BEQ ADDR_00C9C2           
                     DEC.W $1492               
-                    BNE ADDR_00C9C1           
+                    BNE Return00C9C1          
                     LDA.B #$11                
-                    STA.W $1DFB               ; / Play sound effect 
-ADDR_00C9C1:        RTS                       ; Return 
+                    STA.W $1DFB               ; / Change music
+Return00C9C1:       RTS                       ; Return
 
 ADDR_00C9C2:        JSR.W ADDR_00CA44         
                     LDA.B #$01                
                     STA $15                   
                     JSR.W ADDR_00CD24         
                     LDA.W $1433               
-                    BNE ADDR_00CA30           
-                    LDA.W $141C               
-                    INC A                     
-                    CMP.B #$03                
-                    BNE ADDR_00C9DF           
-                    LDA.B #$01                
-                    STA.W $1F11               
-                    LSR                       
+                    BNE Return00CA30          
+                    LDA.W $141C               ;  \ Branch if Goal Tape extra bits == #$02
+                    INC A                     ;   | (never happens)
+                    CMP.B #$03                ;   |
+                    BNE ADDR_00C9DF           ;  /
+                    LDA.B #$01                ;  \ Unreachable
+                    STA.W $1F11               ;   | Set submap to be Yoshi's Island
+                    LSR                       ;  /
 ADDR_00C9DF:        LDY.B #$0C                
                     LDX.W $1425               
                     BEQ ADDR_00C9F8           
@@ -6927,7 +7603,7 @@ ADDR_00C9DF:        LDY.B #$0C
                     LDY.B #$10                
 ADDR_00C9F8:        STZ.W $0DAE               
                     STZ.W $0DAF               
-ADDR_00C9FE:        STA.W $0DD5               
+ADDR_00C9FE:        STA.W $0DD5               ;  Store secret/normal exit info
                     LDA.W $13C6               
                     BEQ ADDR_00CA25           
                     LDX.B #$08                
@@ -6937,33 +7613,34 @@ ADDR_00C9FE:        STA.W $0DD5
                     INC.W $0DD5               
 ADDR_00CA12:        CMP.B #$31                
                     BEQ ADDR_00CA20           
-ADDR_00CA16:        CMP.W ADDR_00C9A6,X       
+ADDR_00CA16:        CMP.W DATA_00C9A7-1,X     
                     BEQ ADDR_00CA20           
                     DEX                       
                     BNE ADDR_00CA16           
                     BRA ADDR_00CA25           
+
 ADDR_00CA20:        STX.W $13C6               
                     LDY.B #$18                
 ADDR_00CA25:        STY.W $0100               
                     INC.W $1DE9               
 ADDR_00CA2B:        LDA.B #$01                
                     STA.W $13CE               
-ADDR_00CA30:        RTS                       ; Return 
+Return00CA30:       RTS                       ; Return
 
-ADDR_00CA31:        LDA.B #$26                
-                    LDY.W $187A               
-                    BEQ ADDR_00CA3A           
-                    LDA.B #$14                
-ADDR_00CA3A:        STA.W $13E0               
-                    RTS                       ; Return 
+SetMarioPeaceImg:   LDA.B #$26                ;  \ Mario's image = Peace Sign, or
+                    LDY.W $187A               ;   |
+                    BEQ ADDR_00CA3A           ;   |
+                    LDA.B #$14                ;   | Mario's image = Peace Sign on Yoshi
+ADDR_00CA3A:        STA.W $13E0               ;  /
+                    RTS                       ; Return
 
 ADDR_00CA3E:        LDA.B #$F0                
                     STA.W $1433               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00CA44:        LDA.W $1433               
                     BNE ADDR_00CA4A           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00CA4A:        JSR.W ADDR_00CA61         
                     LDA.B #$FC                
@@ -6975,14 +7652,14 @@ ADDR_00CA4A:        JSR.W ADDR_00CA61
                     STA $42                   
                     LDA.B #$22                
                     STA $44                   
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00CA61:        REP #$20                  ; 16 bit A ; Accum (16 bit) 
-                    LDA.W #$CB12              ; \  
-                    STA $04                   ;  |Load xCB12 into $04 and $06 
-                    STA $06                   ; /  
+                    LDA.W #$CB12              ; \
+                    STA $04                   ;  |Load xCB12 into $04 and $06
+                    STA $06                   ; /
                     SEP #$20                  ; 8 bit A ; Accum (8 bit) 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00CA6D:        CLC                       
                     ADC.W $1433               
@@ -6999,11 +7676,11 @@ ADDR_00CA83:        CLC
                     ADC $80                   
                     STA $01                   
 ADDR_00CA88:        REP #$30                  ; 16 bit A ; Index (16 bit) Accum (16 bit) 
-                    AND.W #$00FF              ; Keep lower byte of A 
-                    ASL                       ; \  
-                    DEC A                     ;  |Set Y to ((2A-1)*2) 
-                    ASL                       ;  | 
-                    TAY                       ; /  
+                    AND.W #$00FF              ; Keep lower byte of A
+                    ASL                       ; \
+                    DEC A                     ;  |Set Y to ((2A-1)*2)
+                    ASL                       ;  |
+                    TAY                       ; /
                     SEP #$20                  ; 8 bit A ; Accum (8 bit) 
                     LDX.W #$0000              
 ADDR_00CA96:        LDA $01                   
@@ -7025,6 +7702,7 @@ ADDR_00CAB1:        INX
                     BEQ ADDR_00CB0A           
                     DEC $01                   
                     BRA ADDR_00CA96           
+
 ADDR_00CABD:        JSR.W ADDR_00CC14         
                     CLC                       
                     ADC $00                   
@@ -7045,6 +7723,7 @@ ADDR_00CAD3:        STA.W $04A0,X
                     STA.W $04A1,Y             
                     DEC A                     
                     BRA ADDR_00CAFB           
+
 ADDR_00CAE7:        LDA $03                   
                     ADC $00                   
                     BCC ADDR_00CAEF           
@@ -7067,8 +7746,7 @@ ADDR_00CAFE:        INX
 ADDR_00CB0A:        LDA.B #$80                
                     STA.W $0D9F               
                     SEP #$10                  ; Index (8 bit) 
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_00CB12:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FE,$FE,$FE,$FE
@@ -7142,13 +7820,12 @@ ADDR_00CC14:        PHY
                     LDA.W $4217               ; Product/Remainder Result (High Byte)
                     STA $02                   
                     PLY                       
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_00CC5C:        .db $00,$00,$00,$00,$02,$00,$06,$00
                     .db $FE,$FF,$FA,$FF
 
-ADDR_00CC68:        LDA $17                   
+ResetAni:           LDA $17                   
                     AND.B #$20                
                     BEQ ADDR_00CC81           
                     LDA $18                   
@@ -7160,31 +7837,32 @@ ADDR_00CC68:        LDA $17
                     BCC ADDR_00CC81           
                     STZ.W $1E01               
 ADDR_00CC81:        LDA.W $1E01               
-                    BRA ADDR_00CCBB           
-                    LSR                       
-                    BEQ ADDR_00CCB3           
-                    LDA.B #$FF                
-                    STA.W $1497               
-                    LDA $15                   
-                    AND.B #$03                
-                    ASL                       
-                    ASL                       
-                    LDX.B #$00                
-                    JSR.W ADDR_00CC9F         
-                    LDA $15                   
-                    AND.B #$0C                
-                    LDX.B #$02                
-ADDR_00CC9F:        BIT $15                   
-                    BVC ADDR_00CCA5           
-                    ORA.B #$02                
-ADDR_00CCA5:        TAY                       
-                    REP #$20                  ; Accum (16 bit) 
-                    LDA $94,X                 
-                    CLC                       
-                    ADC.W DATA_00CC5C,Y       
-                    STA $94,X                 
-                    SEP #$20                  ; Accum (8 bit) 
-                    RTS                       ; Return 
+                    BRA ADDR_00CCBB           ; Change to BEQ to enable debug code below
+
+                    LSR                       ; \ Unreachable
+                    BEQ ADDR_00CCB3           ;  | Debug: Free roaming mode
+                    LDA.B #$FF                ;  |
+                    STA.W $1497               ;  |
+                    LDA $15                   ;  |
+                    AND.B #$03                ;  |
+                    ASL                       ;  |
+                    ASL                       ;  |
+                    LDX.B #$00                ;  |
+                    JSR.W ADDR_00CC9F         ;  |
+                    LDA $15                   ;  |
+                    AND.B #$0C                ;  |
+                    LDX.B #$02                ;  |
+ADDR_00CC9F:        BIT $15                   ;  |
+                    BVC ADDR_00CCA5           ;  |
+                    ORA.B #$02                ;  |
+ADDR_00CCA5:        TAY                       ;  |
+                    REP #$20                  ;  | Accum (16 bit) ; Accum (16 bit) 
+                    LDA $94,X                 ;  |
+                    CLC                       ;  |
+                    ADC.W DATA_00CC5C,Y       ;  |
+                    STA $94,X                 ;  |
+                    SEP #$20                  ;  | Accum (8 bit) ; Accum (8 bit) 
+                    RTS                       ; / Return
 
 ADDR_00CCB3:        LDA.B #$70                
                     STA.W $13E4               
@@ -7192,18 +7870,19 @@ ADDR_00CCB3:        LDA.B #$70
 ADDR_00CCBB:        LDA.W $1493               
                     BEQ ADDR_00CCC3           
                     JMP.W ADDR_00C915         
+
 ADDR_00CCC3:        JSR.W ADDR_00CDDD         
-                    LDA $9D                   
-                    BNE ADDR_00CCDF           
+                    LDA $9D                   ; \ Branch if sprites locked
+                    BNE Return00CCDF          ; /
                     STZ.W $13E8               
                     STZ.W $13DE               
-                    LDA.W $18BD               
-                    BEQ ADDR_00CCE0           
-                    DEC.W $18BD               
-                    STZ $7B                   
-                    LDA.B #$0F                
-                    STA.W $13E0               
-ADDR_00CCDF:        RTS                       ; Return 
+                    LDA.W $18BD               ;  \ If lock Mario timer is set...
+                    BEQ ADDR_00CCE0           ;   |
+                    DEC.W $18BD               ;   | Decrease the timer
+                    STZ $7B                   ;   | X speed = 0
+                    LDA.B #$0F                ;   | Mario's image = Going down tube
+                    STA.W $13E0               ;  /
+Return00CCDF:       RTS                       ; Return
 
 ADDR_00CCE0:        LDA.W $0D9B               
                     BPL ADDR_00CD24           
@@ -7230,15 +7909,17 @@ ADDR_00CCE0:        LDA.W $0D9B
                     STA.W $14B6               
                     JSR.W ADDR_00F9C9         
                     BRA ADDR_00CD1F           
+
 ADDR_00CD1C:        JSR.W ADDR_00DC2D         ; Accum (8 bit) 
 ADDR_00CD1F:        JSR.W ADDR_00F8F2         
                     BRA ADDR_00CD36           
-ADDR_00CD24:        LDA $7D                   
-                    BPL ADDR_00CD30           
+
+ADDR_00CD24:        LDA $7D                   ;  \ Branch if Mario has downward speed
+                    BPL ADDR_00CD30           ;  /
                     LDA $77                   
                     AND.B #$08                
                     BEQ ADDR_00CD30           
-                    STZ $7D                   
+                    STZ $7D                   ;  Y speed = 0
 ADDR_00CD30:        JSR.W ADDR_00DC2D         
                     JSR.W ADDR_00E92B         
 ADDR_00CD36:        JSR.W ADDR_00F595         
@@ -7271,17 +7952,19 @@ ADDR_00CD4A:        LDA $74
 ADDR_00CD72:        LDA $8B                   
                     STA $74                   
                     JMP.W ADDR_00DB17         
+
 ADDR_00CD79:        LDA $75                   
                     BEQ ADDR_00CD82           
                     JSR.W ADDR_00D988         
                     BRA ADDR_00CD8F           
+
 ADDR_00CD82:        JSR.W ADDR_00D5F2         
                     JSR.W ADDR_00D062         
                     JSR.W ADDR_00D7E4         
-ADDR_00CD8B:        JSL.L ADDR_00CEB1         
+ADDR_00CD8B:        JSL.L ExtSub00CEB1        
 ADDR_00CD8F:        LDY.W $187A               
                     BNE ADDR_00CDAD           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00CD95:        LDA.B #$42                
                     LDX $19                   
@@ -7290,12 +7973,11 @@ ADDR_00CD95:        LDA.B #$42
 ADDR_00CD9D:        DEY                       
                     BEQ ADDR_00CDA5           
                     STY.W $13F3               
-                    LDA.B #$0F                
-ADDR_00CDA5:        STA.W $13E0               
+                    LDA.B #$0F                ;  \ Mario's image = Going down tube
+ADDR_00CDA5:        STA.W $13E0               ;  /
+                    RTS                       
 
-Instr00CDA8:        .db $60
-
-DATA_00CDA9:        .db $20,$21,$27,$28
+OnYoshiAnimations:  .db $20,$21,$27,$28
 
 ADDR_00CDAD:        LDX.W $14A3               
                     BEQ ADDR_00CDBA           
@@ -7303,25 +7985,25 @@ ADDR_00CDAD:        LDX.W $14A3
                     CPX.B #$0C                
                     BCS ADDR_00CDBA           
                     LDY.B #$04                
-ADDR_00CDBA:        LDA.W Instr00CDA8,Y       
+ADDR_00CDBA:        LDA.W OnYoshiAnimations-1,Y
                     DEY                       
                     BNE ADDR_00CDC6           
                     LDY $73                   
                     BEQ ADDR_00CDC6           
-                    LDA.B #$1D                
-ADDR_00CDC6:        STA.W $13E0               
-                    LDA.W $141E               
-                    CMP.B #$01                
-                    BNE ADDR_00CDDC           
-                    BIT $16                   
-                    BVC ADDR_00CDDC           
-                    LDA.B #$08                
-                    STA.W $18DB               
-                    JSR.W ADDR_00FEA8         
-ADDR_00CDDC:        RTS                       ; Return 
+                    LDA.B #$1D                ;  \ Mario's image = Picking up object
+ADDR_00CDC6:        STA.W $13E0               ;  /
+                    LDA.W $141E               ; \ Check Yoshi wing ability address for #$01,
+                    CMP.B #$01                ; / but this is an impossible value
+                    BNE Return00CDDC          ; \ Unreachable/unused code
+                    BIT $16                   ;  | Lets Mario (any power) shoot fireballs while on Yoshi
+                    BVC Return00CDDC          ;  |
+                    LDA.B #$08                ;  |
+                    STA.W $18DB               ;  |
+                    JSR.W ShootFireball       ; /
+Return00CDDC:       RTS                       ; Return
 
 ADDR_00CDDD:        LDA.W $1411               
-                    BEQ ADDR_00CDDC           
+                    BEQ Return00CDDC          
                     LDY.W $13FE               
                     LDA.W $13FD               
                     STA $9D                   
@@ -7330,16 +8012,17 @@ ADDR_00CDDD:        LDA.W $1411
                     BEQ ADDR_00CDF6           
                     STZ.W $13FE               
                     BRA ADDR_00CE48           
-ADDR_00CDF6:        LDA $17                   
-                    AND.B #$CF                
-                    ORA $15                   
-                    BNE ADDR_00CE49           
-                    LDA $17                   
-                    AND.B #$30                
-                    BEQ ADDR_00CE49           
-                    CMP.B #$30                
-                    BEQ ADDR_00CE49           
-                    LSR                       
+
+ADDR_00CDF6:        LDA $17                   ; \ Branch if anything besides L/R being held
+                    AND.B #$CF                ;  |
+                    ORA $15                   ;  |
+                    BNE ADDR_00CE49           ; /
+                    LDA $17                   ; \ Branch if L/R not being held
+                    AND.B #$30                ;  |
+                    BEQ ADDR_00CE49           ;  |
+                    CMP.B #$30                ;  |
+                    BEQ ADDR_00CE49           ; /
+ScrollScreen:       LSR                       
                     LSR                       
                     LSR                       
                     INC.W $1401               
@@ -7366,8 +8049,8 @@ ADDR_00CE33:        REP #$20                  ; Accum (16 bit)
                     CMP $1A                   
                     SEP #$20                  ; Accum (8 bit) 
                     BEQ ADDR_00CE44           
-                    LDY.B #$0E                
-                    STY.W $1DFC               ; / Play sound effect 
+                    LDY.B #$0E                ; \ Play sound effect
+                    STY.W $1DFC               ; /
 ADDR_00CE44:        TXA                       
                     STA.W $13FE               
 ADDR_00CE48:        TAY                       
@@ -7390,8 +8073,7 @@ ADDR_00CE6D:        STX.W $13FD
 ADDR_00CE70:        STA.W $142A               
                     STX.W $1400               
                     SEP #$20                  ; Accum (8 bit) 
-
-Instr00CE78:        .db $60
+                    RTS                       
 
 DATA_00CE79:        .db $2A,$2B,$2C,$2D,$2E,$2F
 
@@ -7404,89 +8086,94 @@ DATA_00CE99:        .db $00,$00,$25,$44,$00,$00,$0F,$45
 DATA_00CEA1:        .db $00,$00,$00,$00,$01,$01,$01,$01
 DATA_00CEA9:        .db $02,$07,$06,$09,$02,$07,$06,$09
 
-ADDR_00CEB1:        LDA.W $14A2               ; Related to cape animation? 
+ExtSub00CEB1:       LDA.W $14A2               ; Related to cape animation?
                     BNE lbl14A2Not0           
-                    LDX.W $13DF               ; Cape image 
-                    LDA $72                   ; If Mario isn't in air, branch to $CEDE 
-                    BEQ MarioAnimAir          ; branch to $CEDE 
+                    LDX.W $13DF               ; Cape image
+                    LDA $72                   ; If Mario isn't in air, branch to $CEDE
+                    BEQ MarioAnimAir          ; branch to $CEDE
                     LDY.B #$04                
-                    BIT $7D                   ; \ If Mario is falling (and thus not on ground) 
-                    BPL ADDR_00CECD           ; / branch down 
-                    CMP.B #$0C                ; \ If making a "run jump", 
-                    BEQ ADDR_00CEFD           ; / branch to $CEFD 
-                    LDA $75                   ; \ If Mario is in water, 
-                    BNE ADDR_00CEFD           ;  |branch to $CEFD 
-                    BRA MrioNtInWtr           ; / otherwise, branch to $CEE4 
-ADDR_00CECD:        INX                       ; \  
-                    CPX.B #$05                ;  |if X >= #$04 and != #$FF then jump down <- counting the INX 
-                    BCS ADDR_00CED6           ; /  
-                    LDX.B #$05                ; X = #$05 
-                    BRA ADDR_00CF0A           ; Branch to $CF04 
-ADDR_00CED6:        CPX.B #$0B                ; \ If X is less than #$0B, 
-                    BCC ADDR_00CF0A           ; / branch to $CF0A 
-                    LDX.B #$07                ; X = #$07 
-                    BRA ADDR_00CF0A           ; Mario is not in the air, branch to $CF0A 
-MarioAnimAir:       LDA $7B                   ; \ If Mario X speed isn't 0, 
-                    BNE ADDR_00CEF0           ; / branch to $CEF0 
-                    LDY.B #$08                ; Otherwise Y = #$08 
-MrioNtInWtr:        TXA                       ; A = X = #13DF 
-                    BEQ ADDR_00CF0A           ; If $13DF (now A) = 0 branch to $CF04 
-                    DEX                       ; \  
-                    CPX.B #$03                ;  |If X - 1 < #$03 Then Branch $CF04 
-                    BCC ADDR_00CF0A           ; /  
-                    LDX.B #$02                ; X = #$02 
-                    BRA ADDR_00CF0A           ; Branch to $CF04 
-ADDR_00CEF0:        BPL ADDR_00CEF5           ; \  
-                    EOR.B #$FF                ;  |A = abs(A) 
-                    INC A                     ;  | 
-ADDR_00CEF5:        LSR                       ; \  
-                    LSR                       ;  |Divide a by 8 
-                    LSR                       ; /  
-                    TAY                       ; Y = A 
-                    LDA.W DATA_00DC7C,Y       ; A = Mario animation speed? (I didn't know it was a table...) 
-                    TAY                       ; Load Y with this table 
-ADDR_00CEFD:        INX                       ; \  
-                    CPX.B #$03                ;  | 
-                    BCS ADDR_00CF04           ;  |If X is < #$02 and != #$FF <- counting the INX 
-                    LDX.B #$05                ;  |then X = #$05 
-ADDR_00CF04:        CPX.B #$07                ; \  
-                    BCC ADDR_00CF0A           ;  |If X is greater than or equal to #$07 then X = #$03 
-                    LDX.B #$03                ;  | 
-ADDR_00CF0A:        STX.W $13DF               ; And X goes right back into $13DF (cape image) after being modified 
-                    TYA                       ; Now Y goes back into A 
-                    LDY $75                   ; \  
-                    BEQ ADDR_00CF13           ;  |If mario is in water then A = 2A 
-                    ASL                       ;  | 
-ADDR_00CF13:        STA.W $14A2               ; A -> $14A2 (do we know this byte yet?) no. 
-lbl14A2Not0:        LDA.W $140D               ; A = Spin Jump Flag 
+                    BIT $7D                   ; \ If Mario is falling (and thus not on ground)
+                    BPL ADDR_00CECD           ; / branch down
+                    CMP.B #$0C                ; \ If making a "run jump",
+                    BEQ ADDR_00CEFD           ; / branch to $CEFD
+                    LDA $75                   ; \ If Mario is in water,
+                    BNE ADDR_00CEFD           ;  |branch to $CEFD
+                    BRA MrioNtInWtr           ; / otherwise, branch to $CEE4
+
+ADDR_00CECD:        INX                       ; \
+                    CPX.B #$05                ;  |if X >= #$04 and != #$FF then jump down <- counting the INX
+                    BCS ADDR_00CED6           ; /
+                    LDX.B #$05                ; X = #$05
+                    BRA ADDR_00CF0A           ; Branch to $CF04
+
+ADDR_00CED6:        CPX.B #$0B                ; \ If X is less than #$0B,
+                    BCC ADDR_00CF0A           ; / branch to $CF0A
+                    LDX.B #$07                ; X = #$07
+                    BRA ADDR_00CF0A           ; Mario is not in the air, branch to $CF0A
+
+MarioAnimAir:       LDA $7B                   ; \ If Mario X speed isn't 0,
+                    BNE ADDR_00CEF0           ; / branch to $CEF0
+                    LDY.B #$08                ; Otherwise Y = #$08
+MrioNtInWtr:        TXA                       ; A = X = #13DF
+                    BEQ ADDR_00CF0A           ; If $13DF (now A) = 0 branch to $CF04
+                    DEX                       ; \
+                    CPX.B #$03                ;  |If X - 1 < #$03 Then Branch $CF04
+                    BCC ADDR_00CF0A           ; /
+                    LDX.B #$02                ; X = #$02
+                    BRA ADDR_00CF0A           ; Branch to $CF04
+
+ADDR_00CEF0:        BPL ADDR_00CEF5           ; \
+                    EOR.B #$FF                ;  |A = abs(A)
+                    INC A                     ;  |
+ADDR_00CEF5:        LSR                       ; \
+                    LSR                       ;  |Divide a by 8
+                    LSR                       ; /
+                    TAY                       ; Y = A
+                    LDA.W DATA_00DC7C,Y       ; A = Mario animation speed? (I didn't know it was a table...)
+                    TAY                       ; Load Y with this table
+ADDR_00CEFD:        INX                       ; \
+                    CPX.B #$03                ;  |
+                    BCS ADDR_00CF04           ;  |If X is < #$02 and != #$FF <- counting the INX
+                    LDX.B #$05                ;  |then X = #$05
+ADDR_00CF04:        CPX.B #$07                ; \
+                    BCC ADDR_00CF0A           ;  |If X is greater than or equal to #$07 then X = #$03
+                    LDX.B #$03                ;  |
+ADDR_00CF0A:        STX.W $13DF               ; And X goes right back into $13DF (cape image) after being modified
+                    TYA                       ; Now Y goes back into A
+                    LDY $75                   ; \
+                    BEQ ADDR_00CF13           ;  |If mario is in water then A = 2A
+                    ASL                       ;  |
+ADDR_00CF13:        STA.W $14A2               ; A -> $14A2 (do we know this byte yet?) no.
+lbl14A2Not0:        LDA.W $140D               ; A = Spin Jump Flag
                     ORA.W $14A6               
-                    BEQ ADDR_00CF4E           ; If $140D OR $14A6 = 0 then branch to $CF4E 
-                    STZ $73                   ; 0 -> Ducking while jumping flag 
-                    LDA $14                   ; \  
-                    AND.B #$06                ;  |X = Y = Alternate frame counter AND #$06 
-                    TAX                       ;  | 
-                    TAY                       ; /  
-                    LDA $72                   ; \ If on ground branch down 
-                    BEQ ADDR_00CF2F           ; /  
-                    LDA $7D                   ; \ If Mario moving upwards branch down 
-                    BMI ADDR_00CF2F           ; /  
-                    INY                       ; Y = Y + 1 
-ADDR_00CF2F:        LDA.W DATA_00CEA9,Y       ; \ After loading from this table, 
-                    STA.W $13DF               ; / Store A in cape image 
-                    LDA $19                   ; A = Mario's powerup status 
-                    BEQ ADDR_00CF3A           ; \  
-                    INX                       ;  |If not small, increase X 
-ADDR_00CF3A:        LDA.W DATA_00CEA1,X       ; \ Load from another table 
-                    STA $76                   ; / store to Mario's Direction 
-                    LDY $19                   ; \  
-                    CPY.B #$02                ;  | 
-                    BNE ADDR_00CF48           ;  |If Mario has cape, JSR 
-                    JSR.W ADDR_00D044         ;  |to possibly the graphics handler 
-ADDR_00CF48:        LDA.W DATA_00CE99,X       ; \ Load from a table again 
-                    JMP.W ADDR_00D01A         ; / And jump 
-ADDR_00CF4E:        LDA.W $13ED               ; \ If $13ED is #$01 - #$7F then 
-                    BEQ ADDR_00CF62           ;  |branch to $CF85 
-                    BPL ADDR_00CF85           ;  | 
+                    BEQ ADDR_00CF4E           ; If $140D OR $14A6 = 0 then branch to $CF4E
+                    STZ $73                   ; 0 -> Ducking while jumping flag
+                    LDA $14                   ; \
+                    AND.B #$06                ;  |X = Y = Alternate frame counter AND #$06
+                    TAX                       ;  |
+                    TAY                       ; /
+                    LDA $72                   ; \ If on ground branch down
+                    BEQ ADDR_00CF2F           ; /
+                    LDA $7D                   ; \ If Mario moving upwards branch down
+                    BMI ADDR_00CF2F           ; /
+                    INY                       ; Y = Y + 1
+ADDR_00CF2F:        LDA.W DATA_00CEA9,Y       ; \ After loading from this table,
+                    STA.W $13DF               ; / Store A in cape image
+                    LDA $19                   ; A = Mario's powerup status
+                    BEQ ADDR_00CF3A           ; \
+                    INX                       ;  |If not small, increase X
+ADDR_00CF3A:        LDA.W DATA_00CEA1,X       ; \ Load from another table
+                    STA $76                   ; / store to Mario's Direction
+                    LDY $19                   ; \
+                    CPY.B #$02                ;  |
+                    BNE ADDR_00CF48           ;  |If Mario has cape, JSR
+                    JSR.W ADDR_00D044         ;  |to possibly the graphics handler
+ADDR_00CF48:        LDA.W DATA_00CE99,X       ; \ Load from a table again
+                    JMP.W ADDR_00D01A         ; / And jump
+
+ADDR_00CF4E:        LDA.W $13ED               ; \ If $13ED is #$01 - #$7F then
+                    BEQ ADDR_00CF62           ;  |branch to $CF85
+                    BPL ADDR_00CF85           ;  |
                     LDA.W $13E1               
                     LSR                       
                     LSR                       
@@ -7494,107 +8181,112 @@ ADDR_00CF4E:        LDA.W $13ED               ; \ If $13ED is #$01 - #$7F then
                     TAY                       
                     LDA.W DATA_00CE7F,Y       
                     BRA ADDR_00CF85           
-ADDR_00CF62:        LDA.B #$3C                ; \ Select Case $148F 
-                    LDY.W $148F               ;  |Case 0:A = #$3C 
-                    BEQ ADDR_00CF6B           ;  |Case Else: A = #$1D 
-                    LDA.B #$1D                ;  |End Select 
-ADDR_00CF6B:        LDY $73                   ; \ If Ducking while jumping 
-                    BNE ADDR_00CF85           ; / Branch to $CF85 
-                    LDA.W $149C               ; \ If (Unknown) = 0 
-                    BEQ ADDR_00CF7E           ; / Branch to $CF7E 
-                    LDA.B #$3F                ; A = #$3F 
-                    LDY $72                   ; \ If Mario isn't in air,  
-                    BEQ ADDR_00CF85           ;  |branch to $CF85 
-                    LDA.B #$16                ;  |Otherwise, set A to #$16 and 
-                    BRA ADDR_00CF85           ; / branch to $CF85 
-ADDR_00CF7E:        LDA.B #$0E                ; A = #$0E 
-                    LDY.W $149A               ; \ If Time to show Mario's current pose is 00, 
-                    BEQ ADDR_00CF88           ;  | Don't jump to $D01A 
-ADDR_00CF85:        JMP.W ADDR_00D01A         ;  | 
-ADDR_00CF88:        LDA.B #$1D                ; A = #$1D 
-                    LDY.W $1498               ; \ If $1499 != 0 then Jump to $D01A 
-                    BNE ADDR_00CF85           ; /  
-                    LDA.B #$0F                ; A = #$0F 
-                    LDY.W $1499               ; \ If $1499 != 0 then Jump to $D01A 
-                    BNE ADDR_00CF85           ; /  
-                    LDA.B #$00                ; A = #$00 
-                    LDX.W $18C2               ; X = $18C2 (Unknown) 
-                    BNE MarioAnimNoAbs1       ; If X != 0 then branch down 
-                    LDA $72                   ; \ If Mario is flying branch down 
-                    BEQ ADDR_00CFB7           ; /  
-                    LDY.W $14A0               ; \ If $14A0 != 0 then 
-                    BNE ADDR_00CFBC           ; / Skip down 
-                    LDY.W $1407               ; Spaghetticode(tm) 
+
+ADDR_00CF62:        LDA.B #$3C                ; \ Select Case $148F
+                    LDY.W $148F               ;  |Case 0:A = #$3C
+                    BEQ ADDR_00CF6B           ;  |Case Else: A = #$1D
+                    LDA.B #$1D                ;  |End Select
+ADDR_00CF6B:        LDY $73                   ; \ If Ducking while jumping
+                    BNE ADDR_00CF85           ; / Branch to $CF85
+                    LDA.W $149C               ; \ If (Unknown) = 0
+                    BEQ ADDR_00CF7E           ; / Branch to $CF7E
+                    LDA.B #$3F                ; A = #$3F
+                    LDY $72                   ; \ If Mario isn't in air,
+                    BEQ ADDR_00CF85           ;  |branch to $CF85
+                    LDA.B #$16                ;  |Otherwise, set A to #$16 and
+                    BRA ADDR_00CF85           ; / branch to $CF85
+
+ADDR_00CF7E:        LDA.B #$0E                ; A = #$0E
+                    LDY.W $149A               ; \ If Time to show Mario's current pose is 00,
+                    BEQ ADDR_00CF88           ;  | Don't jump to $D01A
+ADDR_00CF85:        JMP.W ADDR_00D01A         ;  |
+
+ADDR_00CF88:        LDA.B #$1D                ; A = #$1D
+                    LDY.W $1498               ; \ If $1499 != 0 then Jump to $D01A
+                    BNE ADDR_00CF85           ; /
+                    LDA.B #$0F                ; A = #$0F
+                    LDY.W $1499               ; \ If $1499 != 0 then Jump to $D01A
+                    BNE ADDR_00CF85           ; /
+                    LDA.B #$00                ; A = #$00
+                    LDX.W $18C2               ; X = $18C2 (Unknown)
+                    BNE MarioAnimNoAbs1       ; If X != 0 then branch down
+                    LDA $72                   ; \ If Mario is flying branch down
+                    BEQ ADDR_00CFB7           ; /
+                    LDY.W $14A0               ; \ If $14A0 != 0 then
+                    BNE ADDR_00CFBC           ; / Skip down
+                    LDY.W $1407               ; Spaghetticode(tm)
                     BEQ ADDR_00CFAE           
-                    LDA.W Instr00CE78,Y       
-ADDR_00CFAE:        LDY.W $148F               ; \ If Mario isn't holding something, 
-                    BEQ ADDR_00D01A           ;  |branch to $D01A 
-                    LDA.B #$09                ;  |Otherwise, set A to #$09 and 
-                    BRA ADDR_00D01A           ; / branch to $D01A 
+                    LDA.W DATA_00CE79-1,Y     
+ADDR_00CFAE:        LDY.W $148F               ; \ If Mario isn't holding something,
+                    BEQ ADDR_00D01A           ;  |branch to $D01A
+                    LDA.B #$09                ;  |Otherwise, set A to #$09 and
+                    BRA ADDR_00D01A           ; / branch to $D01A
+
 ADDR_00CFB7:        LDA.W $13DD               
                     BNE ADDR_00D01A           
-ADDR_00CFBC:        LDA $7B                   ; \  
-                    BPL MarioAnimNoAbs1       ;  | 
-                    EOR.B #$FF                ;  |Set A to absolute value of Mario's X speed 
-                    INC A                     ;  | 
-MarioAnimNoAbs1:    TAX                       ; Copy A to X 
-                    BNE ADDR_00CFD4           ; If Mario isn't standing still, branch to $CFD4 
-                    XBA                       ; "Push" A 
-                    LDA $15                   ; \  
-                    AND.B #$08                ;  |If player isn't pressing up, 
-                    BEQ ADDR_00D002           ;  |branch to $D002 
-                    LDA.B #$03                ;  |Otherwise, store x03 in $13DE and 
-                    STA.W $13DE               ;  |branch to $D002 
-                    BRA ADDR_00D002           ; /  
-ADDR_00CFD4:        LDA $86                   ; \ If level isn't slippery, 
-                    BEQ ADDR_00CFE3           ; / branch to $CFE3 
+ADDR_00CFBC:        LDA $7B                   ; \
+                    BPL MarioAnimNoAbs1       ;  |
+                    EOR.B #$FF                ;  |Set A to absolute value of Mario's X speed
+                    INC A                     ;  |
+MarioAnimNoAbs1:    TAX                       ; Copy A to X
+                    BNE ADDR_00CFD4           ; If Mario isn't standing still, branch to $CFD4
+                    XBA                       ; "Push" A
+                    LDA $15                   ; \
+                    AND.B #$08                ;  |If player isn't pressing up,
+                    BEQ ADDR_00D002           ;  |branch to $D002
+                    LDA.B #$03                ;  |Otherwise, store x03 in $13DE and
+                    STA.W $13DE               ;  |branch to $D002
+                    BRA ADDR_00D002           ; /
+
+ADDR_00CFD4:        LDA $86                   ; \ If level isn't slippery,
+                    BEQ ADDR_00CFE3           ; / branch to $CFE3
                     LDA $15                   
                     AND.B #$03                
                     BEQ ADDR_00D003           
                     LDA.B #$68                
                     STA.W $13E5               
-ADDR_00CFE3:        LDA.W $13DB               ; A = $13DB 
-                    LDY.W $1496               ; \ If Mario is hurt (flashing), 
-                    BNE ADDR_00D003           ; / branch to $D003 
-                    DEC A                     ; A = A - 1 
-                    BPL ADDR_00CFF3           ; \If bit 7 is clear, 
-                    LDY $19                   ;  | Load amount of walking frames 
-                    LDA.W DATA_00DC78,Y       ;  | for current powerup 
-ADDR_00CFF3:        XBA                       ; \ >>-This code puts together an index to a table further down-<< 
-                    TXA                       ;  |-\ Above Line: "Push" frame amount 
-                    LSR                       ;  |  |A = X / 8 
-                    LSR                       ;  |  | 
-                    LSR                       ;  |-/  
-                    ORA.W $13E5               ;  |ORA with $13E5 
-                    TAY                       ;  |And store A to Y 
-                    LDA.W DATA_00DC7C,Y       ;  | 
-                    STA.W $1496               ; /  
-ADDR_00D002:        XBA                       ; \ Switch in frame amount and store it to $13DB 
-ADDR_00D003:        STA.W $13DB               ; /  
-                    CLC                       ; \ Add walking animation type 
-                    ADC.W $13DE               ; / (Walking, running...) 
-                    LDY.W $148F               ; \  
-                    BEQ ADDR_00D014           ;  | 
-                    CLC                       ;  |If Mario is carrying something, add #$07 
-                    ADC.B #$07                ;  | 
-                    BRA ADDR_00D01A           ;  | 
-ADDR_00D014:        CPX.B #$2F                ; \  
-                    BCC ADDR_00D01A           ;  |If X is greater than #$2F, add #$04 
-                    ADC.B #$03                ; / <-Carry is always set here, adding #$01 to (#$03 + A) 
-ADDR_00D01A:        LDY.W $13E3               ; \ If Mario isn't rotated 45 degrees (triangle 
-                    BEQ MarioAnimNo45         ; / block), branch to $D030 
-                    TYA                       ; \ Y AND #$01 -> Mario's Direction RAM Byte 
-                    AND.B #$01                ;  | 
-                    STA $76                   ; /  
-                    LDA.B #$10                ; \  
-                    CPY.B #$06                ;  |If Y < 6 then 
-                    BCC MarioAnimNo45         ;  |    A = #13DB + $11 
-                    LDA.W $13DB               ;  |Else 
-                    CLC                       ;  |    A = #$10 
-                    ADC.B #$11                ;  |End If 
-MarioAnimNo45:      STA.W $13E0               ; Store in Current animation frame 
-                    RTL                       ; And Finish 
+ADDR_00CFE3:        LDA.W $13DB               ; A = $13DB
+                    LDY.W $1496               ; \ If Mario is hurt (flashing),
+                    BNE ADDR_00D003           ; / branch to $D003
+                    DEC A                     ; A = A - 1
+                    BPL ADDR_00CFF3           ; \If bit 7 is clear,
+                    LDY $19                   ;  | Load amount of walking frames
+                    LDA.W NumWalkingFrames,Y  ;  | for current powerup
+ADDR_00CFF3:        XBA                       ; \ >>-This code puts together an index to a table further down-<<
+                    TXA                       ;  |-\ Above Line: "Push" frame amount
+                    LSR                       ;  |  |A = X / 8
+                    LSR                       ;  |  |
+                    LSR                       ;  |-/
+                    ORA.W $13E5               ;  |ORA with $13E5
+                    TAY                       ;  |And store A to Y
+                    LDA.W DATA_00DC7C,Y       ;  |
+                    STA.W $1496               ; /
+ADDR_00D002:        XBA                       ; \ Switch in frame amount and store it to $13DB
+ADDR_00D003:        STA.W $13DB               ; /
+                    CLC                       ; \ Add walking animation type
+                    ADC.W $13DE               ; / (Walking, running...)
+                    LDY.W $148F               ; \
+                    BEQ ADDR_00D014           ;  |
+                    CLC                       ;  |If Mario is carrying something, add #$07
+                    ADC.B #$07                ;  |
+                    BRA ADDR_00D01A           ;  |
 
+ADDR_00D014:        CPX.B #$2F                ; \
+                    BCC ADDR_00D01A           ;  |If X is greater than #$2F, add #$04
+                    ADC.B #$03                ; / <-Carry is always set here, adding #$01 to (#$03 + A)
+ADDR_00D01A:        LDY.W $13E3               ; \ If Mario isn't rotated 45 degrees (triangle
+                    BEQ MarioAnimNo45         ; / block), branch to $D030
+                    TYA                       ; \ Y AND #$01 -> Mario's Direction RAM Byte
+                    AND.B #$01                ;  |
+                    STA $76                   ; /
+                    LDA.B #$10                ; \
+                    CPY.B #$06                ;  |If Y < 6 then
+                    BCC MarioAnimNo45         ;  |    A = #13DB + $11
+                    LDA.W $13DB               ;  |Else
+                    CLC                       ;  |    A = #$10
+                    ADC.B #$11                ;  |End If
+MarioAnimNo45:      STA.W $13E0               ; Store in Current animation frame
+                    RTL                       ; And Finish
 
 DATA_00D034:        .db $0C,$00,$F4,$FF,$08,$00,$F8,$FF
 DATA_00D03C:        .db $10,$00,$10,$00,$02,$00,$02,$00
@@ -7604,124 +8296,124 @@ ADDR_00D044:        LDY.B #$01
                     ASL                       
                     TAY                       
                     REP #$20                  ; 16 bit A ; Accum (16 bit) 
-                    LDA $94                   ; \  
-                    CLC                       ;  | 
-                    ADC.W DATA_00D034,Y       ;  | 
-                    STA.W $13E9               ;  |Set cape<->sprite collision coordinates 
-                    LDA $96                   ;  | 
-                    CLC                       ;  | 
-                    ADC.W DATA_00D03C,Y       ;  | 
-                    STA.W $13EB               ; /  
+                    LDA $94                   ; \
+                    CLC                       ;  |
+                    ADC.W DATA_00D034,Y       ;  |
+                    STA.W $13E9               ;  |Set cape<->sprite collision coordinates
+                    LDA $96                   ;  |
+                    CLC                       ;  |
+                    ADC.W DATA_00D03C,Y       ;  |
+                    STA.W $13EB               ; /
                     SEP #$20                  ; 8 bit A ; Accum (8 bit) 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00D062:        LDA $19                   
                     CMP.B #$02                
                     BNE ADDR_00D081           
                     BIT $16                   
-                    BVC ADDR_00D0AD           
+                    BVC Return00D0AD          
                     LDA $73                   
                     ORA.W $187A               
                     ORA.W $140D               
-                    BNE ADDR_00D0AD           
+                    BNE Return00D0AD          
                     LDA.B #$12                
                     STA.W $14A6               
-                    LDA.B #$04                
-                    STA.W $1DFC               ; / Play sound effect 
-                    RTS                       ; Return 
+                    LDA.B #$04                ; \ Play sound effect
+                    STA.W $1DFC               ; /
+                    RTS                       ; Return
 
 ADDR_00D081:        CMP.B #$03                
-                    BNE ADDR_00D0AD           
+                    BNE Return00D0AD          
                     LDA $73                   
                     ORA.W $187A               
-                    BNE ADDR_00D0AD           
+                    BNE Return00D0AD          
                     BIT $16                   
                     BVS ADDR_00D0AA           
                     LDA.W $140D               
-                    BEQ ADDR_00D0AD           
+                    BEQ Return00D0AD          
                     INC.W $13E2               
                     LDA.W $13E2               
                     AND.B #$0F                
-                    BNE ADDR_00D0AD           
+                    BNE Return00D0AD          
                     TAY                       
                     LDA.W $13E2               
                     AND.B #$10                
                     BEQ ADDR_00D0A8           
                     INY                       
 ADDR_00D0A8:        STY $76                   
-ADDR_00D0AA:        JSR.W ADDR_00FEA8         ; haha, I read this as "FEAR" at first 
-ADDR_00D0AD:        RTS                       ; Return 
-
+ADDR_00D0AA:        JSR.W ShootFireball       ; haha, I read this as "FEAR" at first
+Return00D0AD:       RTS                       ; Return
 
 DATA_00D0AE:        .db $7C,$00,$80,$00,$00,$06,$00,$01
 
-MarioDeath:         STZ $19                   ; Set powerup to 0 
-                    LDA.B #$3E                ; \  
-                    STA.W $13E0               ; / Set Mario image to death image 
-                    LDA $13                   ; \  
-                    AND.B #$03                ;  |Decrease "Death fall timer" every four frames 
-                    BNE ADDR_00D0C6           ;  | 
-                    DEC.W $1496               ;  | 
-ADDR_00D0C6:        LDA.W $1496               ; \ If Death fall timer isn't #$00, 
-                    BNE DeathNotDone          ; / branch to $D108 
+MarioDeathAni:      STZ $19                   ; Set powerup to 0
+                    LDA.B #$3E                ; \
+                    STA.W $13E0               ; / Set Mario image to death image
+                    LDA $13                   ; \
+                    AND.B #$03                ;  |Decrease "Death fall timer" every four frames
+                    BNE ADDR_00D0C6           ;  |
+                    DEC.W $1496               ;  |
+ADDR_00D0C6:        LDA.W $1496               ; \ If Death fall timer isn't #$00,
+                    BNE DeathNotDone          ; / branch to $D108
                     LDA.B #$80                
                     STA.W $0DD5               
                     LDA.W $1B9B               
                     BNE ADDR_00D0D8           
-                    STZ.W $0DC1               ; Set reserve item to 0 
-ADDR_00D0D8:        DEC.W $0DBE               ; Decrease amount of lifes 
-                    BPL DeathNotGameOver      ; If not Game Over, branch to $D0E6 
+                    STZ.W $0DC1               ; Set reserve item to 0
+ADDR_00D0D8:        DEC.W $0DBE               ; Decrease amount of lifes
+                    BPL DeathNotGameOver      ; If not Game Over, branch to $D0E6
                     LDA.B #$0A                
-                    STA.W $1DFB               ; / Play sound effect 
-                    LDX.B #$14                ; Set X (Death message) to x14 (Game Over) 
+                    STA.W $1DFB               ; / Change music
+                    LDX.B #$14                ; Set X (Death message) to x14 (Game Over)
                     BRA DeathShowMessage      
-DeathNotGameOver:   LDY.B #$0B                ; Set Y (game mode) to x0B (Fade to overworld) 
-                    LDA.W $0F31               ; \  
-                    ORA.W $0F32               ;  |If time isn't zero, 
-                    ORA.W $0F33               ;  |branch to $D104 
-                    BNE DeathNotTimeUp        ; /  
-                    LDX.B #$1D                ; Set X (Death message) to x1D (Time Up) 
-DeathShowMessage:   STX.W $143B               ; Store X in Death message 
-                    LDA.B #$C0                ; \ Set Death message animation to xC0 
-                    STA.W $143C               ; /(Must be divisable by 4) 
-                    LDA.B #$FF                ; \ Set Death message timer to xFF 
-                    STA.W $143D               ; / 
-                    LDY.B #$15                ; Set Y (game mode) to x15 (Fade to Game Over) 
-DeathNotTimeUp:     STY.W $0100               ; Store Y in Game Mode 
-                    RTS                       ; Return 
 
-DeathNotDone:       CMP.B #$26                ; \ If Death fall timer >= x26, 
-                    BCS DeathNotDoneEnd       ; / return 
-                    STZ $7B                   ; Set Mario X speed to 0 
+DeathNotGameOver:   LDY.B #$0B                ; Set Y (game mode) to x0B (Fade to overworld)
+                    LDA.W $0F31               ; \
+                    ORA.W $0F32               ;  |If time isn't zero,
+                    ORA.W $0F33               ;  |branch to $D104
+                    BNE DeathNotTimeUp        ; /
+                    LDX.B #$1D                ; Set X (Death message) to x1D (Time Up)
+DeathShowMessage:   STX.W $143B               ; Store X in Death message
+                    LDA.B #$C0                ; \ Set Death message animation to xC0
+                    STA.W $143C               ; /(Must be divisable by 4)
+                    LDA.B #$FF                ; \ Set Death message timer to xFF
+                    STA.W $143D               ; /
+                    LDY.B #$15                ; Set Y (game mode) to x15 (Fade to Game Over)
+DeathNotTimeUp:     STY.W $0100               ; Store Y in Game Mode
+                    RTS                       ; Return
+
+DeathNotDone:       CMP.B #$26                ; \ If Death fall timer >= x26,
+                    BCS DeathNotDoneEnd       ; / return
+                    STZ $7B                   ; Set Mario X speed to 0
                     JSR.W ADDR_00DC2D         
                     JSR.W ADDR_00D92E         
-                    LDA $13                   ; \  
-                    LSR                       ;  | 
-                    LSR                       ;  |Flip death image every four frames 
-                    AND.B #$01                ;  | 
-                    STA $76                   ; /  
+                    LDA $13                   ; \
+                    LSR                       ;  |
+                    LSR                       ;  |Flip death image every four frames
+                    AND.B #$01                ;  |
+                    STA $76                   ; /
 DeathNotDoneEnd:    RTS                       
 
-
-DATA_00D11D:        .db $00,$3D,$00,$3D,$00,$3D,$46,$3D
+GrowingAniImgs:     .db $00,$3D,$00,$3D,$00,$3D,$46,$3D
                     .db $46,$3D,$46,$3D
 
-ADDR_00D129:        LDA.W $1496               
+PowerDownAni:       LDA.W $1496               
                     BEQ ADDR_00D140           
                     LSR                       
                     LSR                       
 ADDR_00D130:        TAY                       
-                    LDA.W DATA_00D11D,Y       
-                    STA.W $13E0               
+                    LDA.W GrowingAniImgs,Y    ;  \ Set Mario's image
+                    STA.W $13E0               ;  /
 ADDR_00D137:        LDA.W $1496               
-                    BEQ ADDR_00D13F           
+                    BEQ Return00D13F          
                     DEC.W $1496               
-ADDR_00D13F:        RTS                       ; Return 
+Return00D13F:       RTS                       ; Return
 
 ADDR_00D140:        LDA.B #$7F                
                     STA.W $1497               
                     BRA ADDR_00D158           
-ADDR_00D147:        LDA.W $1496               
+
+MushroomAni:        LDA.W $1496               
                     BEQ ADDR_00D156           
                     LSR                       
                     LSR                       
@@ -7730,21 +8422,22 @@ ADDR_00D147:        LDA.W $1496
                     CLC                       
                     ADC.B #$0B                
                     BRA ADDR_00D130           
+
 ADDR_00D156:        INC $19                   
 ADDR_00D158:        LDA.B #$00                
                     STA $71                   
                     STZ $9D                   
-ADDR_00D15E:        RTS                       ; Return 
+Return00D15E:       RTS                       ; Return
 
-ADDR_00D15F:        LDA.B #$7F                
+CapeAni:            LDA.B #$7F                
                     STA $78                   
                     DEC.W $1496               
-                    BNE ADDR_00D15E           
+                    BNE Return00D15E          
                     LDA $19                   
                     LSR                       
                     BEQ ADDR_00D140           
                     BNE ADDR_00D158           
-ADDR_00D16F:        LDA.W $13ED               
+FlowerAni:          LDA.W $13ED               
                     AND.B #$80                
                     ORA.W $1407               
                     BEQ ADDR_00D187           
@@ -7755,26 +8448,25 @@ ADDR_00D16F:        LDA.W $13ED
                     STZ.W $13E0               
 ADDR_00D187:        DEC.W $149B               
                     BEQ ADDR_00D158           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
+PipeSpeedX:         .db $F8,$08
 
-DATA_00D18D:        .db $F8,$08
-
-DATA_00D18F:        .db $00,$00,$F0
+PipeSpeedY:         .db $00,$00,$F0
 
 DATA_00D192:        .db $10
 
 DATA_00D193:        .db $00,$63,$1C,$00
 
-ADDR_00D197:        JSR.W NoButtons           
+DoorPipeAni:        JSR.W NoButtons           
                     STZ.W $13DE               
-                    JSL.L ADDR_00CEB1         
+                    JSL.L ExtSub00CEB1        
                     JSL.L ADDR_00CFBC         
                     JSR.W ADDR_00D1F4         
                     LDA.W $187A               
                     BEQ ADDR_00D1B2           
-                    LDA.B #$29                
-                    STA.W $13E0               
+                    LDA.B #$29                ;  \ Mario's image = Entering horizontal pipe on Yoshi
+                    STA.W $13E0               ;  /
 ADDR_00D1B2:        REP #$20                  ; Accum (16 bit) 
                     LDA $96                   
                     SEC                       
@@ -7806,38 +8498,39 @@ ADDR_00D1DB:        LDX $88
 ADDR_00D1ED:        LDA.W DATA_00D193,Y       
 ADDR_00D1F0:        STA $78                   
                     BRA ADDR_00D22D           
+
 ADDR_00D1F4:        LDA.W $14A2               
                     BEQ ADDR_00D1FC           
                     DEC.W $14A2               
 ADDR_00D1FC:        JMP.W ADDR_00D137         
 
-DATA_00D1FF:        .db $0A,$06
+PipeCntrBoundryX:   .db $0A,$06
 
-DATA_00D201:        .db $FF,$01
+PipeCntringSpeed:   .db $FF,$01
 
-ADDR_00D203:        JSR.W NoButtons           
+VertPipeAni:        JSR.W NoButtons           
                     STZ.W $13DF               
                     LDA.B #$0F                
                     LDY.W $187A               
                     BEQ ADDR_00D22A           
                     LDX.B #$00                
-                    LDY $76                   
-                    LDA $94                   
-                    AND.B #$0F                
-                    CMP.W DATA_00D1FF,Y       
-                    BEQ ADDR_00D228           
-                    BPL ADDR_00D220           
-                    INX                       
-ADDR_00D220:        LDA $94                   
-                    CLC                       
-                    ADC.W DATA_00D201,X       
-                    STA $94                   
-ADDR_00D228:        LDA.B #$21                
-ADDR_00D22A:        STA.W $13E0               
-ADDR_00D22D:        LDA.B #$40                
-                    STA $15                   
-                    LDA.B #$02                
-                    STA.W $13F9               
+                    LDY $76                   ; \
+                    LDA $94                   ;  | If not relativly centered on the pipe...
+                    AND.B #$0F                ;  |
+                    CMP.W PipeCntrBoundryX,Y  ;  |
+                    BEQ ADDR_00D228           ;  |
+                    BPL ADDR_00D220           ;  |
+                    INX                       ;  |
+ADDR_00D220:        LDA $94                   ;  | ...adjust Mario's X postion
+                    CLC                       ;  |
+                    ADC.W PipeCntringSpeed,X  ;  |
+                    STA $94                   ; /
+ADDR_00D228:        LDA.B #$21                ; \ Mario's image = going down pipe
+ADDR_00D22A:        STA.W $13E0               ; /
+ADDR_00D22D:        LDA.B #$40                ; \ Set holding X/Y on controller
+                    STA $15                   ; /
+                    LDA.B #$02                ; \ Set behind scenery flag
+                    STA.W $13F9               ; /
                     LDA $89                   
                     CMP.B #$04                
                     LDY $88                   
@@ -7850,35 +8543,37 @@ ADDR_00D22D:        LDA.B #$40
                     LDA.B #$7F                
                     STA $78                   
                     INC.W $1405               
-ADDR_00D24E:        LDA $7B                   
-                    ORA $7D                   
-                    BNE ADDR_00D259           
-                    LDA.B #$04                
-                    STA.W $1DF9               ; / Play sound effect 
-ADDR_00D259:        LDA.W DATA_00D18D,Y       
-                    STA $7B                   
-                    LDA.W DATA_00D18F,Y       
-                    STA $7D                   
-                    STZ $72                   
+ADDR_00D24E:        LDA $7B                   ; \ If Mario has no speed...
+                    ORA $7D                   ;  |
+                    BNE ADDR_00D259           ;  |
+                    LDA.B #$04                ;  | ...play sound effect
+                    STA.W $1DF9               ; /
+ADDR_00D259:        LDA.W PipeSpeedX,Y        ; \ Set X speed
+                    STA $7B                   ; /
+                    LDA.W PipeSpeedY,Y        ; \ Set Y speed
+                    STA $7D                   ; /
+                    STZ $72                   ; Mario flying = false
                     JMP.W ADDR_00DC2D         
+
 ADDR_00D268:        BCC ADDR_00D273           
-ADDR_00D26A:        STZ.W $13F9               
-                    STZ.W $1419               
+ADDR_00D26A:        STZ.W $13F9               ; \ In new level, reset values
+                    STZ.W $1419               ; /
                     JMP.W ADDR_00D158         
+
 ADDR_00D273:        INC.W $141A               
                     LDA.B #$0F                
                     STA.W $0100               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDA $96                   
-                    SEC                       
-                    SBC $D3                   
-                    CLC                       
-                    ADC $88                   
-                    STA $88                   
-                    RTS                       ; Return 
+                    LDA $96                   ; \ Unreachable
+                    SEC                       ;  |
+                    SBC $D3                   ;  |
+                    CLC                       ;  |
+                    ADC $88                   ;  |
+                    STA $88                   ;  |
+                    RTS                       ; / Return
 
-ADDR_00D287:        JSR.W NoButtons           
+PipeCannonAni:      JSR.W NoButtons           
                     LDA.B #$02                
                     STA.W $13F9               
                     LDA.B #$0C                
@@ -7887,19 +8582,20 @@ ADDR_00D287:        JSR.W NoButtons
                     DEC $88                   
                     BNE ADDR_00D29D           
                     JMP.W ADDR_00D26A         
+
 ADDR_00D29D:        LDA $88                   
                     CMP.B #$18                
                     BCC ADDR_00D2AA           
                     BNE ADDR_00D2B2           
-                    LDA.B #$09                
-                    STA.W $1DFC               ; / Play sound effect 
+                    LDA.B #$09                ; \ Play sound effect
+                    STA.W $1DFC               ; /
 ADDR_00D2AA:        STZ.W $13F9               
                     STZ.W $1419               
-                    STZ $9D                   
-ADDR_00D2B2:        LDA.B #$40                
-                    STA $7B                   
-                    LDA.B #$C0                
-                    STA $7D                   
+                    STZ $9D                   ;  Set sprites not locked
+ADDR_00D2B2:        LDA.B #$40                ;  \ X speed = #$40
+                    STA $7B                   ;  /
+                    LDA.B #$C0                ;  \ Y speed = #$C0
+                    STA $7D                   ;  /
                     JMP.W ADDR_00DC2D         
 
 DATA_00D2BD:        .db $B0,$B6,$AE,$B4,$AB,$B2,$A9,$B0
@@ -7922,9 +8618,9 @@ DATA_00D309:        .db $E0,$FF,$20,$00,$E0,$FF,$20,$00
                     .db $80,$00,$00,$02,$00,$FF,$00,$01
                     .db $00,$FF,$00,$01
 
-DATA_00D345:        .db $80
+MarioAccel?:        .db $80
 
-DATA_00D346:        .db $FE,$80,$FE,$80,$01,$80,$01,$80
+MarioAccel2?:       .db $FE,$80,$FE,$80,$01,$80,$01,$80
                     .db $FE,$80,$FE,$80,$01,$80,$01,$80
                     .db $FE,$80,$FE,$80,$01,$80,$01,$80
                     .db $FE,$80,$FE,$40,$01,$40,$01,$C0
@@ -8024,6 +8720,7 @@ DATA_00D5F0:        .db $1C,$0C
 ADDR_00D5F2:        LDA $72                   
                     BEQ ADDR_00D5F9           
                     JMP.W ADDR_00D682         
+
 ADDR_00D5F9:        STZ $73                   
                     LDA.W $13ED               
                     BNE ADDR_00D60B           
@@ -8049,6 +8746,7 @@ ADDR_00D61E:        LDA $73
                     BNE ADDR_00D62D           
                     JSR.W ADDR_00FE4A         
 ADDR_00D62D:        JMP.W ADDR_00D764         
+
 ADDR_00D630:        LDA $7B                   
                     BPL ADDR_00D637           
                     EOR.B #$FF                
@@ -8063,8 +8761,8 @@ ADDR_00D637:        LSR
                     BNE ADDR_00D65E           
                     INC A                     
                     STA.W $140D               
-                    LDA.B #$04                
-                    STA.W $1DFC               ; / Play sound effect 
+                    LDA.B #$04                ; \ Play sound effect
+                    STA.W $1DFC               ; /
                     LDY $76                   
                     LDA.W DATA_00D5F0,Y       
                     STA.W $13E2               
@@ -8072,8 +8770,9 @@ ADDR_00D637:        LSR
                     BNE ADDR_00D682           
                     INX                       
                     BRA ADDR_00D663           
-ADDR_00D65E:        LDA.B #$01                
-                    STA.W $1DFA               ; / Play sound effect 
+
+ADDR_00D65E:        LDA.B #$01                ; \ Play sound effect
+                    STA.W $1DFA               ; /
 ADDR_00D663:        LDA.W DATA_00D2BD,X       
                     STA $7D                   
                     LDA.B #$0B                
@@ -8109,7 +8808,9 @@ ADDR_00D692:        JSR.W ADDR_00FE4A
                     ADC.B #$87                
                     TAY                       
                     JMP.W ADDR_00D742         
+
 ADDR_00D6AE:        JMP.W ADDR_00D764         
+
 ADDR_00D6B1:        STZ.W $13ED               
                     AND.B #$01                
                     LDY.W $1407               
@@ -8127,6 +8828,7 @@ ADDR_00D6C3:        LDX $76
                     ORA.W $13E1               
                     TAX                       
                     BRA ADDR_00D713           
+
 ADDR_00D6D5:        LDY $76                   
                     CMP $76                   
                     BEQ ADDR_00D6EC           
@@ -8144,7 +8846,7 @@ ADDR_00D6EC:        STA $01
                     TAX                       
                     LDA $7B                   
                     BEQ ADDR_00D713           
-                    EOR.W DATA_00D346,X       
+                    EOR.W MarioAccel2?,X      
                     BPL ADDR_00D713           
                     LDA.W $14A1               
                     BNE ADDR_00D713           
@@ -8174,6 +8876,7 @@ ADDR_00D723:        CMP.B #$23
                     LDA.B #$10                
                     STA.W $14A0               
                     BRA ADDR_00D736           
+
 ADDR_00D732:        CMP.B #$0C                
                     BNE ADDR_00D737           
 ADDR_00D736:        INY                       
@@ -8190,7 +8893,7 @@ ADDR_00D742:        LDA $7B
                     EOR.W DATA_00D535,Y       
                     BPL ADDR_00D76B           
                     REP #$20                  ; Accum (16 bit) 
-                    LDA.W DATA_00D345,X       
+                    LDA.W MarioAccel?,X       
                     LDY $86                   
                     BEQ ADDR_00D75F           
                     LDY $72                   
@@ -8199,9 +8902,10 @@ ADDR_00D742:        LDA $7B
 ADDR_00D75F:        CLC                       
                     ADC $7A                   
                     BRA ADDR_00D7A0           
+
 ADDR_00D764:        JSR.W ADDR_00D968         
                     LDA $72                   
-                    BNE ADDR_00D7A4           
+                    BNE Return00D7A4          
 ADDR_00D76B:        LDA.W $13E1               
                     LSR                       
                     TAY                       
@@ -8231,8 +8935,7 @@ ADDR_00D78F:        CLC
                     LDA.W DATA_00D5C9,X       
 ADDR_00D7A0:        STA $7A                   
 ADDR_00D7A2:        SEP #$20                  ; Accum (8 bit) 
-ADDR_00D7A4:        RTS                       ; Return 
-
+Return00D7A4:       RTS                       ; Return
 
 DATA_00D7A5:        .db $06,$03,$04,$10,$F4,$01,$03,$04
                     .db $05,$06
@@ -8245,7 +8948,7 @@ DATA_00D7B9:        .db $10,$C8,$E0,$02,$03,$03,$04,$03
 
 DATA_00D7C8:        .db $01,$10,$30,$30,$38,$38,$40
 
-DATA_00D7CF:        .db $FF,$01,$01,$FF,$FF
+CapeSpeed:          .db $FF,$01,$01,$FF,$FF
 
 DATA_00D7D4:        .db $01,$06,$03,$01,$00
 
@@ -8272,6 +8975,7 @@ ADDR_00D7FF:        STZ.W $13ED
                     LDA.W $149F               
                     BNE ADDR_00D814           
 ADDR_00D811:        JMP.W ADDR_00D8CD         
+
 ADDR_00D814:        STZ $73                   
                     LDA.B #$0B                
                     STA $72                   
@@ -8279,6 +8983,7 @@ ADDR_00D814:        STZ $73
                     JSR.W ADDR_00D94F         
                     LDX.B #$02                
                     BRA ADDR_00D85B           
+
 ADDR_00D824:        CPY.B #$02                
                     BCC ADDR_00D82B           
                     JSR.W ADDR_00D94F         
@@ -8297,6 +9002,7 @@ ADDR_00D82B:        LDX.W $1408
                     BCS ADDR_00D856           
                     DEX                       
                     BRA ADDR_00D856           
+
 ADDR_00D849:        LSR                       
                     LDY $76                   
                     BEQ ADDR_00D850           
@@ -8313,7 +9019,7 @@ ADDR_00D861:        LDA.W $1407
                     CMP.W DATA_00D7D4,X       
                     BEQ ADDR_00D87E           
                     CLC                       
-                    ADC.W DATA_00D7CF,X       
+                    ADC.W CapeSpeed,X         
                     STA.W $1407               
                     LDA.B #$08                
                     LDY.W $1409               
@@ -8330,6 +9036,7 @@ ADDR_00D87E:        STX.W $1408
                     BCS ADDR_00D89A           
                     LDA.B #$C8                
                     BRA ADDR_00D89A           
+
 ADDR_00D892:        CMP.W DATA_00D7C8,Y       
                     BCC ADDR_00D89A           
                     LDA.W DATA_00D7C8,Y       
@@ -8340,9 +9047,10 @@ ADDR_00D89A:        PHA
                     BEQ ADDR_00D8C4           
                     LDA $7D                   
                     BMI ADDR_00D8AF           
-                    LDA.B #$09                
-                    STA.W $1DF9               ; / Play sound effect 
+                    LDA.B #$09                ; \ Play sound effect
+                    STA.W $1DF9               ; /
                     BRA ADDR_00D8B9           
+
 ADDR_00D8AF:        CMP.W $1409               
                     BCS ADDR_00D8B9           
                     STX $7D                   
@@ -8358,25 +9066,27 @@ ADDR_00D8C6:        PLA
                     INY                       
                     INY                       
                     JMP.W ADDR_00D948         
-ADDR_00D8CD:        LDA $72                   
-                    BEQ ADDR_00D928           
-                    LDX.B #$00                
-                    LDA.W $187A               
-                    BEQ ADDR_00D8E7           
-                    LDA.W $141E               
-                    LSR                       
-                    BEQ ADDR_00D8E7           
-                    LDY.B #$02                
-                    CPY $19                   
-                    BEQ ADDR_00D8E5           
-                    INX                       
+
+ADDR_00D8CD:        LDA $72                   ; \ Branch if not flying
+                    BEQ ADDR_00D928           ; /
+                    LDX.B #$00                ; X = #$00
+                    LDA.W $187A               ; \ Branch if not on Yoshi
+                    BEQ ADDR_00D8E7           ; /
+                    LDA.W $141E               ; \ Branch if not winged Yoshi
+                    LSR                       ;  |
+                    BEQ ADDR_00D8E7           ; /
+                    LDY.B #$02                ; \ Branch if not Caped Mario
+                    CPY $19                   ;  |
+                    BEQ ADDR_00D8E5           ; /
+                    INX                       ; X= #$01
 ADDR_00D8E5:        BRA ADDR_00D8FF           
-ADDR_00D8E7:        LDA $19                   
-                    CMP.B #$02                
-                    BNE ADDR_00D928           
-                    LDA $72                   
-                    CMP.B #$0C                
-                    BNE ADDR_00D8FD           
+
+ADDR_00D8E7:        LDA $19                   ; \ Branch if not Caped Mario
+                    CMP.B #$02                ;  |
+                    BNE ADDR_00D928           ; /
+                    LDA $72                   ; \ Branch if $72 != 0C
+                    CMP.B #$0C                ;  |
+                    BNE ADDR_00D8FD           ; /
                     LDY.B #$01                
                     CPY.W $149F               
                     BCC ADDR_00D8FF           
@@ -8404,8 +9114,8 @@ ADDR_00D928:        LDY.B #$01
                     LDA $15                   
                     BMI ADDR_00D930           
 ADDR_00D92E:        LDY.B #$00                
-ADDR_00D930:        LDA $7D                   ; \ If Mario's Y speed is negative (up), 
-                    BMI ADDR_00D948           ; / branch to $D948 
+ADDR_00D930:        LDA $7D                   ; \ If Mario's Y speed is negative (up),
+                    BMI ADDR_00D948           ; / branch to $D948
                     CMP.W DATA_00D7AF,Y       
                     BCC ADDR_00D93C           
                     LDA.W DATA_00D7AF,Y       
@@ -8418,7 +9128,7 @@ ADDR_00D93C:        LDX $72
 ADDR_00D948:        CLC                       
                     ADC.W DATA_00D7A5,Y       
 ADDR_00D94C:        STA $7D                   
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00D94F:        STZ.W $140A               
                     LDA $7D                   
@@ -8430,9 +9140,9 @@ ADDR_00D958:        LSR
                     TAY                       
                     LDA.W DATA_00D7D9,Y       
                     CMP.W $1409               
-                    BPL ADDR_00D967           
+                    BPL Return00D967          
                     STA.W $1409               
-ADDR_00D967:        RTS                       ; Return 
+Return00D967:       RTS                       ; Return
 
 ADDR_00D968:        LDY.B #$00                
 ADDR_00D96A:        LDA.W $13E4               
@@ -8445,8 +9155,7 @@ ADDR_00D975:        CMP.B #$70
                     INY                       
                     LDA.B #$70                
 ADDR_00D97C:        STA.W $13E4               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_00D980:        .db $16,$1A,$1A,$18
 
@@ -8469,6 +9178,7 @@ ADDR_00D988:        STZ.W $13ED
                     STZ.W $13ED               
                     LDY.B #$F0                
                     BRA ADDR_00D9B5           
+
 ADDR_00D9AF:        LDA $15                   
                     AND.B #$04                
                     BEQ ADDR_00D9BD           
@@ -8492,6 +9202,7 @@ ADDR_00D9CC:        TYA
                     BCC ADDR_00D9DD           
                     LDA.B #$10                
                     BRA ADDR_00D9DD           
+
 ADDR_00D9D7:        CMP.B #$F0                
                     BCS ADDR_00D9DD           
                     LDA.B #$F0                
@@ -8502,6 +9213,7 @@ ADDR_00D9DD:        STA $7D
                     BNE ADDR_00DA48           
                     LDA $76                   
                     BRA ADDR_00DA46           
+
 ADDR_00D9EB:        LDA $16                   
                     ORA $18                   
                     BPL ADDR_00DA0B           
@@ -8534,6 +9246,7 @@ ADDR_00DA13:        LDA $15
                     BCC ADDR_00DA2D           
                     LDA.B #$40                
                     BRA ADDR_00DA2D           
+
 ADDR_00DA25:        CMP.W DATA_00D984,X       
                     BCS ADDR_00DA2D           
                     LDA.W DATA_00D984,X       
@@ -8546,6 +9259,7 @@ ADDR_00DA2D:        STA $7D
                     STZ.W $13E8               
                     INC $73                   
                     BRA ADDR_00DA69           
+
 ADDR_00DA40:        LDA $15                   
                     AND.B #$03                
                     BEQ ADDR_00DA69           
@@ -8570,6 +9284,7 @@ ADDR_00DA5D:        TAY
                     INY                       
 ADDR_00DA64:        JSR.W ADDR_00D742         
                     BRA ADDR_00DA7C           
+
 ADDR_00DA69:        LDY.B #$00                
                     TYX                       
                     LDA.W $1403               
@@ -8581,12 +9296,12 @@ ADDR_00DA69:        LDY.B #$00
                     INX                       
 ADDR_00DA79:        JSR.W ADDR_00D772         
 ADDR_00DA7C:        JSR.W ADDR_00D062         
-                    JSL.L ADDR_00CEB1         
+                    JSL.L ExtSub00CEB1        
                     LDA.W $14A6               
-                    BNE ADDR_00DA8C           
+                    BNE Return00DA8C          
                     LDA $72                   
                     BNE ADDR_00DA8D           
-ADDR_00DA8C:        RTS                       ; Return 
+Return00DA8C:       RTS                       ; Return
 
 ADDR_00DA8D:        LDA.B #$18                
                     LDY.W $149C               
@@ -8601,15 +9316,14 @@ ADDR_00DA9F:        LDY.W $148F
                     BEQ ADDR_00DAA5           
                     INC A                     
 ADDR_00DAA5:        STA.W $13E0               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_00DAA9:        LDA.B #$0E                
-                    STA.W $1DF9               ; / Play sound effect 
+ADDR_00DAA9:        LDA.B #$0E                ; \ Play sound effect
+                    STA.W $1DF9               ; /
                     LDA.W $1496               
                     ORA.B #$10                
                     STA.W $1496               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_00DAB7:        .db $10,$08,$F0,$F8
 
@@ -8620,9 +9334,9 @@ DATA_00DABD:        .db $00,$01,$00,$01,$01,$01,$01,$01
 DATA_00DACD:        .db $22,$15,$22,$15,$21,$1F,$20,$20
                     .db $20,$20,$1F,$21,$1F,$21
 
-DATA_00DADB:        .db $15,$22
+ClimbingImgs:       .db $15,$22
 
-DATA_00DADD:        .db $1E,$23
+ClimbPunchingImgs:  .db $1E,$23
 
 DATA_00DADF:        .db $10,$0F,$0E,$0D,$0C,$0B,$0A,$09
                     .db $08,$07,$06,$05,$05,$05,$05,$05
@@ -8684,6 +9398,7 @@ ADDR_00DB5D:        CLC
 ADDR_00DB76:        STA $76                   
                     LDA.W DATA_00DACD,Y       
                     BRA ADDR_00DB92           
+
 ADDR_00DB7D:        STZ $7B                   
                     STZ $7A                   
                     LDX.W $13F9               
@@ -8693,37 +9408,38 @@ ADDR_00DB7D:        STZ $7B
                     INC A                     
                     INC A                     
                     JSR.W ADDR_00D044         
-                    LDA.W DATA_00DADD,X       
+                    LDA.W ClimbPunchingImgs,X 
 ADDR_00DB92:        STA.W $13E0               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_00DB96:        LDY $75                   
+ADDR_00DB96:        LDY $75                   ; Mario is in Water flag
                     BIT $16                   
                     BPL ADDR_00DBAC           
                     LDA.B #$0B                
                     STA $72                   
                     LDA.W DATA_00DABB,Y       
                     STA $7D                   
-                    LDA.B #$01                
-                    STA.W $1DFA               ; / Play sound effect 
+                    LDA.B #$01                ; \ Play sound effect
+                    STA.W $1DFA               ; /
                     BRA ADDR_00DC00           
+
 ADDR_00DBAC:        BVC ADDR_00DBCA           
                     LDA $74                   
                     BPL ADDR_00DBCA           
-                    LDA.B #$01                
-                    STA.W $1DF9               ; / Play sound effect 
+                    LDA.B #$01                ; \ Play sound effect
+                    STA.W $1DF9               ; /
                     STX.W $13F0               
-                    LDA $94                   
+                    LDA $94                   ; Mario X
                     AND.B #$08                
                     LSR                       
                     LSR                       
                     LSR                       
                     EOR.B #$01                
-                    STA $76                   
+                    STA $76                   ; Mario's Direction
                     LDA.B #$08                
                     STA.W $149E               
-ADDR_00DBCA:        LDA.W DATA_00DADB,X       
-                    STA.W $13E0               
+ADDR_00DBCA:        LDA.W ClimbingImgs,X      
+                    STA.W $13E0               ; Store A in Mario image
                     LDA $15                   
                     AND.B #$03                
                     BEQ ADDR_00DBF2           
@@ -8743,15 +9459,15 @@ ADDR_00DBE8:        TXA
                     TAX                       
                     LDA.W DATA_00DAB7,X       
                     STA $7B                   
-ADDR_00DBF2:        LDA $15                   
-                    AND.B #$0C                
-                    BEQ ADDR_00DC16           
-                    AND.B #$08                
-                    BNE ADDR_00DC03           
+ADDR_00DBF2:        LDA $15                   ; \
+                    AND.B #$0C                ;  |If up or down isn't pressed, branch to $DC16
+                    BEQ ADDR_00DC16           ; /
+                    AND.B #$08                ; \ If up is pressed, branch to $DC03
+                    BNE ADDR_00DC03           ; /
                     LSR $8B                   
                     BCS ADDR_00DC0B           
-ADDR_00DC00:        STZ $74                   
-                    RTS                       ; Return 
+ADDR_00DC00:        STZ $74                   ; Mario isn't climbing
+                    RTS                       ; Return
 
 ADDR_00DC03:        INY                       
                     INY                       
@@ -8764,19 +9480,19 @@ ADDR_00DC0B:        LDA $74
 ADDR_00DC11:        LDA.W DATA_00DAB7,Y       
                     STA $7D                   
 ADDR_00DC16:        ORA $7B                   
-                    BEQ ADDR_00DC2C           
+                    BEQ Return00DC2C          
                     LDA.W $1496               
                     ORA.B #$08                
                     STA.W $1496               
                     AND.B #$07                
-                    BNE ADDR_00DC2C           
+                    BNE Return00DC2C          
                     LDA $76                   
                     EOR.B #$01                
                     STA $76                   
-ADDR_00DC2C:        RTS                       ; Return 
+Return00DC2C:       RTS                       ; Return
 
-ADDR_00DC2D:        LDA $7D                   ; \ Store Mario's Y speed in $8A 
-                    STA $8A                   ; /  
+ADDR_00DC2D:        LDA $7D                   ; \ Store Mario's Y speed in $8A
+                    STA $8A                   ; /
                     LDA.W $13E3               
                     BEQ ADDR_00DC40           
                     LSR                       
@@ -8791,7 +9507,7 @@ ADDR_00DC40:        LDX.B #$00
                     JSR.W ADDR_00DC4F         
                     LDA $8A                   
                     STA $7D                   
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00DC4F:        LDA $7B,X                 
                     ASL                       
@@ -8816,10 +9532,9 @@ ADDR_00DC70:        PLP
                     ADC $94,X                 
                     STA $94,X                 
                     SEP #$20                  ; Accum (8 bit) 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-
-DATA_00DC78:        .db $01,$02,$02,$02
+NumWalkingFrames:   .db $01,$02,$02,$02
 
 DATA_00DC7C:        .db $0A,$08,$06,$04,$03,$02,$01,$01
                     .db $0A,$08,$06,$04,$03,$02,$01,$01
@@ -8910,9 +9625,9 @@ DATA_00DE32:        .db $01,$00,$11,$00,$11,$00,$19,$00
                     .db $18,$00,$00,$00,$10,$00,$00,$00
                     .db $10,$00,$F8,$FF
 
-DATA_00DF16:        .db $00,$46,$83,$46
+TilesetIndex:       .db $00,$46,$83,$46
 
-DATA_00DF1A:        .db $00,$00,$00,$00,$00,$00,$00,$00
+TileExpansion?:     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
@@ -8936,7 +9651,7 @@ DATA_00DF1A:        .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$24,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
-DATA_00DFDA:        .db $00,$02,$80,$80,$00,$02,$0C,$80
+Mario8x8Tiles:      .db $00,$02,$80,$80,$00,$02,$0C,$80
                     .db $00,$02,$1A,$1B,$00,$02,$0D,$80
                     .db $00,$02,$22,$23,$00,$02,$32,$33
                     .db $00,$02,$0A,$0B,$00,$02,$30,$31
@@ -8992,7 +9707,7 @@ DATA_00E0CC:        .db $71,$60,$60,$19,$94,$96,$96,$A2
                     .db $10,$B7,$E4,$B5,$61,$0A,$55,$0D
                     .db $75,$77,$1E,$59,$59,$58,$02,$02
                     .db $6D,$6E,$6F,$F3,$68,$6F,$6F,$06
-DATA_00E18C:        .db $00,$40
+MarioPalIndex:      .db $00,$40
 
 DATA_00E18E:        .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$0D,$00,$10
@@ -9050,24 +9765,24 @@ DATA_00E2B6:        .db $08,$CC,$08
 
 DATA_00E2B9:        .db $E0,$10,$10,$30
 
-ADDR_00E2BD:        PHB                       
+ExtSub00E2BD:       PHB                       
                     PHK                       
                     PLB                       
                     LDA $78                   
                     CMP.B #$FF                
                     BEQ ADDR_00E2CA           
-                    JSL.L ADDR_01EA70         
+                    JSL.L ExtSub01EA70        
 ADDR_00E2CA:        LDY.W $149B               
                     BNE ADDR_00E308           
-                    LDY.W $1490               
-                    BEQ ADDR_00E314           
+                    LDY.W $1490               ; \ Branch if Mario doesn't have star
+                    BEQ ADDR_00E314           ; /
                     LDA $78                   
                     CMP.B #$FF                
                     BEQ ADDR_00E2E3           
                     LDA $14                   
                     AND.B #$03                
                     BNE ADDR_00E2E3           
-                    DEC.W $1490               
+                    DEC.W $1490               ; Decrease star timer
 ADDR_00E2E3:        LDA $13                   
                     CPY.B #$1E                
                     BCC ADDR_00E30A           
@@ -9083,7 +9798,7 @@ ADDR_00E2E3:        LDA $13
                     ORA.W $190C               
                     BEQ ADDR_00E305           
                     LDX.B #$0E                
-ADDR_00E305:        STX.W $1DFB               ; / Play sound effect 
+ADDR_00E305:        STX.W $1DFB               ; / Change music
 ADDR_00E308:        LDA $13                   
 ADDR_00E30A:        LSR                       
                     LSR                       
@@ -9093,6 +9808,7 @@ ADDR_00E30C:        AND.B #$03
                     INC A                     
                     INC A                     
                     BRA ADDR_00E31A           
+
 ADDR_00E314:        LDA $19                   
                     ASL                       
                     ORA.W $0DB3               
@@ -9148,7 +9864,7 @@ ADDR_00E369:        STA $80
                     ORA.W $13FB               
                     BNE ADDR_00E385           
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_00E385:        LDA.B #$C8                
                     CPX.B #$43                
@@ -9169,9 +9885,9 @@ ADDR_00E399:        LDA.W DATA_00DCEC,X
                     LDA.W $13E0               
                     CMP.B #$3D                
                     BCS ADDR_00E3B0           
-                    ADC.W DATA_00DF16,Y       
+                    ADC.W TilesetIndex,Y      
 ADDR_00E3B0:        TAY                       
-                    LDA.W DATA_00DF1A,Y       
+                    LDA.W TileExpansion?,Y    
                     STA $06                   
                     LDA.W DATA_00E00C,Y       
                     STA $0A                   
@@ -9183,7 +9899,7 @@ ADDR_00E3B0:        TAY
                     LDA.W DATA_00E2B9,X       
 ADDR_00E3CA:        LDY.W DATA_00E2B2,X       
                     LDX $76                   
-                    ORA.W DATA_00E18C,X       
+                    ORA.W MarioPalIndex,X     
                     STA.W $0303,Y             
                     STA.W $0307,Y             
                     STA.W $030F,Y             
@@ -9225,6 +9941,7 @@ ADDR_00E3EC:        STA.W $030B,Y
                     STA $0C                   
                     LDA.W DATA_00E266,Y       
                     BRA ADDR_00E435           
+
 ADDR_00E432:        LDA.W DATA_00E1D6,X       
 ADDR_00E435:        ORA $76                   
                     TAY                       
@@ -9243,12 +9960,12 @@ ADDR_00E448:        LDX.W $13F9
                     JSR.W ADDR_00E45D         
 ADDR_00E458:        JSR.W ADDR_00F636         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_00E45D:        LSR $78                   
                     BCS ADDR_00E49F           
                     LDX $06                   
-                    LDA.W DATA_00DFDA,X       
+                    LDA.W Mario8x8Tiles,X     
                     BMI ADDR_00E49F           
                     STA.W $0302,Y             
                     LDX $05                   
@@ -9296,8 +10013,7 @@ ADDR_00E49F:        PHP
                     INC $05                   
                     INC $05                   
                     INC $06                   
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_00E4B9:        .db $08,$08,$08,$08,$10,$10,$10,$10
                     .db $18,$18,$20,$20,$28,$30,$08,$10
@@ -9469,6 +10185,7 @@ ADDR_00E92B:        JSR.W ADDR_00EAA6
                     BEQ ADDR_00E938           
                     JSR.W ADDR_00EE1D         
                     BRA ADDR_00E98C           
+
 ADDR_00E938:        LDA.W $13EF               
                     STA $8D                   
                     STZ.W $13EF               
@@ -9518,7 +10235,7 @@ ADDR_00E98C:        LDA.W $1B96
                     SEP #$20                  ; Accum (8 bit) 
                     BCC ADDR_00E9FB           
                     JSL.L SubSideExit         
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00E9A1:        LDA $7E                   
                     CMP.B #$F0                
@@ -9572,6 +10289,7 @@ ADDR_00E9FB:        LDA $77
                     BNE ADDR_00EA0D           
 ADDR_00EA08:        JSR.W ADDR_00F629         
                     BRA ADDR_00EA32           
+
 ADDR_00EA0D:        LDA $77                   
                     AND.B #$03                
                     BEQ ADDR_00EA34           
@@ -9607,16 +10325,17 @@ ADDR_00EA42:        STZ.W $13FA
                     LDA $7D                   
                     BMI ADDR_00EA65           
                     LSR $8A                   
-                    BCC ADDR_00EAA5           
+                    BCC Return00EAA5          
                     JSR.W ADDR_00FDA5         
                     STZ $7D                   
 ADDR_00EA5E:        LDA.B #$01                
                     STA $75                   
 ADDR_00EA62:        JMP.W ADDR_00FD08         
+
 ADDR_00EA65:        LSR $8A                   
                     BCS ADDR_00EA5E           
                     LDA $75                   
-                    BEQ ADDR_00EAA5           
+                    BEQ Return00EAA5          
                     LDA.B #$FC                
                     CMP $7D                   
                     BMI ADDR_00EA75           
@@ -9632,8 +10351,8 @@ ADDR_00EA75:        INC.W $13FA
                     BNE ADDR_00EA92           
                     INC A                     
                     STA.W $140D               
-                    LDA.B #$04                
-                    STA.W $1DFC               ; / Play sound effect 
+                    LDA.B #$04                ; \ Play sound effect
+                    STA.W $1DFC               ; /
 ADDR_00EA92:        LDA $77                   
                     AND.B #$08                
                     BNE ADDR_00EA62           
@@ -9643,7 +10362,7 @@ ADDR_00EA92:        LDA $77
                     LDA.B #$AA                
                     STA $7D                   
 ADDR_00EAA3:        STZ $75                   
-ADDR_00EAA5:        RTS                       ; Return 
+Return00EAA5:       RTS                       ; Return
 
 ADDR_00EAA6:        STZ.W $13E5               
                     STZ $77                   
@@ -9652,8 +10371,7 @@ ADDR_00EAA6:        STZ.W $13E5
                     STZ $8A                   
                     STZ $8B                   
                     STZ.W $140E               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_00EAB9:        .db $DE,$23
 
@@ -9672,6 +10390,7 @@ ADDR_00EADB:        LDA $96
                     LDA.W $13E3               
                     BNE ADDR_00EAE9           
                     JMP.W ADDR_00EB77         
+
 ADDR_00EAE9:        AND.B #$01                
                     TAY                       
                     LDA $7B                   
@@ -9689,7 +10408,7 @@ ADDR_00EAE9:        AND.B #$01
                     BCS ADDR_00EB22           
                     LDX $90                   
                     CPX.B #$08                
-                    BCC ADDR_00EB76           
+                    BCC Return00EB76          
                     CMP.B #$04                
                     BCS ADDR_00EB73           
                     ORA.B #$04                
@@ -9698,7 +10417,7 @@ ADDR_00EB19:        LDA $94
                     AND.B #$F0                
                     ORA.B #$08                
                     STA $94                   
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00EB22:        LDX.B #$60                
                     TYA                       
@@ -9710,12 +10429,13 @@ ADDR_00EB29:        JSR.W ADDR_00EFE8
                     INX                       
                     INX                       
                     BRA ADDR_00EB37           
+
 ADDR_00EB34:        JSR.W ADDR_00EFE8         
 ADDR_00EB37:        JSR.W ADDR_00F44D         
                     BNE ADDR_00EB19           
                     LDA.B #$02                
                     TRB.W $13E3               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00EB42:        LDA.W $13E3               
                     AND.B #$01                
@@ -9743,7 +10463,7 @@ ADDR_00EB64:        CLC
                     LDA.B #$E0                
                     STA $7D                   
 ADDR_00EB73:        STZ.W $13E3               
-ADDR_00EB76:        RTS                       ; Return 
+Return00EB76:       RTS                       ; Return
 
 ADDR_00EB77:        LDX.B #$00                
                     LDA $19                   
@@ -9783,11 +10503,12 @@ ADDR_00EBA5:        LDA $90
                     CPY.B #$6E                
                     BCC ADDR_00EBC9           
                     TYA                       
-                    JSL.L ADDR_00F04D         
+                    JSL.L ExtSub00F04D        
                     BCC ADDR_00EC24           
                     LDA.B #$01                
                     TSB $8A                   
                     BRA ADDR_00EC24           
+
 ADDR_00EBC9:        INX                       
                     INX                       
                     INX                       
@@ -9800,6 +10521,7 @@ ADDR_00EBC9:        INX
                     BEQ ADDR_00EBDA           
                     LDY.B #$02                
 ADDR_00EBDA:        JMP.W ADDR_00EC6F         
+
 ADDR_00EBDD:        CPY.B #$9C                
                     BNE ADDR_00EBE8           
                     LDA.W $1931               
@@ -9824,13 +10546,14 @@ ADDR_00EC06:        LDA $8F
                     LDA $16                   
                     AND.B #$08                
                     BEQ ADDR_00EC24           
-                    LDA.B #$0F                
-                    STA.W $1DFC               ; / Play sound effect 
+                    LDA.B #$0F                ; \ Play sound effect
+                    STA.W $1DFC               ; /
                     JSR.W ADDR_00D273         
                     LDA.B #$0D                
                     STA $71                   
                     JSR.W NoButtons           
                     BRA ADDR_00EC24           
+
 ADDR_00EC21:        JSR.W ADDR_00F28C         
 ADDR_00EC24:        JSR.W ADDR_00F44D         
                     BEQ ADDR_00EC35           
@@ -9841,6 +10564,7 @@ ADDR_00EC24:        JSR.W ADDR_00F44D
                     INX                       
                     INX                       
                     BRA ADDR_00EC4E           
+
 ADDR_00EC35:        LDA.B #$10                
                     JSR.W ADDR_00F2C9         
 ADDR_00EC3A:        JSR.W ADDR_00F44D         
@@ -9848,6 +10572,7 @@ ADDR_00EC3A:        JSR.W ADDR_00F44D
                     LDA.B #$08                
                     JSR.W ADDR_00F2C9         
                     BRA ADDR_00EC8A           
+
 ADDR_00EC46:        CPY.B #$11                
                     BCC ADDR_00EC8A           
                     CPY.B #$6E                
@@ -9858,7 +10583,7 @@ ADDR_00EC4E:        LDA $76
                     JSR.W ADDR_00F3C4         
                     PHX                       
                     JSR.W ADDR_00F267         
-                    LDY.W $1693               ; Current MAP16 tile number 
+                    LDY.W $1693               ; Current MAP16 tile number
                     PLX                       
 ADDR_00EC5F:        LDA.B #$03                
                     STA.W $13E5               
@@ -9876,7 +10601,7 @@ ADDR_00EC7B:        LDA.W DATA_00E90A,Y
                     TSB $77                   
                     AND.B #$03                
                     TAY                       
-                    LDA.W $1693               ; Current MAP16 tile number 
+                    LDA.W $1693               ; Current MAP16 tile number
                     JSL.L ADDR_00F127         
 ADDR_00EC8A:        JSR.W ADDR_00F44D         
                     BNE ADDR_00ECB1           
@@ -9884,17 +10609,19 @@ ADDR_00EC8A:        JSR.W ADDR_00F44D
                     JSR.W ADDR_00F2C2         
                     LDY $7D                   
                     BPL ADDR_00ECA3           
-                    LDA.W $1693               ; Current MAP16 tile number 
+                    LDA.W $1693               ; Current MAP16 tile number
                     CMP.B #$21                
                     BCC ADDR_00ECA3           
                     CMP.B #$25                
                     BCC ADDR_00ECA6           
 ADDR_00ECA3:        JMP.W ADDR_00ED4A         
+
 ADDR_00ECA6:        SEC                       
                     SBC.B #$04                
                     LDY.B #$00                
                     JSL.L ADDR_00F17F         
                     BRA ADDR_00ED0D           
+
 ADDR_00ECB1:        CPY.B #$11                
                     BCC ADDR_00ECA3           
                     CPY.B #$6E                
@@ -9934,14 +10661,15 @@ ADDR_00ECDA:        TYA
                     SEP #$10                  ; Index (8 bit) 
                     BMI ADDR_00ED0F           
 ADDR_00ECF8:        BRA ADDR_00ED4A           
+
 ADDR_00ECFA:        LDA.B #$02                
                     JSR.W ADDR_00F3E9         
                     TYA                       
                     LDY.B #$00                
                     JSL.L ADDR_00F127         
-                    LDA.W $1693               ; Current MAP16 tile number 
-                    CMP.B #$1E                ; \ If block is turn block, branch to $ED3B 
-                    BEQ ADDR_00ED3B           ; /  
+                    LDA.W $1693               ; Current MAP16 tile number
+                    CMP.B #$1E                ; \ If block is turn block, branch to $ED3B
+                    BEQ ADDR_00ED3B           ; /
 ADDR_00ED0D:        LDA.B #$F0                
 ADDR_00ED0F:        CLC                       
                     ADC $91                   
@@ -9956,6 +10684,7 @@ ADDR_00ED0F:        CLC
                     STA $77                   
                     STZ $7B                   
                     BRA ADDR_00ED3B           
+
 ADDR_00ED28:        LDY $72                   
                     BEQ ADDR_00ED37           
                     EOR.B #$FF                
@@ -9969,23 +10698,26 @@ ADDR_00ED37:        LDA.B #$08
 ADDR_00ED3B:        LDA $7D                   
                     BPL ADDR_00ED4A           
                     STZ $7D                   
-                    LDA.W $1DF9               ; / Play sound effect 
+                    LDA.W $1DF9               ; / Play sound effect
                     BNE ADDR_00ED4A           
                     INC A                     
-                    STA.W $1DF9               ; / Play sound effect 
+                    STA.W $1DF9               ; / Play sound effect
 ADDR_00ED4A:        JSR.W ADDR_00F44D         
                     BNE ADDR_00ED52           
                     JMP.W ADDR_00EDDB         
+
 ADDR_00ED52:        CPY.B #$6E                
                     BCS ADDR_00ED5E           
                     LDA.B #$03                
                     JSR.W ADDR_00F3E9         
                     JMP.W ADDR_00EDF7         
+
 ADDR_00ED5E:        CPY.B #$D8                
                     BCC ADDR_00ED86           
                     CPY.B #$FB                
                     BCC ADDR_00ED69           
                     JMP.W ADDR_00F629         
+
 ADDR_00ED69:        REP #$20                  ; Accum (16 bit) 
                     LDA $98                   
                     SEC                       
@@ -10042,28 +10774,32 @@ ADDR_00EDB9:        SEP #$10                  ; Index (8 bit)
                     LDA.B #$08                
                     STA.W $14A1               
                     JMP.W ADDR_00EED1         
+
 ADDR_00EDD5:        JSR.W ADDR_00EFBC         
                     JMP.W ADDR_00EE85         
+
 ADDR_00EDDB:        CPY.B #$05                
                     BNE ADDR_00EDE4           
                     JSR.W ADDR_00F629         
                     BRA ADDR_00EDE9           
+
 ADDR_00EDE4:        LDA.B #$04                
                     JSR.W ADDR_00F2C2         
 ADDR_00EDE9:        JSR.W ADDR_00F44D         
                     BNE ADDR_00EDF3           
                     JSR.W ADDR_00F309         
                     BRA ADDR_00EE1D           
+
 ADDR_00EDF3:        CPY.B #$6E                
                     BCS ADDR_00EE1D           
 ADDR_00EDF7:        LDA $7D                   
-                    BMI ADDR_00EE39           
+                    BMI Return00EE39          
                     LDA.W $1931               
                     CMP.B #$03                
                     BEQ ADDR_00EE06           
                     CMP.B #$0E                
                     BNE ADDR_00EE11           
-ADDR_00EE06:        LDY.W $1693               ; $ED3B 
+ADDR_00EE06:        LDY.W $1693               ; $ED3B
                     CPY.B #$59                
                     BCC ADDR_00EE11           
                     CPY.B #$5C                
@@ -10074,41 +10810,43 @@ ADDR_00EE11:        LDA $90
                     CMP.B #$08                
                     STA $91                   
                     BCC ADDR_00EE3A           
-ADDR_00EE1D:        LDA.W $1471               ; \ If Mario isn't on a sprite platform, 
-                    BEQ ADDR_00EE2D           ; / branch to $EE2D 
-                    LDA $7D                   ; \ If Mario is moving up, 
-                    BMI ADDR_00EE2D           ; / branch to $EE2D 
+ADDR_00EE1D:        LDA.W $1471               ; \ If Mario isn't on a sprite platform,
+                    BEQ ADDR_00EE2D           ; / branch to $EE2D
+                    LDA $7D                   ; \ If Mario is moving up,
+                    BMI ADDR_00EE2D           ; / branch to $EE2D
                     STZ $8E                   
                     LDY.B #$20                
                     JMP.W ADDR_00EEE1         
-ADDR_00EE2D:        LDA $77                   ; \  
-                    AND.B #$04                ;  |If Mario is on an edge or in air, 
-                    ORA $72                   ;  |branch to $EE39 
-                    BNE ADDR_00EE39           ; /  
-ADDR_00EE35:        LDA.B #$24                ; \ Set "In air" to x24 (falling) 
-                    STA $72                   ; /  
-ADDR_00EE39:        RTS                       ; Return 
 
-ADDR_00EE3A:        LDY.W $1693               ; Current MAP16 tile number 
-                    LDA.W $1931               ; Tileset 
-                    CMP.B #$02                ; \ If tileset is "Rope 1", 
-                    BEQ ADDR_00EE48           ; / branch to $EE48 
-                    CMP.B #$08                ; \ If tileset isn't "Rope 3", 
-                    BNE ADDR_00EE57           ; / branch to $EE57 
-ADDR_00EE48:        TYA                       ; \  
-                    SEC                       ;  |If the current tile isn't Rope 3's "Conveyor rope", 
-                    SBC.B #$0C                ;  |branch to $EE57 
-                    CMP.B #$02                ;  | 
-                    BCS ADDR_00EE57           ; /  
+ADDR_00EE2D:        LDA $77                   ; \
+                    AND.B #$04                ;  |If Mario is on an edge or in air,
+                    ORA $72                   ;  |branch to $EE39
+                    BNE Return00EE39          ; /
+ADDR_00EE35:        LDA.B #$24                ; \ Set "In air" to x24 (falling)
+                    STA $72                   ; /
+Return00EE39:       RTS                       ; Return
+
+ADDR_00EE3A:        LDY.W $1693               ; Current MAP16 tile number
+                    LDA.W $1931               ; Tileset
+                    CMP.B #$02                ; \ If tileset is "Rope 1",
+                    BEQ ADDR_00EE48           ; / branch to $EE48
+                    CMP.B #$08                ; \ If tileset isn't "Rope 3",
+                    BNE ADDR_00EE57           ; / branch to $EE57
+ADDR_00EE48:        TYA                       ; \
+                    SEC                       ;  |If the current tile isn't Rope 3's "Conveyor rope",
+                    SBC.B #$0C                ;  |branch to $EE57
+                    CMP.B #$02                ;  |
+                    BCS ADDR_00EE57           ; /
                     ASL                       
                     TAX                       
                     JSR.W ADDR_00EFCD         
                     BRA ADDR_00EE83           
+
 ADDR_00EE57:        JSR.W ADDR_00F267         
                     LDY.B #$03                
-                    LDA.W $1693               ; Current MAP16 tile number 
-                    CMP.B #$1E                ; \ If block isn't "Turn block", 
-                    BNE ADDR_00EE78           ; / branch to $EE78 
+                    LDA.W $1693               ; Current MAP16 tile number
+                    CMP.B #$1E                ; \ If block isn't "Turn block",
+                    BNE ADDR_00EE78           ; / branch to $EE78
                     LDX $8F                   
                     BEQ ADDR_00EE83           
                     LDX $19                   
@@ -10118,16 +10856,17 @@ ADDR_00EE57:        JSR.W ADDR_00F267
                     LDA.B #$21                
                     JSL.L ADDR_00F17F         
                     BRA ADDR_00EE1D           
-ADDR_00EE78:        CMP.B #$32                ; \ If block isn't "Brown block", 
-                    BNE ADDR_00EE7F           ; / branch to $EE7F 
+
+ADDR_00EE78:        CMP.B #$32                ; \ If block isn't "Brown block",
+                    BNE ADDR_00EE7F           ; / branch to $EE7F
                     STZ.W $1909               
 ADDR_00EE7F:        JSL.L ADDR_00F120         
 ADDR_00EE83:        LDY.B #$20                
-ADDR_00EE85:        LDA $7D                   ; \ If Mario isn't moving up, 
-                    BPL ADDR_00EE8F           ; / branch to $EE8F 
+ADDR_00EE85:        LDA $7D                   ; \ If Mario isn't moving up,
+                    BPL ADDR_00EE8F           ; / branch to $EE8F
                     LDA $8D                   
                     CMP.B #$02                
-                    BCC ADDR_00EE39           
+                    BCC Return00EE39          
 ADDR_00EE8F:        LDX.W $1423               
                     BEQ ADDR_00EED1           
                     DEX                       
@@ -10146,19 +10885,19 @@ ADDR_00EEAA:        TXA
                     LSR                       
                     LSR                       
                     TAX                       
-                    LDA.W $1F27,X             ; \ If switch block is already active, 
-                    BNE ADDR_00EED1           ; / branch to $EED1 
-                    INC A                     ; \ Activate switch block 
-                    STA.W $1F27,X             ; /  
+                    LDA.W $1F27,X             ; \ If switch block is already active,
+                    BNE ADDR_00EED1           ; / branch to $EED1
+                    INC A                     ; \ Activate switch block
+                    STA.W $1F27,X             ; /
                     STA.W $13D2               
                     PHY                       
                     STX.W $191E               
                     JSR.W FlatPalaceSwitch    
                     PLY                       
                     LDA.B #$0C                
-                    STA.W $1DFB               ; / Play sound effect 
-                    LDA.B #$FF                ; \  
-                    STA.W $0DDA               ; / Set music to xFF 
+                    STA.W $1DFB               ; / Change music
+                    LDA.B #$FF                ; \
+                    STA.W $0DDA               ; / Set music to xFF
                     LDA.B #$08                
                     STA.W $1493               
 ADDR_00EED1:        INC.W $13EF               
@@ -10203,6 +10942,7 @@ ADDR_00EF26:        CMP.B #$28
                     BCC ADDR_00EF2F           
                     LDA.W DATA_00E4FB,Y       
                     BRA ADDR_00EF60           
+
 ADDR_00EF2F:        LDY.B #$20                
 ADDR_00EF31:        LDA $7D                   
                     CMP.W DATA_00E4DA,Y       
@@ -10244,37 +10984,37 @@ ADDR_00EF68:        STZ.W $18B5
                     BEQ ADDR_00EF95           
                     LDA $8F                   
                     BEQ ADDR_00EF95           
-                    LDA.W $18E7               
-                    BEQ ADDR_00EF95           
-                    JSL.L ADDR_0286BF         
-                    LDA.B #$25                
-                    STA.W $1DFC               ; / Play sound effect 
+                    LDA.W $18E7               ; \ If Yoshi has stomp ability,
+                    BEQ ADDR_00EF95           ;  |
+                    JSL.L YoshiStompRoutine   ;  | Run routine
+                    LDA.B #$25                ;  | Play sound effect
+                    STA.W $1DFC               ; /
 ADDR_00EF95:        STZ.W $1697               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00EF99:        STZ.W $1697               
                     STZ.W $1407               
                     CPY.B #$05                
-                    BCS ADDR_00EFAE           
+                    BCS CallGroundPound       
                     LDA $19                   
                     CMP.B #$02                
-                    BNE ADDR_00EFAD           
+                    BNE Return00EFAD          
                     SEC                       
                     ROR.W $13ED               
-ADDR_00EFAD:        RTS                       ; Return 
+Return00EFAD:       RTS                       ; Return
 
-ADDR_00EFAE:        LDA $8F                   
-                    BEQ ADDR_00EFBB           
-                    JSL.L ADDR_0294C1         
-                    LDA.B #$09                
-                    STA.W $1DFC               ; / Play sound effect 
-ADDR_00EFBB:        RTS                       ; Return 
+CallGroundPound:    LDA $8F                   
+                    BEQ Return00EFBB          
+                    JSL.L GroundPound         
+                    LDA.B #$09                ; \ Play sound effect
+                    STA.W $1DFC               ; /
+Return00EFBB:       RTS                       ; Return
 
 ADDR_00EFBC:        LDX.W $1693               
                     CPX.B #$CE                
-                    BCC ADDR_00EFE7           
+                    BCC Return00EFE7          
                     CPX.B #$D2                
-                    BCS ADDR_00EFE7           
+                    BCS Return00EFE7          
                     TXA                       
                     SEC                       
                     SBC.B #$CC                
@@ -10282,7 +11022,7 @@ ADDR_00EFBC:        LDX.W $1693
                     TAX                       
 ADDR_00EFCD:        LDA $13                   
                     AND.B #$03                
-                    BNE ADDR_00EFE7           
+                    BNE Return00EFE7          
                     REP #$20                  ; Accum (16 bit) 
                     LDA $94                   
                     CLC                       
@@ -10293,62 +11033,65 @@ ADDR_00EFCD:        LDA $13
                     ADC.W DATA_00E91F,X       
                     STA $96                   
                     SEP #$20                  ; Accum (8 bit) 
-ADDR_00EFE7:        RTS                       ; Return 
+Return00EFE7:       RTS                       ; Return
 
 ADDR_00EFE8:        JSR.W ADDR_00F44D         
                     BNE ADDR_00EFF0           
                     JMP.W ADDR_00F309         
+
 ADDR_00EFF0:        CPY.B #$11                
-                    BCC ADDR_00F004           
+                    BCC Return00F004          
                     CPY.B #$6E                
-                    BCS ADDR_00F004           
+                    BCS Return00F004          
                     TYA                       
                     LDY.B #$00                
-                    JSL.L ADDR_00F160         
+                    JSL.L ExtSub00F160        
                     PLA                       
                     PLA                       
                     JMP.W ADDR_00EB42         
-ADDR_00F004:        RTS                       ; Return 
+
+Return00F004:       RTS                       ; Return
 
 ADDR_00F005:        TYA                       
                     SEC                       
                     SBC.B #$0E                
                     CMP.B #$02                
-                    BCS ADDR_00F04C           
+                    BCS Return00F04C          
                     EOR.B #$01                
                     CMP $76                   
-                    BNE ADDR_00F04C           
+                    BNE Return00F04C          
                     TAX                       
                     LSR                       
                     LDA $92                   
                     BCC ADDR_00F01B           
                     EOR.B #$0F                
 ADDR_00F01B:        CMP.B #$08                
-                    BCS ADDR_00F04C           
+                    BCS Return00F04C          
                     LDA.W $187A               
                     BEQ ADDR_00F035           
                     LDA.B #$08                
-                    STA.W $1DFC               ; / Play sound effect 
+                    STA.W $1DFC               ; / Play sound effect
                     LDA.B #$80                
                     STA $7D                   
                     STA.W $1406               
                     PLA                       
                     PLA                       
                     JMP.W ADDR_00EE35         
+
 ADDR_00F035:        LDA $7B                   
                     SEC                       
                     SBC.W DATA_00EAB9,X       
                     EOR.W DATA_00EAB9,X       
-                    BMI ADDR_00F04C           
+                    BMI Return00F04C          
                     LDA.W $148F               
                     ORA $73                   
-                    BNE ADDR_00F04C           
+                    BNE Return00F04C          
                     INX                       
                     INX                       
                     STX.W $13E3               
-ADDR_00F04C:        RTS                       ; Return 
+Return00F04C:       RTS                       ; Return
 
-ADDR_00F04D:        PHX                       
+ExtSub00F04D:       PHX                       
                     LDX.B #$19                
 ADDR_00F050:        CMP.L DATA_00EAC1,X       
                     BEQ ADDR_00F05A           
@@ -10356,8 +11099,7 @@ ADDR_00F050:        CMP.L DATA_00EAC1,X
                     BPL ADDR_00F050           
                     CLC                       
 ADDR_00F05A:        PLX                       
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 DATA_00F05C:        .db $01,$05,$01,$02,$01,$01,$00,$00
                     .db $00,$00,$00,$00,$00,$06,$02,$02
@@ -10412,9 +11154,9 @@ ADDR_00F127:        CMP.B #$2F
 ADDR_00F140:        CMP.B #$5D                
                     BCC ADDR_00F14C           
 ADDR_00F144:        CMP.B #$66                
-                    BCC ADDR_00F160           
+                    BCC ExtSub00F160          
                     CMP.B #$6A                
-                    BCS ADDR_00F160           
+                    BCS ExtSub00F160          
 ADDR_00F14C:        XBA                       
                     LDA.W $1931               
                     CMP.B #$01                
@@ -10425,10 +11167,10 @@ ADDR_00F154:        PHB
                     PLB                       
                     JSL.L HurtMario           
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_00F15F:        XBA                       
-ADDR_00F160:        SEC                       
+ExtSub00F160:       SEC                       
                     SBC.B #$11                
                     CMP.B #$1D                
                     BCC ADDR_00F17F           
@@ -10439,12 +11181,12 @@ ADDR_00F160:        SEC
                     PLX                       
                     AND.B #$03                
                     BEQ ADDR_00F176           
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_00F176:        XBA                       
                     SBC.B #$59                
                     CMP.B #$02                
-                    BCS ADDR_00F1F8           
+                    BCS Return00F1F8          
                     ADC.B #$22                
 ADDR_00F17F:        PHX                       
                     PHA                       
@@ -10466,6 +11208,7 @@ ADDR_00F17F:        PHX
                     LDY.W $0DC0               
                     BEQ ADDR_00F1D0           
                     BRA ADDR_00F1CE           
+
 ADDR_00F1AE:        LSR                       
                     LDA $9A                   
                     ROR                       
@@ -10482,8 +11225,9 @@ ADDR_00F1BA:        LSR
                     BNE ADDR_00F1D0           
                     LDA.B #$01                
                     BRA ADDR_00F1D0           
-ADDR_00F1C9:        LDY.W $1490               
-                    BNE ADDR_00F1D0           
+
+ADDR_00F1C9:        LDY.W $1490               ; \ Branch if Mario has star
+                    BNE ADDR_00F1D0           ; /
 ADDR_00F1CE:        LDA.B #$06                
 ADDR_00F1D0:        STA $05                   
                     CMP.B #$05                
@@ -10503,11 +11247,11 @@ ADDR_00F1EC:        PHB
                     LDA.B #$02                
                     PHA                       
                     PLB                       
-                    JSL.L ADDR_028752         
+                    JSL.L ExtSub028752        
                     PLB                       
 ADDR_00F1F6:        PLX                       
                     CLC                       
-ADDR_00F1F8:        RTL                       ; Return 
+Return00F1F8:       RTL                       ; Return
 
 ADDR_00F1F9:        LDA $99                   
                     LSR                       
@@ -10534,6 +11278,7 @@ ADDR_00F1F9:        LDA $99
 ADDR_00F220:        LDA.B #$17                
                     STA $07                   
                     BRA ADDR_00F1EC           
+
 ADDR_00F226:        LDA.W $141B               
                     BNE ADDR_00F236           
                     TXA                       
@@ -10543,14 +11288,14 @@ ADDR_00F230:        EOR.B #$03
                     AND $13                   
                     BNE ADDR_00F220           
 ADDR_00F236:        LDA.B #$2A                
-                    STA.W $1DFC               ; / Play sound effect 
+                    STA.W $1DFC               ; / Play sound effect
                     PHY                       
                     STZ $05                   
                     PHB                       
-                    LDA.B #$02                
-                    PHA                       
+                    LDA.B #$02                ; \ Set data bank = $02
+                    PHA                       ;  |
                     PLB                       
-                    JSL.L ADDR_028752         
+                    JSL.L ExtSub028752        
                     PLB                       
                     PLY                       
                     LDX.B #$07                
@@ -10558,33 +11303,34 @@ ADDR_00F236:        LDA.B #$2A
 ADDR_00F24E:        LSR                       
                     BCS ADDR_00F261           
                     PHA                       
-                    LDA.B #$0D                
-                    STA $9C                   
+                    LDA.B #$0D                ; \ Block to generate = Used block
+                    STA $9C                   ; /
                     LDA.L DATA_00F0F8,X       
                     STA $9A                   
-                    JSL.L ADDR_00BEB0         
+                    JSL.L GenerateTile        
                     PLA                       
 ADDR_00F261:        DEX                       
                     BPL ADDR_00F24E           
                     JMP.W ADDR_00F1F6         
+
 ADDR_00F267:        CPY.B #$2E                
-                    BNE ADDR_00F28B           
+                    BNE Return00F28B          
                     BIT $16                   
-                    BVC ADDR_00F28B           
+                    BVC Return00F28B          
                     LDA.W $148F               
                     ORA.W $187A               
-                    BNE ADDR_00F28B           
+                    BNE Return00F28B          
                     LDA.B #$02                
                     PHA                       
                     PLB                       
-                    JSL.L ADDR_02862F         
+                    JSL.L ExtSub02862F        
                     BMI ADDR_00F289           
-                    LDA.B #$02                
-                    STA $9C                   
-                    JSL.L ADDR_00BEB0         
+                    LDA.B #$02                ; \ Block to generate = #$02
+                    STA $9C                   ; /
+                    JSL.L GenerateTile        
 ADDR_00F289:        PHK                       
                     PLB                       
-ADDR_00F28B:        RTS                       ; Return 
+Return00F28B:       RTS                       ; Return
 
 ADDR_00F28C:        TYA                       
                     SEC                       
@@ -10595,34 +11341,34 @@ ADDR_00F28C:        TYA
                     BEQ ADDR_00F2A8           
                     INC A                     
                     CMP.W $1421               
-                    BEQ ADDR_00F2BF           
+                    BEQ Return00F2BF          
                     LDA.W $1421               
                     CMP.B #$04                
-                    BCS ADDR_00F2BF           
+                    BCS Return00F2BF          
                     LDA.B #$FF                
 ADDR_00F2A8:        INC A                     
                     STA.W $1421               
                     CMP.B #$04                
-                    BNE ADDR_00F2BF           
+                    BNE Return00F2BF          
                     PHX                       
-                    JSL.L ADDR_03C2D9         
+                    JSL.L TriggerInivis1Up    
                     JSR.W ADDR_00F3B2         
                     ORA.W $1F3C,Y             
                     STA.W $1F3C,Y             
                     PLX                       
-ADDR_00F2BF:        RTS                       ; Return 
+Return00F2BF:       RTS                       ; Return
 
 ADDR_00F2C0:        LDA.B #$01                
 ADDR_00F2C2:        CPY.B #$06                
                     BCS ADDR_00F2C9           
                     TSB $8A                   
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00F2C9:        CPY.B #$38                
                     BNE ADDR_00F2EE           
-                    LDA.B #$02                
-                    STA $9C                   
-                    JSL.L ADDR_00BEB0         
+                    LDA.B #$02                ; \ Block to generate = #$02
+                    STA $9C                   ; /
+                    JSL.L GenerateTile        
                     JSR.W ADDR_00FD5A         
                     LDA.W $13CD               
                     BEQ ADDR_00F2E0           
@@ -10632,8 +11378,8 @@ ADDR_00F2E0:        LDA $19
                     LDA.B #$01                
                     STA $19                   
 ADDR_00F2E8:        LDA.B #$05                
-                    STA.W $1DF9               ; / Play sound effect 
-                    RTS                       ; Return 
+                    STA.W $1DF9               ; / Play sound effect
+                    RTS                       ; Return
 
 ADDR_00F2EE:        CPY.B #$06                
                     BEQ ADDR_00F2FC           
@@ -10648,14 +11394,14 @@ ADDR_00F2FC:        CMP.B #$01
 ADDR_00F302:        TSB $8B                   
                     LDA $93                   
                     STA $8C                   
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00F309:        CPY.B #$2F                
                     BCS ADDR_00F311           
                     CPY.B #$2A                
                     BCS ADDR_00F32B           
 ADDR_00F311:        CPY.B #$6E                
-                    BNE ADDR_00F376           
+                    BNE Return00F376          
                     LDA.B #$0F                
                     JSL.L ADDR_00F38A         
                     INC.W $13C5               
@@ -10665,9 +11411,10 @@ ADDR_00F311:        CPY.B #$6E
                     STA.W $1FEE,Y             
                     PLX                       
                     BRA ADDR_00F36B           
-ADDR_00F32B:        BNE ADDR_00F332           
+
+ADDR_00F32B:        BNE ADDR_00F332           ; YOSHI COIN HANDLER
                     LDA.W $14AD               
-                    BEQ ADDR_00F376           
+                    BEQ Return00F376          
 ADDR_00F332:        CPY.B #$2D                
                     BEQ ADDR_00F33F           
                     BCC ADDR_00F367           
@@ -10686,17 +11433,18 @@ ADDR_00F33F:        JSL.L ADDR_00F377
                     STA.W $1F2F,Y             
                     PLX                       
 ADDR_00F358:        LDA.B #$1C                
-                    STA.W $1DF9               ; / Play sound effect 
+                    STA.W $1DF9               ; / Play sound effect
                     LDA.B #$01                
-                    JSL.L ADDR_05B330         
+                    JSL.L ExtSub05B330        
                     LDY.B #$18                
                     BRA ADDR_00F36D           
-ADDR_00F367:        JSL.L ADDR_05B34A         
-ADDR_00F36B:        LDY.B #$01                
-ADDR_00F36D:        STY $9C                   
-                    JSL.L ADDR_00BEB0         
+
+ADDR_00F367:        JSL.L ExtSub05B34A        
+ADDR_00F36B:        LDY.B #$01                ; \ Block to generate = #$01
+ADDR_00F36D:        STY $9C                   ; /
+                    JSL.L GenerateTile        
                     JSR.W ADDR_00FD5A         
-ADDR_00F376:        RTS                       ; Return 
+Return00F376:       RTS                       ; Return
 
 ADDR_00F377:        LDA.W $1420               
                     INC.W $1420               
@@ -10706,9 +11454,10 @@ ADDR_00F377:        LDA.W $1420
                     BCC ADDR_00F386           
                     LDA.B #$0D                
 ADDR_00F386:        BRA ADDR_00F38A           
-ADDR_00F388:        LDA.B #$0D                
+
+ExtSub00F388:       LDA.B #$0D                
 ADDR_00F38A:        PHA                       
-                    JSL.L ADDR_02AD34         
+                    JSL.L ExtSub02AD34        
                     PLA                       
                     STA.W $16E1,Y             
                     LDA $94                   
@@ -10723,7 +11472,7 @@ ADDR_00F38A:        PHA
                     STA.W $16FF,Y             
                     LDA.B #$00                
                     STA.W $1705,Y             
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_00F3B2:        LDA.W $13BF               
                     LSR                       
@@ -10734,13 +11483,14 @@ ADDR_00F3B2:        LDA.W $13BF
                     AND.B #$07                
                     TAX                       
                     LDA.L DATA_05B35B,X       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00F3C4:        CPY.B #$3F                
-                    BNE ADDR_00F376           
+                    BNE Return00F376          
                     LDY $8F                   
                     BEQ ADDR_00F3CF           
                     JMP.W ADDR_00F43F         
+
 ADDR_00F3CF:        PHX                       
                     TAX                       
                     LDA $94                   
@@ -10764,7 +11514,7 @@ ADDR_00F3E9:        XBA
                     SEC                       
                     SBC.B #$37                
                     CMP.B #$02                
-                    BCS ADDR_00F442           
+                    BCS Return00F442          
                     TAY                       
                     LDA $92                   
                     SBC.W DATA_00F3E3,Y       
@@ -10802,17 +11552,17 @@ ADDR_00F430:        INX
                     STY $71                   
                     JSR.W NoButtons           
                     LDA.B #$04                
-                    STA.W $1DF9               ; / Play sound effect 
+                    STA.W $1DF9               ; / Play sound effect
 ADDR_00F43E:        PLX                       
 ADDR_00F43F:        LDY.W $1693               
-ADDR_00F442:        RTS                       ; Return 
+Return00F442:       RTS                       ; Return
 
 ADDR_00F443:        LDA $94                   
                     CLC                       
                     ADC.B #$04                
                     AND.B #$0F                
                     CMP.B #$08                
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00F44D:        INX                       
                     INX                       
@@ -10826,7 +11576,7 @@ ADDR_00F44D:        INX
                     ADC.W DATA_00E89C,X       
                     STA $98                   
 ADDR_00F461:        JSR.W ADDR_00F465         
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00F465:        SEP #$20                  ; Accum (8 bit) 
                     STZ.W $1423               
@@ -10834,6 +11584,7 @@ ADDR_00F465:        SEP #$20                  ; Accum (8 bit)
                     LDA $8E                   
                     BPL ADDR_00F472           
                     JMP.W ADDR_00F4EC         
+
 ADDR_00F472:        BNE ADDR_00F4A6           
                     REP #$20                  ; Accum (16 bit) 
                     LDA $98                   
@@ -10857,10 +11608,11 @@ ADDR_00F472:        BNE ADDR_00F4A6
                     LDA $99                   
                     ADC.L DATA_00BA9C,X       
                     BRA ADDR_00F4CD           
+
 ADDR_00F4A0:        PLX                       
                     LDY.B #$25                
 ADDR_00F4A3:        LDA.B #$00                
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00F4A6:        LDA $9B                   
                     CMP.B #$02                
@@ -10890,14 +11642,15 @@ ADDR_00F4CD:        STA $01
                     INC $02                   
                     PLX                       
                     LDA [$00]                 
-                    JSL.L ADDR_00F545         
+                    JSL.L ExtSub00F545        
                     LDY.W $1693               
                     CMP.B #$00                
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00F4E7:        PLX                       
                     LDY.B #$25                
                     BRA ADDR_00F4A3           
+
 ADDR_00F4EC:        ASL                       
                     BNE ADDR_00F51B           
                     REP #$20                  ; Accum (16 bit) 
@@ -10922,6 +11675,7 @@ ADDR_00F4EC:        ASL
                     LDA $99                   
                     ADC.L DATA_00BAAC,X       
                     BRA ADDR_00F4CD           
+
 ADDR_00F51B:        LDA $9B                   
                     CMP.B #$02                
                     BCS ADDR_00F4E7           
@@ -10943,19 +11697,20 @@ ADDR_00F51B:        LDA $9B
                     LDA $9B                   
                     ADC.L DATA_00BACA,X       
                     JMP.W ADDR_00F4CD         
-ADDR_00F545:        TAY                       
+
+ExtSub00F545:       TAY                       
                     BNE ADDR_00F577           
-                    LDY.W $1693               ; Load MAP16 tile number 
-                    CPY.B #$29                ; \ If block isn't "Invisible POW ? block", 
-                    BNE PSwitchNotInvQBlk     ; / branch to PSwitchNotInvQBlk 
+                    LDY.W $1693               ; Load MAP16 tile number
+                    CPY.B #$29                ; \ If block isn't "Invisible POW ? block",
+                    BNE PSwitchNotInvQBlk     ; / branch to PSwitchNotInvQBlk
                     LDY.W $14AD               
-                    BEQ ADDR_00F594           
+                    BEQ Return00F594          
                     LDA.B #$24                
                     STA.W $1693               
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-PSwitchNotInvQBlk:  CPY.B #$2B                ; \ If block is "Coin", 
-                    BEQ PSwitchCoinBrown      ; / branch to PSwitchCoinBrown 
+PSwitchNotInvQBlk:  CPY.B #$2B                ; \ If block is "Coin",
+                    BEQ PSwitchCoinBrown      ; / branch to PSwitchCoinBrown
                     TYA                       
                     SEC                       
                     SBC.B #$EC                
@@ -10964,27 +11719,28 @@ PSwitchNotInvQBlk:  CPY.B #$2B                ; \ If block is "Coin",
                     INC A                     
                     STA.W $1423               
                     BRA ADDR_00F571           
+
 PSwitchCoinBrown:   LDY.W $14AD               
-                    BEQ ADDR_00F594           
+                    BEQ Return00F594          
 ADDR_00F571:        LDA.B #$32                
                     STA.W $1693               
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_00F577:        LDY.W $1693               
                     CPY.B #$32                
                     BNE ADDR_00F584           
                     LDY.W $14AD               
                     BNE ADDR_00F58D           
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_00F584:        CPY.B #$2F                
-                    BNE ADDR_00F594           
+                    BNE Return00F594          
                     LDY.W $14AE               
-                    BEQ ADDR_00F594           
+                    BEQ Return00F594          
 ADDR_00F58D:        LDY.B #$2B                
                     STY.W $1693               
 ADDR_00F592:        LDA.B #$00                
-ADDR_00F594:        RTL                       ; Return 
+Return00F594:       RTL                       ; Return
 
 ADDR_00F595:        REP #$20                  ; Accum (16 bit) 
                     LDA.W #$FF80              
@@ -10996,19 +11752,20 @@ ADDR_00F595:        REP #$20                  ; Accum (16 bit)
 ADDR_00F5A3:        SEP #$20                  ; Accum (8 bit) 
                     LDA $81                   
                     DEC A                     
-                    BMI ADDR_00F5B6           
+                    BMI Return00F5B6          
                     LDA.W $1B95               
                     BEQ ADDR_00F5B2           
                     JMP.W ADDR_00C95B         
-ADDR_00F5B2:        JSL.L ADDR_00F60A         
-ADDR_00F5B6:        RTS                       ; Return 
 
-HurtMario:          LDA $71                   
-                    BNE ADDR_00F628           
-                    LDA.W $1497               
-                    ORA.W $1490               
-                    ORA.W $1493               
-                    BNE ADDR_00F628           
+ADDR_00F5B2:        JSL.L ADDR_00F60A         
+Return00F5B6:       RTS                       ; Return
+
+HurtMario:          LDA $71                   ; \ Return if animation sequence activated
+                    BNE Return00F628          ; /
+                    LDA.W $1497               ; \ If flashing...
+                    ORA.W $1490               ;  | ...or have star...
+                    ORA.W $1493               ;  | ...or level ending...
+                    BNE Return00F628          ; / ...return
                     STZ.W $18E3               
                     LDA.W $13E3               
                     BEQ ADDR_00F5D5           
@@ -11017,49 +11774,51 @@ HurtMario:          LDA $71
                     PLB                       
                     JSR.W ADDR_00EB42         
                     PLB                       
-ADDR_00F5D5:        LDA $19                   
-                    BEQ KillMario             
-                    CMP.B #$02                
-                    BNE ADDR_00F5F3           
-                    LDA.W $1407               
-                    BEQ ADDR_00F5F3           
-                    LDY.B #$0F                
-                    STY.W $1DF9               ; / Play sound effect 
-                    LDA.B #$01                
-                    STA.W $140D               
-                    LDA.B #$30                
-                    STA.W $1497               
+ADDR_00F5D5:        LDA $19                   ; \ If Mario is small, kill him
+                    BEQ KillMario             ; /
+                    CMP.B #$02                ; \ Branch if not Caped Mario
+                    BNE PowerDown             ; /
+                    LDA.W $1407               ; \ Branch if not soaring
+                    BEQ PowerDown             ; /
+CancelSoaring:      LDY.B #$0F                ; \ Break Mario out of soaring
+                    STY.W $1DF9               ;  | (Play sound effect)
+                    LDA.B #$01                ;  | (Set spin jump flag)
+                    STA.W $140D               ;  |
+                    LDA.B #$30                ;  | (Set flashing timer)
+                    STA.W $1497               ; /
                     BRA ADDR_00F622           
-ADDR_00F5F3:        LDY.B #$04                
-                    STY.W $1DF9               ; / Play sound effect 
-                    JSL.L ADDR_028008         
-                    LDA.B #$01                
-                    STA $71                   
-                    STZ $19                   
+
+PowerDown:          LDY.B #$04                ; \ Play sound effect
+                    STY.W $1DF9               ; /
+                    JSL.L ExtSub028008        
+                    LDA.B #$01                ; \ Set power down animation
+                    STA $71                   ; /
+                    STZ $19                   ; Mario status = Small
                     LDA.B #$2F                
                     BRA ADDR_00F61D           
-KillMario:          LDA.B #$90                
-                    STA $7D                   
-ADDR_00F60A:        LDA.B #$09                
-                    STA.W $1DFB               ; / Play sound effect 
+
+KillMario:          LDA.B #$90                ; \ Mario Y speed = #$90
+                    STA $7D                   ; /
+ADDR_00F60A:        LDA.B #$09                ; \
+                    STA.W $1DFB               ; / Change music
                     LDA.B #$FF                
                     STA.W $0DDA               
-                    LDA.B #$09                
-                    STA $71                   
-                    STZ.W $140D               
+                    LDA.B #$09                ; \ Animation sequence = Kill Mario
+                    STA $71                   ; /
+                    STZ.W $140D               ; Spin jump flag = 0
                     LDA.B #$30                
-ADDR_00F61D:        STA.W $1496               
-                    STA $9D                   
-ADDR_00F622:        STZ.W $1407               
+ADDR_00F61D:        STA.W $1496               ; Set hurt frame timer
+                    STA $9D                   ; set lock sprite timer
+ADDR_00F622:        STZ.W $1407               ; Cape status = 0
                     STZ.W $188A               
-ADDR_00F628:        RTL                       ; Return 
+Return00F628:       RTL                       ; Return
 
 ADDR_00F629:        JSL.L KillMario           
-NoButtons:          STZ $15                   ; Zero RAM mirrors for controller Input 
+NoButtons:          STZ $15                   ; Zero RAM mirrors for controller Input
                     STZ $16                   
                     STZ $17                   
                     STZ $18                   
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00F636:        REP #$20                  ; Accum (16 bit) 
                     LDX.B #$00                
@@ -11110,8 +11869,7 @@ ADDR_00F662:        AND.W #$F700
                     SEP #$20                  ; Accum (8 bit) 
                     LDA.B #$0A                
                     STA.W $0D84               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_00F69F:        .db $64,$00,$7C,$00
 
@@ -11155,6 +11913,7 @@ ADDR_00F6DB:        PHB
                     LSR                       
                     BCC ADDR_00F70D           
                     JMP.W ADDR_00F75C         
+
 ADDR_00F70D:        LDA.W #$00C0              
                     JSR.W ADDR_00F7F4         
                     LDY.W $1411               
@@ -11192,6 +11951,7 @@ ADDR_00F754:        CMP $1A
                     BPL ADDR_00F75A           
                     STA $1A                   
 ADDR_00F75A:        BRA ADDR_00F79D           
+
 ADDR_00F75C:        LDA $5F                   
                     DEC A                     
                     XBA                       
@@ -11267,11 +12027,11 @@ ADDR_00F7EA:        LDA $1A,X
                     DEX                       
                     BPL ADDR_00F7EA           
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_00F7F4:        LDX.W $1412               
                     BNE ADDR_00F7FA           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00F7FA:        STA $04                   ; Accum (16 bit) 
                     LDY.B #$00                
@@ -11296,14 +12056,15 @@ ADDR_00F81F:        LDA $02
                     LDX.B #$00                
                     STX.W $1404               
                     BRA ADDR_00F883           
+
 ADDR_00F82A:        SEP #$20                  ; Accum (8 bit) 
                     LDA.W $13E3               
                     CMP.B #$06                
                     BCS ADDR_00F845           
-                    LDA.W $1410               
-                    LSR                       
+                    LDA.W $1410               ; \ If winged Yoshi...
+                    LSR                       ;  |
                     ORA.W $149F               
-                    ORA $74                   
+                    ORA $74                   ;  | ...or climbing
                     ORA.W $13F3               
                     ORA.W $18C2               
                     ORA.W $1406               
@@ -11312,9 +12073,9 @@ ADDR_00F845:        TAX
                     BNE ADDR_00F869           
                     LDX.W $187A               
                     BEQ ADDR_00F856           
-                    LDX.W $141E               
-                    CPX.B #$02                
-                    BCS ADDR_00F869           
+                    LDX.W $141E               ; \ Branch if 141E >= #$02
+                    CPX.B #$02                ;  |
+                    BCS ADDR_00F869           ; /
 ADDR_00F856:        LDX $75                   
                     BEQ ADDR_00F85E           
                     LDX $72                   
@@ -11329,10 +12090,11 @@ ADDR_00F869:        STX.W $13F1
                     BNE ADDR_00F881           
                     LDY.B #$04                
                     BRA ADDR_00F881           
+
 ADDR_00F875:        LDX.W $1404               
                     BNE ADDR_00F881           
                     LDX $72                   
-                    BNE ADDR_00F8AA           
+                    BNE Return00F8AA          
                     INC.W $1404               
 ADDR_00F881:        LDA $02                   
 ADDR_00F883:        SEC                       
@@ -11350,13 +12112,13 @@ ADDR_00F892:        CLC
 ADDR_00F89D:        STA $1C                   
                     LDA $04                   
                     CMP $1C                   
-                    BPL ADDR_00F8AA           
+                    BPL Return00F8AA          
                     STA $1C                   
                     STZ.W $13F1               
-ADDR_00F8AA:        RTS                       ; Return 
+Return00F8AA:       RTS                       ; Return
 
 ADDR_00F8AB:        LDY.W $13FD               
-                    BNE ADDR_00F8DE           
+                    BNE Return00F8DE          
                     SEP #$20                  ; Accum (8 bit) 
                     LDX.W $13FF               
                     REP #$20                  ; Accum (16 bit) 
@@ -11367,18 +12129,17 @@ ADDR_00F8AB:        LDY.W $13FD
                     LDY.B #$0A                
 ADDR_00F8C3:        LDA.W DATA_00F6BF,Y       
                     EOR $02                   
-                    BPL ADDR_00F8DE           
+                    BPL Return00F8DE          
                     LDA.W DATA_00F6BF,X       
                     EOR $02                   
-                    BPL ADDR_00F8DE           
+                    BPL Return00F8DE          
                     LDA $02                   
                     CLC                       
                     ADC.W DATA_00F6CF,Y       
-                    BEQ ADDR_00F8DE           
+                    BEQ Return00F8DE          
                     STA $02                   
                     STY.W $1400               
-ADDR_00F8DE:        RTS                       ; Return 
-
+Return00F8DE:       RTS                       ; Return
 
 DATA_00F8DF:        .db $0C,$0C,$08,$00,$20,$04,$0A,$0D
                     .db $0D
@@ -11405,12 +12166,12 @@ ADDR_00F8F2:        JSR.W ADDR_00EAA6
                     SEP #$20                  ; Accum (8 bit) 
                     STZ $7D                   
                     LDA.B #$01                
-                    STA.W $1DF9               ; / Play sound effect 
+                    STA.W $1DF9               ; / Play sound effect
 ADDR_00F91E:        SEP #$20                  ; Accum (8 bit) 
                     PLX                       
                     LDA.W DATA_00F8E8,X       
                     CMP.B #$2A                
-                    BNE ADDR_00F94D           
+                    BNE Return00F94D          
                     REP #$20                  ; Accum (16 bit) 
                     LDY.B #$00                
                     LDA.W $1617               
@@ -11428,16 +12189,19 @@ ADDR_00F91E:        SEP #$20                  ; Accum (8 bit)
                     ADC.W #$000F              
                     CMP $00                   
 ADDR_00F94A:        JMP.W ADDR_00E9C8         
-ADDR_00F94D:        RTS                       ; Return 
+
+Return00F94D:       RTS                       ; Return
 
 ADDR_00F94E:        LDY.B #$00                
                     LDA $7D                   
                     BPL ADDR_00F957           
                     JMP.W ADDR_00F997         
+
 ADDR_00F957:        JSR.W ADDR_00F9A8         
                     BCS ADDR_00F962           
                     JSR.W ADDR_00EE1D         
                     JMP.W ADDR_00F997         
+
 ADDR_00F962:        LDA $72                   
                     BEQ ADDR_00F983           
                     REP #$20                  ; Accum (16 bit) 
@@ -11469,6 +12233,7 @@ ADDR_00F997:        REP #$20                  ; Accum (16 bit)
                     BMI ADDR_00F9A5           
                     JSR.W ADDR_00F629         
 ADDR_00F9A5:        JMP.W ADDR_00E98C         
+
 ADDR_00F9A8:        REP #$20                  ; Accum (16 bit) 
                     LDA $94                   
                     CLC                       
@@ -11483,9 +12248,9 @@ ADDR_00F9BC:        SEP #$20                  ; Accum (8 bit)
                     LDA.B #$01                
                     PHA                       
                     PLB                       
-                    JSL.L ADDR_01CC9D         
+                    JSL.L ExtSub01CC9D        
                     PLB                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00F9C9:        LDA $36                   ; Accum (16 bit) 
                     PHA                       
@@ -11507,20 +12272,20 @@ ADDR_00F9C9:        LDA $36                   ; Accum (16 bit)
                     SBC.W #$0020              
                     STA $96                   
                     SEP #$20                  ; Accum (8 bit) 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-
-DATA_00F9F5:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+Empty00F9F5:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-                    .db $FF,$FF,$FF,$A2,$0B
+                    .db $FF,$FF,$FF
 
-ADDR_00FA12:        STZ.W $14C8,X             
-                    DEX                       
-                    BPL ADDR_00FA12           
-                    RTL                       ; Return 
+                    LDX.B #$0B                ; \ Unreachable
+ADDR_00FA12:        STZ.W $14C8,X             ;  | Clear out sprite status table
+                    DEX                       ;  |
+                    BPL ADDR_00FA12           ;  |
+                    RTL                       ; /
 
-ADDR_00FA19:        LDY.B #$32                
+ExtSub00FA19:       LDY.B #$32                
                     STY $05                   
                     LDY.B #$E6                
                     STY $06                   
@@ -11545,79 +12310,80 @@ ADDR_00FA37:        LDA $0C
                     AND.B #$0F                
                     ORA $01                   
                     TAY                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-FlatPalaceSwitch:   LDA.B #$20                ; \ Set "Time to shake ground" to x20 
-                    STA.W $1887               ; /  
-                    LDY.B #$02                ; \  
-                    LDA.B #$60                ;  |Set sprite x02 to x60 (Flat palace switch) 
-                    STA.W $009E,Y             ; /  
-                    LDA.B #$08                ; \ Set sprite's status to x08 
-                    STA.W $14C8,Y             ; /  
-                    LDA $9A                   ; \  
-                    AND.B #$F0                ;  |Set sprite X (low) to $9A & 0xF0 
-                    STA.W $00E4,Y             ; /  
-                    LDA $9B                   ; \ Set sprite X (high) to $9B 
-                    STA.W $14E0,Y             ; /  
-                    LDA $98                   ; \  
-                    AND.B #$F0                ;  | 
-                    CLC                       ;  |Set sprite Y (low) to ($98 & 0xF0) + 0x10 
-                    ADC.B #$10                ;  | 
-                    STA.W $00D8,Y             ; /  
-                    LDA $99                   ; \  
-                    ADC.B #$00                ;  |Set sprite Y (high) to $99 + carry 
-                    STA.W $14D4,Y             ; / (Carry carried over from previous addition) 
+FlatPalaceSwitch:   LDA.B #$20                ; \ Set "Time to shake ground" to x20
+                    STA.W $1887               ;  /
+                    LDY.B #$02                ; \
+                    LDA.B #$60                ;  |Set sprite x02 to x60 (Flat palace switch)
+                    STA.W $009E,Y             ; /
+                    LDA.B #$08                ; \ Set sprite's status to x08
+                    STA.W $14C8,Y             ; /
+                    LDA $9A                   ; \
+                    AND.B #$F0                ;  |Set sprite X (low) to $9A & 0xF0
+                    STA.W $00E4,Y             ; /
+                    LDA $9B                   ; \ Set sprite X (high) to $9B
+                    STA.W $14E0,Y             ; /
+                    LDA $98                   ; \
+                    AND.B #$F0                ;  |
+                    CLC                       ;  |Set sprite Y (low) to ($98 & 0xF0) + 0x10
+                    ADC.B #$10                ;  |
+                    STA.W $00D8,Y             ; /
+                    LDA $99                   ; \
+                    ADC.B #$00                ;  |Set sprite Y (high) to $99 + carry
+                    STA.W $14D4,Y             ; / (Carry carried over from previous addition)
                     PHX                       
                     TYX                       
-                    JSL.L ADDR_07F7D2         
+                    JSL.L InitSpriteTables    
                     PLX                       
-                    LDA.B #$5F                ; \ Set sprite's "Spin Jump Death Frame Counter" to x5F 
-                    STA.W $1540,Y             ; /  
-                    RTS                       ; Return 
+                    LDA.B #$5F                ; \ Set sprite's "Spin Jump Death Frame Counter" to x5F
+                    STA.W $1540,Y             ; /
+                    RTS                       ; Return
 
-ADDR_00FA80:        STZ.W $13F3               
+TriggerGoalTape:    STZ.W $13F3               
                     STZ.W $1891               
-                    STZ.W $18C0               
+                    STZ.W $18C0               ;  Don't respawn sprites
                     STZ.W $18B9               
                     STZ.W $18DD               
-                    LDY.B #$0B                
-ADDR_00FA91:        LDA.W $14C8,Y             
-                    CMP.B #$08                
-                    BCC ADDR_00FAD1           
-                    CMP.B #$0B                
-                    BNE ADDR_00FAA3           
-                    PHX                       
-                    JSR.W ADDR_00FB00         
-                    PLX                       
-                    BRA ADDR_00FAD1           
-ADDR_00FAA3:        LDA.W $009E,Y             
-                    CMP.B #$7B                
-                    BEQ ADDR_00FAB2           
-                    LDA.W $15A0,Y             
-                    ORA.W $186C,Y             
-                    BNE ADDR_00FAC5           
-ADDR_00FAB2:        LDA.W $1686,Y             
-                    AND.B #$20                
-                    BNE ADDR_00FAC5           
-                    LDA.B #$10                
-                    STA.W $1540,Y             
-                    LDA.B #$06                
-                    STA.W $14C8,Y             
-                    BRA ADDR_00FAD1           
-ADDR_00FAC5:        LDA.W $190F,Y             
-                    AND.B #$02                
-                    BNE ADDR_00FAD1           
-                    LDA.B #$00                
-                    STA.W $14C8,Y             
-ADDR_00FAD1:        DEY                       
-                    BPL ADDR_00FA91           
-                    LDY.B #$07                
-                    LDA.B #$00                
-ADDR_00FAD8:        STA.W $170B,Y             
-                    DEY                       
-                    BPL ADDR_00FAD8           
-                    RTL                       ; Return 
+                    LDY.B #$0B                ; Loop over sprites:
+LvlEndSprLoopStrt:  LDA.W $14C8,Y             ; \ If sprite status < 8,
+                    CMP.B #$08                ;  | skip the current sprite
+                    BCC LvlEndNextSprite      ; /
+                    CMP.B #$0B                ; \ If Mario carries a sprite past the goal,
+                    BNE ADDR_00FAA3           ;  |
+                    PHX                       ;  |
+                    JSR.W LvlEndPowerUp       ;  | he gets a powerup
+                    PLX                       ;  |
+                    BRA LvlEndNextSprite      ; /
 
+ADDR_00FAA3:        LDA.W $009E,Y             ; \ Branch if goal tape
+                    CMP.B #$7B                ;  |
+                    BEQ ADDR_00FAB2           ; /
+                    LDA.W $15A0,Y             ; \ If sprite on screen...
+                    ORA.W $186C,Y             ;  |
+                    BNE ADDR_00FAC5           ;  |
+ADDR_00FAB2:        LDA.W $1686,Y             ;  | ...and "don't turn into coin" not set,
+                    AND.B #$20                ;  |
+                    BNE ADDR_00FAC5           ;  |
+                    LDA.B #$10                ;  | Set coin animation timer = #$10
+                    STA.W $1540,Y             ;  |
+                    LDA.B #$06                ;  | Sprite status = Level end, turn to coins
+                    STA.W $14C8,Y             ;  |
+                    BRA LvlEndNextSprite      ; /
+
+ADDR_00FAC5:        LDA.W $190F,Y             ; \ If "don't erase" not set,
+                    AND.B #$02                ;  |
+                    BNE LvlEndNextSprite      ;  |
+                    LDA.B #$00                ;  | Erase sprite
+                    STA.W $14C8,Y             ; /
+LvlEndNextSprite:   DEY                       ; \ Goto next sprite
+                    BPL LvlEndSprLoopStrt     ; /
+                    LDY.B #$07                ; \
+                    LDA.B #$00                ;  | Clear out all extended sprites
+ADDR_00FAD8:        STA.W $170B,Y             ;  |
+                    DEY                       ;  |
+                    BPL ADDR_00FAD8           ; /
+                    RTL                       ; Return
 
 DATA_00FADF:        .db $74,$74,$77,$75,$76,$E0,$F0,$74
                     .db $74,$77,$75,$76,$E0,$F1,$F0,$F0
@@ -11626,22 +12392,22 @@ DATA_00FADF:        .db $74,$74,$77,$75,$76,$E0,$F0,$74
 
 DATA_00FAFB:        .db $FF,$74,$75,$76,$77
 
-ADDR_00FB00:        LDX $19                   
-                    LDA.W $1490               
-                    BEQ ADDR_00FB09           
-                    LDX.B #$04                
-ADDR_00FB09:        LDA.W $187A               
-                    BEQ ADDR_00FB10           
-                    LDX.B #$05                
-ADDR_00FB10:        LDA.W $009E,Y             
-                    CMP.B #$2F                
-                    BEQ ADDR_00FB2D           
-                    CMP.B #$3E                
-                    BEQ ADDR_00FB2D           
-                    CMP.B #$80                
-                    BEQ ADDR_00FB28           
-                    CMP.B #$2D                
-                    BNE ADDR_00FB32           
+LvlEndPowerUp:      LDX $19                   ; X = Mario's power up status
+                    LDA.W $1490               ; \ If Mario has star, X = #$04.  However this never happens as $1490 is cleared earlier
+                    BEQ ADDR_00FB09           ;  | Otherwise Mario could get a star from carrying a sprite past the goal.
+                    LDX.B #$04                ;  / Unreachable instruction
+ADDR_00FB09:        LDA.W $187A               ; \ If Mario on Yoshi, X = #$05
+                    BEQ ADDR_00FB10           ;  |
+                    LDX.B #$05                ; /
+ADDR_00FB10:        LDA.W $009E,Y             ; \ If Spring Board, X += #$07
+                    CMP.B #$2F                ;  |
+                    BEQ ADDR_00FB2D           ; /
+                    CMP.B #$3E                ; \ If P Switch, X += #$07
+                    BEQ ADDR_00FB2D           ; /
+                    CMP.B #$80                ; \ If Key, X += #$0E
+                    BEQ ADDR_00FB28           ; /
+                    CMP.B #$2D                ; \ If Baby Yoshi, X += #$15
+                    BNE ADDR_00FB32           ; /
                     TXA                       
                     CLC                       
                     ADC.B #$07                
@@ -11661,25 +12427,25 @@ ADDR_00FB32:        LDA.L DATA_00FADF,X
                     LDA.B #$78                
 ADDR_00FB41:        STZ $0F                   
                     CMP.B #$E0                
-                    BCC ADDR_00FB55           
+                    BCC LvlEndStoreSpr        
                     PHA                       
                     AND.B #$0F                
                     STA $0F                   
                     PLA                       
                     CMP.B #$F0                
                     LDA.B #$78                
-                    BCS ADDR_00FB55           
+                    BCS LvlEndStoreSpr        
                     LDA.B #$78                
-ADDR_00FB55:        STA.W $009E,Y             
+LvlEndStoreSpr:     STA.W $009E,Y             
                     CMP.B #$76                
                     BNE ADDR_00FB5F           
                     INC.W $13CB               
 ADDR_00FB5F:        TYX                       
-                    JSL.L ADDR_07F7D2         
+                    JSL.L InitSpriteTables    
                     LDA $0F                   
                     STA.W $1594,Y             
-                    LDA.B #$0C                
-                    STA.W $14C8,Y             
+                    LDA.B #$0C                ; \ Sprite status = Goal tape power up
+                    STA.W $14C8,Y             ; /
                     LDA.B #$D0                
                     STA.W $00AA,Y             
                     LDA.B #$05                
@@ -11687,13 +12453,13 @@ ADDR_00FB5F:        TYX
                     LDA.B #$20                
                     STA.W $154C,Y             
                     LDA.B #$0C                
-                    STA.W $1DF9               ; / Play sound effect 
+                    STA.W $1DF9               ; / Play sound effect
                     LDX.B #$03                
 ADDR_00FB84:        LDA.W $17C0,X             
                     BEQ ADDR_00FB8D           
                     DEX                       
                     BPL ADDR_00FB84           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00FB8D:        LDA.B #$01                
                     STA.W $17C0,X             
@@ -11703,19 +12469,18 @@ ADDR_00FB8D:        LDA.B #$01
                     STA.W $17C8,X             
                     LDA.B #$1B                
                     STA.W $17CC,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
+LvlEndSmokeTiles:   .db $66,$64,$62,$60,$E8,$EA,$EC,$EA
 
-DATA_00FBA4:        .db $66,$64,$62,$60,$E8,$EA,$EC,$EA
-
-ADDR_00FBAC:        PHB                       
+LvlEndSprCoins:     PHB                       
                     PHK                       
                     PLB                       
-                    JSR.W ADDR_00FBB4         
+                    JSR.W LvlEndSprCoinsRt    
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_00FBB4:        LDY.B #$00                
+LvlEndSprCoinsRt:   LDY.B #$00                
                     LDA.W $17BD               
                     BPL ADDR_00FBBC           
                     DEY                       
@@ -11732,42 +12497,42 @@ ADDR_00FBBC:        CLC
                     LDA.B #$D0                
                     STA $AA,X                 
 ADDR_00FBD5:        PHX                       
-                    LDA.B #$04                
-                    STA.W $15F6,X             
-                    JSL.L GenericSprGfxRt     
+                    LDA.B #$04                ; \ Use Palette A
+                    STA.W $15F6,X             ; /
+                    JSL.L GenericSprGfxRt2    
                     LDA.W $1540,X             
                     LSR                       
                     LSR                       
-                    LDY.W $15EA,X             
+                    LDY.W $15EA,X             ; Y = Index into sprite OAM
                     TAX                       
-                    LDA.W DATA_00FBA4,X       
+                    LDA.W LvlEndSmokeTiles,X  
                     STA.W $0302,Y             
                     PLX                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00FBF0:        INC.W $1570,X             
-                    JSL.L ADDR_01801A         
+                    JSL.L UpdateYPosNoGrvty   
                     INC $AA,X                 
                     INC $AA,X                 
                     LDA $AA,X                 
                     CMP.B #$20                
                     BMI ADDR_00FC1E           
-                    JSL.L ADDR_05B34A         
+                    JSL.L ExtSub05B34A        
                     LDA.W $18DD               
                     CMP.B #$0D                
                     BCC ADDR_00FC0E           
-                    LDA.B #$0D                
+                    LDA.B #$0D                ;  Bug: Sprites glitch if too many near goal tape.  See goalsprites.asm
 ADDR_00FC0E:        JSL.L GivePoints          
                     LDA.W $18DD               
                     CLC                       
                     ADC.B #$02                
                     STA.W $18DD               
                     STZ.W $14C8,X             
-ADDR_00FC1E:        JSL.L ADDR_01C641         
-                    RTS                       ; Return 
+ADDR_00FC1E:        JSL.L CoinSprGfx          
+                    RTS                       ; Return
 
-                    LDY.B #$0B                
-ADDR_00FC25:        LDA.W $14C8,Y             
+                    LDY.B #$0B                ;  \ Unreachable instructions
+ADDR_00FC25:        LDA.W $14C8,Y             ; / Status = Carried
                     CMP.B #$08                
                     BNE ADDR_00FC73           
                     LDA.W $009E,Y             
@@ -11775,13 +12540,13 @@ ADDR_00FC25:        LDA.W $14C8,Y
                     BNE ADDR_00FC73           
                     LDA.B #$01                
                     STA.W $0DC1               
-                    STZ.W $141E               
+                    STZ.W $141E               ; No Yoshi wings
                     LDA.W $15F6,Y             
                     AND.B #$F1                
                     ORA.B #$0A                
                     STA.W $15F6,Y             
                     LDA.W $187A               
-                    BNE ADDR_00FC72           
+                    BNE Return00FC72          
                     LDA $1A                   
                     SEC                       
                     SBC.B #$10                
@@ -11799,15 +12564,15 @@ ADDR_00FC25:        LDA.W $14C8,Y
                     STA.W $157C,Y             
                     LDA.B #$10                
                     STA.W $00B6,Y             
-ADDR_00FC72:        RTL                       ; Return 
+Return00FC72:       RTL                       ; Return
 
 ADDR_00FC73:        DEY                       
                     BPL ADDR_00FC25           
                     STZ.W $0DC1               
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_00FC7A:        LDA.B #$02                
-                    STA.W $1DFA               ; / Play sound effect 
+ExtSub00FC7A:       LDA.B #$02                
+                    STA.W $1DFA               ; / Play sound effect
                     LDX.B #$00                
                     LDA.W $1B94               
                     BNE ADDR_00FC98           
@@ -11815,32 +12580,32 @@ ADDR_00FC7A:        LDA.B #$02
                     LDA.W $1692               
                     CMP.B #$0A                
                     BEQ ADDR_00FC98           
-                    JSL.L ADDR_02A9E4         
-                    TYX                       
-                    BPL ADDR_00FC98           
-                    LDX.B #$03                
-ADDR_00FC98:        LDA.B #$08                
-                    STA.W $14C8,X             
-                    LDA.B #$35                
-                    STA $9E,X                 
-                    LDA $94                   
-                    STA $E4,X                 
-                    LDA $95                   
-                    STA.W $14E0,X             
-                    LDA $96                   
-                    SEC                       
-                    SBC.B #$10                
-                    STA $96                   
-                    STA $D8,X                 
-                    LDA $97                   
-                    SBC.B #$00                
-                    STA $97                   
-                    STA.W $14D4,X             
-                    JSL.L ADDR_07F7D2         
+                    JSL.L FindFreeSprSlot     ; \ X = First free sprite slot, #$03 if none free
+                    TYX                       ;  |
+                    BPL ADDR_00FC98           ;  |
+                    LDX.B #$03                ; /
+ADDR_00FC98:        LDA.B #$08                ; \ Status = Normal
+                    STA.W $14C8,X             ; /
+                    LDA.B #$35                ; \ Sprite = Yoshi
+                    STA $9E,X                 ; /
+                    LDA $94                   ; \ Yoshi X position = Mario X position
+                    STA $E4,X                 ;  |
+                    LDA $95                   ;  |
+                    STA.W $14E0,X             ; /
+                    LDA $96                   ; \ Yoshi's Y position = Mario Y position - #$10
+                    SEC                       ;  | Mario Y position = Mario Y position - #$10
+                    SBC.B #$10                ;  |
+                    STA $96                   ;  |
+                    STA $D8,X                 ;  |
+                    LDA $97                   ;  |
+                    SBC.B #$00                ;  |
+                    STA $97                   ;  |
+                    STA.W $14D4,X             ; /
+                    JSL.L InitSpriteTables    ; Reset sprite tables
                     LDA.B #$04                
                     STA.W $1FE2,X             
-                    LDA.W $13C7               
-                    STA.W $15F6,X             
+                    LDA.W $13C7               ; \ Set Yoshi palette
+                    STA.W $15F6,X             ; /
                     LDA.W $1B95               
                     BEQ ADDR_00FCD5           
                     LDA.B #$06                
@@ -11854,15 +12619,15 @@ ADDR_00FCD5:        INC.W $187A
                     INX                       
                     STX.W $18DF               
                     STX.W $18E2               
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_00FCEC:        LDX.B #$0B                
 ADDR_00FCEE:        STZ.W $14C8,X             
                     DEX                       
                     BPL ADDR_00FCEE           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_00FCF5:        LDA.B #$A0                
+ExtSub00FCF5:       LDA.B #$A0                
                     STA $E4,X                 
                     LDA.B #$00                
                     STA.W $14E0,X             
@@ -11870,7 +12635,7 @@ ADDR_00FCF5:        LDA.B #$A0
                     STA $D8,X                 
                     LDA.B #$00                
                     STA.W $14D4,X             
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_00FD08:        LDY.B #$3F                
                     LDA $15                   
@@ -11880,19 +12645,18 @@ ADDR_00FD08:        LDY.B #$3F
 ADDR_00FD12:        TYA                       
                     AND $14                   
                     ORA $9D                   
-                    BNE ADDR_00FD23           
-                    LDX.B #$07                
-ADDR_00FD1B:        LDA.W $170B,X             
-                    BEQ ADDR_00FD26           
-                    DEX                       
-                    BPL ADDR_00FD1B           
-ADDR_00FD23:        RTS                       ; Return 
-
+                    BNE Return00FD23          
+                    LDX.B #$07                ; \ Find a free extended sprite slot
+ADDR_00FD1B:        LDA.W $170B,X             ;  |
+                    BEQ ADDR_00FD26           ;  |
+                    DEX                       ;  |
+                    BPL ADDR_00FD1B           ;  |
+Return00FD23:       RTS                       ; / Return if no free slots
 
 DATA_00FD24:        .db $02,$0A
 
-ADDR_00FD26:        LDA.B #$12                
-                    STA.W $170B,X             
+ADDR_00FD26:        LDA.B #$12                ; \ Extended sprite = Water buble
+                    STA.W $170B,X             ; /
                     LDY $76                   
                     LDA $94                   
                     CLC                       
@@ -11914,17 +12678,17 @@ ADDR_00FD49:        CLC
                     ADC.B #$00                
                     STA.W $1729,X             
                     STZ.W $176F,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_00FD5A:        LDA $7F                   
                     ORA $81                   
-                    BNE ADDR_00FD6A           
+                    BNE Return00FD6A          
                     LDY.B #$03                
 ADDR_00FD62:        LDA.W $17C0,Y             
                     BEQ ADDR_00FD6B           
                     DEY                       
                     BPL ADDR_00FD62           
-ADDR_00FD6A:        RTS                       ; Return 
+Return00FD6A:       RTS                       ; Return
 
 ADDR_00FD6B:        LDA.B #$05                
                     STA.W $17C0,Y             
@@ -11948,8 +12712,7 @@ ADDR_00FD6B:        LDA.B #$05
                     STA.W $17C4,Y             
 ADDR_00FD97:        LDA.B #$10                
                     STA.W $17CC,Y             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_00FD9D:        .db $08,$FC,$10,$04
 
@@ -11995,7 +12758,7 @@ ADDR_00FDC3:        LDA $96
                     LDA.B #$00                
                     STA.W $1850,Y             
                     LDA $7D                   
-                    BMI ADDR_00FE0D           
+                    BMI Return00FE0D          
                     STZ $7D                   
                     LDY $72                   
                     BEQ ADDR_00FDFE           
@@ -12008,15 +12771,14 @@ ADDR_00FE05:        LDA.W $170B,Y
                     BEQ ADDR_00FE16           
 ADDR_00FE0A:        DEY                       
                     BPL ADDR_00FE05           
-ADDR_00FE0D:        RTS                       ; Return 
-
+Return00FE0D:       RTS                       ; Return
 
 DATA_00FE0E:        .db $10,$16,$13,$1C
 
 DATA_00FE12:        .db $00,$04,$0A,$07
 
-ADDR_00FE16:        LDA.B #$12                
-                    STA.W $170B,Y             
+ADDR_00FE16:        LDA.B #$12                ; \ Extended sprite = Water bubble
+                    STA.W $170B,Y             ; /
                     TYA                       
                     ASL                       
                     ASL                       
@@ -12038,13 +12800,14 @@ ADDR_00FE16:        LDA.B #$12
                     LDA.B #$00                
                     STA.W $176F,Y             
                     JMP.W ADDR_00FE0A         
+
 ADDR_00FE4A:        LDA $13                   
                     AND.B #$03                
                     ORA $72                   
                     ORA $7F                   
                     ORA $81                   
                     ORA $9D                   
-                    BNE ADDR_00FE71           
+                    BNE Return00FE71          
                     LDA $15                   
                     AND.B #$04                
                     BEQ ADDR_00FE67           
@@ -12052,13 +12815,13 @@ ADDR_00FE4A:        LDA $13
                     CLC                       
                     ADC.B #$08                
                     CMP.B #$10                
-                    BCC ADDR_00FE71           
+                    BCC Return00FE71          
 ADDR_00FE67:        LDY.B #$03                
 ADDR_00FE69:        LDA.W $17C0,Y             
                     BEQ ADDR_00FE72           
                     DEY                       
                     BNE ADDR_00FE69           
-ADDR_00FE71:        RTS                       ; Return 
+Return00FE71:       RTS                       ; Return
 
 ADDR_00FE72:        LDA.B #$03                
                     STA.W $17C0,Y             
@@ -12075,8 +12838,7 @@ ADDR_00FE8A:        STA.W $17C4,Y
                     PLX                       
                     LDA.B #$13                
                     STA.W $17CC,Y             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_00FE94:        .db $FD,$03
 
@@ -12086,20 +12848,20 @@ DATA_00FE9C:        .db $00,$00,$FF,$00,$FF,$00
 
 DATA_00FEA2:        .db $08,$08,$0C,$0C,$14,$14
 
-ADDR_00FEA8:        LDX.B #$09                
-ADDR_00FEAA:        LDA.W $170B,X             
-                    BEQ ADDR_00FEB5           
-                    DEX                       
-                    CPX.B #$07                
-                    BNE ADDR_00FEAA           
-                    RTS                       ; Return 
+ShootFireball:      LDX.B #$09                ; \ Find a free fireball slot (08-09)
+ADDR_00FEAA:        LDA.W $170B,X             ;  |
+                    BEQ ADDR_00FEB5           ;  |
+                    DEX                       ;  |
+                    CPX.B #$07                ;  |
+                    BNE ADDR_00FEAA           ;  |
+                    RTS                       ; / Return if no free slots
 
 ADDR_00FEB5:        LDA.B #$06                
-                    STA.W $1DFC               ; / Play sound effect 
+                    STA.W $1DFC               ; / Play sound effect
                     LDA.B #$0A                
                     STA.W $149C               
-                    LDA.B #$05                
-                    STA.W $170B,X             
+                    LDA.B #$05                ; \ Extended sprite = Mario fireball
+                    STA.W $170B,X             ; /
                     LDA.B #$30                
                     STA.W $173D,X             
                     LDY $76                   
@@ -12129,9 +12891,9 @@ ADDR_00FEDF:        LDA $94
                     STA.W $1729,X             
                     LDA.W $13F9               
                     STA.W $1779,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_00FF07:        REP #$20                  ; Accum (16 bit) 
+ExtSub00FF07:       REP #$20                  ; Accum (16 bit) 
                     LDA.W $17BC               
                     AND.W #$FF00              
                     BPL ADDR_00FF14           
@@ -12151,9 +12913,9 @@ ADDR_00FF25:        XBA
                     ADC $96                   
                     STA $96                   
                     SEP #$20                  ; Accum (8 bit) 
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_00FF32:        LDA.W $14E0,X             
+ExtSub00FF32:       LDA.W $14E0,X             
                     XBA                       
                     LDA $E4,X                 
                     REP #$20                  ; Accum (16 bit) 
@@ -12177,9 +12939,9 @@ ADDR_00FF32:        LDA.W $14E0,X
                     SBC $00                   
                     STA $24                   
                     SEP #$20                  ; Accum (8 bit) 
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_00FF61:        LDA.W $14E0,X             
+ExtSub00FF61:       LDA.W $14E0,X             
                     XBA                       
                     LDA $E4,X                 
                     REP #$20                  ; Accum (16 bit) 
@@ -12202,8 +12964,7 @@ ADDR_00FF76:        STA $22
                     ADC.W $1888               
                     STA $24                   
                     SEP #$20                  ; Accum (8 bit) 
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 DATA_00FF93:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
@@ -12219,3 +12980,5 @@ DATA_00FF93:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $81,$00,$80,$74,$83,$FF,$FF,$FF
                     .db $FF,$C3,$82,$C3,$82,$C3,$82,$C3
                     .db $82,$00,$80,$C3,$82
+
+

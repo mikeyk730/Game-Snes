@@ -1,7 +1,5 @@
 .INCLUDE "snes.cfg"
 .BANK 14
-
-
 BankE:              .db $3E,$0E,$00,$05,$20,$CD,$CF,$BD
                     .db $E8,$00,$C5,$86,$03,$C5,$87,$03
                     .db $C5,$88,$03,$C5,$89,$03,$5D,$AF
@@ -4098,4 +4096,5 @@ BankE:              .db $3E,$0E,$00,$05,$20,$CD,$CF,$BD
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+
 

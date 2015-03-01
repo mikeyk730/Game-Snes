@@ -58,6 +58,10 @@ private:
     std::string get_label_helper(unsigned char bank, int pc, bool use_addr_label, bool mark_instruction_used, bool is_branch);
     void disassembleRange(const Request& request);
     void disassembleInstruction(const InstructionMetadata& instr, unsigned char default_bank, const std::string& label, const std::string& comment, int offset);
+    OutputHandler* output_handler() const
+    {
+        return finalPass() ? m_output_handler : m_noop_handler;
+    }
 
     unsigned int current_full_address() const;
 
@@ -92,6 +96,7 @@ private:
     int m_start;
     int m_end;
 
+    OutputHandler* m_noop_handler;
     OutputHandler* m_output_handler;
     FILE* m_rom_file;
 };

@@ -1,16 +1,14 @@
 .INCLUDE "snes.cfg"
 .BANK 2
-
-
 DATA_028000:        .db $80,$40,$20,$10,$08,$04,$02,$01
 
-ADDR_028008:        PHX                       
+ExtSub028008:       PHX                       
                     LDA.W $0DC2               
                     BEQ ADDR_028070           
                     STZ.W $0DC2               
                     PHA                       
-                    LDA.B #$0C                
-                    STA.W $1DFC               ; / Play sound effect 
+                    LDA.B #$0C                ; \ Play sound effect
+                    STA.W $1DFC               ; /
                     LDX.B #$0B                
 ADDR_028019:        LDA.W $14C8,X             
                     BEQ ADDR_028042           
@@ -31,13 +29,13 @@ ADDR_02802B:        LDA.W $1861
                     CMP.B #$0B                
                     BNE ADDR_028042           
                     STZ.W $13F3               
-ADDR_028042:        LDA.B #$08                
-                    STA.W $14C8,X             
+ADDR_028042:        LDA.B #$08                ; \ Sprite status = Normal
+                    STA.W $14C8,X             ; /
                     PLA                       
                     CLC                       
                     ADC.B #$73                
                     STA $9E,X                 
-                    JSL.L ADDR_07F7D2         
+                    JSL.L InitSpriteTables    
                     LDA.B #$78                
                     CLC                       
                     ADC $1A                   
@@ -54,8 +52,7 @@ ADDR_028042:        LDA.B #$08
                     STA.W $14D4,X             
                     INC.W $1534,X             
 ADDR_028070:        PLX                       
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 BombExplosionX:     .db $00,$08,$06,$FA,$F8,$06,$08,$00
                     .db $F8,$FA
@@ -63,27 +60,27 @@ BombExplosionX:     .db $00,$08,$06,$FA,$F8,$06,$08,$00
 BombExplosionY:     .db $F8,$FE,$06,$06,$FE,$FA,$02,$08
                     .db $02,$FA
 
-ADDR_028086:        JSR.W ADDR_02808A         
-                    RTL                       ; Return 
+ExplodeBombRt:      JSR.W ExplodeBombSubRt    ; BOMB
+                    RTL                       ; Return
 
-ADDR_02808A:        STZ.W $1656,X             
-                    LDA.B #$11                
-                    STA.W $1662,X             
+ExplodeBombSubRt:   STZ.W $1656,X             ; Make sprite unstompable
+                    LDA.B #$11                ; \ Set new clipping area for explosion
+                    STA.W $1662,X             ; /
                     JSR.W GetDrawInfo2        
-                    LDA $9D                   
-                    BNE ADDR_02809C           
-                    INC.W $1570,X             
-ADDR_02809C:        LDA.W $1540,X             
-                    BNE ADDR_0280A5           
-                    STZ.W $14C8,X             
-                    RTS                       ; Return 
+                    LDA $9D                   ; \ Increase frame count if sprites not locked
+                    BNE ADDR_02809C           ;  |
+                    INC.W $1570,X             ; /
+ADDR_02809C:        LDA.W $1540,X             ; \ When timer is up free up sprite slot
+                    BNE ExplodeBombGfx        ;  |
+                    STZ.W $14C8,X             ; /
+                    RTS                       ; Return
 
-ADDR_0280A5:        LDA.W $1540,X             
+ExplodeBombGfx:     LDA.W $1540,X             
                     LSR                       
                     AND.B #$03                
                     CMP.B #$03                
                     BNE ADDR_0280C0           
-                    JSR.W ADDR_028139         
+                    JSR.W ExplodeSprites      
                     LDA.W $1540,X             
                     SEC                       
                     SBC.B #$10                
@@ -157,37 +154,37 @@ ADDR_0280ED:        LDA $00
                     LDY.B #$00                
                     LDA.B #$04                
                     JMP.W ADDR_02B7A7         
-ADDR_028139:        LDY.B #$09                
-ADDR_02813B:        CPY.W $15E9               
-                    BEQ ADDR_02814C           
-                    PHY                       
-                    LDA.W $14C8,Y             
-                    CMP.B #$08                
-                    BCC ADDR_02814B           
-                    JSR.W ADDR_028150         
-ADDR_02814B:        PLY                       
-ADDR_02814C:        DEY                       
-                    BPL ADDR_02813B           
-                    RTS                       ; Return 
 
-ADDR_028150:        PHX                       
-                    TYX                       
-                    JSL.L ADDR_03B6E5         
-                    PLX                       
-                    JSL.L ADDR_03B69F         
-                    JSL.L ADDR_03B72B         
-                    BCC ADDR_028177           
-                    LDA.W $167A,Y             
-                    AND.B #$02                
-                    BNE ADDR_028177           
-                    LDA.B #$02                
-                    STA.W $14C8,Y             
-                    LDA.B #$C0                
-                    STA.W $00AA,Y             
-                    LDA.B #$00                
-                    STA.W $00B6,Y             
-ADDR_028177:        RTS                       ; Return 
+ExplodeSprites:     LDY.B #$09                ;  \ Loop over sprites:
+ExplodeLoopStart:   CPY.W $15E9               ;   | Don't attempt to kill self
+                    BEQ ADDR_02814C           ;   |
+                    PHY                       ;   |
+                    LDA.W $14C8,Y             ;   | Skip sprite if it's already dying/dead
+                    CMP.B #$08                ;   |
+                    BCC ADDR_02814B           ;   |
+                    JSR.W ExplodeKillSpr      ;   | Check for contact
+ADDR_02814B:        PLY                       ;   |
+ADDR_02814C:        DEY                       ;   | Next
+                    BPL ExplodeLoopStart      ;  /
+                    RTS                       ; Return
 
+ExplodeKillSpr:     PHX                       
+                    TYX                       ;  \ Return if no sprite contact
+                    JSL.L GetSpriteClippingB  ;   |
+                    PLX                       ;   |
+                    JSL.L GetSpriteClippingA  ;   |
+                    JSL.L CheckForContact     ;   |
+                    BCC Return028177          ;  /
+                    LDA.W $167A,Y             ;  \ Return if sprite is invincible
+                    AND.B #$02                ;   | to explosions
+                    BNE Return028177          ;  /
+                    LDA.B #$02                ; \ Sprite status = Killed
+                    STA.W $14C8,Y             ; /
+                    LDA.B #$C0                ;  \ Sprite Y speed = #$C0
+                    STA.W $00AA,Y             ;  /
+                    LDA.B #$00                ;  \ Sprite X speed = #$00
+                    STA.W $00B6,Y             ;  /
+Return028177:       RTS                       ; Return
 
 DATA_028178:        .db $F8,$38,$78,$B8,$00,$10,$20,$D0
                     .db $E0,$10,$40,$80,$C0,$10,$10,$20
@@ -225,7 +222,7 @@ DATA_028226:        .db $E8,$E8,$E8,$E8,$E4,$E4,$E4,$E4
                     .db $C8,$CC,$CE,$CC,$CE,$CC,$CE,$CC
                     .db $CE,$CC,$CE,$CC,$CE,$CC,$CE
 
-ADDR_02827D:        LDA $1A                   
+ExtSub02827D:       LDA $1A                   
                     STA.W $188D               
                     EOR.B #$FF                
                     INC A                     
@@ -346,6 +343,7 @@ ADDR_028367:        PLY
                     DEX                       
                     BMI ADDR_028374           
                     JMP.W ADDR_0282D8         
+
 ADDR_028374:        SEP #$10                  ; Index (8 bit) 
                     LDA.B #$01                
                     STA.W $188C               
@@ -360,6 +358,7 @@ ADDR_028374:        SEP #$10                  ; Index (8 bit)
                     STA.W $02CF               
                     STA.W $02D3               
                     BRA ADDR_0283C4           
+
 ADDR_028398:        LDA $14                   
                     AND.B #$03                
                     BNE ADDR_0283C4           
@@ -367,7 +366,7 @@ ADDR_028398:        LDA $14
 ADDR_0283A0:        LDX $00                   
                     LDA.L DATA_0283C8,X       
                     TAY                       
-                    JSL.L ADDR_01ACF9         
+                    JSL.L GetRand             
                     AND.B #$01                
                     BNE ADDR_0283B7           
                     LDA.W $020E,Y             
@@ -380,8 +379,7 @@ ADDR_0283B7:        LDA.B #$09
                     CMP.B #$04                
                     BNE ADDR_0283A0           
 ADDR_0283C4:        JSR.W ADDR_0283CE         
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 DATA_0283C8:        .db $00,$04,$08,$0C
 
@@ -406,7 +404,7 @@ ADDR_0283E0:        STX $0F
 ADDR_0283F1:        JSR.W ADDR_028439         
 ADDR_0283F4:        DEX                       
                     BPL ADDR_0283E0           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0283F8:        LDA.W $18AA,X             
                     LSR                       
@@ -421,10 +419,10 @@ ADDR_0283F8:        LDA.W $18AA,X
                     ASL.W $18A8,X             
                     SEC                       
                     ROR.W $18A8,X             
-                    LDA.B #$30                
-                    STA.W $1887               
-                    LDA.B #$09                
-                    STA.W $1DFC               ; / Play sound effect 
+                    LDA.B #$30                ;  \ Set ground shake timer
+                    STA.W $1887               ;  /
+                    LDA.B #$09                ; \ Play sound effect
+                    STA.W $1DFC               ; /
                     CPX.B #$00                
                     BNE ADDR_02842A           
                     LDA.W $18A9               
@@ -432,13 +430,14 @@ ADDR_0283F8:        LDA.W $18AA,X
                     INC.W $18A9               
                     STZ.W $18AB               
                     BRA ADDR_028433           
+
 ADDR_02842A:        CPX.B #$01                
                     BNE ADDR_028433           
                     STZ $9D                   
                     STZ.W $13FB               
 ADDR_028433:        LDA.B #$B0                
 ADDR_028435:        STA.W $18AA,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_028439:        LDA.L DATA_0283CC,X       
                     TAY                       
@@ -453,7 +452,7 @@ ADDR_028440:        LDA.B #$F0
                     SEC                       
                     SBC $00                   
                     CMP.B #$20                
-                    BCC ADDR_02848C           
+                    BCC Return02848C          
                     CMP.B #$A4                
                     BCS ADDR_02845D           
                     STA.W $0201,Y             
@@ -483,22 +482,22 @@ ADDR_02846A:        STA.W $0202,Y
                     STA $00                   
                     CMP.B #$90                
                     BCC ADDR_028440           
-ADDR_02848C:        RTS                       ; Return 
+Return02848C:       RTS                       ; Return
 
-ADDR_02848D:        LDY.B #$00                
+SubHorzPosBnk2:     LDY.B #$00                
                     LDA $94                   
                     SEC                       
                     SBC $E4,X                 
                     STA $0F                   
                     LDA $95                   
                     SBC.W $14E0,X             
-                    BPL ADDR_02849E           
+                    BPL Return02849E          
                     INY                       
-ADDR_02849E:        RTS                       ; Return 
+Return02849E:       RTS                       ; Return
 
-ADDR_02849F:        LDA.W $15A0,X             
+IsOffScreenBnk2:    LDA.W $15A0,X             
                     ORA.W $186C,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0284A6:        STA $03                   
                     LDA.B #$02                
@@ -510,11 +509,12 @@ ADDR_0284AC:        JSL.L ADDR_0284D8
                     STA $02                   
                     DEC $01                   
                     BPL ADDR_0284AC           
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_0284BC:        LDA.B #$12                
+ExtSub0284BC:       LDA.B #$12                
                     BRA ADDR_0284C2           
-ADDR_0284C0:        LDA.B #$00                
+
+ExtSub0284C0:       LDA.B #$00                
 ADDR_0284C2:        STA $00                   
                     STZ $02                   
                     LDA $9E,X                 
@@ -523,17 +523,18 @@ ADDR_0284C2:        STA $00
                     CMP.B #$42                
                     BNE ADDR_0284D8           
 ADDR_0284D0:        LDA $AA,X                 
-                    BPL ADDR_0284E7           
+                    BPL Return0284E7          
                     LDA.B #$0A                
                     BRA ADDR_0284A6           
-ADDR_0284D8:        JSR.W ADDR_02849F         
-                    BNE ADDR_0284E7           
+
+ADDR_0284D8:        JSR.W IsOffScreenBnk2     
+                    BNE Return0284E7          
                     LDY.B #$0B                
 ADDR_0284DF:        LDA.W $17F0,Y             
                     BEQ ADDR_0284E8           
                     DEY                       
                     BPL ADDR_0284DF           
-ADDR_0284E7:        RTL                       ; Return 
+Return0284E7:       RTL                       ; Return
 
 ADDR_0284E8:        LDA $D8,X                 
                     CLC                       
@@ -553,27 +554,26 @@ ADDR_0284E8:        LDA $D8,X
                     STA.W $17F0,Y             
                     LDA $00                   
                     STA.W $1850,Y             
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 DATA_028510:        .db $04,$FC,$06,$FA,$08,$F8,$0A,$F6
 DATA_028518:        .db $E0,$E1,$E2,$E3,$E4,$E6,$E8,$EA
 DATA_028520:        .db $1F,$13,$10,$1C,$17,$1A,$0F,$1E
 
-ADDR_028528:        JSR.W ADDR_02849F         
+ExtSub028528:       JSR.W IsOffScreenBnk2     
                     LDA.W $186C,X             
-                    BNE ADDR_0284E7           
+                    BNE Return0284E7          
                     LDA.B #$04                
                     STA $00                   
-                    LDY.B #$07                
-ADDR_028536:        LDA.W $170B,Y             
-                    BEQ ADDR_02853F           
-                    DEY                       
-                    BPL ADDR_028536           
-                    RTL                       ; Return 
+                    LDY.B #$07                ; \ Find a free extended sprite slot
+ADDR_028536:        LDA.W $170B,Y             ;  |
+                    BEQ ADDR_02853F           ;  |
+                    DEY                       ;  |
+                    BPL ADDR_028536           ;  |
+                    RTL                       ; / Return if no free slots
 
-ADDR_02853F:        LDA.B #$07                
-                    STA.W $170B,Y             
+ADDR_02853F:        LDA.B #$07                ; \ Extended sprite = Lava splash
+                    STA.W $170B,Y             ; /
                     LDA $D8,X                 
                     STA.W $1715,Y             
                     LDA.W $14D4,X             
@@ -585,7 +585,7 @@ ADDR_02853F:        LDA.B #$07
                     LDA.W $14E0,X             
                     ADC.B #$00                
                     STA.W $1733,Y             
-                    JSL.L ADDR_01ACF9         
+                    JSL.L GetRand             
                     PHX                       
                     AND.B #$07                
                     TAX                       
@@ -596,7 +596,7 @@ ADDR_02853F:        LDA.B #$07
                     TAX                       
                     LDA.L DATA_028518,X       
                     STA.W $173D,Y             
-                    JSL.L ADDR_01ACF9         
+                    JSL.L GetRand             
                     AND.B #$07                
                     TAX                       
                     LDA.L DATA_028520,X       
@@ -604,16 +604,16 @@ ADDR_02853F:        LDA.B #$07
                     PLX                       
                     DEC $00                   
                     BPL ADDR_028536           
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_02858F:        LDY.B #$1F                
-                    LDX.B #$00                
-                    LDA $19                   
-                    BNE ADDR_02859B           
-                    LDY.B #$0F                
-                    LDX.B #$10                
+ADDR_02858F:        LDY.B #$1F                ;  \ If Big Mario:
+                    LDX.B #$00                ;   | Y = #$1F
+                    LDA $19                   ;   | X = #$00
+                    BNE ADDR_02859B           ;   | Small Mario:
+                    LDY.B #$0F                ;   | Y = #$0F
+                    LDX.B #$10                ;  / X = #$10
 ADDR_02859B:        STX $01                   
-                    JSL.L ADDR_01ACF9         
+                    JSL.L GetRand             
                     TYA                       
                     AND.W $148D               
                     CLC                       
@@ -628,12 +628,12 @@ ADDR_02859B:        STX $01
                     CLC                       
                     ADC $94                   
                     STA $02                   
-ADDR_0285BA:        LDY.B #$0B                
+ExtSub0285BA:       LDY.B #$0B                
 ADDR_0285BC:        LDA.W $17F0,Y             
                     BEQ ADDR_0285C5           
                     DEY                       
                     BPL ADDR_0285BC           
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_0285C5:        LDA.B #$05                
                     STA.W $17F0,Y             
@@ -645,18 +645,18 @@ ADDR_0285C5:        LDA.B #$05
                     STA.W $1808,Y             
                     LDA.B #$17                
                     STA.W $1850,Y             
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_0285DF:        JSR.W ADDR_02849F         
-                    BNE ADDR_0285EE           
+ExtSub0285DF:       JSR.W IsOffScreenBnk2     
+                    BNE Return0285EE          
                     LDY.B #$0B                
 ADDR_0285E6:        LDA.W $17F0,Y             
                     BEQ ADDR_0285EF           
                     DEY                       
                     BPL ADDR_0285E6           
-ADDR_0285EE:        RTL                       ; Return 
+Return0285EE:       RTL                       ; Return
 
-ADDR_0285EF:        JSL.L ADDR_01ACF9         
+ADDR_0285EF:        JSL.L GetRand             
                     LDA.B #$04                
                     STA.W $17F0,Y             
                     LDA.B #$00                
@@ -683,13 +683,13 @@ ADDR_0285EF:        JSL.L ADDR_01ACF9
                     STA.W $1814,Y             
                     LDA.B #$17                
                     STA.W $1850,Y             
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_02862F:        JSL.L ADDR_02A9E4         
-                    BMI ADDR_028662           
+ExtSub02862F:       JSL.L FindFreeSprSlot     ; \ Return if no free slots
+                    BMI Return028662          ; /
                     TYX                       
-                    LDA.B #$0B                
-                    STA.W $14C8,X             
+                    LDA.B #$0B                ; \ Sprite status = Being carried
+                    STA.W $14C8,X             ; /
                     LDA $96                   
                     STA $D8,X                 
                     LDA $97                   
@@ -698,15 +698,15 @@ ADDR_02862F:        JSL.L ADDR_02A9E4
                     STA $E4,X                 
                     LDA $95,X                 
                     STA.W $14E0,X             
-                    LDA.B #$53                
-                    STA $9E,X                 
-                    JSL.L ADDR_07F7D2         
+                    LDA.B #$53                ; \ Sprite = Throw Block
+                    STA $9E,X                 ; /
+                    JSL.L InitSpriteTables    
                     LDA.B #$FF                
                     STA.W $1540,X             
                     LDA.B #$08                
                     STA.W $1498               
                     STA.W $148F               
-ADDR_028662:        RTL                       ; Return 
+Return028662:       RTL                       ; Return
 
 ShatterBlock:       PHX                       
                     STA $00                   
@@ -721,8 +721,8 @@ ADDR_02866F:        DEX
                     LDA.B #$0B                
                     STA.W $185D               
 ADDR_02867C:        LDX.W $185D               
-ADDR_02867F:        LDA.B #$07                ; \ 
-                    STA.W $1DFC               ; / Play sound effect 
+ADDR_02867F:        LDA.B #$07                ; \
+                    STA.W $1DFC               ; / Play sound effect
                     LDA.B #$01                
                     STA.W $17F0,X             
                     LDA $9A                   
@@ -748,10 +748,10 @@ ADDR_02867F:        LDA.B #$07                ; \
                     DEY                       
                     BPL ADDR_02866F           
                     PLX                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_0286BF:        LDA.W $1697               
-                    BNE ADDR_0286EC           
+YoshiStompRoutine:  LDA.W $1697               
+                    BNE Return0286EC          
                     PHB                       
                     PHK                       
                     PLB                       
@@ -771,7 +771,7 @@ ADDR_0286BF:        LDA.W $1697
                     STA.W $16DD,Y             
                     JSR.W ADDR_029BE4         
                     PLB                       
-ADDR_0286EC:        RTL                       ; Return 
+Return0286EC:       RTL                       ; Return
 
 SprBlkInteract:     LDY.B #$03                
 ADDR_0286EF:        LDA.W $16CD,Y             
@@ -807,8 +807,7 @@ ADDR_02872F:        LDA.B #$01
                     STA.W $16CD,Y             
                     LDA.B #$06                
                     STA.W $18F8,Y             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 BlockBounceSpeedY:  .db $C0,$00,$00,$40
 
@@ -822,140 +821,140 @@ DATA_02874A:        .db $FB,$FB,$FD,$FD
 
 DATA_02874E:        .db $FF,$01,$FF,$01
 
-ADDR_028752:        LDA $04                   
+ExtSub028752:       LDA $04                   
                     CMP.B #$07                
                     BNE NotBreakable          
-BreakTurnBlock:     LDA.W $0DB3               ; Increase points 
-                    ASL                       
-                    ADC.W $0DB3               
-                    TAX                       
-                    LDA.W $0F34,X             
-                    CLC                       
-                    ADC.B #$05                
-                    STA.W $0F34,X             
-                    BCC ADDR_028773           
-                    INC.W $0F35,X             
-                    BNE ADDR_028773           
-                    INC.W $0F36,X             
-ADDR_028773:        LDA.B #$D0                ; Deflect Mario downward 
-                    STA $7D                   
-                    LDA.B #$00                
-                    JSL.L ShatterBlock        ; Actually break the block 
-                    JSR.W SprBlkInteract      ; Handle sprite/block interaction  
-ADDR_028780:        LDA.B #$02                ; \ Replace block with "nothing" tile 
-                    STA $9C                   ;  | 
-                    JSL.L ADDR_00BEB0         ; / 
-                    RTL                       ; Return 
-
+BreakTurnBlock:     LDA.W $0DB3               ; \ Increase points
+                    ASL                       ;  |
+                    ADC.W $0DB3               ;  |
+                    TAX                       ;  |
+                    LDA.W $0F34,X             ;  |
+                    CLC                       ;  |
+                    ADC.B #$05                ;  |
+                    STA.W $0F34,X             ;  |
+                    BCC ADDR_028773           ;  |
+                    INC.W $0F35,X             ;  |
+                    BNE ADDR_028773           ;  |
+                    INC.W $0F36,X             ; /
+ADDR_028773:        LDA.B #$D0                ; Deflect Mario downward
+                    STA $7D                   ; /
+                    LDA.B #$00                ; for shatter routine?
+                    JSL.L ShatterBlock        ; Actually break the block
+                    JSR.W SprBlkInteract      ; Handle sprite/block interaction
+                    LDA.B #$02                ; \ Replace block with "nothing" tile
+                    STA $9C                   ;  |
+                    JSL.L GenerateTile        ; /
+                    RTL                       ; Return
 
 BlockBounce:        .db $00,$03,$00,$00,$01,$07,$00,$04
                     .db $0A
 
-NotBreakable:       LDY.B #$03                ; Reset turning block 
-ADDR_028794:        LDA.W $1699,Y             
-                    BEQ ADDR_028807           
-                    DEY                       
-                    BPL ADDR_028794           
+NotBreakable:       LDY.B #$03                ; \ Reset turning block
+FindTurningBlkSlot: LDA.W $1699,Y             ;  |
+                    BEQ ADDR_028807           ;  |
+                    DEY                       ;  |
+                    BPL FindTurningBlkSlot    ; /
                     DEC.W $18CD               
                     BPL ADDR_0287A6           
                     LDA.B #$03                
                     STA.W $18CD               
 ADDR_0287A6:        LDY.W $18CD               
-                    LDA.W $1699,Y             
-                    CMP.B #$07                
-                    BNE ADDR_028804           
-                    LDA $9A                   
-                    PHA                       
-                    LDA $9B                   
-                    PHA                       
-                    LDA $98                   
-                    PHA                       
-                    LDA $99                   
-                    PHA                       
-                    LDA.W $16A5,Y             
-                    STA $9A                   
-                    LDA.W $16AD,Y             
-                    STA $9B                   
-                    LDA.W $16A1,Y             
-                    CLC                       
-                    ADC.B #$0C                
-                    AND.B #$F0                
-                    STA $98                   
-                    LDA.W $16A9,Y             
-                    ADC.B #$00                
-                    STA $99                   
-                    LDA.W $16C1,Y             
-                    STA $9C                   
-                    LDA $04                   
-                    PHA                       
-                    LDA $05                   
-                    PHA                       
-                    LDA $06                   
-                    PHA                       
-                    LDA $07                   
-                    PHA                       
-                    JSL.L ADDR_00BEB0         
-                    PLA                       
-                    STA $07                   
-                    PLA                       
-                    STA $06                   
-                    PLA                       
-                    STA $05                   
-                    PLA                       
-                    STA $04                   
-                    PLA                       
-                    STA $99                   
-                    PLA                       
-                    STA $98                   
-                    PLA                       
-                    STA $9B                   
-                    PLA                       
-                    STA $9A                   
-ADDR_028804:        LDY.W $18CD               
+                    LDA.W $1699,Y             ; \ Branch if not a turn block
+                    CMP.B #$07                ;  |
+                    BNE NoResetTurningBlk     ; /
+                    LDA $9A                   ; \ Save [$98-$9A]
+                    PHA                       ;  |
+                    LDA $9B                   ;  |
+                    PHA                       ;  |
+                    LDA $98                   ;  |
+                    PHA                       ;  |
+                    LDA $99                   ;  |
+                    PHA                       ; /
+                    LDA.W $16A5,Y             ; \ Block Y position = Bounce Y sprite position
+                    STA $9A                   ;  |
+                    LDA.W $16AD,Y             ;  |
+                    STA $9B                   ; /
+                    LDA.W $16A1,Y             ; \ Block X position = Bounce X sprite position
+                    CLC                       ;  |
+                    ADC.B #$0C                ;  | (Round to nearest #$10)
+                    AND.B #$F0                ;  |
+                    STA $98                   ;  |
+                    LDA.W $16A9,Y             ;  |
+                    ADC.B #$00                ;  |
+                    STA $99                   ; /
+                    LDA.W $16C1,Y             ; \ Block to generate = Bounce sprite block
+                    STA $9C                   ; /
+                    LDA $04                   ; \ Save [$04-$07]
+                    PHA                       ;  |
+                    LDA $05                   ;  |
+                    PHA                       ;  |
+                    LDA $06                   ;  |
+                    PHA                       ;  |
+                    LDA $07                   ;  |
+                    PHA                       ; /
+                    JSL.L GenerateTile        
+                    PLA                       ; \ Restore [$04-$07]
+                    STA $07                   ;  |
+                    PLA                       ;  |
+                    STA $06                   ;  |
+                    PLA                       ;  |
+                    STA $05                   ;  |
+                    PLA                       ;  |
+                    STA $04                   ; /
+                    PLA                       ; \ Restore [$98-$9A]
+                    STA $99                   ;  |
+                    PLA                       ;  |
+                    STA $98                   ;  |
+                    PLA                       ;  |
+                    STA $9B                   ;  |
+                    PLA                       ;  |
+                    STA $9A                   ; /
+NoResetTurningBlk:  LDY.W $18CD               
 ADDR_028807:        LDA $04                   
                     CMP.B #$10                
                     BCC ADDR_028818           
                     STZ $04                   
                     TAX                       
-                    LDA.W ADDR_028780,X       
+                    LDA.W BlockBounce-9,X     
                     STA.W $1901,Y             
                     BRA ADDR_02882A           
-ADDR_028818:        LDA $04                   ; \ Play on/off sound if appropriate 
-                    CMP.B #$05                ;  | 
-                    BNE ADDR_028823           ;  | 
-                    LDX.B #$0B                ;  | 
-                    STX.W $1DF9               ; / 
+
+ADDR_028818:        LDA $04                   ; \ Play on/off sound if appropriate
+                    CMP.B #$05                ;  |
+                    BNE ADDR_028823           ;  |
+                    LDX.B #$0B                ;  |
+                    STX.W $1DF9               ; /
 ADDR_028823:        TAX                       
                     LDA.W BlockBounce,X       
                     STA.W $1901,Y             
-ADDR_02882A:        LDA $04                   
-                    INC A                     
-                    STA.W $1699,Y             ; Set block bounce sprite type 
-                    LDA.B #$00                ; \ set (times can be hit?) 
-                    STA.W $169D,Y             ; / 
-                    LDA $9A                   ; \ Set bounce block y position 
-                    STA.W $16A5,Y             ;  | 
-                    LDA $9B                   ;  | 
-                    STA.W $16AD,Y             ; / 
-                    LDA $98                   ; \ Set bounce block x position 
-                    STA.W $16A1,Y             ;  | 
-                    LDA $99                   ;  | 
-                    STA.W $16A9,Y             ; / 
+ADDR_02882A:        LDA $04                   ; \ Set block bounce sprite type
+                    INC A                     ;  |
+                    STA.W $1699,Y             ; /
+                    LDA.B #$00                ; \ set (times can be hit?)
+                    STA.W $169D,Y             ; /
+                    LDA $9A                   ; \ Set bounce block y position
+                    STA.W $16A5,Y             ;  |
+                    LDA $9B                   ;  |
+                    STA.W $16AD,Y             ; /
+                    LDA $98                   ; \ Set bounce block x position
+                    STA.W $16A1,Y             ;  |
+                    LDA $99                   ;  |
+                    STA.W $16A9,Y             ; /
                     LDA.W $1933               
                     LSR                       
                     ROR                       
                     STA $08                   
                     LDX $06                   
-                    LDA.W BlockBounceSpeedY,X ; \ Set bounce y speed 
-                    STA.W $16B1,Y             ; / 
-                    LDA.W BlockBounceSpeedX,X ; \ Set bounce x speed 
-                    STA.W $16B5,Y             ; / 
+                    LDA.W BlockBounceSpeedY,X ; \ Set bounce y speed
+                    STA.W $16B1,Y             ; /
+                    LDA.W BlockBounceSpeedX,X ; \ Set bounce x speed
+                    STA.W $16B5,Y             ; /
                     TXA                       
                     ORA $08                   
                     STA.W $16C9,Y             
-                    LDA $07                   ; \ Set tile to turn block into 
-                    STA.W $16C1,Y             ; / 
-                    LDA.B #$08                ; \ Time to show bouncing block 
+                    LDA $07                   ; \ Set tile to turn block into
+                    STA.W $16C1,Y             ; /
+                    LDA.B #$08                ; \ Time to show bouncing block
                     STA.W $16C5,Y             
                     LDA.W $1699,Y             
                     CMP.B #$07                
@@ -963,8 +962,8 @@ ADDR_02882A:        LDA $04
                     LDA.B #$FF                
                     STA.W $18CE,Y             
 ADDR_02887A:        JSR.W SprBlkInteract      
-ADDR_02887D:        LDA $05                   
-                    BEQ ADDR_0288A0           
+ExtSub02887D:       LDA $05                   
+                    BEQ Return0288A0          
                     CMP.B #$0A                
                     BNE ADDR_028885           
 ADDR_028885:        LDA $05                   
@@ -979,18 +978,19 @@ ADDR_028885:        LDA $05
                     LDA.B #$FF                
                     STA.W $186B               
 ADDR_02889D:        JSR.W ADDR_028A66         
-ADDR_0288A0:        RTL                       ; Return 
-
+Return0288A0:       RTL                       ; Return
 
 DATA_0288A1:        .db $35,$78
 
-DATA_0288A3:        .db $00,$74,$75,$76,$77,$78,$00,$00
+SpriteInBlock:      .db $00,$74,$75,$76,$77,$78,$00,$00
                     .db $79,$00,$3E,$7D,$2C,$04,$81,$45
-                    .db $80,$00,$74,$75,$76,$77,$78,$00
-                    .db $00,$79,$00,$3E,$7D,$2C,$04,$81
-                    .db $45,$80
+                    .db $80
 
-DATA_0288C5:        .db $00,$08,$08,$08,$08,$08,$00,$00
+SpriteInBlockPow:   .db $00,$74,$75,$76,$77,$78,$00,$00
+                    .db $79,$00,$3E,$7D,$2C,$04,$81,$45
+                    .db $80
+
+StatusOfSprInBlk:   .db $00,$08,$08,$08,$08,$08,$00,$00
                     .db $08,$00,$09,$08,$09,$09,$08,$08
                     .db $09
 
@@ -1004,27 +1004,27 @@ ADDR_0288DC:        LDY $05
                     LDA $9A                   
                     AND.B #$30                
                     CMP.B #$20                
-                    BEQ ADDR_028905           
+                    BEQ GenSpriteFromBlk      
 ADDR_0288EA:        CPY.B #$10                
                     BEQ ADDR_0288FD           
                     CPY.B #$08                
                     BNE ADDR_0288F9           
                     LDA.W $1692               
-                    BEQ ADDR_028905           
+                    BEQ GenSpriteFromBlk      
                     BNE ADDR_0288FD           
 ADDR_0288F9:        CPY.B #$0C                
-                    BNE ADDR_028905           
-ADDR_0288FD:        JSL.L ADDR_02A9E4         
+                    BNE GenSpriteFromBlk      
+ADDR_0288FD:        JSL.L FindFreeSprSlot     
                     TYX                       
                     BPL ADDR_028922           
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_028905:        LDX.B #$0B                
-ADDR_028907:        LDA.W $14C8,X             
-                    BEQ ADDR_028922           
-                    DEX                       
-                    CPX.B #$FF                
-                    BNE ADDR_028907           
+GenSpriteFromBlk:   LDX.B #$0B                ; \ Find a last free sprite slot from 00-0B
+ADDR_028907:        LDA.W $14C8,X             ;  |
+                    BEQ ADDR_028922           ;  |
+                    DEX                       ;  |
+                    CPX.B #$FF                ;  |
+                    BNE ADDR_028907           ; /
                     DEC.W $1861               
                     BPL ADDR_02891B           
                     LDA.B #$01                
@@ -1035,8 +1035,8 @@ ADDR_02891B:        LDA.W $1861
                     TAX                       
 ADDR_028922:        STX.W $185E               
                     LDY $05                   
-                    LDA.W DATA_0288C5,Y       
-                    STA.W $14C8,X             
+                    LDA.W StatusOfSprInBlk,Y  ; \ Set sprite status
+                    STA.W $14C8,X             ; /
                     LDA.W $18E2               
                     BEQ ADDR_028937           
                     TYA                       
@@ -1044,8 +1044,8 @@ ADDR_028922:        STX.W $185E
                     ADC.B #$11                
                     TAY                       
 ADDR_028937:        STY.W $1695               
-                    LDA.W DATA_0288A3,Y       
-                    STA $9E,X                 
+                    LDA.W SpriteInBlock,Y     ; \ Set sprite number
+                    STA $9E,X                 ; /
                     STA $0E                   
                     LDY.B #$02                
                     CMP.B #$81                
@@ -1053,8 +1053,8 @@ ADDR_028937:        STY.W $1695
                     CMP.B #$79                
                     BCC ADDR_02894C           
                     INY                       
-ADDR_02894C:        STY.W $1DFC               ; / Play sound effect 
-                    JSL.L ADDR_07F7D2         
+ADDR_02894C:        STY.W $1DFC               ; / Play sound effect
+                    JSL.L InitSpriteTables    
                     INC.W $15A0,X             
                     LDA $9E,X                 
                     CMP.B #$45                
@@ -1063,8 +1063,9 @@ ADDR_02894C:        STY.W $1DFC               ; / Play sound effect
                     BEQ ADDR_028967           
                     STZ.W $14C8,X             
                     JMP.W ADDR_02889D         
+
 ADDR_028967:        LDA.B #$0E                
-                    STA.W $1DFB               ; / Play sound effect 
+                    STA.W $1DFB               ; / Change music
                     INC.W $1432               
                     STZ.W $190C               
 ADDR_028972:        LDA $9A                   
@@ -1106,16 +1107,17 @@ ADDR_0289A5:        LDA $9E,X
                     LDA.W DATA_0288D6,Y       
                     STA $9E,X                 
                     PHA                       
-                    JSL.L ADDR_07F7D2         
+                    JSL.L InitSpriteTables    
                     PLA                       
                     CMP.B #$7D                
                     BNE ADDR_0289CD           
                     INC.W $157C,X             
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_0289CD:        CMP.B #$7E                
                     BEQ ADDR_028A03           
                     BRA ADDR_028A01           
+
 ADDR_0289D3:        CMP.B #$04                
                     BEQ ADDR_028A08           
                     CMP.B #$3E                
@@ -1131,6 +1133,7 @@ ADDR_0289E1:        LDA.W $14C8,Y
                     BNE ADDR_0289F3           
 ADDR_0289EF:        LDY.B #$01                
                     BRA ADDR_0289FB           
+
 ADDR_0289F3:        DEY                       
                     BPL ADDR_0289E1           
                     LDY.W $18E2               
@@ -1138,14 +1141,16 @@ ADDR_0289F3:        DEY
 ADDR_0289FB:        LDA.W DATA_0288A1,Y       
                     STA.W $151C,X             
 ADDR_028A01:        BRA ADDR_028A0D           
+
 ADDR_028A03:        INC $C2,X                 
                     INC $C2,X                 
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_028A08:        LDA.B #$FF                
                     STA.W $1540,X             
 ADDR_028A0D:        LDA.B #$D0                
                     BRA ADDR_028A18           
+
 ADDR_028A11:        LDA.B #$3E                
                     STA.W $1540,X             
                     LDA.B #$D0                
@@ -1153,10 +1158,10 @@ ADDR_028A18:        STA $AA,X
                     LDA.B #$2C                
                     STA.W $154C,X             
                     LDA.W $190F,X             
-                    BPL ADDR_028A29           
+                    BPL Return028A29          
                     LDA.B #$10                
                     STA.W $15AC,X             
-ADDR_028A29:        RTL                       ; Return 
+Return028A29:       RTL                       ; Return
 
 ADDR_028A2A:        LDA $E4,X                 
                     LSR                       
@@ -1168,12 +1173,12 @@ ADDR_028A2A:        LDA $E4,X
                     TAY                       
                     LDA.W DATA_028A42,Y       
                     STA.W $15F6,X             
-                    JSL.L ADDR_028A44         
+                    JSL.L ExtSub028A44        
                     BRA ADDR_028A0D           
 
 DATA_028A42:        .db $06,$02
 
-ADDR_028A44:        PHX                       
+ExtSub028A44:       PHX                       
                     LDX.B #$03                
 ADDR_028A47:        LDA.W $17C0,X             
                     BEQ ADDR_028A50           
@@ -1189,7 +1194,7 @@ ADDR_028A50:        LDA.B #$01
                     LDA.B #$1B                
                     STA.W $17CC,X             
                     PLX                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_028A66:        LDX.B #$03                
 ADDR_028A68:        LDA.W $17D0,X             
@@ -1201,7 +1206,7 @@ ADDR_028A68:        LDA.W $17D0,X
                     LDA.B #$03                
                     STA.W $1865               
 ADDR_028A7A:        LDX.W $1865               
-ADDR_028A7D:        JSL.L ADDR_05B34A         
+ADDR_028A7D:        JSL.L ExtSub05B34A        
                     INC.W $17D0,X             
                     LDA $9A                   
                     STA.W $17E0,X             
@@ -1218,12 +1223,11 @@ ADDR_028A7D:        JSL.L ADDR_05B34A
                     STA.W $17E4,X             
                     LDA.B #$D0                
                     STA.W $17D8,X             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_028AA9:        .db $07,$03,$03,$01,$01,$01,$01,$01
 
-ADDR_028AB1:        PHB                       
+ExtSub028AB1:       PHB                       
                     PHK                       
                     PLB                       
                     LDA.W $18E4               
@@ -1232,15 +1236,16 @@ ADDR_028AB1:        PHB
                     BEQ ADDR_028AC3           
                     DEC.W $18E5               
                     BRA ADDR_028AD5           
+
 ADDR_028AC3:        DEC.W $18E4               
                     BEQ ADDR_028ACD           
                     LDA.B #$23                
                     STA.W $18E5               
-ADDR_028ACD:        LDA.B #$05                
-                    STA.W $1DFC               ; / Play sound effect 
+ADDR_028ACD:        LDA.B #$05                ; \ Play sound effect
+                    STA.W $1DFC               ; /
                     INC.W $0DBE               
-ADDR_028AD5:        LDA.W $1490               
-                    BEQ ADDR_028AEB           
+ADDR_028AD5:        LDA.W $1490               ; \ Branch if Mario doesn't have star
+                    BEQ ADDR_028AEB           ; /
                     CMP.B #$08                
                     BCC ADDR_028AEB           
                     LSR                       
@@ -1252,6 +1257,7 @@ ADDR_028AD5:        LDA.W $1490
                     LDA $13                   
                     AND.W DATA_028AA9,Y       
                     BRA ADDR_028AF5           
+
 ADDR_028AEB:        LDA.W $18D3               
                     BEQ ADDR_028B05           
                     DEC.W $18D3               
@@ -1265,29 +1271,29 @@ ADDR_028AF5:        ORA $7F
                     JSL.L ADDR_02858F         
 ADDR_028B05:        JSR.W ADDR_028B67         
                     JSR.W ADDR_02902D         
-                    JSR.W ADDR_02ADA4         
+                    JSR.W ScoreSprGfx         
                     JSR.W ADDR_029B0A         
                     JSR.W ADDR_0299D2         
                     JSR.W ADDR_02B387         
-                    JSR.W ADDR_02AFFE         
+                    JSR.W CallGenerator       
                     JSR.W ADDR_0294F5         
-                    JSR.W ADDR_02A7FC         
-                    LDA.W $18C0               
-                    BEQ ADDR_028B65           
-                    LDA $13                   
-                    AND.B #$01                
-                    ORA $9D                   
+                    JSR.W LoadSprFromLevel    
+                    LDA.W $18C0               ;  \ Return if timer not set
+                    BEQ ADDR_028B65           ;  /
+                    LDA $13                   ;  \ Decrement every other frame...
+                    AND.B #$01                ;   |
+                    ORA $9D                   ;   | ...as long as sprites not locked...
                     ORA.W $18BF               
-                    BNE ADDR_028B65           
-                    DEC.W $18C0               
-                    BNE ADDR_028B65           
-                    JSL.L ADDR_02A9E4         
-                    BMI ADDR_028B65           
+                    BNE ADDR_028B65           ;   |
+                    DEC.W $18C0               ;  /
+                    BNE ADDR_028B65           ;  Return if the timer hasn't just run out
+                    JSL.L FindFreeSprSlot     ; \ Return if no free slots
+                    BMI ADDR_028B65           ; /
                     TYX                       
-                    LDA.B #$01                
-                    STA.W $14C8,X             
-                    LDA.W $18C1               
-                    STA $9E,X                 
+                    LDA.B #$01                ; \ Sprite status = Initialization
+                    STA.W $14C8,X             ; /
+                    LDA.W $18C1               ;  \ Sprite = Sprite to respwan
+                    STA $9E,X                 ;  /
                     LDA $1A                   
                     SEC                       
                     SBC.B #$20                
@@ -1300,9 +1306,9 @@ ADDR_028B05:        JSR.W ADDR_028B67
                     STA $D8,X                 
                     LDA.W $18C4               
                     STA.W $14D4,X             
-                    JSL.L ADDR_07F7D2         
+                    JSL.L InitSpriteTables    ;  Reset sprite tables
 ADDR_028B65:        PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_028B67:        LDX.B #$0B                
 ADDR_028B69:        LDA.W $17F0,X             
@@ -1311,8 +1317,7 @@ ADDR_028B69:        LDA.W $17F0,X
                     JSR.W ADDR_028B94         
 ADDR_028B74:        DEX                       
                     BPL ADDR_028B69           
-ADDR_028B77:        RTS                       ; Return 
-
+Return028B77:       RTS                       ; Return
 
 BrokenBlock:        .db $50,$54,$58,$5C,$60,$64,$68,$6C
                     .db $70,$74,$78,$7C
@@ -1322,7 +1327,7 @@ DATA_028B8C:        .db $00,$00,$80,$80,$80,$C0,$40,$00
 
 ADDR_028B94:        JSL.L ExecutePtr          
 
-Ptrs028B98:         .dw ADDR_028B77           
+Ptrs028B98:         .dw Return028B77          
                     .dw ADDR_028F8B           
                     .dw ADDR_028ED2           
                     .dw ADDR_028E7E           
@@ -1335,24 +1340,24 @@ Ptrs028B98:         .dw ADDR_028B77
                     .dw ADDR_028CC4           
                     .dw ADDR_028C0F           
 
-ADDR_028BB0:        PHB                       
-                    PHK                       
-                    PLB                       
-                    JSR.W ADDR_028BB8         
-                    PLB                       
-                    RTL                       ; Return 
+DisabledAddSmokeRt: PHB                       ; \ This routine does nothing at all
+                    PHK                       ;  | I believe it used to call the below
+                    PLB                       ;  | routine to add smoke when boarding
+                    JSR.W Return028BB8        ;  | Yoshi
+                    PLB                       ;  |
+                    RTL                       ; / Return
 
-ADDR_028BB8:        RTS                       ; Return 
+Return028BB8:       RTS                       ; Return
 
-                    STZ $00                   
-                    JSR.W ADDR_028BC0         
-                    INC $00                   
-ADDR_028BC0:        LDY.B #$0B                
-ADDR_028BC2:        LDA.W $17F0,Y             
-                    BEQ ADDR_028BCB           
-                    DEY                       
-                    BPL ADDR_028BC2           
-                    RTS                       ; Return 
+UnusedYoshiSmoke:   STZ $00                   ; \ Display smoke when getting on Yoshi
+                    JSR.W ADDR_028BC0         ;  |
+                    INC $00                   ;  |
+ADDR_028BC0:        LDY.B #$0B                ;  |
+ADDR_028BC2:        LDA.W $17F0,Y             ;  |
+                    BEQ ADDR_028BCB           ;  |
+                    DEY                       ;  |
+                    BPL ADDR_028BC2           ;  |
+                    RTS                       ; / Return
 
 ADDR_028BCB:        LDA.B #$0B                
                     STA.W $17F0,Y             
@@ -1381,8 +1386,7 @@ ADDR_028BCB:        LDA.B #$0B
                     ADC.W DATA_028C0D,X       
                     STA.W $18EA,Y             
                     PLX                       
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_028C09:        .db $40,$C0
 
@@ -1398,6 +1402,7 @@ ADDR_028C0F:        LDA.W $1850,X
                     CLC                       
                     ADC.B #$08                
                     BRA ADDR_028C23           
+
 ADDR_028C20:        SEC                       
                     SBC.B #$08                
 ADDR_028C23:        STA.W $182C,X             
@@ -1405,13 +1410,13 @@ ADDR_028C23:        STA.W $182C,X
                     TXA                       
                     EOR $13                   
                     AND.B #$03                
-                    BNE ADDR_028C60           
+                    BNE Return028C60          
                     LDY.B #$0B                
 ADDR_028C32:        LDA.W $17F0,Y             
                     BEQ ADDR_028C3B           
                     DEY                       
                     BPL ADDR_028C32           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_028C3B:        LDA.B #$0B                
                     STA.W $17F0,Y             
@@ -1426,13 +1431,12 @@ ADDR_028C3B:        LDA.B #$0B
                     STA.W $1814,Y             
                     LDA.B #$10                
                     STA.W $1850,Y             
-ADDR_028C60:        RTS                       ; Return 
+Return028C60:       RTS                       ; Return
 
 ADDR_028C61:        DEC.W $1850,X             
                     BNE ADDR_028C6E           
 ADDR_028C66:        STZ.W $17F0,X             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_028C6A:        .db $66,$66,$64,$62
 
@@ -1472,14 +1476,13 @@ ADDR_028C6E:        LDY.W BrokenBlock,X
                     TAY                       
                     LDA.B #$00                
                     STA.W $0420,Y             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 BooStreamTiles:     .db $88,$A8,$AA,$8C,$8E,$AE,$88,$A8
                     .db $AA,$8C,$8E,$AE
 
-ADDR_028CC4:        LDA $9D                   
-                    BNE ADDR_028CFF           
+ADDR_028CC4:        LDA $9D                   ; \ Branch if sprites locked
+                    BNE ADDR_028CFF           ; /
                     LDA.W $1808,X             
                     CLC                       
                     ADC.B #$04                
@@ -1497,8 +1500,8 @@ ADDR_028CC4:        LDA $9D
                     LDA.B #$08                
                     STA $06                   
                     STA $07                   
-                    JSL.L ADDR_03B664         
-                    JSL.L ADDR_03B72B         
+                    JSL.L GetMarioClipping    
+                    JSL.L CheckForContact     
                     BCC ADDR_028CFA           
                     JSL.L HurtMario           
 ADDR_028CFA:        DEC.W $1850,X             
@@ -1510,7 +1513,7 @@ ADDR_028CFF:        LDY.W BrokenBlock,X
                     STA $00                   
                     LDA.W $18EA,X             
                     SBC $1B                   
-                    BNE ADDR_028D41           
+                    BNE Return028D41          
                     LDA $00                   
                     STA.W $0200,Y             
                     LDA.W $17FC,X             
@@ -1534,8 +1537,7 @@ ADDR_028CFF:        LDY.W BrokenBlock,X
                     TAY                       
                     LDA.B #$02                
                     STA.W $0420,Y             
-ADDR_028D41:        RTS                       ; Return 
-
+Return028D41:       RTS                       ; Return
 
 WaterSplashTiles:   .db $68,$68,$6A,$6A,$6A,$62,$62,$62
                     .db $64,$64,$64,$64,$66
@@ -1549,7 +1551,7 @@ ADDR_028D4F:        LDA.W $1808,X
                     CMP.B #$20                
                     BNE ADDR_028D66           
 ADDR_028D62:        STZ.W $17F0,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_028D66:        STZ $00                   
                     CMP.B #$10                
@@ -1604,16 +1606,15 @@ ADDR_028DB6:        LDA.W WaterSplashTiles,X
                     TAY                       
                     LDA.B #$02                
                     STA.W $0420,Y             
-                    LDA $9D                   
-                    BNE ADDR_028DD6           
+                    LDA $9D                   ; \ Branch if sprites locked
+                    BNE Return028DD6          ; /
                     INC.W $1850,X             
-ADDR_028DD6:        RTS                       ; Return 
-
+Return028DD6:       RTS                       ; Return
 
 RipVanFishZsTiles:  .db $F1,$F0,$E1,$E0
 
-ADDR_028DDB:        LDA $9D                   
-                    BNE ADDR_028E20           
+ADDR_028DDB:        LDA $9D                   ; \ Branch if sprites locked
+                    BNE ADDR_028E20           ; /
                     LDA.W $1850,X             
                     BEQ ADDR_028DE7           
                     DEC.W $1850,X             
@@ -1683,11 +1684,10 @@ ADDR_028E66:        STA.W $0202,Y
                     LDA.B #$00                
                     STA.W $0420,Y             
                     LDX.W $1698               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_028E76:        STZ.W $17F0,X             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_028E7A:        .db $03,$43,$83,$C3
 
@@ -1725,14 +1725,14 @@ ADDR_028E7E:        DEC.W $1850,X
                     TAY                       
                     LDA.B #$00                
                     STA.W $0420,Y             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 StarSparkleTiles:   .db $66,$6E,$FF,$6D,$6C,$5C
 
 ADDR_028ED2:        LDA.W $1850,X             
                     BNE ADDR_028EDA           
 ADDR_028ED7:        JMP.W ADDR_028F87         
+
 ADDR_028EDA:        LDY $9D                   
                     BNE ADDR_028EE1           
                     DEC.W $1850,X             
@@ -1774,8 +1774,7 @@ ADDR_028F11:        LDA.W StarSparkleTiles,X
                     TAY                       
                     LDA.B #$00                
                     STA.W $0420,Y             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 LavaSplashTiles:    .db $D7,$C7,$D6,$C6
 
@@ -1819,13 +1818,13 @@ ADDR_028F4D:        LDY.W BrokenBlock,X
                     TAY                       
                     LDA.B #$00                
                     STA.W $0420,Y             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_028F87:        STZ.W $17F0,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_028F8B:        LDA $9D                   
-                    BNE ADDR_028FCA           
+ADDR_028F8B:        LDA $9D                   ; \ Branch if sprites locked
+                    BNE ADDR_028FCA           ; /
                     LDA $13                   
                     AND.B #$03                
                     BEQ ADDR_028FAB           
@@ -1861,7 +1860,7 @@ ADDR_028FCA:        LDA.W $17FC,X
                     SBC $1D                   
                     BEQ ADDR_028FDD           
                     BPL ADDR_028F87           
-                    BMI ADDR_02902C           
+                    BMI Return02902C          
 ADDR_028FDD:        LDY.W BrokenBlock,X       
                     LDA.W $1808,X             
                     SEC                       
@@ -1900,7 +1899,7 @@ ADDR_029018:        EOR.W DATA_028B8C,X
                     TAY                       
                     LDA.B #$00                
                     STA.W $0420,Y             
-ADDR_02902C:        RTS                       ; Return 
+Return02902C:       RTS                       ; Return
 
 ADDR_02902D:        LDA.W $186B               
                     CMP.B #$02                
@@ -1915,34 +1914,34 @@ ADDR_02903D:        STX.W $1698
                     JSR.W ADDR_0296C0         
                     DEX                       
                     BPL ADDR_02903D           
-ADDR_02904C:        RTS                       ; Return 
+Return02904C:       RTS                       ; Return
 
 ADDR_02904D:        LDA.W $1699,X             
-                    BEQ ADDR_02904C           
+                    BEQ Return02904C          
                     LDY $9D                   
                     BNE ADDR_02905E           
-                    LDY.W $16C5,X             
+                    LDY.W $16C5,X             ;  \ Decrement bounce sprite timer if > 0
                     BEQ ADDR_02905E           
                     DEC.W $16C5,X             
 ADDR_02905E:        JSL.L ExecutePtr          
 
-Ptrs029062:         .dw ADDR_02904C           
-                    .dw ADDR_0290DE           
-                    .dw ADDR_0290DE           
-                    .dw ADDR_0290DE           
-                    .dw ADDR_0290DE           
-                    .dw ADDR_0290DE           
-                    .dw ADDR_0290DE           
-                    .dw ADDR_029076           
+BounceSpritePtrs:   .dw Return02904C          ; 00 - Nothing (Bypassed above)
+                    .dw BounceBlockSpr        ; 01 - Turn Block without turn
+                    .dw BounceBlockSpr        ; 02 - Music Block
+                    .dw BounceBlockSpr        ; 03 - Question Block
+                    .dw BounceBlockSpr        ; 04 - Sideways Bounce Block
+                    .dw BounceBlockSpr        ; 05 - Translucent Block
+                    .dw BounceBlockSpr        ; 06 - On/Off Block
+                    .dw TurnBlockSpr          ; 07 - Turn Block
 
 DATA_029072:        .db $13,$00,$00,$ED
 
-ADDR_029076:        LDA $9D                   
-                    BNE ADDR_0290CD           
-                    LDA.W $169D,X             
-                    BNE ADDR_029085           
-                    INC.W $169D,X             
-                    JSR.W ADDR_0291B8         
+TurnBlockSpr:       LDA $9D                   ;  \ Return if sprites locked
+                    BNE Return0290CD          ;  /
+                    LDA.W $169D,X             ;  \ Initialize only once
+                    BNE ADDR_029085           ;   | (Generate invisible tile sprite)
+                    INC.W $169D,X             ;   |
+                    JSR.W InvisSldFromBncSpr  ;  /
 ADDR_029085:        LDA.W $16C5,X             
                     BEQ ADDR_0290BB           
                     CMP.B #$01                
@@ -1956,25 +1955,25 @@ ADDR_029085:        LDA.W $16C5,X
                     ADC.B #$00                
                     STA.W $16A9,X             
                     LDA.B #$05                
-                    JSR.W ADDR_0291BA         
+                    JSR.W TileFromBounceSpr1  
                     BRA ADDR_0290BB           
+
 ADDR_0290A8:        JSR.W ADDR_02B526         
                     LDY.W $16C9,X             
                     LDA.W $16B1,X             
                     CLC                       
                     ADC.W DATA_029072,Y       
                     STA.W $16B1,X             
-                    JSR.W ADDR_0291F8         
+                    JSR.W BounceSprGfx        
 ADDR_0290BB:        LDA.W $18CE,X             
                     BEQ ADDR_0290C4           
                     DEC.W $18CE,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0290C4:        LDA.W $16C1,X             
-                    JSR.W ADDR_0291BA         
+                    JSR.W TileFromBounceSpr1  
                     STZ.W $1699,X             
-ADDR_0290CD:        RTS                       ; Return 
-
+Return0290CD:       RTS                       ; Return
 
 DATA_0290CE:        .db $10,$00,$00,$F0
 
@@ -1984,14 +1983,14 @@ DATA_0290D6:        .db $80,$80,$80,$00
 
 DATA_0290DA:        .db $80,$E0,$20,$80
 
-ADDR_0290DE:        JSR.W ADDR_0291F8         
+BounceBlockSpr:     JSR.W BounceSprGfx        
                     LDA $9D                   
-                    BNE ADDR_0290CD           
+                    BNE Return0290CD          
                     LDA.W $169D,X             
                     BNE ADDR_02910B           
                     INC.W $169D,X             
                     JSR.W ADDR_029265         
-                    JSR.W ADDR_0291B8         
+                    JSR.W InvisSldFromBncSpr  
                     LDA.W $16C9,X             
                     AND.B #$03                
                     TAY                       
@@ -2040,7 +2039,7 @@ ADDR_029143:        STA $00
                     STA.W $1402               
                     STZ $7D                   
 ADDR_02915E:        LDA.W $16C5,X             
-                    BNE ADDR_02919C           
+                    BNE Return02919C          
                     LDA.W $16C9,X             
                     AND.B #$03                
                     CMP.B #$03                
@@ -2054,66 +2053,65 @@ ADDR_02915E:        LDA.W $16C5,X
                     LDA $97                   
                     SBC.B #$00                
                     STA $97                   
-                    LDA.B #$08                
-                    STA.W $1DFC               ; / Play sound effect 
-ADDR_029182:        JSR.W ADDR_02919F         
+                    LDA.B #$08                ; \ Play sound effect
+                    STA.W $1DFC               ; /
+ADDR_029182:        JSR.W TileFromBounceSpr0  
                     LDY.W $1699,X             
                     CPY.B #$06                
                     BCC ADDR_029199           
-                    LDA.B #$0B                
-                    STA.W $1DF9               ; / Play sound effect 
-                    LDA.W $14AF               
-                    EOR.B #$01                
-                    STA.W $14AF               
+                    LDA.B #$0B                ; \ Play sound effect
+                    STA.W $1DF9               ; /
+                    LDA.W $14AF               ;  \ Toggle On/Off
+                    EOR.B #$01                ;   |
+                    STA.W $14AF               ;  /
 ADDR_029199:        STZ.W $1699,X             
-ADDR_02919C:        RTS                       ; Return 
-
+Return02919C:       RTS                       ; Return
 
 DATA_02919D:        .db $01,$00
 
-ADDR_02919F:        LDA.W $16C1,X             
-                    CMP.B #$0A                
-                    BEQ ADDR_0291AA           
-                    CMP.B #$0B                
-                    BNE ADDR_0291B6           
+TileFromBounceSpr0: LDA.W $16C1,X             ;  \ If doesn't turn into multiple coin block,
+                    CMP.B #$0A                ;   |
+                    BEQ ADDR_0291AA           ;   |
+                    CMP.B #$0B                ;   |
+                    BNE ADDR_0291B6           ;  / Block to generate = Bounce sprite block to turn into
 ADDR_0291AA:        LDY.W $186B               
                     CPY.B #$01                
                     BNE ADDR_0291B6           
                     STZ.W $186B               
-                    LDA.B #$0D                
-ADDR_0291B6:        BRA ADDR_0291BA           
-ADDR_0291B8:        LDA.B #$09                
-ADDR_0291BA:        STA $9C                   
-                    LDA.W $16A5,X             
-                    CLC                       
-                    ADC.B #$08                
-                    AND.B #$F0                
-                    STA $9A                   
-                    LDA.W $16AD,X             
-                    ADC.B #$00                
-                    STA $9B                   
-                    LDA.W $16A1,X             
-                    CLC                       
-                    ADC.B #$08                
-                    AND.B #$F0                
-                    STA $98                   
-                    LDA.W $16A9,X             
-                    ADC.B #$00                
-                    STA $99                   
+                    LDA.B #$0D                ;  Block to generate = Used block
+ADDR_0291B6:        BRA TileFromBounceSpr1    
+
+InvisSldFromBncSpr: LDA.B #$09                ; \ Block to generate = Invisible solid
+TileFromBounceSpr1: STA $9C                   ;  /
+                    LDA.W $16A5,X             ;  \ Block Y position = Bounce sprite Y position
+                    CLC                       ;   |
+                    ADC.B #$08                ;   | (Rounded to nearest #$10)
+                    AND.B #$F0                ;   |
+                    STA $9A                   ;   |
+                    LDA.W $16AD,X             ;   |
+                    ADC.B #$00                ;   |
+                    STA $9B                   ;  /
+                    LDA.W $16A1,X             ;  \ Block X position = Bounce sprite X position
+                    CLC                       ;   |
+                    ADC.B #$08                ;   | (Rounded to nearest #$10)
+                    AND.B #$F0                ;   |
+                    STA $98                   ;   |
+                    LDA.W $16A9,X             ;   |
+                    ADC.B #$00                ;   |
+                    STA $99                   ;  /
                     LDA.W $16C9,X             
                     ASL                       
                     ROL                       
                     AND.B #$01                
                     STA.W $1933               
-                    JSL.L ADDR_00BEB0         
-ADDR_0291EC:        RTS                       ; Return 
-
+                    JSL.L GenerateTile        
+Return0291EC:       RTS                       ; Return
 
 DATA_0291ED:        .db $10,$14,$18
 
-BlockBounceTiles:   .db $1C,$40,$6B,$2A,$42,$EA,$8A,$40
+BounceSpriteTiles:  .db $1C,$40,$6B,$2A,$42,$EA,$8A,$40
 
-ADDR_0291F8:        LDY.B #$00                
+BounceSprGfx:       LDY.B #$00                
                     LDA.W $16C9,X             
                     BPL ADDR_029201           
                     LDY.B #$04                
@@ -2129,12 +2127,12 @@ ADDR_029201:        LDA.W $001C,Y
                     CMP $02                   
                     LDA.W $16A9,X             
                     SBC $04                   
-                    BNE ADDR_0291EC           
+                    BNE Return0291EC          
                     LDA.W $16A5,X             
                     CMP $03                   
                     LDA.W $16AD,X             
                     SBC $05                   
-                    BNE ADDR_0291EC           
+                    BNE Return0291EC          
                     LDY.W DATA_0291ED,X       
                     LDA.W $16A1,X             
                     SEC                       
@@ -2151,7 +2149,7 @@ ADDR_029201:        LDA.W $001C,Y
                     STA.W $0203,Y             
                     LDA.W $1699,X             
                     TAX                       
-                    LDA.W BlockBounceTiles,X  
+                    LDA.W BounceSpriteTiles,X 
                     STA.W $0202,Y             
                     TYA                       
                     LSR                       
@@ -2160,7 +2158,7 @@ ADDR_029201:        LDA.W $001C,Y
                     LDA.B #$02                
                     STA.W $0420,Y             
                     LDX.W $1698               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_029265:        LDA.B #$01                
                     LDY.W $16C9,X             
@@ -2177,7 +2175,7 @@ ADDR_02926F:        AND $5B
                     LDA.W $16A9,X             
                     SBC.B #$00                
                     CMP $5D                   
-                    BCS ADDR_0292C9           
+                    BCS Return0292C9          
                     STA $03                   
                     AND.B #$10                
                     STA $08                   
@@ -2185,7 +2183,7 @@ ADDR_02926F:        AND $5B
                     STA $01                   
                     LDA.W $16AD,X             
                     CMP.B #$02                
-                    BCS ADDR_0292C9           
+                    BCS Return0292C9          
                     STA $02                   
                     LDA $01                   
                     LSR                       
@@ -2209,7 +2207,8 @@ ADDR_0292B2:        CLC
 ADDR_0292C3:        ADC $02                   
                     STA $06                   
                     BRA ADDR_02931A           
-ADDR_0292C9:        RTS                       ; Return 
+
+Return0292C9:       RTS                       ; Return
 
 ADDR_0292CA:        LDA.W $16A1,X             
                     SEC                       
@@ -2219,13 +2218,13 @@ ADDR_0292CA:        LDA.W $16A1,X
                     LDA.W $16A9,X             
                     SBC.B #$00                
                     CMP.B #$02                
-                    BCS ADDR_0292C9           
+                    BCS Return0292C9          
                     STA $02                   
                     LDA.W $16A5,X             
                     STA $01                   
                     LDA.W $16AD,X             
                     CMP $5D                   
-                    BCS ADDR_0292C9           
+                    BCS Return0292C9          
                     STA $03                   
                     LDA $01                   
                     LSR                       
@@ -2255,10 +2254,10 @@ ADDR_02931A:        LDA.B #$7E
                     STA.W $1693               
                     INC $07                   
                     LDA [$05]                 
-                    BNE ADDR_029355           
+                    BNE Return029355          
                     LDA.W $1693               
                     CMP.B #$2B                
-                    BNE ADDR_029355           
+                    BNE Return029355          
                     LDA.W $16A1,X             
                     PHA                       
                     SBC.B #$03                
@@ -2268,13 +2267,13 @@ ADDR_02931A:        LDA.B #$7E
                     PHA                       
                     SBC.B #$00                
                     STA.W $16A9,X             
-                    JSR.W ADDR_0291B8         
+                    JSR.W InvisSldFromBncSpr  
                     JSR.W ADDR_029356         
                     PLA                       
                     STA.W $16A9,X             
                     PLA                       
                     STA.W $16A1,X             
-ADDR_029355:        RTS                       ; Return 
+Return029355:       RTS                       ; Return
 
 ADDR_029356:        LDY.B #$03                
 ADDR_029358:        LDA.W $17D0,Y             
@@ -2284,7 +2283,7 @@ ADDR_029358:        LDA.W $17D0,Y
                     INY                       
 ADDR_029361:        LDA.B #$01                
                     STA.W $17D0,Y             
-                    JSL.L ADDR_05B34A         
+                    JSL.L ExtSub05B34A        
                     LDA.W $16A5,X             
                     STA.W $17E0,Y             
                     LDA.W $16AD,X             
@@ -2300,21 +2299,20 @@ ADDR_029361:        LDA.B #$01
                     STA.W $17E4,Y             
                     LDA.B #$D0                
                     STA.W $17D8,Y             
-ADDR_029391:        RTS                       ; Return 
-
+Return029391:       RTS                       ; Return
 
 DATA_029392:        .db $F8,$08
 
 ADDR_029394:        STZ.W $16CD,X             
-ADDR_029397:        RTS                       ; Return 
+Return029397:       RTS                       ; Return
 
 ADDR_029398:        LDA.W $16CD,X             
-                    BEQ ADDR_029397           
+                    BEQ Return029397          
                     DEC.W $18F8,X             
                     BEQ ADDR_029394           
                     LDA.W $18F8,X             
                     CMP.B #$03                
-                    BCS ADDR_029391           
+                    BCS Return029391          
                     LDY.W $1698               
                     STZ $0E                   
 ADDR_0293AE:        LDX.B #$0B                
@@ -2338,21 +2336,23 @@ ADDR_0293B0:        STX.W $15E9
 ADDR_0293D8:        PLY                       
                     EOR.W $13F9               
                     BNE ADDR_0293F7           
-                    JSL.L ADDR_03B69F         
+                    JSL.L GetSpriteClippingA  
                     LDA $0E                   
                     BEQ ADDR_0293EB           
                     JSR.W ADDR_029696         
                     BRA ADDR_0293EE           
+
 ADDR_0293EB:        JSR.W ADDR_029663         
-ADDR_0293EE:        JSL.L ADDR_03B72B         
+ADDR_0293EE:        JSL.L CheckForContact     
                     BCC ADDR_0293F7           
                     JSR.W ADDR_029404         
 ADDR_0293F7:        LDY.W $1698               
                     DEX                       
                     BMI ADDR_029400           
                     JMP.W ADDR_0293B0         
+
 ADDR_029400:        LDX.W $1698               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_029404:        LDA.B #$08                
                     STA.W $154C,X             
@@ -2360,7 +2360,7 @@ ADDR_029404:        LDA.B #$08
                     CMP.B #$81                
                     BNE ADDR_029427           
                     LDA $C2,X                 
-                    BEQ ADDR_029426           
+                    BEQ Return029426          
                     STZ $C2,X                 
                     LDA.B #$C0                
                     STA $AA,X                 
@@ -2369,7 +2369,7 @@ ADDR_029404:        LDA.B #$08
                     STZ.W $157C,X             
                     LDA.B #$20                
                     STA.W $1558,X             
-ADDR_029426:        RTS                       ; Return 
+Return029426:       RTS                       ; Return
 
 ADDR_029427:        CMP.B #$2D                
                     BEQ ADDR_029448           
@@ -2390,11 +2390,11 @@ ADDR_029448:        STZ.W $1558,X
                     LDA $0E                   
                     CMP.B #$35                
                     BEQ ADDR_029455           
-                    JSL.L ADDR_01AB6F         
+                    JSL.L ExtSub01AB6F        
 ADDR_029455:        LDA.B #$00                
                     JSL.L GivePoints          
-                    LDA.B #$02                
-                    STA.W $14C8,X             
+                    LDA.B #$02                ; \ Sprite status = Killed
+                    STA.W $14C8,X             ; /
                     LDA $9E,X                 
                     CMP.B #$1E                
                     BNE ADDR_02946B           
@@ -2403,14 +2403,14 @@ ADDR_029455:        LDA.B #$00
 ADDR_02946B:        LDA.W $1662,X             
                     AND.B #$80                
                     BNE ADDR_0294A2           
-                    LDA.W $1656,X             
-                    AND.B #$10                
-                    BEQ ADDR_0294A2           
-                    LDA.W $1656,X             
-                    AND.B #$20                
-                    BNE ADDR_0294A2           
-                    LDA.B #$09                
-                    STA.W $14C8,X             
+                    LDA.W $1656,X             ; \ Branch if can't be jumped on
+                    AND.B #$10                ;  |
+                    BEQ ADDR_0294A2           ; /
+                    LDA.W $1656,X             ; \ Branch if dies when jumped on
+                    AND.B #$20                ;  |
+                    BNE ADDR_0294A2           ; /
+                    LDA.B #$09                ; \ Sprite status = Carryable
+                    STA.W $14C8,X             ; /
                     ASL.W $15F6,X             
                     SEC                       
                     ROR.W $15F6,X             
@@ -2420,10 +2420,10 @@ ADDR_02946B:        LDA.W $1662,X
                     PHX                       
                     LDA $9E,X                 
                     TAX                       
-                    LDA.L DATA_01A7C9,X       
+                    LDA.L SpriteToSpawn,X     
                     PLX                       
                     STA $9E,X                 
-                    JSL.L ADDR_07F78B         
+                    JSL.L LoadSpriteTables    
 ADDR_0294A2:        LDA.B #$C0                
                     LDY $0E                   
                     BEQ ADDR_0294B0           
@@ -2432,42 +2432,42 @@ ADDR_0294A2:        LDA.B #$C0
                     BNE ADDR_0294B0           
                     LDA.B #$C0                
 ADDR_0294B0:        STA $AA,X                 
-                    JSR.W ADDR_02848D         
+                    JSR.W SubHorzPosBnk2      
                     LDA.W DATA_029392,Y       
                     STA $B6,X                 
                     TYA                       
                     EOR.B #$01                
                     STA.W $157C,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_0294C1:        LDA.B #$30                
-                    STA.W $1887               
+GroundPound:        LDA.B #$30                ; \ Set ground shake timer
+                    STA.W $1887               ; /
                     STZ.W $14A9               
                     PHB                       
                     PHK                       
                     PLB                       
-                    LDX.B #$09                
-ADDR_0294CE:        LDA.W $14C8,X             
-                    CMP.B #$08                
-                    BCC ADDR_0294F0           
-                    LDA.W $1588,X             
-                    AND.B #$04                
-                    BEQ ADDR_0294F0           
-                    LDA.W $166E,X             
-                    AND.B #$20                
-                    ORA.W $15D0,X             
-                    ORA.W $154C,X             
-                    BNE ADDR_0294F0           
+                    LDX.B #$09                ; Loop over sprites:
+KillSprLoopStart:   LDA.W $14C8,X             ; \ Skip current sprite if status < 8
+                    CMP.B #$08                ;  |
+                    BCC GroundPoundNextSpr    ; /
+                    LDA.W $1588,X             ; \ Skip current sprite if not on ground
+                    AND.B #$04                ;  |
+                    BEQ GroundPoundNextSpr    ; /
+                    LDA.W $166E,X             ; \ Skip current sprite if...
+                    AND.B #$20                ;  | ...can't be killed by cape...
+                    ORA.W $15D0,X             ;  | ...or sprite being eaten...
+                    ORA.W $154C,X             ;  | ...or interaction disabled
+                    BNE GroundPoundNextSpr    ; /
                     LDA.B #$35                
                     STA $0E                   
                     JSR.W ADDR_029404         
-ADDR_0294F0:        DEX                       
-                    BPL ADDR_0294CE           
+GroundPoundNextSpr: DEX                       
+                    BPL KillSprLoopStart      
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_0294F5:        LDA.W $13E8               
-                    BEQ ADDR_02950A           
+                    BEQ Return02950A          
                     STA $0E                   
                     LDA $13                   
                     LSR                       
@@ -2475,12 +2475,12 @@ ADDR_0294F5:        LDA.W $13E8
                     JSR.W ADDR_0293AE         
                     JSR.W ADDR_029631         
 ADDR_029507:        JSR.W ADDR_02950B         
-ADDR_02950A:        RTS                       ; Return 
+Return02950A:       RTS                       ; Return
 
 ADDR_02950B:        STZ $0F                   
                     JSR.W ADDR_029540         
                     LDA $5B                   
-                    BPL ADDR_02953B           
+                    BPL Return02953B          
                     INC $0F                   
                     LDA.W $13E9               
                     CLC                       
@@ -2497,8 +2497,7 @@ ADDR_02950B:        STZ $0F
                     ADC $29                   
                     STA.W $13EC               
                     JSR.W ADDR_029540         
-ADDR_02953B:        RTS                       ; Return 
-
+Return02953B:       RTS                       ; Return
 
 DATA_02953C:        .db $08,$08
 
@@ -2520,7 +2519,7 @@ ADDR_029540:        LDA $13
                     LDA.W $13EC               
                     ADC.B #$00                
                     CMP $5D                   
-                    BCS ADDR_0295AD           
+                    BCS Return0295AD          
                     STA $03                   
                     STA $99                   
                     LDA.W $13E9               
@@ -2531,7 +2530,7 @@ ADDR_029540:        LDA $13
                     LDA.W $13EA               
                     ADC.B #$00                
                     CMP.B #$02                
-                    BCS ADDR_0295AD           
+                    BCS Return0295AD          
                     STA $02                   
                     STA $9B                   
                     LDA $01                   
@@ -2556,7 +2555,8 @@ ADDR_029596:        CLC
 ADDR_0295A7:        ADC $02                   
                     STA $06                   
                     BRA ADDR_02960D           
-ADDR_0295AD:        RTS                       ; Return 
+
+Return0295AD:       RTS                       ; Return
 
 ADDR_0295AE:        LDA.W $13EB               
                     CLC                       
@@ -2567,7 +2567,7 @@ ADDR_0295AE:        LDA.W $13EB
                     LDA.W $13EC               
                     ADC.B #$00                
                     CMP.B #$02                
-                    BCS ADDR_0295AD           
+                    BCS Return0295AD          
                     STA $02                   
                     STA $99                   
                     LDA.W $13E9               
@@ -2578,7 +2578,7 @@ ADDR_0295AE:        LDA.W $13EB
                     LDA.W $13EA               
                     ADC.B #$00                
                     CMP $5D                   
-                    BCS ADDR_0295AD           
+                    BCS Return0295AD          
                     STA $03                   
                     STA $9B                   
                     LDA $01                   
@@ -2608,15 +2608,15 @@ ADDR_02960D:        LDA.B #$7E
                     STA.W $1693               
                     INC $07                   
                     LDA [$05]                 
-                    JSL.L ADDR_00F545         
+                    JSL.L ExtSub00F545        
                     CMP.B #$00                
-                    BEQ ADDR_029630           
+                    BEQ Return029630          
                     LDA $0F                   
                     STA.W $1933               
                     LDA.W $1693               
                     LDY.B #$00                
-                    JSL.L ADDR_00F160         
-ADDR_029630:        RTS                       ; Return 
+                    JSL.L ExtSub00F160        
+Return029630:       RTS                       ; Return
 
 ADDR_029631:        LDX.B #$07                
 ADDR_029633:        STX.W $15E9               
@@ -2625,7 +2625,7 @@ ADDR_029633:        STX.W $15E9
                     BCC ADDR_029653           
                     JSR.W ADDR_02A519         
                     JSR.W ADDR_029696         
-                    JSL.L ADDR_03B72B         
+                    JSL.L CheckForContact     
                     BCC ADDR_029653           
                     LDA.W $170B,X             
                     CMP.B #$12                
@@ -2633,44 +2633,43 @@ ADDR_029633:        STX.W $15E9
                     JSR.W ADDR_02A4DE         
 ADDR_029653:        DEX                       
                     BPL ADDR_029633           
-ADDR_029656:        RTS                       ; Return 
+                    RTS                       ; Return
 
+DATA_029657:        .db $FC,$E0
 
-DATA_029657:        .db $FC
+DATA_029659:        .db $FF,$FF
 
-DATA_029658:        .db $E0,$FF
+DATA_02965B:        .db $18,$50
 
-DATA_02965A:        .db $FF,$18
+DATA_02965D:        .db $FC,$F8
 
-DATA_02965C:        .db $50,$FC
+DATA_02965F:        .db $FF,$FF
 
-DATA_02965E:        .db $F8,$FF
-
-DATA_029660:        .db $FF,$18,$10
+DATA_029661:        .db $18,$10
 
 ADDR_029663:        PHX                       
                     LDA.W $16CD,Y             
                     TAX                       
                     LDA.W $16D1,Y             
                     CLC                       
-                    ADC.W ADDR_029656,X       
+                    ADC.W DATA_029657-1,X     
                     STA $00                   
                     LDA.W $16D5,Y             
-                    ADC.W DATA_029658,X       
+                    ADC.W DATA_029659-1,X     
                     STA $08                   
-                    LDA.W DATA_02965A,X       
+                    LDA.W DATA_02965B-1,X     
                     STA $02                   
                     LDA.W $16D9,Y             
                     CLC                       
-                    ADC.W DATA_02965C,X       
+                    ADC.W DATA_02965D-1,X     
                     STA $01                   
                     LDA.W $16DD,Y             
-                    ADC.W DATA_02965E,X       
+                    ADC.W DATA_02965F-1,X     
                     STA $09                   
-                    LDA.W DATA_029660,X       
+                    LDA.W DATA_029661-1,X     
                     STA $03                   
                     PLX                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_029696:        LDA.W $13E9               
                     SEC                       
@@ -2687,32 +2686,30 @@ ADDR_029696:        LDA.W $13E9
                     STA $09                   
                     LDA.B #$10                
                     STA $03                   
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0296B8:        .db $20,$24,$28,$2C
 
 DATA_0296BC:        .db $90,$94,$98,$9C
 
 ADDR_0296C0:        LDA.W $17C0,X             
-                    BEQ ADDR_0296D7           
+                    BEQ Return0296D7          
                     AND.B #$7F                
                     JSL.L ExecutePtr          
 
-Ptrs0296CB:         .dw ADDR_0296D7           
+Ptrs0296CB:         .dw Return0296D7          
                     .dw ADDR_0296E3           
                     .dw ADDR_029797           
                     .dw ADDR_029927           
-                    .dw ADDR_0296D7           
+                    .dw Return0296D7          
                     .dw ADDR_0298CA           
 
-ADDR_0296D7:        RTS                       ; Return 
-
+Return0296D7:       RTS                       ; Return
 
 DATA_0296D8:        .db $66,$66,$64,$62,$60,$62,$60
 
 ADDR_0296DF:        STZ.W $17C0,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0296E3:        LDA.W $17CC,X             
                     BEQ ADDR_0296DF           
@@ -2765,7 +2762,7 @@ ADDR_02972D:        ORA $64
                     TAY                       
                     LDA.B #$02                
                     STA.W $0460,Y             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02974A:        LDY.W DATA_0296B8,X       
                     LDA.W $17C8,X             
@@ -2805,10 +2802,10 @@ ADDR_029776:        ORA $64
                     TAY                       
                     LDA.B #$02                
                     STA.W $0420,Y             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_029793:        STZ.W $17C0,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_029797:        LDA.W $17CC,X             
                     BEQ ADDR_029793           
@@ -2821,6 +2818,7 @@ ADDR_0297A3:        BIT.W $0D9B
                     CMP.B #$C1                
                     BEQ ADDR_0297B2           
                     JMP.W ADDR_029838         
+
 ADDR_0297B2:        LDY.B #$F0                
                     LDA.W $17C8,X             
                     SEC                       
@@ -2865,6 +2863,7 @@ ADDR_0297B2:        LDY.B #$F0
                     STA.W $0206,Y             
                     STA.W $020A,Y             
                     BRA ADDR_029825           
+
 ADDR_029815:        LDA.B #$7D                
                     STA.W $0202,Y             
                     STA.W $020E,Y             
@@ -2880,7 +2879,7 @@ ADDR_029825:        TYA
                     STA.W $0421,Y             
                     STA.W $0422,Y             
                     STA.W $0423,Y             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_029838:        LDY.B #$90                
                     LDA.W $17C8,X             
@@ -2926,6 +2925,7 @@ ADDR_029838:        LDY.B #$90
                     STA.W $0306,Y             
                     STA.W $030A,Y             
                     BRA ADDR_0298AB           
+
 ADDR_02989B:        LDA.B #$7D                
                     STA.W $0302,Y             
                     STA.W $030E,Y             
@@ -2941,11 +2941,10 @@ ADDR_0298AB:        TYA
                     STA.W $0461,Y             
                     STA.W $0462,Y             
                     STA.W $0463,Y             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0298BE:        STZ.W $17C0,X             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0298C2:        .db $04,$08,$04,$00
 
@@ -2954,10 +2953,10 @@ DATA_0298C6:        .db $FC,$04,$0C,$04
 ADDR_0298CA:        LDA.W $17CC,X             
                     BEQ ADDR_0298BE           
                     LDY $9D                   
-                    BNE ADDR_029921           
+                    BNE Return029921          
                     DEC.W $17CC,X             
                     AND.B #$03                
-                    BNE ADDR_029921           
+                    BNE Return029921          
                     LDY.B #$0B                
 ADDR_0298DC:        LDA.W $17F0,Y             
                     BEQ ADDR_0298F1           
@@ -2991,8 +2990,7 @@ ADDR_0298F1:        LDA.B #$02
                     PLX                       
                     LDA.B #$17                
                     STA.W $1850,Y             
-ADDR_029921:        RTS                       ; Return 
-
+Return029921:       RTS                       ; Return
 
 DATA_029922:        .db $66,$66,$64,$62,$62
 
@@ -3006,6 +3004,7 @@ ADDR_029927:        LDA.W $17CC,X
                     LDA.B #$F0                
                     STA.W $0301,Y             
 ADDR_02993E:        JMP.W ADDR_029793         
+
 ADDR_029941:        LDY $9D                   
                     BNE ADDR_02994F           
                     DEC.W $17CC,X             
@@ -3025,6 +3024,7 @@ ADDR_02994F:        LDA $A5
                     BNE ADDR_02999F           
 ADDR_029967:        LDY.W DATA_0296BC,X       
                     BRA ADDR_02996F           
+
 ADDR_02996C:        LDY.W DATA_0296B8,X       
 ADDR_02996F:        LDA.W $17C8,X             
                     SEC                       
@@ -3049,7 +3049,7 @@ ADDR_02996F:        LDA.W $17C8,X
                     TAY                       
                     LDA.B #$00                
                     STA.W $0420,Y             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02999F:        LDY.W DATA_0296BC,X       
                     LDA.W $17C8,X             
@@ -3075,7 +3075,7 @@ ADDR_02999F:        LDY.W DATA_0296BC,X
                     TAY                       
                     LDA.B #$00                
                     STA.W $0460,Y             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0299D2:        LDX.B #$03                
 ADDR_0299D4:        STX.W $15E9               
@@ -3084,12 +3084,11 @@ ADDR_0299D4:        STX.W $15E9
                     JSR.W ADDR_0299F1         
 ADDR_0299DF:        DEX                       
                     BPL ADDR_0299D4           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0299E3:        LDA.B #$00                
                     STA.W $17D0,X             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0299E9:        .db $30,$38,$40,$48,$EC,$EA,$E8,$EC
 
@@ -3103,6 +3102,7 @@ ADDR_0299F1:        LDA $9D
                     CMP.B #$20                
                     BMI ADDR_029A08           
                     JMP.W ADDR_029AA8         
+
 ADDR_029A08:        LDA.W $17E4,X             
                     ASL                       
                     ASL                       
@@ -3117,7 +3117,7 @@ ADDR_029A08:        LDA.W $17E4,X
                     CMP $02                   
                     LDA.W $17E8,X             
                     SBC $04                   
-                    BNE ADDR_029A6D           
+                    BNE Return029A6D          
                     LDA.W $17E0,X             
                     SEC                       
                     SBC $03                   
@@ -3153,8 +3153,7 @@ ADDR_029A08:        LDA.W $17E4,X
                     LSR                       
                     AND.B #$03                
                     BNE ADDR_029A71           
-ADDR_029A6D:        RTS                       ; Return 
-
+Return029A6D:       RTS                       ; Return
 
 RollingCoinTiles:   .db $EA,$FA,$EA
 
@@ -3170,7 +3169,7 @@ ADDR_029A71:        LDY $0F
                     CLC                       
                     ADC.B #$08                
                     STA.W $0205,Y             
-                    LDA.L ADDR_029A6D,X       
+                    LDA.L Return029A6D,X      
                     STA.W $0202,Y             
                     STA.W $0206,Y             
                     LDA.W $0203,Y             
@@ -3184,59 +3183,60 @@ ADDR_029A71:        LDY $0F
                     STA.W $0420,Y             
                     STA.W $0421,Y             
                     PLX                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_029AA8:        JSL.L ADDR_02AD34         ;  Find next usable location in score sprite table 
+ADDR_029AA8:        JSL.L ExtSub02AD34        ;  Find next usable location in score sprite table
                     LDA.B #$01                
-                    STA.W $16E1,Y             ;  add a 10 score sprite 
+                    STA.W $16E1,Y             ; add a "10" score sprite
                     LDA.W $17D4,X             
-                    STA.W $16E7,Y             ; set Yposition low byte 
+                    STA.W $16E7,Y             ; set Yposition low byte
                     LDA.W $17E8,X             
-                    STA.W $16F9,Y             ; set Ypos high byte 
+                    STA.W $16F9,Y             ; set Ypos high byte
                     LDA.W $17E0,X             
-                    STA.W $16ED,Y             ; set Xpos low byte 
+                    STA.W $16ED,Y             ; set Xpos low byte
                     LDA.W $17EC,X             
-                    STA.W $16F3,Y             ; set Xpos high byte 
+                    STA.W $16F3,Y             ; set Xpos high byte
                     LDA.B #$30                
-                    STA.W $16FF,Y             ; set initial speed to 30 
+                    STA.W $16FF,Y             ; set initial speed to 30
                     LDA.W $17E4,X             
                     STA.W $1705,Y             
                     JSR.W ADDR_029ADA         
-                    JMP.W ADDR_0299E3         
-ADDR_029ADA:        LDY.B #$03                
-ADDR_029ADC:        LDA.W $17C0,Y             
-                    BEQ ADDR_029AE5           
-                    DEY                       
-                    BPL ADDR_029ADC           
-                    RTS                       ; Return 
+                    JMP.W ADDR_0299E3         ; Puts #$00 into $17D0 and returns
 
-ADDR_029AE5:        LDA.B #$05                
+ADDR_029ADA:        LDY.B #$03                ; for (c=3;c>=0;c--)
+ADDR_029ADC:        LDA.W $17C0,Y             ; {
+                    BEQ ADDR_029AE5           ;  check if there is empty space in smoke/dust sprite table
+                    DEY                       
+                    BPL ADDR_029ADC           ; }
+                    RTS                       ;  if no empty space, return
+
+ADDR_029AE5:        LDA.B #$05                ; if there's an empty space, make it 5 (glitter sprite)
                     STA.W $17C0,Y             
-                    LDA.W $17E4,X             
-                    LSR                       
+                    LDA.W $17E4,X             ;  nots sure what 17E4 is used for yet - copied from $1933
+                    LSR                       ; carryout = $17E4 % 2
                     PHP                       
-                    LDA.W $17E0,X             
-                    BCC ADDR_029AF6           
-                    SBC $26                   
-ADDR_029AF6:        STA.W $17C8,Y             
-                    LDA.W $17D4,X             
+                    LDA.W $17E0,X             ; get x coordinate low byte
+                    BCC ADDR_029AF6           ; if carryout == 1
+                    SBC $26                   ;   x-coord -= $26
+ADDR_029AF6:        STA.W $17C8,Y             ; store x-coord
+                    LDA.W $17D4,X             ; get y coordinate low byte
                     PLP                       
-                    BCC ADDR_029B01           
-                    SBC $28                   
-ADDR_029B01:        STA.W $17C4,Y             
+                    BCC ADDR_029B01           ; if carryout == 1
+                    SBC $28                   ;   y-coord -=$28
+ADDR_029B01:        STA.W $17C4,Y             ; store y-coord
                     LDA.B #$10                
-                    STA.W $17CC,Y             
-                    RTS                       ; Return 
+                    STA.W $17CC,Y             ; duration = 10
+                    RTS                       ; Return
 
 ADDR_029B0A:        LDX.B #$09                
 ADDR_029B0C:        STX.W $15E9               
                     JSR.W ADDR_029B16         
                     DEX                       
                     BPL ADDR_029B0C           
-ADDR_029B15:        RTS                       ; Return 
+Return029B15:       RTS                       ; Return
 
 ADDR_029B16:        LDA.W $170B,X             
-                    BEQ ADDR_029B15           
+                    BEQ Return029B15          
                     LDY $9D                   
                     BNE ADDR_029B27           
                     LDY.W $176F,X             
@@ -3244,27 +3244,27 @@ ADDR_029B16:        LDA.W $170B,X
                     DEC.W $176F,X             
 ADDR_029B27:        JSL.L ExecutePtr          
 
-ExtendedSpritePtrs: .dw ADDR_029B15           
-                    .dw ADDR_02A34F           
-                    .dw ADDR_02A16B           
-                    .dw ADDR_02A219           
-                    .dw ADDR_02A2EF           
-                    .dw ADDR_029FAF           
-                    .dw ADDR_02A254           
-                    .dw ADDR_029E86           
-                    .dw ADDR_029E3D           
-                    .dw ADDR_029D9D           
-                    .dw ADDR_029CB5           
-                    .dw ADDR_02A2EF           
-                    .dw ADDR_029B51           
-                    .dw ADDR_02A254           
-                    .dw ADDR_029CB5           
-                    .dw ADDR_029C3E           
-                    .dw ADDR_029C83           
-                    .dw ADDR_029F61           
-                    .dw ADDR_029EEE           
+ExtendedSpritePtrs: .dw Return029B15          ; 00 - Empty slot
+                    .dw SmokePuff             ; 01 - Puff of smoke
+                    .dw ReznorFireball        ; 02 - Reznor fireball
+                    .dw FlameRemnant          ; 03 - Tiny flame left by hopping flame
+                    .dw Hammer_PiranhaFire    ; 04 - Hammer
+                    .dw MarioFireball         ; 05 - Mario fireball
+                    .dw Baseball_Bone         ; 06 - Bone
+                    .dw LavaSplash            ; 07 - Lava splash
+                    .dw LauncherArm           ; 08 - Torpedo Ted shooter's arm
+                    .dw UnusedExtendedSpr     ; 09 - Unused (Red thing that flickers from 16x16 to 8x8)
+                    .dw CloudCoin_Flower      ; 0A - Coin from cloud game
+                    .dw Hammer_PiranhaFire    ; 0B - Piranha fireball
+                    .dw VolcanoLotusFire      ; 0C - Volcano lotus fire
+                    .dw Baseball_Bone         ; 0D - Baseball
+                    .dw CloudCoin_Flower      ; 0E - Flower of Wiggler
+                    .dw SmokeTrail            ; 0F - Trail of smoke
+                    .dw SpinJumpStars         ; 10 - Spin Jump stars
+                    .dw YoshiFireball         ; 11 - Yoshi fireballs
+                    .dw WaterBubble           ; 12 - Water bubble
 
-ADDR_029B51:        LDY.W DATA_02A153,X       
+VolcanoLotusFire:   LDY.W DATA_02A153,X       
                     LDA.W $171F,X             
                     SEC                       
                     SBC $1A                   
@@ -3306,7 +3306,7 @@ ADDR_029B99:        STA.W $0202,Y
                     LDA.B #$00                
                     STA.W $0420,Y             
 ADDR_029BA5:        LDA $9D                   
-                    BNE ADDR_029BD9           
+                    BNE Return029BD9          
                     JSR.W ADDR_02A3F6         
                     JSR.W ADDR_02B554         
                     JSR.W ADDR_02B560         
@@ -3318,7 +3318,7 @@ ADDR_029BA5:        LDA $9D
                     BPL ADDR_029BC2           
                     INC.W $173D,X             
 ADDR_029BC2:        LDA.W $173D,X             
-                    BMI ADDR_029BD9           
+                    BMI Return029BD9          
                     TXA                       
                     ASL                       
                     ASL                       
@@ -3330,11 +3330,10 @@ ADDR_029BC2:        LDA.W $173D,X
                     LDY.B #$F8                
 ADDR_029BD5:        TYA                       
                     STA.W $1747,X             
-ADDR_029BD9:        RTS                       ; Return 
+Return029BD9:       RTS                       ; Return
 
-ADDR_029BDA:        STZ.W $170B,X             
-                    RTS                       ; Return 
-
+ADDR_029BDA:        STZ.W $170B,X             ; Clear extended sprite
+                    RTS                       ; Return
 
 DATA_029BDE:        .db $08,$F8
 
@@ -3342,22 +3341,22 @@ DATA_029BE0:        .db $00,$FF
 
 DATA_029BE2:        .db $18,$E8
 
-ADDR_029BE4:        LDA.B #$05                
-                    STA.W $1887               
-                    LDA.B #$09                
-                    STA.W $1DFC               ; / Play sound effect 
+ADDR_029BE4:        LDA.B #$05                ;  \ Set ground shake timer
+                    STA.W $1887               ;  /
+                    LDA.B #$09                ; \ Play sound effect
+                    STA.W $1DFC               ; /
                     STZ $00                   
                     JSR.W ADDR_029BF5         
                     INC $00                   
-ADDR_029BF5:        LDY.B #$07                
-ADDR_029BF7:        LDA.W $170B,Y             
-                    BEQ ADDR_029C00           
-                    DEY                       
-                    BPL ADDR_029BF7           
-                    RTS                       ; Return 
+ADDR_029BF5:        LDY.B #$07                ; \ Find a free extended sprite slot
+ADDR_029BF7:        LDA.W $170B,Y             ;  |
+                    BEQ ADDR_029C00           ;  |
+                    DEY                       ;  |
+                    BPL ADDR_029BF7           ;  |
+                    RTS                       ; / Return if no free slots
 
-ADDR_029C00:        LDA.B #$0F                
-                    STA.W $170B,Y             
+ADDR_029C00:        LDA.B #$0F                ; \ Extended sprite = Yoshi stomp smoke
+                    STA.W $170B,Y             ; /
                     LDA $96                   
                     CLC                       
                     ADC.B #$28                
@@ -3377,13 +3376,12 @@ ADDR_029C00:        LDA.B #$0F
                     STA.W $1747,Y             
                     LDA.B #$15                
                     STA.W $176F,Y             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-
-DATA_029C33:        .db $66,$64,$62,$60,$60,$60,$60,$60
+SmokeTrailTiles:    .db $66,$64,$62,$60,$60,$60,$60,$60
                     .db $60,$60,$60
 
-ADDR_029C3E:        JSR.W ADDR_02A1A4         
+SmokeTrail:         JSR.W ADDR_02A1A4         
                     LDY.W DATA_02A153,X       
                     LDA.W $176F,X             
                     LSR                       
@@ -3397,7 +3395,7 @@ ADDR_029C3E:        JSR.W ADDR_02A1A4
                     AND.B #$C0                
                     ORA.B #$32                
                     STA.W $0203,Y             
-                    LDA.W DATA_029C33,X       
+                    LDA.W SmokeTrailTiles,X   
                     STA.W $0202,Y             
                     TYA                       
                     LSR                       
@@ -3407,7 +3405,7 @@ ADDR_029C3E:        JSR.W ADDR_02A1A4
                     STA.W $0420,Y             
                     PLX                       
                     LDA $9D                   
-                    BNE ADDR_029C7E           
+                    BNE Return029C7E          
                     LDA.W $176F,X             
                     BEQ ADDR_029C7F           
                     CMP.B #$06                
@@ -3416,12 +3414,12 @@ ADDR_029C3E:        JSR.W ADDR_02A1A4
                     ASL                       
                     ROR.W $1747,X             
 ADDR_029C7B:        JSR.W ADDR_02B554         
-ADDR_029C7E:        RTS                       ; Return 
+Return029C7E:       RTS                       ; Return
 
-ADDR_029C7F:        STZ.W $170B,X             
-                    RTS                       ; Return 
+ADDR_029C7F:        STZ.W $170B,X             ; Clear extended sprite
+                    RTS                       ; Return
 
-ADDR_029C83:        LDA.W $176F,X             
+SpinJumpStars:      LDA.W $176F,X             
                     BEQ ADDR_029C7F           
                     JSR.W ADDR_02A1A4         
                     LDY.W DATA_02A153,X       
@@ -3430,22 +3428,21 @@ ADDR_029C83:        LDA.W $176F,X
                     LDA.B #$EF                
                     STA.W $0202,Y             
                     LDA $9D                   
-                    BNE ADDR_029CAF           
+                    BNE Return029CAF          
                     LDA.W $176F,X             
                     LSR                       
                     LSR                       
                     TAY                       
                     LDA $13                   
                     AND.W DATA_029CB0,Y       
-                    BNE ADDR_029CAF           
+                    BNE Return029CAF          
                     JSR.W ADDR_02B554         
                     JSR.W ADDR_02B560         
-ADDR_029CAF:        RTS                       ; Return 
-
+Return029CAF:       RTS                       ; Return
 
 DATA_029CB0:        .db $FF,$07,$01,$00,$00
 
-ADDR_029CB5:        LDA $9D                   
+CloudCoin_Flower:   LDA $9D                   
                     BNE ADDR_029CF8           
                     JSR.W ADDR_02B560         
                     LDA.W $173D,X             
@@ -3466,6 +3463,7 @@ ADDR_029CDA:        TYA
                     STA.W $1747,X             
                     JSR.W ADDR_02B554         
                     BRA ADDR_029CF8           
+
 ADDR_029CE3:        LDA.W $1765,X             
                     BNE ADDR_029CF5           
                     JSR.W ADDR_02A56E         
@@ -3484,7 +3482,7 @@ ADDR_029CF8:        LDA.W $1715,X
                     CMP $1A                   
                     LDA.W $1733,X             
                     SBC $1B                   
-                    BNE ADDR_029D5D           
+                    BNE Return029D5D          
                     LDY.W DATA_02A153,X       
                     STY $0F                   
                     LDA.W $171F,X             
@@ -3510,7 +3508,7 @@ ADDR_029D36:        ORA $64
                     TAY                       
                     LDA.B #$00                
                     STA.W $0420,Y             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_029D45:        LDA $01                   
                     STA.W $0201,Y             
@@ -3520,31 +3518,30 @@ ADDR_029D45:        LDA $01
                     JSR.W ADDR_029D36         
                     LDA.B #$02                
                     STA.W $0420,Y             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_029D5A:        STZ.W $170B,X             
-ADDR_029D5D:        RTS                       ; Return 
-
+ADDR_029D5A:        STZ.W $170B,X             ; Clear extended sprite
+Return029D5D:       RTS                       ; Return
 
 DATA_029D5E:        .db $00,$01,$02,$03,$02,$03,$02,$03
                     .db $03,$02,$03,$02,$03,$02,$01,$00
-DATA_029D6E:        .db $10,$F8,$03,$10,$F8,$03,$10,$F0
+UnusedExSprDispX:   .db $10,$F8,$03,$10,$F8,$03,$10,$F0
                     .db $FF,$10,$F0,$FF
 
-DATA_029D7A:        .db $02,$02,$EE,$02,$02,$EE,$FE,$FE
+UnusedExSprDispY:   .db $02,$02,$EE,$02,$02,$EE,$FE,$FE
                     .db $E6,$FE,$FE,$E6
 
-DATA_029D86:        .db $B3,$B3,$B1,$B2,$B2,$B0,$8E,$8E
+UnusedExSprTiles:   .db $B3,$B3,$B1,$B2,$B2,$B0,$8E,$8E
                     .db $A8,$8C,$8C,$88
 
-DATA_029D92:        .db $69,$29,$29
+UnusedExSprGfxProp: .db $69,$29,$29
 
-DATA_029D95:        .db $00,$00,$02,$02
+UnusedExSprTileSize:.db $00,$00,$02,$02
 
-ADDR_029D99:        STZ.W $170B,X             
-                    RTS                       ; Return 
+ADDR_029D99:        STZ.W $170B,X             ; Clear extended sprite
+                    RTS                       ; Return
 
-ADDR_029D9D:        JSR.W ADDR_02A3F6         
+UnusedExtendedSpr:  JSR.W ADDR_02A3F6         
                     LDY.W $1747,X             
                     LDA.W $14C8,Y             
                     CMP.B #$08                
@@ -3568,13 +3565,13 @@ ADDR_029D9D:        JSR.W ADDR_02A3F6
                     STY $03                   
                     LDA.W $171F,X             
                     CLC                       
-                    ADC.W DATA_029D6E,Y       
+                    ADC.W UnusedExSprDispX,Y  
                     SEC                       
                     SBC $1A                   
                     STA $00                   
                     LDA.W $1715,X             
                     CLC                       
-                    ADC.W DATA_029D7A,Y       
+                    ADC.W UnusedExSprDispY,Y  
                     SEC                       
                     SBC $1C                   
                     STA $01                   
@@ -3590,26 +3587,26 @@ ADDR_029D9D:        JSR.W ADDR_02A3F6
                     STA.W $0200,Y             
                     LDA.W $1765,X             
                     TAX                       
-                    LDA.W DATA_029D92,X       
+                    LDA.W UnusedExSprGfxProp,X
                     STA.W $0203,Y             
                     LDX $03                   
-                    LDA.W DATA_029D86,X       
+                    LDA.W UnusedExSprTiles,X  
                     STA.W $0202,Y             
                     TYA                       
                     LSR                       
                     LSR                       
                     TAY                       
                     LDX $0F                   
-                    LDA.W DATA_029D95,X       
+                    LDA.W UnusedExSprTileSize,X
                     STA.W $0420,Y             
-                    LDX.W $15E9               
+                    LDX.W $15E9               ; X = Sprite index
                     LDA $00                   
                     SEC                       
                     SBC $7E                   
                     CLC                       
                     ADC.B #$04                
                     CMP.B #$08                
-                    BCS ADDR_029E35           
+                    BCS Return029E35          
                     LDA $01                   
                     SEC                       
                     SBC $80                   
@@ -3618,17 +3615,17 @@ ADDR_029D9D:        JSR.W ADDR_02A3F6
                     CLC                       
                     ADC.B #$10                
                     CMP.B #$10                
-                    BCS ADDR_029E35           
+                    BCS Return029E35          
                     JMP.W ADDR_02A469         
-ADDR_029E35:        RTS                       ; Return 
 
+Return029E35:       RTS                       ; Return
 
 DATA_029E36:        .db $08,$00,$F8
 
 ADDR_029E39:        STZ.W $170B,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_029E3D:        LDY.B #$00                
+LauncherArm:        LDY.B #$00                
                     LDA.W $176F,X             
                     BEQ ADDR_029E39           
                     CMP.B #$60                
@@ -3661,12 +3658,11 @@ ADDR_029E6B:        STA.W $0202,Y
                     TAY                       
                     LDA.B #$02                
                     STA.W $0420,Y             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 LavaSplashTiles2:   .db $D7,$C7,$D6,$C6
 
-ADDR_029E86:        LDA $9D                   
+LavaSplash:         LDA $9D                   
                     BNE ADDR_029E9D           
                     JSR.W ADDR_02B554         
                     JSR.W ADDR_02B560         
@@ -3711,16 +3707,15 @@ ADDR_029E9D:        LDY.W DATA_02A153,X
                     TAY                       
                     LDA.B #$00                
                     STA.W $0420,Y             
-                    LDX.W $15E9               
-                    RTS                       ; Return 
+                    LDX.W $15E9               ; X = Sprite index
+                    RTS                       ; Return
 
-ADDR_029EE6:        STZ.W $170B,X             
-                    RTS                       ; Return 
-
+ADDR_029EE6:        STZ.W $170B,X             ; Clear extended sprite
+                    RTS                       ; Return
 
 DATA_029EEA:        .db $00,$01,$00,$FF
 
-ADDR_029EEE:        LDA $9D                   
+WaterBubble:        LDA $9D                   
                     BNE ADDR_029F2A           
                     INC.W $1765,X             
                     LDA.W $1765,X             
@@ -3748,6 +3743,7 @@ ADDR_029F08:        TXA
                     CMP.B #$06                
                     BCC ADDR_029F2A           
 ADDR_029F27:        JMP.W ADDR_02A211         
+
 ADDR_029F2A:        LDA.W $1715,X             
                     CMP $1C                   
                     LDA.W $1729,X             
@@ -3772,13 +3768,13 @@ ADDR_029F2A:        LDA.W $1715,X
                     STA.W $0201,Y             
                     LDA.B #$1C                
                     STA.W $0202,Y             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_029F61:        LDA $9D                   
+YoshiFireball:      LDA $9D                   
                     BNE ADDR_029F6E           
                     JSR.W ADDR_02B554         
                     JSR.W ADDR_02B560         
-                    JSR.W ADDR_02A0AC         
+                    JSR.W ProcessFireball     
 ADDR_029F6E:        JSR.W ADDR_02A1A4         
                     LDA $14                   
                     LSR                       
@@ -3801,8 +3797,7 @@ ADDR_029F7F:        STA.W $0202,Y
                     TAY                       
                     LDA.B #$02                
                     STA.W $0420,Y             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_029F99:        .db $00,$B8,$C0,$C8,$D0,$D8,$E0,$E8
                     .db $F0
@@ -3814,7 +3809,7 @@ DATA_029FA3:        .db $05,$03
 DATA_029FA5:        .db $02,$02,$02,$02,$02,$02,$F8,$FC
                     .db $A0,$A4
 
-ADDR_029FAF:        LDA $9D                   
+MarioFireball:      LDA $9D                   
                     BNE ADDR_02A02C           
                     LDA.W $1715,X             
                     CMP $1C                   
@@ -3822,8 +3817,9 @@ ADDR_029FAF:        LDA $9D
                     SBC $1D                   
                     BEQ ADDR_029FC2           
                     JMP.W ADDR_02A211         
+
 ADDR_029FC2:        INC.W $1765,X             
-                    JSR.W ADDR_02A0AC         
+                    JSR.W ProcessFireball     
                     LDA.W $173D,X             
                     CMP.B #$30                
                     BPL ADDR_029FD8           
@@ -3856,6 +3852,7 @@ ADDR_029FF3:        LDA $0B
                     BCS ADDR_02A00E           
                     DEC.W $1729,X             
 ADDR_02A00E:        BRA ADDR_02A013           
+
 ADDR_02A010:        STZ.W $175B,X             
 ADDR_02A013:        LDY.B #$00                
                     LDA.W $1747,X             
@@ -3877,13 +3874,14 @@ ADDR_02A02C:        LDA $A5
                     BNE ADDR_02A04F           
 ADDR_02A03B:        LDY.W DATA_029FA3,X       
                     JSR.W ADDR_02A1A7         
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02A042:        JSR.W ADDR_02A02C         
-ADDR_02A045:        LDA.B #$01                
-                    STA.W $1DF9               ; / Play sound effect 
+ADDR_02A045:        LDA.B #$01                ; \ Play sound effect
+                    STA.W $1DF9               ; /
                     LDA.B #$0F                
                     JMP.W ADDR_02A4E0         
+
 ADDR_02A04F:        LDY.W DATA_029FA5,X       
                     LDA.W $1747,X             
                     AND.B #$80                
@@ -3925,84 +3923,86 @@ ADDR_02A09C:        TYA
                     TAY                       
                     LDA.B #$00                
                     STA.W $0460,Y             
-                    LDX.W $15E9               
-ADDR_02A0A8:        RTS                       ; Return 
+                    LDX.W $15E9               ; X = Sprite index
+Return02A0A8:       RTS                       ; Return
 
 ADDR_02A0A9:        JMP.W ADDR_02A211         
-ADDR_02A0AC:        TXA                       
-                    EOR $13                   
-                    AND.B #$03                
-                    BNE ADDR_02A0A8           
+
+ProcessFireball:    TXA                       ; \ Return every other frame
+                    EOR $13                   ;  |
+                    AND.B #$03                ;  |
+                    BNE Return02A0A8          ; /
                     PHX                       
                     TXY                       
-                    STY.W $185E               
-                    LDX.B #$09                
-ADDR_02A0BA:        STX.W $15E9               
-                    LDA.W $14C8,X             
-                    CMP.B #$08                
-                    BCC ADDR_02A143           
-                    LDA.W $167A,X             
-                    AND.B #$02                
-                    ORA.W $15D0,X             
-                    ORA.W $1632,X             
+                    STY.W $185E               ; $185E = Y = Extended sprite index
+                    LDX.B #$09                ; Loop over sprites:
+FireRtLoopStart:    STX.W $15E9               
+                    LDA.W $14C8,X             ; \ Skip current sprite if status < 8
+                    CMP.B #$08                ;  |
+                    BCC FireRtNextSprite      ; /
+                    LDA.W $167A,X             ; \ Skip current sprite if...
+                    AND.B #$02                ;  | ...invincible to fire/cape/etc
+                    ORA.W $15D0,X             ;  | ...sprite being eaten...
+                    ORA.W $1632,X             ;  | ...interactions disabled...
                     EOR.W $1779,Y             
-                    BNE ADDR_02A143           
-                    JSL.L ADDR_03B69F         
+                    BNE FireRtNextSprite      ; /
+                    JSL.L GetSpriteClippingA  
                     JSR.W ADDR_02A547         
-                    JSL.L ADDR_03B72B         
-                    BCC ADDR_02A143           
-                    LDA.W $170B,Y             
-                    CMP.B #$11                
-                    BEQ ADDR_02A0EE           
-                    PHX                       
-                    TYX                       
-                    JSR.W ADDR_02A045         
-                    PLX                       
-ADDR_02A0EE:        LDA.W $166E,X             
-                    AND.B #$10                
-                    BNE ADDR_02A143           
-                    LDA.W $190F,X             
-                    AND.B #$08                
-                    BEQ ADDR_02A124           
-                    INC.W $1528,X             
-                    LDA.W $1528,X             
-                    CMP.B #$05                
-                    BCC ADDR_02A143           
-                    LDA.B #$02                
-                    STA.W $1DF9               ; / Play sound effect 
-                    LDA.B #$02                
-                    STA.W $14C8,X             
-                    LDA.B #$D0                
-                    STA $AA,X                 
-                    JSR.W ADDR_02848D         
-                    LDA.W DATA_02A151,Y       
-                    STA $B6,X                 
-                    LDA.B #$04                
-                    JSL.L GivePoints          
-                    BRA ADDR_02A143           
-ADDR_02A124:        LDA.B #$03                
-                    STA.W $1DF9               ; / Play sound effect 
-                    LDA.B #$21                
-                    STA $9E,X                 
-                    LDA.B #$08                
-                    STA.W $14C8,X             
-                    JSL.L ADDR_07F7D2         
-                    LDA.B #$D0                
-                    STA $AA,X                 
-                    JSR.W ADDR_02848D         
+                    JSL.L CheckForContact     
+                    BCC FireRtNextSprite      
+                    LDA.W $170B,Y             ; \ if Yoshi fireball...
+                    CMP.B #$11                ;  |
+                    BEQ ADDR_02A0EE           ;  |
+                    PHX                       ;  |
+                    TYX                       ;  |
+                    JSR.W ADDR_02A045         ;  | ...?
+                    PLX                       ; /
+ADDR_02A0EE:        LDA.W $166E,X             ; \ Skip sprite if fire killing is disabled
+                    AND.B #$10                ;  |
+                    BNE FireRtNextSprite      ; /
+                    LDA.W $190F,X             ; \ Branch if takes 1 fireball to kill
+                    AND.B #$08                ;  |
+                    BEQ TurnSpriteToCoin      ; /
+                    INC.W $1528,X             ; Increase times Chuck hit by fireball
+                    LDA.W $1528,X             ; \ If fire count >= 5, kill Chuck:
+                    CMP.B #$05                ;  |
+                    BCC FireRtNextSprite      ;  |
+ChuckFireKill:      LDA.B #$02                ;  | Play sound effect
+                    STA.W $1DF9               ;  |
+                    LDA.B #$02                ;  | Sprite status = Killed
+                    STA.W $14C8,X             ;  |
+                    LDA.B #$D0                ;  | Set death Y speed
+                    STA $AA,X                 ;  |
+                    JSR.W SubHorzPosBnk2      
+                    LDA.W FireKillSpeedX,Y    ;  | Set death X speed
+                    STA $B6,X                 ;  |
+                    LDA.B #$04                ;  | Increase points
+                    JSL.L GivePoints          ;  |
+                    BRA FireRtNextSprite      ; /
+
+TurnSpriteToCoin:   LDA.B #$03                ; \ Turn sprite into coin:
+                    STA.W $1DF9               ;  | Play sound effect
+                    LDA.B #$21                ;  | Sprite = Moving Coin
+                    STA $9E,X                 ;  |
+                    LDA.B #$08                ;  | Sprite status = Normal
+                    STA.W $14C8,X             ;  |
+                    JSL.L InitSpriteTables    ;  | Reset sprite tables
+                    LDA.B #$D0                ;  | Set upward speed
+                    STA $AA,X                 ;  |
+                    JSR.W SubHorzPosBnk2      
                     TYA                       
                     EOR.B #$01                
-                    STA.W $157C,X             
-ADDR_02A143:        LDY.W $185E               
+                    STA.W $157C,X             ; /
+FireRtNextSprite:   LDY.W $185E               
                     DEX                       
                     BMI ADDR_02A14C           
-                    JMP.W ADDR_02A0BA         
-ADDR_02A14C:        PLX                       
-                    STX.W $15E9               
-                    RTS                       ; Return 
+                    JMP.W FireRtLoopStart     
 
+ADDR_02A14C:        PLX                       ; $15E9 = Sprite index
+                    STX.W $15E9               ; $15E9 = Sprite index
+                    RTS                       ; Return
 
-DATA_02A151:        .db $F0,$10
+FireKillSpeedX:     .db $F0,$10
 
 DATA_02A153:        .db $90,$94,$98,$9C,$A0,$A4,$A8,$AC
 FireballTiles:      .db $2C,$2D,$2C,$2D
@@ -4013,7 +4013,7 @@ ReznorFireTiles:    .db $26,$2A,$26,$2A
 
 DATA_02A167:        .db $35,$35,$F5,$F5
 
-ADDR_02A16B:        LDA $9D                   
+ReznorFireball:     LDA $9D                   
                     BNE ADDR_02A178           
                     JSR.W ADDR_02B554         
                     JSR.W ADDR_02B560         
@@ -4040,7 +4040,7 @@ ADDR_02A178:        LDA.W $0D9B
                     LDA.B #$02                
                     STA.W $0420,X             
                     PLX                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02A1A4:        LDY.W DATA_02A153,X       
 ADDR_02A1A7:        LDA.W $1747,X             
@@ -4092,17 +4092,16 @@ ADDR_02A204:        TYA
                     TAY                       
                     LDA.B #$00                
                     STA.W $0420,Y             
-                    LDX.W $15E9               
-                    RTS                       ; Return 
+                    LDX.W $15E9               ; X = Sprite index
+                    RTS                       ; Return
 
-ADDR_02A211:        LDA.B #$00                
-                    STA.W $170B,X             
-                    RTS                       ; Return 
-
+ADDR_02A211:        LDA.B #$00                ; \ Clear extended sprite
+                    STA.W $170B,X             ; /
+                    RTS                       ; Return
 
 SmallFlameTiles:    .db $AC,$AD
 
-ADDR_02A219:        LDA $9D                   
+FlameRemnant:       LDA $9D                   
                     BNE ADDR_02A22F           
                     INC.W $1765,X             
                     LDA.W $176F,X             
@@ -4110,7 +4109,7 @@ ADDR_02A219:        LDA $9D
                     CMP.B #$50                
                     BCS ADDR_02A22F           
                     AND.B #$01                
-                    BNE ADDR_02A253           
+                    BNE Return02A253          
                     BEQ ADDR_02A232           
 ADDR_02A22F:        JSR.W ADDR_02A3F6         
 ADDR_02A232:        JSR.W ADDR_02A1A4         
@@ -4126,10 +4125,10 @@ ADDR_02A232:        JSR.W ADDR_02A1A4
                     AND.B #$3F                
                     ORA.B #$05                
                     STA.W $0203,Y             
-                    LDX.W $15E9               
-ADDR_02A253:        RTS                       ; Return 
+                    LDX.W $15E9               ; X = Sprite index
+Return02A253:       RTS                       ; Return
 
-ADDR_02A254:        LDA $9D                   
+Baseball_Bone:      LDA $9D                   
                     BNE ADDR_02A26A           
                     JSR.W ADDR_02B554         
                     INC.W $1765,X             
@@ -4150,7 +4149,7 @@ ADDR_02A26A:        LDA.W $170B,X
                     BEQ ADDR_02A287           
                     EOR.W $1747,X             
                     BPL ADDR_02A2BF           
-                    BMI ADDR_02A2BE           
+                    BMI Return02A2BE          
 ADDR_02A287:        LDY.W DATA_02A153,X       
                     LDA $00                   
                     STA.W $0200,Y             
@@ -4179,10 +4178,10 @@ ADDR_02A287:        LDY.W DATA_02A153,X
                     TAY                       
                     LDA.B #$00                
                     STA.W $0420,Y             
-ADDR_02A2BE:        RTS                       ; Return 
+Return02A2BE:       RTS                       ; Return
 
-ADDR_02A2BF:        STZ.W $170B,X             
-                    RTS                       ; Return 
+ADDR_02A2BF:        STZ.W $170B,X             ; Clear extended sprite
+                    RTS                       ; Return
 
 ADDR_02A2C3:        JSR.W ADDR_02A317         
                     LDA.W $0202,Y             
@@ -4195,13 +4194,12 @@ ADDR_02A2D1:        STA.W $0202,Y
                     AND.B #$F1                
                     ORA.B #$02                
                     STA.W $0203,Y             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 HammerTiles:        .db $08,$6D,$6D,$08,$08,$6D,$6D,$08
 HammerGfxProp:      .db $47,$47,$07,$07,$87,$87,$C7,$C7
 
-ADDR_02A2EF:        LDA $9D                   
+Hammer_PiranhaFire: LDA $9D                   
                     BNE ADDR_02A30C           
                     JSR.W ADDR_02B554         
                     JSR.W ADDR_02B560         
@@ -4216,7 +4214,7 @@ ADDR_02A30C:        LDA.W $170B,X
                     CMP.B #$0B                
                     BNE ADDR_02A317           
                     JSR.W ADDR_02A178         
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02A317:        JSR.W ADDR_02A1A4         
                     LDY.W DATA_02A153,X       
@@ -4241,7 +4239,7 @@ ADDR_02A317:        JSR.W ADDR_02A1A4
                     LDA.B #$02                
                     STA.W $0420,X             
                     PLX                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02A344:        JMP.W ADDR_02A211         
 
@@ -4249,7 +4247,7 @@ DustCloudTiles:     .db $66,$64,$60,$62
 
 DATA_02A34B:        .db $00,$40,$C0,$80
 
-ADDR_02A34F:        LDA.W $176F,X             
+SmokePuff:          LDA.W $176F,X             
                     BEQ ADDR_02A344           
                     LDA.W $140F               
                     BNE ADDR_02A362           
@@ -4293,10 +4291,11 @@ ADDR_02A36C:        LDA.W $171F,X
                     TAY                       
                     LDA.B #$02                
                     STA.W $0420,Y             
-                    LDX.W $15E9               
-                    RTS                       ; Return 
+                    LDX.W $15E9               ; X = Sprite index
+                    RTS                       ; Return
 
 ADDR_02A3AE:        JMP.W ADDR_02A211         
+
 ADDR_02A3B1:        LDY.W DATA_029FA5,X       
                     LDA.W $171F,X             
                     SEC                       
@@ -4324,28 +4323,28 @@ ADDR_02A3B1:        LDY.W DATA_029FA5,X
                     LDA.W DATA_02A34B,X       
                     ORA $64                   
                     STA.W $0303,Y             
-                    LDX.W $15E9               
+                    LDX.W $15E9               ; X = Sprite index
                     TYA                       
                     LSR                       
                     LSR                       
                     TAY                       
                     LDA.B #$02                
                     STA.W $0460,Y             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02A3F6:        LDA.W $13F9               
                     EOR.W $1779,X             
-                    BNE ADDR_02A468           
-                    JSL.L ADDR_03B664         
+                    BNE Return02A468          
+                    JSL.L GetMarioClipping    
                     JSR.W ADDR_02A519         
-                    JSL.L ADDR_03B72B         
-                    BCC ADDR_02A468           
+                    JSL.L CheckForContact     
+                    BCC Return02A468          
                     LDA.W $170B,X             
                     CMP.B #$0A                
                     BNE ADDR_02A469           
-                    JSL.L ADDR_05B34A         
+                    JSL.L ExtSub05B34A        
                     INC.W $18E3               
-                    STZ.W $170B,X             
+                    STZ.W $170B,X             ; Clear extended sprite
                     LDY.B #$03                
 ADDR_02A41E:        LDA.W $17C0,Y             
                     BEQ ADDR_02A427           
@@ -4360,7 +4359,7 @@ ADDR_02A427:        LDA.B #$05
                     STA.W $17C4,Y             
                     LDA.B #$0A                
                     STA.W $17CC,Y             
-                    JSL.L ADDR_02AD34         
+                    JSL.L ExtSub02AD34        
                     LDA.B #$05                
                     STA.W $16E1,Y             
                     LDA.W $1715,X             
@@ -4375,20 +4374,20 @@ ADDR_02A427:        LDA.B #$05
                     STA.W $16FF,Y             
                     LDA.B #$00                
                     STA.W $1705,Y             
-ADDR_02A468:        RTS                       ; Return 
+Return02A468:       RTS                       ; Return
 
-ADDR_02A469:        LDA.W $1490               
-                    BNE ADDR_02A4B5           
+ADDR_02A469:        LDA.W $1490               ; \ Branch if Mario has star
+                    BNE ADDR_02A4B5           ; /
                     LDA.W $187A               
                     BEQ ADDR_02A4AE           
 ADDR_02A473:        PHX                       
                     LDX.W $18DF               
                     LDA.B #$10                
                     STA.W $163D,X             
-                    LDA.B #$03                
-                    STA.W $1DFA               ; / Play sound effect 
-                    LDA.B #$13                
-                    STA.W $1DFC               ; / Play sound effect 
+                    LDA.B #$03                ; \ Play sound effect
+                    STA.W $1DFA               ; /
+                    LDA.B #$13                ; \ Play sound effect
+                    STA.W $1DFC               ; /
                     LDA.B #$02                
                     STA $C1,X                 
                     STZ.W $187A               
@@ -4405,11 +4404,10 @@ ADDR_02A473:        PHX
                     LDA.B #$30                
                     STA.W $1497               
                     PLX                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02A4AE:        JSL.L HurtMario           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02A4B3:        .db $10,$F0
 
@@ -4433,13 +4431,8 @@ ADDR_02A4B5:        LDA.W $170B,X
 ADDR_02A4DE:        LDA.B #$07                
 ADDR_02A4E0:        STA.W $176F,X             
                     LDA.B #$01                
-
-Instr02A4E5:        .db $9D,$0B
-
-ADDR_02A4E7:        .db $17
-
-                    RTS                       ; Return 
-
+                    STA.W $170B,X             
+                    RTS                       ; Return
 
 DATA_02A4E9:        .db $03,$03,$04,$03,$04,$00,$00,$00
                     .db $04,$03
@@ -4456,7 +4449,7 @@ DATA_02A50B:        .db $01,$01,$01,$01,$08,$01,$08,$00
 ADDR_02A519:        LDY.W $170B,X             
                     LDA.W $171F,X             
                     CLC                       
-                    ADC.W ADDR_02A4E7,Y       
+                    ADC.W DATA_02A4E9-2,Y     
                     STA $04                   
                     LDA.W $1733,X             
                     ADC.B #$00                
@@ -4472,7 +4465,7 @@ ADDR_02A519:        LDY.W $170B,X
                     STA $0B                   
                     LDA.W DATA_02A50B,Y       
                     STA $07                   
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02A547:        LDA.W $171F,Y             
                     SEC                       
@@ -4492,7 +4485,7 @@ ADDR_02A547:        LDA.W $171F,Y
                     STA $09                   
                     LDA.B #$13                
                     STA $03                   
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02A56E:        STZ $0F                   
                     STZ $0E                   
@@ -4509,7 +4502,7 @@ ADDR_02A56E:        STZ $0F
                     BEQ ADDR_02A5BC           
                     LDA.W $1715,X             
                     CMP.B #$A8                
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02A592:        LDA.W $171F,X             
                     CLC                       
@@ -4525,9 +4518,9 @@ ADDR_02A592:        LDA.W $171F,X
                     LDA.W $1729,X             
                     ADC.B #$00                
                     STA.W $14B7               
-                    JSL.L ADDR_01CC9D         
-                    LDX.W $15E9               
-                    RTS                       ; Return 
+                    JSL.L ExtSub01CC9D        
+                    LDX.W $15E9               ; X = Sprite index
+                    RTS                       ; Return
 
 ADDR_02A5BC:        JSR.W ADDR_02A611         
                     ROL $0E                   
@@ -4568,7 +4561,7 @@ ADDR_02A5BC:        JSR.W ADDR_02A611
                     STA.W $171F,X             
 ADDR_02A60C:        LDA $0E                   
                     CMP.B #$01                
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02A611:        LDA $0F                   
                     INC A                     
@@ -4619,8 +4612,9 @@ ADDR_02A660:        CLC
 ADDR_02A671:        ADC $02                   
                     STA $06                   
                     BRA ADDR_02A6DB           
+
 ADDR_02A677:        CLC                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02A679:        LDA.W $1715,X             
                     CLC                       
@@ -4671,12 +4665,12 @@ ADDR_02A6D7:        ADC $02
                     STA $06                   
 ADDR_02A6DB:        LDA.B #$7E                
                     STA $07                   
-                    LDX.W $15E9               
+                    LDX.W $15E9               ; X = Sprite index
                     LDA [$05]                 
                     STA.W $1693               
                     INC $07                   
                     LDA [$05]                 
-                    JSL.L ADDR_00F545         
+                    JSL.L ExtSub00F545        
                     CMP.B #$00                
                     BEQ ADDR_02A729           
                     LDA.W $1693               
@@ -4690,7 +4684,7 @@ ADDR_02A6DB:        LDA.B #$7E
                     STY $0A                   
                     LDY $98                   
                     STY $0C                   
-                    JSL.L ADDR_00FA19         
+                    JSL.L ExtSub00FA19        
                     LDA $00                   
                     CMP.B #$0C                
                     BCS ADDR_02A718           
@@ -4704,17 +4698,17 @@ ADDR_02A718:        LDA [$05],Y
                     PLX                       
                     STA $0B                   
 ADDR_02A727:        SEC                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02A729:        CLC                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02A72B:        LDA $98                   
                     AND.B #$0F                
                     CMP.B #$06                
                     BCS ADDR_02A729           
                     SEC                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02A735:        LDA $98                   
                     AND.B #$0F                
@@ -4728,48 +4722,48 @@ ADDR_02A735:        LDA $98
                     SBC.B #$00                
                     STA.W $1729,X             
                     JMP.W ADDR_02A611         
-ADDR_02A751:        PHB                       
+
+ExtSub02A751:       PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02ABF2         
                     JSR.W ADDR_02AC5C         
                     LDA.W $0D9B               
                     BMI ADDR_02A763           
-                    JSL.L ADDR_01808C         
+                    JSL.L ExtSub01808C        
 ADDR_02A763:        LDA.W $0DC1               
                     BEQ ADDR_02A771           
                     LDA.W $1B9B               
                     BNE ADDR_02A771           
-                    JSL.L ADDR_00FC7A         
+                    JSL.L ExtSub00FC7A        
 ADDR_02A771:        PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-
-DATA_02A773:        .db $09,$05,$07,$07,$07,$06,$07,$06
+SpriteSlotMax:      .db $09,$05,$07,$07,$07,$06,$07,$06
                     .db $06,$09,$08,$04,$07,$07,$07,$08
                     .db $09,$05,$05
 
-DATA_02A786:        .db $09,$07,$07,$01,$00,$01,$07,$06
+SpriteSlotMax1:     .db $09,$07,$07,$01,$00,$01,$07,$06
                     .db $06,$00,$02,$00,$07,$01,$07,$08
                     .db $09,$07,$05
 
-DATA_02A799:        .db $09,$07,$07,$01,$00,$06,$07,$06
+SpriteSlotMax2:     .db $09,$07,$07,$01,$00,$06,$07,$06
                     .db $06,$00,$02,$00,$07,$01,$07,$08
                     .db $09,$07,$05
 
-DATA_02A7AC:        .db $FF,$FF,$00,$01,$00,$01,$FF,$01
+SpriteSlotStart:    .db $FF,$FF,$00,$01,$00,$01,$FF,$01
                     .db $FF,$00,$FF,$00,$FF,$01,$FF,$FF
                     .db $FF,$FF,$FF
 
-DATA_02A7BF:        .db $FF,$05,$FF,$FF,$FF,$FF,$FF,$01
+SpriteSlotStart1:   .db $FF,$05,$FF,$FF,$FF,$FF,$FF,$01
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$05,$FF
 
-DATA_02A7D2:        .db $FF,$5F,$54,$5E,$60,$28,$88,$FF
+ReservedSprite1:    .db $FF,$5F,$54,$5E,$60,$28,$88,$FF
                     .db $FF,$C5,$86,$28,$FF,$90,$FF,$FF
                     .db $FF,$AE
 
-DATA_02A7E4:        .db $FF,$64,$FF,$FF,$9F,$FF,$FF,$FF
+ReservedSprite2:    .db $FF,$64,$FF,$FF,$9F,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$9F,$FF,$FF
                     .db $FF,$FF
 
@@ -4777,116 +4771,122 @@ DATA_02A7F6:        .db $D0,$00,$20
 
 DATA_02A7F9:        .db $FF,$00,$01
 
-ADDR_02A7FC:        LDA $13                   
-                    AND.B #$01                
-                    BNE ADDR_02A84B           
+LoadSprFromLevel:   LDA $13                   ;  \ Return every other frame
+                    AND.B #$01                ;   |
+                    BNE Return02A84B          ;  /
 ADDR_02A802:        LDY $55                   
-                    LDA $5B                   
-                    LSR                       
-                    BCC ADDR_02A817           
-                    LDA $1C                   
-                    CLC                       
-                    ADC.W DATA_02A7F6,Y       
-                    AND.B #$F0                
-                    STA $00                   
-                    LDA $1D                   
-                    BRA ADDR_02A823           
-ADDR_02A817:        LDA $1A                   
-                    CLC                       
-                    ADC.W DATA_02A7F6,Y       
-                    AND.B #$F0                
-                    STA $00                   
-                    LDA $1B                   
-ADDR_02A823:        ADC.W DATA_02A7F9,Y       
-                    BMI ADDR_02A84B           
-                    STA $01                   
-                    LDX.B #$00                
-                    LDY.B #$01                
-ADDR_02A82E:        LDA [$CE],Y               
-                    CMP.B #$FF                
-                    BEQ ADDR_02A84B           
-                    ASL                       
-                    ASL                       
-                    ASL                       
-                    AND.B #$10                
-                    STA $02                   
-                    INY                       
-                    LDA [$CE],Y               
-                    AND.B #$0F                
-                    ORA $02                   
-                    CMP $01                   
-                    BCS ADDR_02A84C           
-ADDR_02A846:        INY                       
-                    INY                       
-                    INX                       
-                    BRA ADDR_02A82E           
-ADDR_02A84B:        RTS                       ; Return 
+                    LDA $5B                   ;  \ Branch if horizontal level
+                    LSR                       ;   |
+                    BCC ADDR_02A817           ;  /
+                    LDA $1C                   ;  \ Vertical level:
+                    CLC                       ;   | $00,$01 = Screen boundary Y + offset
+                    ADC.W DATA_02A7F6,Y       ;   |
+                    AND.B #$F0                ;   |
+                    STA $00                   ;   |
+                    LDA $1D                   ;   |
+                    BRA ADDR_02A823           ;  /
 
-ADDR_02A84C:        BNE ADDR_02A84B           
-                    LDA [$CE],Y               
-                    AND.B #$F0                
-                    CMP $00                   
-                    BNE ADDR_02A846           
-                    LDA.W $1938,X             
-                    BNE ADDR_02A846           
-                    STX $02                   
-                    INC.W $1938,X             
-                    INY                       
-                    LDA [$CE],Y               
-                    STA $05                   
-                    DEY                       
-                    CMP.B #$E7                
-                    BCC ADDR_02A88C           
-                    LDA.W $143E               
+ADDR_02A817:        LDA $1A                   ;  \ Horizontal level:
+                    CLC                       ;   | $00,$01 = Screen boundary X + offset
+                    ADC.W DATA_02A7F6,Y       ;   |
+                    AND.B #$F0                ;   |
+                    STA $00                   ;   |
+                    LDA $1B                   ;   |
+ADDR_02A823:        ADC.W DATA_02A7F9,Y       ;   |
+                    BMI Return02A84B          ;   |
+                    STA $01                   ;  /
+                    LDX.B #$00                ;  X = #$00 (Number of sprite in level)
+                    LDY.B #$01                ;  Y = #$01 (Index into level data)
+LoadSpriteLoopStrt: LDA [$CE],Y               ;  Byte format: YYYYEEsy
+                    CMP.B #$FF                ;  \ Return when we encounter $FF, as it signals the end
+                    BEQ Return02A84B          ;  /
+                    ASL                       ;  \ If 's' is set, $02 = #$10
+                    ASL                       ;   | Else, $02 = #$00
+                    ASL                       ;   |
+                    AND.B #$10                ;   |
+                    STA $02                   ;  /
+                    INY                       ;  Next byte
+                    LDA [$CE],Y               ;  Byte format: XXXXSSSS
+                    AND.B #$0F                ;  \ Skip all sprites until we find one at the adjusted screen boundary:
+                    ORA $02                   ;   |
+                    CMP $01                   ;   | If sprite screen (sSSSS) < adjusted screen boundary...
+                    BCS ADDR_02A84C           ;  / ...skip the sprite
+LoadNextSprite:     INY                       ;  \ Move on to the next sprite
+                    INY                       ;   |
+                    INX                       ;   |
+                    BRA LoadSpriteLoopStrt    ;  /
+
+Return02A84B:       RTS                       ; Return
+
+ADDR_02A84C:        BNE Return02A84B          ;  Return if sprite screen > adjusted screen boundary
+                    LDA [$CE],Y               ;  Byte format: XXXXSSSS
+                    AND.B #$F0                ;  \ Skip sprite if not right at the screen boundary
+                    CMP $00                   ;   |
+                    BNE LoadNextSprite        ;  /
+                    LDA.W $1938,X             ;  \ This table has a flag for every sprite in the level (not just those onscreen)
+                    BNE LoadNextSprite        ;  / Skip sprite if it's already been loaded/permanently killed
+                    STX $02                   ;  $02 = Number of sprite in level
+                    INC.W $1938,X             ;  Mark sprite as loaded
+                    INY                       ;  Next byte
+                    LDA [$CE],Y               ;  Byte format: Sprite number
+                    STA $05                   ;  $05 = Sprite number
+                    DEY                       ;  Previous byte
+                    CMP.B #$E7                ;  \ Branch if sprite number < #$E7
+                    BCC ADDR_02A88C           ;  /
+LoadScrollSprite:   LDA.W $143E               
                     ORA.W $143F               
                     BNE ADDR_02A88A           
                     PHY                       
                     PHX                       
-                    LDA $05                   
-                    SEC                       
-                    SBC.B #$E7                
-                    STA.W $143E               
-                    DEY                       
-                    LDA [$CE],Y               
+                    LDA $05                   ;  \ $143E = Type of scroll sprite
+                    SEC                       ;   | (Sprite number - #$E7)
+                    SBC.B #$E7                ;   |
+                    STA.W $143E               ;  /
+                    DEY                       ;  Previous byte
+                    LDA [$CE],Y               ;  Byte format: YYYYEEsy
                     LSR                       
                     LSR                       
                     STA.W $1440               
-                    JSL.L ADDR_05BCD6         
+                    JSL.L ExtSub05BCD6        
                     PLX                       
                     PLY                       
-ADDR_02A88A:        BRA ADDR_02A846           
-ADDR_02A88C:        CMP.B #$DE                
-                    BNE ADDR_02A89C           
+ADDR_02A88A:        BRA LoadNextSprite        
+
+ADDR_02A88C:        CMP.B #$DE                ;  \ Branch if sprite number != 5 Eeries
+                    BNE ADDR_02A89C           ;  /
                     PHY                       
                     PHX                       
                     DEY                       
                     STY $03                   
-                    JSR.W ADDR_02AF9D         
+                    JSR.W Load5Eeries         
                     PLX                       
                     PLY                       
-ADDR_02A89A:        BRA ADDR_02A846           
-ADDR_02A89C:        CMP.B #$E0                
-                    BNE ADDR_02A8AC           
+ADDR_02A89A:        BRA LoadNextSprite        
+
+ADDR_02A89C:        CMP.B #$E0                ;  \ Branch if sprite number != 3 Platforms on Chain
+                    BNE ADDR_02A8AC           ;  /
                     PHY                       
                     PHX                       
                     DEY                       
                     STY $03                   
-                    JSR.W ADDR_02AF33         
+                    JSR.W Load3Platforms      
                     PLX                       
                     PLY                       
                     BRA ADDR_02A89A           
-ADDR_02A8AC:        CMP.B #$CB                
-                    BCC ADDR_02A8D4           
-                    CMP.B #$DA                
-                    BCS ADDR_02A8C0           
-                    SEC                       
-                    SBC.B #$CB                
-                    INC A                     
-                    STA.W $18B9               
-                    STZ.W $1938,X             
+
+ADDR_02A8AC:        CMP.B #$CB                ;  \ Branch if sprite number < #$CB
+                    BCC ADDR_02A8D4           ;  /
+                    CMP.B #$DA                ;   \ Branch if sprite number >= #$DA
+                    BCS ADDR_02A8C0           ;  /
+InitGenerator:      SEC                       ;  \ $18B9 = Type of generator
+                    SBC.B #$CB                ;   | (Sprite number - #$CA)
+                    INC A                     ;   |
+                    STA.W $18B9               ;  /
+                    STZ.W $1938,X             ;  Allow sprite to be reloaded by level loading routine
                     BRA ADDR_02A89A           
-ADDR_02A8C0:        CMP.B #$E1                
-                    BCC ADDR_02A8D0           
+
+ADDR_02A8C0:        CMP.B #$E1                ;  \ Branch if sprite number < #$E1
+                    BCC ADDR_02A8D0           ;  /
                     PHX                       
                     PHY                       
                     DEY                       
@@ -4895,35 +4895,38 @@ ADDR_02A8C0:        CMP.B #$E1
                     PLY                       
                     PLX                       
                     BRA ADDR_02A89A           
+
 ADDR_02A8D0:        LDA.B #$09                
                     BRA ADDR_02A8DF           
-ADDR_02A8D4:        CMP.B #$C9                
-                    BCC ADDR_02A8DD           
-                    JSR.W ADDR_02AB78         
+
+ADDR_02A8D4:        CMP.B #$C9                ;  \ Branch if sprite number < #$C9
+                    BCC LoadNormalSprite      ;  /
+                    JSR.W LoadShooter         
                     BRA ADDR_02A89A           
-ADDR_02A8DD:        LDA.B #$01                
-ADDR_02A8DF:        STA $04                   
-                    DEY                       
+
+LoadNormalSprite:   LDA.B #$01                ;  \ $04 = #$01
+ADDR_02A8DF:        STA $04                   ;  / Eventually goes into sprite status
+                    DEY                       ;  Previous byte
                     STY $03                   
                     LDY.W $1692               
-                    LDX.W DATA_02A773,Y       
-                    LDA.W DATA_02A7AC,Y       
+                    LDX.W SpriteSlotMax,Y     
+                    LDA.W SpriteSlotStart,Y   
                     STA $06                   
                     LDA $05                   
-                    CMP.W DATA_02A7D2,Y       
+                    CMP.W ReservedSprite1,Y   
                     BNE ADDR_02A8FE           
-                    LDX.W DATA_02A786,Y       
-                    LDA.W DATA_02A7BF,Y       
+                    LDX.W SpriteSlotMax1,Y    
+                    LDA.W SpriteSlotStart1,Y  
                     STA $06                   
 ADDR_02A8FE:        LDA $05                   
-                    CMP.W DATA_02A7E4,Y       
+                    CMP.W ReservedSprite2,Y   
                     BNE ADDR_02A916           
                     CMP.B #$64                
                     BNE ADDR_02A90F           
                     LDA $00                   
                     AND.B #$10                
                     BEQ ADDR_02A916           
-ADDR_02A90F:        LDX.W DATA_02A799,Y       
+ADDR_02A90F:        LDX.W SpriteSlotMax2,Y    
                     LDA.B #$FF                
                     STA $06                   
 ADDR_02A916:        STX $0F                   
@@ -4943,60 +4946,61 @@ ADDR_02A92A:        LDA.W $167A,X
                     CPX $06                   
                     BNE ADDR_02A92A           
 ADDR_02A936:        LDX $02                   
-                    STZ.W $1938,X             
-                    RTS                       ; Return 
+                    STZ.W $1938,X             ;  Allow sprite to be reloaded by level loading routine
+                    RTS                       ; Return
 
 ADDR_02A93C:        LDY $03                   
-                    LDA $5B                   
-                    LSR                       
-                    BCC ADDR_02A95B           
-                    LDA [$CE],Y               
-                    PHA                       
-                    AND.B #$F0                
-                    STA $E4,X                 
-                    PLA                       
-                    AND.B #$0D                
-                    STA.W $14E0,X             
-                    LDA $00                   
-                    STA $D8,X                 
-                    LDA $01                   
-                    STA.W $14D4,X             
-                    BRA ADDR_02A971           
-ADDR_02A95B:        LDA [$CE],Y               
-                    PHA                       
-                    AND.B #$F0                
-                    STA $D8,X                 
-                    PLA                       
-                    AND.B #$0D                
-                    STA.W $14D4,X             
-                    LDA $00                   
-                    STA $E4,X                 
-                    LDA $01                   
-                    STA.W $14E0,X             
+                    LDA $5B                   ;  \ Branch if horizontal level
+                    LSR                       ;   |
+                    BCC ADDR_02A95B           ;  /
+                    LDA [$CE],Y               ;  \ Vertical level:
+                    PHA                       ;   | Same as below with X and Y coords swapped
+                    AND.B #$F0                ;   |
+                    STA $E4,X                 ;   |
+                    PLA                       ;   |
+                    AND.B #$0D                ;   |
+                    STA.W $14E0,X             ;   |
+                    LDA $00                   ;   |
+                    STA $D8,X                 ;   |
+                    LDA $01                   ;   |
+                    STA.W $14D4,X             ;   |
+                    BRA ADDR_02A971           ;  /
+
+ADDR_02A95B:        LDA [$CE],Y               ;  Byte format: YYYYEEsy
+                    PHA                       ;  \ Bits 11110000 are low byte of Y position
+                    AND.B #$F0                ;   |
+                    STA $D8,X                 ;  /
+                    PLA                       ;  \ Bits 00001101 are high byte of Y position
+                    AND.B #$0D                ;   | (Extra bits are stored in Y position)
+                    STA.W $14D4,X             ;  /
+                    LDA $00                   ;  \ X position = adjusted screen boundary
+                    STA $E4,X                 ;   |
+                    LDA $01                   ;   |
+                    STA.W $14E0,X             ;  /
 ADDR_02A971:        INY                       
                     INY                       
-                    LDA $04                   
-                    STA.W $14C8,X             
+                    LDA $04                   ;  \ Sprite status = ??
+                    STA.W $14C8,X             ; /
                     CMP.B #$09                
-                    LDA [$CE],Y               
-                    BCC ADDR_02A984           
+                    LDA [$CE],Y               ; KKOOPA STORAGE???
+                    BCC ADDR_02A984           ; NO, IT WAS STATIONARY
                     SEC                       
-                    SBC.B #$DA                
+                    SBC.B #$DA                ; SUBTRACT DA, FIRST SHELL SPRITE [RED]
                     CLC                       
                     ADC.B #$04                
 ADDR_02A984:        PHY                       
                     LDY.W $1EEB               
-                    BPL ADDR_02A996           
+                    BPL ADDR_02A996           ; IF POSITIBE, JUST STORE?
                     CMP.B #$04                
                     BNE ADDR_02A990           
-                    LDA.B #$07                
+                    LDA.B #$07                ; WHAT?
 ADDR_02A990:        CMP.B #$05                
                     BNE ADDR_02A996           
-                    LDA.B #$06                
+                    LDA.B #$06                ; STORING RED KOOPA SHELL TO SPRITENUM
 ADDR_02A996:        STA $9E,X                 
                     PLY                       
-                    LDA $02                   
-                    STA.W $161A,X             
+                    LDA $02                   ;  \ $161A,x = index of the sprite in the level
+                    STA.W $161A,X             ;  / (Number of sprites in level, not just onscreen)
                     LDA.W $14AE               
                     BEQ ADDR_02A9C9           
                     PHX                       
@@ -5006,52 +5010,54 @@ ADDR_02A996:        STA $9E,X
                     PLX                       
                     AND.B #$40                
                     BNE ADDR_02A9C9           
-                    LDA.B #$21                
-                    STA $9E,X                 
-                    LDA.B #$08                
-                    STA.W $14C8,X             
-                    JSL.L ADDR_07F7D2         
+                    LDA.B #$21                ; \ Sprite = Moving Coin
+                    STA $9E,X                 ; /
+                    LDA.B #$08                ; \ Sprite status = Normal
+                    STA.W $14C8,X             ; /
+                    JSL.L InitSpriteTables    
                     LDA.W $15F6,X             
                     AND.B #$F1                
                     ORA.B #$02                
                     STA.W $15F6,X             
                     BRA ADDR_02A9CD           
-ADDR_02A9C9:        JSL.L ADDR_07F7D2         
-ADDR_02A9CD:        LDA.B #$01                
-                    STA.W $15A0,X             
-                    LDA.B #$04                
-                    STA.W $1FE2,X             
+
+ADDR_02A9C9:        JSL.L InitSpriteTables    ;  Reset sprite tables
+ADDR_02A9CD:        LDA.B #$01                ;  \ Set off screen horizontally
+                    STA.W $15A0,X             ;  /
+                    LDA.B #$04                ;  \ ?? $1FE2,X = #$04
+                    STA.W $1FE2,X             ;  /
                     INY                       
                     LDX $02                   
                     INX                       
-                    JMP.W ADDR_02A82E         
-ADDR_02A9DE:        LDA.B #$02                
-                    STA $0E                   
-                    BRA ADDR_02A9E6           
-ADDR_02A9E4:        STZ $0E                   
+                    JMP.W LoadSpriteLoopStrt  
+
+FindFreeSlotLowPri: LDA.B #$02                ;  \ Number of slots to leave free = 2
+                    STA $0E                   ;   |
+                    BRA ADDR_02A9E6           ;  /
+
+FindFreeSprSlot:    STZ $0E                   ;  Number of slots tp leave free = 0
 ADDR_02A9E6:        PHB                       
                     PHK                       
                     PLB                       
-                    JSR.W ADDR_02A9EF         
+                    JSR.W FindFreeSlotRt      
                     PLB                       
                     TYA                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_02A9EF:        LDY.W $1692               
-                    LDA.W DATA_02A7AC,Y       
-                    STA $0F                   
-                    LDA.W DATA_02A773,Y       
-                    SEC                       
-                    SBC $0E                   
-                    TAY                       
-ADDR_02A9FE:        LDA.W $14C8,Y             
-                    BEQ ADDR_02AA0A           
-                    DEY                       
-                    CPY $0F                   
-                    BNE ADDR_02A9FE           
-                    LDY.B #$FF                
-ADDR_02AA0A:        RTS                       ; Return 
-
+FindFreeSlotRt:     LDY.W $1692               ; \ Subroutine: Return the first free sprite slot in Y (#$FF if not found)
+                    LDA.W SpriteSlotStart,Y   ;  | Y = Sprite memory index
+                    STA $0F                   ;  |
+                    LDA.W SpriteSlotMax,Y     ;  |
+                    SEC                       ;  |
+                    SBC $0E                   ;  |
+                    TAY                       ;  |
+ADDR_02A9FE:        LDA.W $14C8,Y             ;  | If free slot...
+                    BEQ Return02AA0A          ;  |  ...return
+                    DEY                       ;  |
+                    CPY $0F                   ;  |
+                    BNE ADDR_02A9FE           ;  |
+                    LDY.B #$FF                ;  | If no free slots, Y=#$FF
+Return02AA0A:       RTS                       ; /
 
 DATA_02AA0B:        .db $31,$71,$A1,$43,$93,$C3,$14,$65
                     .db $E5,$36,$A7,$39,$99,$F9,$1A,$7A
@@ -5061,12 +5067,12 @@ DATA_02AA1F:        .db $01,$51,$91,$D1,$22,$62,$A2,$73
                     .db $E3,$C7,$88,$29,$5A,$AA,$EB,$2C
                     .db $8C,$CC,$FC,$5D
 
-                    LDX.B #$0E                
-ADDR_02AA35:        STZ.W $1E66,X             
+                    LDX.B #$0E                ; \ Unreachable
+ADDR_02AA35:        STZ.W $1E66,X             ;   | Loop X = 00 to 0E
                     STZ.W $0F86,X             
                     LDA.B #$08                
                     STA.W $1892,X             
-                    JSL.L ADDR_01ACF9         
+                    JSL.L GetRand             
                     CLC                       
                     ADC $1A                   
                     STA.W $1E16,X             
@@ -5084,8 +5090,7 @@ ADDR_02AA35:        STZ.W $1E66,X
                     STA.W $1E2A,X             
                     DEX                       
                     BPL ADDR_02AA35           
-                    RTS                       ; Return 
-
+                    RTS                       ; / Return
 
 DATA_02AA68:        .db $50,$90,$D0,$10
 
@@ -5104,7 +5109,7 @@ ADDR_02AA73:        LDA.B #$05
                     STA.W $0F4A,X             
                     DEX                       
                     BPL ADDR_02AA73           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02AA8D:        STZ.W $190A               
                     LDX.B #$13                
@@ -5132,8 +5137,7 @@ ADDR_02AA92:        LDA.B #$07
                     STA.W $1E7A,X             
                     DEX                       
                     BPL ADDR_02AA92           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02AABD:        .db $4C,$33,$AA
 
@@ -5152,7 +5156,7 @@ ADDR_02AAD7:        STZ.W $1E66,X
                     STZ.W $0F86,X             
                     LDA.B #$03                
                     STA.W $1892,X             
-                    JSL.L ADDR_01ACF9         
+                    JSL.L GetRand             
                     CLC                       
                     ADC $1A                   
                     STA.W $1E16,X             
@@ -5172,11 +5176,11 @@ ADDR_02AAD7:        STZ.W $1E66,X
                     DEX                       
                     BPL ADDR_02AAD7           
                     INC.W $18BA               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02AB11:        LDY.W $18BA               
                     CPY.B #$02                
-                    BCS ADDR_02AB77           
+                    BCS Return02AB77          
                     LDY.B #$01                
                     CMP.B #$E2                
                     BEQ ADDR_02AB20           
@@ -5219,9 +5223,9 @@ ADDR_02AB6D:        DEC $0E
 ADDR_02AB71:        DEX                       
                     BPL ADDR_02AB28           
 ADDR_02AB74:        INC.W $18BA               
-ADDR_02AB77:        RTS                       ; Return 
+Return02AB77:       RTS                       ; Return
 
-ADDR_02AB78:        STX $02                   
+LoadShooter:        STX $02                   
                     DEY                       
                     STY $03                   
                     STA $04                   
@@ -5236,8 +5240,8 @@ ADDR_02AB81:        LDA.W $1783,X
                     STA.W $18FF               
 ADDR_02AB93:        LDX.W $18FF               
                     LDY.W $17B3,X             
-                    LDA.B #$00                
-                    STA.W $1938,Y             
+                    LDA.B #$00                ;  \ Allow sprite to be reloaded by level loading routine
+                    STA.W $1938,Y             ;  /
 ADDR_02AB9E:        LDY $03                   
                     LDA $04                   
                     SEC                       
@@ -5258,6 +5262,7 @@ ADDR_02AB9E:        LDY $03
                     LDA $01                   
                     STA.W $1793,X             
                     BRA ADDR_02ABDF           
+
 ADDR_02ABC7:        LDA [$CE],Y               
                     PHA                       
                     AND.B #$F0                
@@ -5278,29 +5283,31 @@ ADDR_02ABDF:        LDA $02
                     INY                       
                     LDX $02                   
                     INX                       
-                    JMP.W ADDR_02A82E         
+                    JMP.W LoadSpriteLoopStrt  
+
 ADDR_02ABF2:        LDX.B #$3F                
-ADDR_02ABF4:        STZ.W $1938,X             
+ADDR_02ABF4:        STZ.W $1938,X             ;  Allow sprite to be reloaded by level loading routine
                     DEX                       
                     BPL ADDR_02ABF4           
                     LDA.B #$FF                
                     STA $00                   
                     LDX.B #$0B                
-ADDR_02AC00:        LDA.B #$FF                
-                    STA.W $161A,X             
+ADDR_02AC00:        LDA.B #$FF                ;  \ Set to permanently erase sprite
+                    STA.W $161A,X             ;  /
                     LDA.W $14C8,X             
                     CMP.B #$0B                
                     BEQ ADDR_02AC11           
                     STZ.W $14C8,X             
                     BRA ADDR_02AC13           
+
 ADDR_02AC11:        STX $00                   
 ADDR_02AC13:        DEX                       
                     BPL ADDR_02AC00           
                     LDX $00                   
                     BMI ADDR_02AC48           
                     STZ.W $14C8,X             
-                    LDA.B #$0B                
-                    STA.W $14C8               
+                    LDA.B #$0B                ; \ Sprite status = Being carried
+                    STA.W $14C8               ; /
                     LDA $9E,X                 
                     STA $9E                   
                     LDA $E4,X                 
@@ -5314,18 +5321,18 @@ ADDR_02AC13:        DEX
                     LDA.W $15F6,X             
                     PHA                       
                     LDX.B #$00                
-                    JSL.L ADDR_07F7D2         
+                    JSL.L InitSpriteTables    
                     PLA                       
                     STA.W $15F6               
 ADDR_02AC48:        REP #$10                  ; Index (16 bit) 
                     LDX.W #$027A              
-ADDR_02AC4D:        STZ.W $1693,X             
+ADDR_02AC4D:        STZ.W $1693,X             ; clear ram before entering new stage/area
                     DEX                       
                     BPL ADDR_02AC4D           
                     SEP #$10                  ; Index (8 bit) 
                     STZ.W $143E               
                     STZ.W $143F               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02AC5C:        LDA $5B                   
                     LSR                       
@@ -5363,7 +5370,7 @@ ADDR_02AC7A:        JSR.W ADDR_02A802
                     STA $1C                   
                     PLA                       
                     STA $55                   
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02ACA1:        LDA $55                   
                     PHA                       
@@ -5398,63 +5405,63 @@ ADDR_02ACBA:        JSR.W ADDR_02A802
                     STA $1A                   
                     PLA                       
                     STA $55                   
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_02ACE1:        PHX                       
+ExtSub02ACE1:       PHX                       
                     TYX                       
                     BRA ADDR_02ACE6           
-GivePoints:         PHX                       ;  takes sprite type -5 as input in A 
+
+GivePoints:         PHX                       ;  takes sprite type -5 as input in A
 ADDR_02ACE6:        CLC                       
-                    ADC.B #$05                ; Add 5 to sprite type (200,400,1up) 
-                    JSL.L ADDR_02ACEF         ; Set score sprite type/initial position 
+                    ADC.B #$05                ; Add 5 to sprite type (200,400,1up)
+                    JSL.L ADDR_02ACEF         ; Set score sprite type/initial position
                     PLX                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_02ACEF:        PHY                       ;  - note coordinates are level coords, not screen 
-                    PHA                       ;    sprite type 1=10,2=20,3=40,4=80,5=100,6=200,7=400,8=800,9=1000,A=2000,B=4000,C=8000,D=1up 
-                    JSL.L ADDR_02AD34         ; Get next free position in table($16E1) to add score sprite 
+ADDR_02ACEF:        PHY                       ;  - note coordinates are level coords, not screen
+                    PHA                       ;    sprite type 1=10,2=20,3=40,4=80,5=100,6=200,7=400,8=800,9=1000,A=2000,B=4000,C=8000,D=1up
+                    JSL.L ExtSub02AD34        ; Get next free position in table($16E1) to add score sprite
                     PLA                       
-                    STA.W $16E1,Y             ; Set score sprite type (200,400,1up, etc) 
-                    LDA $D8,X                 ; Load y position of sprite jumped on 
+                    STA.W $16E1,Y             ; Set score sprite type (200,400,1up, etc)
+                    LDA $D8,X                 ; Load y position of sprite jumped on
                     SEC                       
-                    SBC.B #$08                ;   - make the score sprite appear a little higher 
-                    STA.W $16E7,Y             ; Set this as score sprite y-position 
-                    PHA                       ; save that value 
-                    LDA.W $14D4,X             ; Get y-pos high byte for sprite jumped on 
+                    SBC.B #$08                ;   - make the score sprite appear a little higher
+                    STA.W $16E7,Y             ; Set this as score sprite y-position
+                    PHA                       ; save that value
+                    LDA.W $14D4,X             ; Get y-pos high byte for sprite jumped on
                     SBC.B #$00                
-                    STA.W $16F9,Y             ; Set score sprite y-pos high byte 
-                    PLA                       ; restore score sprite y-pos to A 
-                    SEC                       ; \ 
-                    SBC $1C                   ; | 
-                    CMP.B #$F0                ; |if (score sprite ypos <1C && >=0C) 
-                    BCC ADDR_02AD22           ; |{ 
-                    LDA.W $16E7,Y             ; | 
-                    ADC.B #$10                ; | 
-                    STA.W $16E7,Y             ; |  move score sprite down by #$10 
-                    LDA.W $16F9,Y             ; | 
-                    ADC.B #$00                ; | 
-                    STA.W $16F9,Y             ; /} 
-ADDR_02AD22:        LDA $E4,X                 ; \ 
-                    STA.W $16ED,Y             ; /Set score sprite x-position 
-                    LDA.W $14E0,X             ; \ 
-                    STA.W $16F3,Y             ; /Set score sprite x-pos high byte 
-                    LDA.B #$30                ; \ 
-                    STA.W $16FF,Y             ; /scoreSpriteSpeed = #$30 
+                    STA.W $16F9,Y             ; Set score sprite y-pos high byte
+                    PLA                       ; restore score sprite y-pos to A
+                    SEC                       ; \
+                    SBC $1C                   ; |
+                    CMP.B #$F0                ; |if (score sprite ypos <1C && >=0C)
+                    BCC ADDR_02AD22           ; |{
+                    LDA.W $16E7,Y             ; |
+                    ADC.B #$10                ; |
+                    STA.W $16E7,Y             ; |  move score sprite down by #$10
+                    LDA.W $16F9,Y             ; |
+                    ADC.B #$00                ; |
+                    STA.W $16F9,Y             ; /}
+ADDR_02AD22:        LDA $E4,X                 ; \
+                    STA.W $16ED,Y             ; /Set score sprite x-position
+                    LDA.W $14E0,X             ; \
+                    STA.W $16F3,Y             ; /Set score sprite x-pos high byte
+                    LDA.B #$30                ; \
+                    STA.W $16FF,Y             ; /scoreSpriteSpeed = #$30
                     PLY                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_02AD34:        LDY.B #$05                ; (here css is used to index through the table of score sprites in table at $16E1 
-ADDR_02AD36:        LDA.W $16E1,Y             ; for (css=5;css>=0;css--){ 
-                    BEQ ADDR_02AD4B           ;  if (css's type == 0)      --check for empty space 
+ExtSub02AD34:       LDY.B #$05                ; (here css is used to index through the table of score sprites in table at $16E1
+ADDR_02AD36:        LDA.W $16E1,Y             ; for (css=5;css>=0;css--){
+                    BEQ Return02AD4B          ;  if (css's type == 0)      --check for empty space
                     DEY                       
-                    BPL ADDR_02AD36           ; } 
-                    DEC.W $18F7               ; $18f7--;                   --gives LRU 
-                    BPL ADDR_02AD48           ; if ($18f7 <0) 
-                    LDA.B #$05                ;   $18f7=5; 
+                    BPL ADDR_02AD36           ; }
+                    DEC.W $18F7               ; $18f7--;                   --gives LRU
+                    BPL ADDR_02AD48           ; if ($18f7 <0)
+                    LDA.B #$05                ;   $18f7=5;
                     STA.W $18F7               
-ADDR_02AD48:        LDY.W $18F7               ; return $18f7 in Y; 
-ADDR_02AD4B:        RTL                       ; Return 
-
+ADDR_02AD48:        LDY.W $18F7               ; return $18f7 in Y;
+Return02AD4B:       RTL                       ; Return
 
 PointTile1:         .db $00,$83,$83,$83,$83,$44,$54,$46
                     .db $47,$44,$54,$46,$47,$56,$29,$39
@@ -5476,11 +5483,11 @@ PointSpeedY:        .db $03,$01,$00,$00
 
 DATA_02AD9E:        .db $B0,$B8,$C0,$C8,$D0,$D8
 
-ADDR_02ADA4:        BIT.W $0D9B               
+ScoreSprGfx:        BIT.W $0D9B               
                     BVC ADDR_02ADB8           
                     LDA.W $0D9B               
                     CMP.B #$C1                
-                    BEQ ADDR_02ADC8           
+                    BEQ Return02ADC8          
                     LDA.B #$F0                
                     STA.W $0205               
                     STA.W $0209               
@@ -5491,31 +5498,23 @@ ADDR_02ADBA:        STX.W $15E9
                     JSR.W ADDR_02ADC9         
 ADDR_02ADC5:        DEX                       
                     BPL ADDR_02ADBA           
-ADDR_02ADC8:        RTS                       ; Return 
+Return02ADC8:       RTS                       ; Return
 
 ADDR_02ADC9:        LDA $9D                   
-
-Instr02ADCB:        .db $F0
-
-ADDR_02ADCC:        .db $03
-
+                    BEQ ADDR_02ADD0           
                     JMP.W ADDR_02AE5B         
-                    LDA.W $16FF,X             
 
-Instr02ADD3:        .db $D0
-
-ADDR_02ADD4:        .db $0F
-
+ADDR_02ADD0:        LDA.W $16FF,X             
+                    BNE ADDR_02ADE4           
                     STZ.W $16E1,X             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 CoinsToGive:        .db $01,$02,$03,$05,$05,$0A,$0F,$14
                     .db $19
 
 2Up3UpAttr:         .db $04,$06
 
-                    DEC.W $16FF,X             
+ADDR_02ADE4:        DEC.W $16FF,X             
                     CMP.B #$2A                
                     BNE ADDR_02AE38           
                     LDY.W $16E1,X             
@@ -5525,17 +5524,19 @@ CoinsToGive:        .db $01,$02,$03,$05,$05,$0A,$0F,$14
                     BCC ADDR_02AE03           
                     PHX                       
                     PHY                       
-                    LDA.W ADDR_02ADCC,Y       
-                    JSL.L ADDR_05B329         
+                    LDA.W CoinsToGive-13,Y    
+                    JSL.L ExtSub05B329        
                     PLY                       
                     PLX                       
                     BRA ADDR_02AE12           
-ADDR_02AE03:        LDA.W ADDR_02ADCC,Y       
+
+ADDR_02AE03:        LDA.W CoinsToGive-13,Y    
                     CLC                       
                     ADC.W $18E4               
                     STA.W $18E4               
                     STZ.W $18E5               
                     BRA ADDR_02AE35           
+
 ADDR_02AE12:        LDA.W $0DB3               
                     ASL                       
                     ADC.W $0DB3               
@@ -5550,7 +5551,7 @@ ADDR_02AE12:        LDA.W $0DB3
                     LDA.W $0F36,X             
                     ADC.B #$00                
                     STA.W $0F36,X             
-ADDR_02AE35:        LDX.W $15E9               
+ADDR_02AE35:        LDX.W $15E9               ; X = Sprite index
 ADDR_02AE38:        LDA.W $16FF,X             
                     LSR                       
                     LSR                       
@@ -5590,17 +5591,17 @@ ADDR_02AE5B:        LDA.W $1705,X
                     SBC $05                   
                     PLP                       
                     ADC.B #$00                
-                    BNE ADDR_02AEFB           
+                    BNE Return02AEFB          
                     LDA.W $16ED,X             
                     CMP $04                   
                     LDA.W $16F3,X             
                     SBC $05                   
-                    BNE ADDR_02AEFB           
+                    BNE Return02AEFB          
                     LDA.W $16E7,X             
                     CMP $02                   
                     LDA.W $16F9,X             
                     SBC $03                   
-                    BNE ADDR_02AEFB           
+                    BNE Return02AEFB          
                     LDY.W DATA_02AD9E,X       
                     BIT.W $0D9B               
                     BVC ADDR_02AEA5           
@@ -5627,10 +5628,10 @@ ADDR_02AEA5:        LDA.W $16E7,X
                     PLX                       
                     PHY                       
                     LDY.W $16E1,X             
-                    CPY.B #$0E                
-                    LDA.B #$08                
+                    CPY.B #$0E                ;  \ Maxed out at #$0E makes 3up the limit
+                    LDA.B #$08                ;  /
                     BCC ADDR_02AEDF           
-                    LDA.W ADDR_02ADD4,Y       
+                    LDA.W CoinsToGive-5,Y     ;  Bug: only 2up/3up supported.  See 5up-fix.asm
 ADDR_02AEDF:        PLY                       
                     ORA.B #$30                
                     STA.W $0203,Y             
@@ -5645,7 +5646,7 @@ ADDR_02AEDF:        PLY
                     LDA.W $16E1,X             
                     CMP.B #$11                
                     BCS ADDR_02AEFC           
-ADDR_02AEFB:        RTS                       ; Return 
+Return02AEFB:       RTS                       ; Return
 
 ADDR_02AEFC:        LDY.B #$4C                
                     LDA.W $16ED,X             
@@ -5669,17 +5670,16 @@ ADDR_02AEFC:        LDY.B #$4C
                     TAY                       
                     LDA.B #$00                
                     STA.W $0420,Y             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    STZ.W $16E1,X             
-                    RTS                       ; Return 
-
+                    STZ.W $16E1,X             ; \ Unreachable
+                    RTS                       ; /
 
 DATA_02AF2D:        .db $00,$AA,$54
 
 DATA_02AF30:        .db $00,$00,$01
 
-ADDR_02AF33:        LDY $03                   
+Load3Platforms:     LDY $03                   
                     LDA [$CE],Y               
                     PHA                       
                     AND.B #$F0                
@@ -5689,14 +5689,14 @@ ADDR_02AF33:        LDY $03
                     STA $09                   
                     LDA.B #$02                
                     STA $04                   
-ADDR_02AF45:        JSL.L ADDR_02A9E4         
-                    BMI ADDR_02AF86           
+ADDR_02AF45:        JSL.L FindFreeSprSlot     ; \ Return if no free slots
+                    BMI Return02AF86          ; /
                     TYX                       
-                    LDA.B #$01                
-                    STA.W $14C8,X             
-                    LDA.B #$A3                
-                    STA $9E,X                 
-                    JSL.L ADDR_07F7D2         
+                    LDA.B #$01                ; \ Sprite status = Initialization
+                    STA.W $14C8,X             ; /
+                    LDA.B #$A3                ; \ Sprite = Grey Platform on Chain
+                    STA $9E,X                 ; /
+                    JSL.L InitSpriteTables    
                     LDA $00                   
                     STA $E4,X                 
                     LDA $01                   
@@ -5716,20 +5716,19 @@ ADDR_02AF45:        JSL.L ADDR_02A9E4
                     STA.W $161A,X             
 ADDR_02AF82:        DEC $04                   
                     BPL ADDR_02AF45           
-ADDR_02AF86:        RTS                       ; Return 
+Return02AF86:       RTS                       ; Return
 
+EerieGroupDispXLo:  .db $E0,$F0,$00,$10,$20
 
-DATA_02AF87:        .db $E0,$F0,$00,$10,$20
+EerieGroupDispXHi:  .db $FF,$FF,$00,$00,$00
 
-DATA_02AF8C:        .db $FF,$FF,$00,$00,$00
+EerieGroupSpeedY:   .db $17,$E9,$17,$E9,$17
 
-DATA_02AF91:        .db $17,$E9,$17,$E9,$17
+EerieGroupState:    .db $00,$01,$00,$01,$00
 
-DATA_02AF96:        .db $00,$01,$00,$01,$00
+EerieGroupSpeedX:   .db $10,$F0
 
-DATA_02AF9B:        .db $10,$F0
-
-ADDR_02AF9D:        LDY $03                   
+Load5Eeries:        LDY $03                   
                     LDA [$CE],Y               
                     PHA                       
                     AND.B #$F0                
@@ -5739,87 +5738,87 @@ ADDR_02AF9D:        LDY $03
                     STA $09                   
                     LDA.B #$04                
                     STA $04                   
-ADDR_02AFAF:        JSL.L ADDR_02A9E4         
-                    BMI ADDR_02AFFD           
+ADDR_02AFAF:        JSL.L FindFreeSprSlot     ; \ Return if no free slots
+                    BMI Return02AFFD          ; /
                     TYX                       
-                    LDA.B #$08                
-                    STA.W $14C8,X             
-                    LDA.B #$39                
-                    STA $9E,X                 
-                    JSL.L ADDR_07F7D2         
+                    LDA.B #$08                ; \ Sprite status = Normal
+                    STA.W $14C8,X             ; /
+                    LDA.B #$39                ;  \ Sprite = Wave Eerie
+                    STA $9E,X                 ;  /
+                    JSL.L InitSpriteTables    
                     LDY $04                   
                     LDA $00                   
                     CLC                       
-                    ADC.W DATA_02AF87,Y       
+                    ADC.W EerieGroupDispXLo,Y 
                     STA $E4,X                 
                     LDA $01                   
-                    ADC.W DATA_02AF8C,Y       
+                    ADC.W EerieGroupDispXHi,Y 
                     STA.W $14E0,X             
                     LDA $08                   
                     STA $D8,X                 
                     LDA $09                   
                     STA.W $14D4,X             
-                    LDA.W DATA_02AF91,Y       
+                    LDA.W EerieGroupSpeedY,Y  
                     STA $AA,X                 
-                    LDA.W DATA_02AF96,Y       
+                    LDA.W EerieGroupState,Y   
                     STA $C2,X                 
                     CPY.B #$04                
                     BNE ADDR_02AFF1           
                     LDA $02                   
                     STA.W $161A,X             
-ADDR_02AFF1:        JSR.W ADDR_02848D         
-                    LDA.W DATA_02AF9B,Y       
+ADDR_02AFF1:        JSR.W SubHorzPosBnk2      
+                    LDA.W EerieGroupSpeedX,Y  
                     STA $B6,X                 
                     DEC $04                   
                     BPL ADDR_02AFAF           
-ADDR_02AFFD:        RTS                       ; Return 
+Return02AFFD:       RTS                       ; Return
 
-ADDR_02AFFE:        LDA.W $18B9               
-                    BEQ ADDR_02B02A           
+CallGenerator:      LDA.W $18B9               
+                    BEQ Return02B02A          
                     LDY $9D                   
-                    BNE ADDR_02B02A           
+                    BNE Return02B02A          
                     DEC A                     
                     JSL.L ExecutePtr          
 
-Ptrs02B00C:         .dw ADDR_02B2D6           
-                    .dw ADDR_02B329           
-                    .dw ADDR_02B329           
-                    .dw ADDR_02B329           
-                    .dw ADDR_02B26C           
-                    .dw ADDR_02B26C           
-                    .dw ADDR_02B15B           
-                    .dw ADDR_02B02B           
-                    .dw ADDR_02B1BC           
-                    .dw ADDR_02B207           
-                    .dw ADDR_02B07C           
-                    .dw ADDR_02B0CD           
-                    .dw ADDR_02B0CD           
-                    .dw ADDR_02B036           
-                    .dw ADDR_02B032           
+GeneratorPtrs:      .dw GenerateEerie         ; 00 - Eerie, generator
+                    .dw GenParaEnemy          ; 01 - Para-Goomba, generator
+                    .dw GenParaEnemy          ; 02 - Para-Bomb, generator
+                    .dw GenParaEnemy          ; 03 - Para-Bomb and Para-Goomba, generator
+                    .dw GenerateDolphin       ; 04 - Dolphin, left, generator
+                    .dw GenerateDolphin       ; 05 - Dolphin, right, generator
+                    .dw GenerateFish          ; 06 - Jumping fish, generator
+                    .dw TurnOffGen2           ; 07 - Turn off generator 2 (sprite E5)
+                    .dw GenSuperKoopa         ; 08 - Super Koopa, generator
+                    .dw GenerateBubble        ; 09 - Bubble with Goomba and Bob-omb, generator
+                    .dw GenerateBullet2       ; 0A - Bullet Bill, generator
+                    .dw GenMultiBullets       ; 0B - Bullet Bill surrounded, generator
+                    .dw GenMultiBullets       ; 0C - Bullet Bill diagonal, generator
+                    .dw GenerateFire          ; 0D - Bowser statue fire breath, generator
+                    .dw TurnOffGenerators     ; 0E - Turn off standard generators
 
-ADDR_02B02A:        RTS                       ; Return 
+Return02B02A:       RTS                       ; Return
 
-ADDR_02B02B:        INC.W $18BF               
-                    STZ.W $18C0               
-                    RTS                       ; Return 
+TurnOffGen2:        INC.W $18BF               
+                    STZ.W $18C0               ;  Don't respawn any sprites
+                    RTS                       ; Return
 
-ADDR_02B032:        STZ.W $18B9               
-                    RTS                       ; Return 
+TurnOffGenerators:  STZ.W $18B9               
+                    RTS                       ; Return
 
-ADDR_02B036:        LDA $14                   
+GenerateFire:       LDA $14                   
                     AND.B #$7F                
-                    BNE ADDR_02B07B           
-                    JSL.L ADDR_02A9DE         
-                    BMI ADDR_02B07B           
+                    BNE Return02B07B          
+                    JSL.L FindFreeSlotLowPri  
+                    BMI Return02B07B          
                     TYX                       
-                    LDA.B #$17                
-                    STA.W $1DFC               ; / Play sound effect 
-                    LDA.B #$08                
-                    STA.W $14C8,X             
-                    LDA.B #$B3                
-                    STA $9E,X                 
-                    JSL.L ADDR_07F7D2         
-                    JSL.L ADDR_01ACF9         
+                    LDA.B #$17                ; \ Play sound effect
+                    STA.W $1DFC               ; /
+                    LDA.B #$08                ; \ Sprite status = Normal
+                    STA.W $14C8,X             ; /
+                    LDA.B #$B3                ; \ Sprite = Bowser's Statue Fireball
+                    STA $9E,X                 ; /
+                    JSL.L InitSpriteTables    
+                    JSL.L GetRand             
                     AND.B #$7F                
                     ADC.B #$20                
                     ADC $1C                   
@@ -5836,22 +5835,22 @@ ADDR_02B036:        LDA $14
                     ADC.B #$00                
                     STA.W $14E0,X             
                     INC.W $157C,X             
-ADDR_02B07B:        RTS                       ; Return 
+Return02B07B:       RTS                       ; Return
 
-ADDR_02B07C:        LDA $14                   
-                    AND.B #$7F                
-                    BNE ADDR_02B0C8           
-                    JSL.L ADDR_02A9DE         
-                    BMI ADDR_02B0C8           
-                    LDA.B #$09                
-                    STA.W $1DFC               ; / Play sound effect 
+GenerateBullet2:    LDA $14                   
+                    AND.B #$7F                ;  |
+                    BNE Return02B0C8          ; /
+                    JSL.L FindFreeSlotLowPri  
+                    BMI Return02B0C8          
+                    LDA.B #$09                ; \ Play sound effect
+                    STA.W $1DFC               ; /
                     TYX                       
-                    LDA.B #$08                
-                    STA.W $14C8,X             
-                    LDA.B #$1C                
-                    STA $9E,X                 
-                    JSL.L ADDR_07F7D2         
-                    JSL.L ADDR_01ACF9         
+                    LDA.B #$08                ; \ Sprite status = Normal
+                    STA.W $14C8,X             ; /
+                    LDA.B #$1C                ; \ Sprite = Bullet Bill
+                    STA $9E,X                 ; /
+                    JSL.L InitSpriteTables    
+                    JSL.L GetRand             
                     PHA                       
                     AND.B #$7F                
                     ADC.B #$20                
@@ -5873,21 +5872,20 @@ ADDR_02B0BF:        ADC.W DATA_02B1BA,Y
                     STA.W $14E0,X             
                     TYA                       
                     STA $C2,X                 
-ADDR_02B0C8:        RTS                       ; Return 
-
+Return02B0C8:       RTS                       ; Return
 
 DATA_02B0C9:        .db $04,$08,$04,$03
 
-ADDR_02B0CD:        LDA $14                   
+GenMultiBullets:    LDA $14                   
                     LSR                       
-                    BCS ADDR_02B0F9           
+                    BCS Return02B0F9          
                     LDA.W $18FE               
                     INC.W $18FE               
                     CMP.B #$A0                
-                    BNE ADDR_02B0F9           
+                    BNE Return02B0F9          
                     STZ.W $18FE               
-                    LDA.B #$09                
-                    STA.W $1DFC               ; / Play sound effect 
+                    LDA.B #$09                ; \ Play sound effect
+                    STA.W $1DFC               ; /
                     LDY.W $18B9               
                     LDA.W ADDR_02B0BD,Y       
                     LDX.W ADDR_02B0BF,Y       
@@ -5898,8 +5896,7 @@ ADDR_02B0EF:        PHX
                     PLX                       
                     DEX                       
                     BPL ADDR_02B0EF           
-ADDR_02B0F9:        RTS                       ; Return 
-
+Return02B0F9:       RTS                       ; Return
 
 DATA_02B0FA:        .db $00,$00,$40,$C0,$F0,$00,$00,$F0
                     .db $F0
@@ -5910,14 +5907,14 @@ DATA_02B103:        .db $50,$B0,$E0,$E0,$80,$00,$E0,$E0
 DATA_02B10C:        .db $00,$00,$02,$02,$01,$05,$04,$07
                     .db $06
 
-ADDR_02B115:        JSL.L ADDR_02A9DE         
-                    BMI ADDR_02B152           
-                    LDA.B #$1C                
-                    STA.W $009E,Y             
-                    LDA.B #$08                
-                    STA.W $14C8,Y             
+ADDR_02B115:        JSL.L FindFreeSlotLowPri  
+                    BMI Return02B152          
+                    LDA.B #$1C                ; \ Sprite = Bullet Bill
+                    STA.W $009E,Y             ; /
+                    LDA.B #$08                ; \ Sprite status = Normal
+                    STA.W $14C8,Y             ; /
                     TYX                       
-                    JSL.L ADDR_07F7D2         
+                    JSL.L InitSpriteTables    
                     LDX $0D                   
                     LDA.W DATA_02B0FA,X       
                     CLC                       
@@ -5935,24 +5932,23 @@ ADDR_02B115:        JSL.L ADDR_02A9DE
                     STA.W $14D4,Y             
                     LDA.W DATA_02B10C,X       
                     STA.W $00C2,Y             
-ADDR_02B152:        RTS                       ; Return 
-
+Return02B152:       RTS                       ; Return
 
 DATA_02B153:        .db $10,$18,$20,$28
 
 DATA_02B157:        .db $18,$1A,$1C,$1E
 
-ADDR_02B15B:        LDA $14                   
+GenerateFish:       LDA $14                   
                     AND.B #$1F                
-                    BNE ADDR_02B1B7           
-                    JSL.L ADDR_02A9DE         
-                    BMI ADDR_02B1B7           
+                    BNE Return02B1B7          
+                    JSL.L FindFreeSlotLowPri  
+                    BMI Return02B1B7          
                     TYX                       
-                    LDA.B #$08                
-                    STA.W $14C8,X             
-                    LDA.B #$17                
-                    STA $9E,X                 
-                    JSL.L ADDR_07F7D2         
+                    LDA.B #$08                ; \ Sprite status = Normal
+                    STA.W $14C8,X             ; /
+                    LDA.B #$17                ; \ Sprite = Flying Fish
+                    STA $9E,X                 ; /
+                    JSL.L InitSpriteTables    
                     LDA $1C                   
                     CLC                       
                     ADC.B #$C0                
@@ -5960,7 +5956,7 @@ ADDR_02B15B:        LDA $14
                     LDA $1D                   
                     ADC.B #$00                
                     STA.W $14D4,X             
-                    JSL.L ADDR_01ACF9         
+                    JSL.L GetRand             
                     CMP.B #$00                
                     PHP                       
                     PHP                       
@@ -5987,25 +5983,24 @@ ADDR_02B196:        CLC
 ADDR_02B1B1:        STA $B6,X                 
                     LDA.B #$B8                
                     STA $AA,X                 
-ADDR_02B1B7:        RTS                       ; Return 
-
+Return02B1B7:       RTS                       ; Return
 
 DATA_02B1B8:        .db $E0,$10
 
 DATA_02B1BA:        .db $FF,$01
 
-ADDR_02B1BC:        LDA $14                   
+GenSuperKoopa:      LDA $14                   
                     AND.B #$3F                
-                    BNE ADDR_02B206           
-                    JSL.L ADDR_02A9DE         
-                    BMI ADDR_02B206           
+                    BNE Return02B206          
+                    JSL.L FindFreeSlotLowPri  
+                    BMI Return02B206          
                     TYX                       
-                    LDA.B #$08                
-                    STA.W $14C8,X             
+                    LDA.B #$08                ; \ Sprite status = Normal
+                    STA.W $14C8,X             ; /
                     LDA.B #$71                
                     STA $9E,X                 
-                    JSL.L ADDR_07F7D2         
-                    JSL.L ADDR_01ACF9         
+                    JSL.L InitSpriteTables    
+                    JSL.L GetRand             
                     PHA                       
                     AND.B #$3F                
                     ADC.B #$20                
@@ -6028,20 +6023,20 @@ ADDR_02B1BC:        LDA $14
                     STA.W $14E0,X             
                     TYA                       
                     STA.W $157C,X             
-ADDR_02B206:        RTS                       ; Return 
+Return02B206:       RTS                       ; Return
 
-ADDR_02B207:        LDA $14                   
+GenerateBubble:     LDA $14                   
                     AND.B #$7F                
-                    BNE ADDR_02B259           
-                    JSL.L ADDR_02A9DE         
-                    BMI ADDR_02B259           
+                    BNE Return02B259          
+                    JSL.L FindFreeSlotLowPri  
+                    BMI Return02B259          
                     TYX                       
-                    LDA.B #$08                
-                    STA.W $14C8,X             
+                    LDA.B #$08                ; \ Sprite status = Normal
+                    STA.W $14C8,X             ; /
                     LDA.B #$9D                
                     STA $9E,X                 
-                    JSL.L ADDR_07F7D2         
-                    JSL.L ADDR_01ACF9         
+                    JSL.L InitSpriteTables    
+                    JSL.L GetRand             
                     PHA                       
                     AND.B #$3F                
                     ADC.B #$20                
@@ -6062,29 +6057,26 @@ ADDR_02B207:        LDA $14
                     STA.W $14E0,X             
                     TYA                       
                     STA.W $157C,X             
-                    JSL.L ADDR_01ACF9         
+                    JSL.L GetRand             
                     AND.B #$03                
                     TAY                       
                     LDA.W DATA_02B25A,Y       
                     STA $C2,X                 
-ADDR_02B259:        RTS                       ; Return 
+Return02B259:       RTS                       ; Return
 
+DATA_02B25A:        .db $00,$01
 
-DATA_02B25A:        .db $00
+DATA_02B25C:        .db $02,$00
 
-DATA_02B25B:        .db $01,$02
+DATA_02B25E:        .db $10,$E0,$01,$FF,$E8
 
-DATA_02B25D:        .db $00,$10,$E0,$01,$FF,$E8
-
-DATA_02B263:        .db $18
-
-DATA_02B264:        .db $F0
+DATA_02B263:        .db $18,$F0
 
 DATA_02B265:        .db $E0,$00,$10,$04,$09,$FF,$04
 
-ADDR_02B26C:        LDA $14                   
+GenerateDolphin:    LDA $14                   
                     AND.B #$1F                
-                    BNE ADDR_02B2CF           
+                    BNE Return02B2CF          
                     LDY.W $18B9               
                     LDX.W DATA_02B263,Y       
                     LDA.W DATA_02B265,Y       
@@ -6094,14 +6086,14 @@ ADDR_02B27D:        LDA.W $14C8,X
                     DEX                       
                     CPX $00                   
                     BNE ADDR_02B27D           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_02B288:        LDA.B #$08                
-                    STA.W $14C8,X             
+ADDR_02B288:        LDA.B #$08                ; \ Sprite status = Normal
+                    STA.W $14C8,X             ; /
                     LDA.B #$41                
                     STA $9E,X                 
-                    JSL.L ADDR_07F7D2         
-                    JSL.L ADDR_01ACF9         
+                    JSL.L InitSpriteTables    
+                    JSL.L GetRand             
                     AND.B #$7F                
                     ADC.B #$40                
                     ADC $1C                   
@@ -6109,24 +6101,23 @@ ADDR_02B288:        LDA.B #$08
                     LDA $1D                   
                     ADC.B #$00                
                     STA.W $14D4,X             
-                    JSL.L ADDR_01ACF9         
+                    JSL.L GetRand             
                     AND.B #$03                
                     TAY                       
-                    LDA.W DATA_02B264,Y       
+                    LDA.W DATA_02B265-1,Y     
                     STA $AA,X                 
                     LDY.W $18B9               
                     LDA $1A                   
                     CLC                       
-                    ADC.W ADDR_02B259,Y       
+                    ADC.W DATA_02B25A-1,Y     
                     STA $E4,X                 
                     LDA $1B                   
-                    ADC.W DATA_02B25B,Y       
+                    ADC.W DATA_02B25C-1,Y     
                     STA.W $14E0,X             
-                    LDA.W DATA_02B25D,Y       
+                    LDA.W DATA_02B25E-1,Y     
                     STA $B6,X                 
                     INC.W $151C,X             
-ADDR_02B2CF:        RTS                       ; Return 
-
+Return02B2CF:       RTS                       ; Return
 
 DATA_02B2D0:        .db $F0,$FF
 
@@ -6134,18 +6125,18 @@ DATA_02B2D2:        .db $FF,$00
 
 DATA_02B2D4:        .db $10,$F0
 
-ADDR_02B2D6:        LDA $14                   
+GenerateEerie:      LDA $14                   
                     AND.B #$3F                
-                    BNE ADDR_02B31E           
-                    JSL.L ADDR_02A9DE         
-                    BMI ADDR_02B31E           
+                    BNE Return02B31E          
+                    JSL.L FindFreeSlotLowPri  
+                    BMI Return02B31E          
                     TYX                       
-                    LDA.B #$08                
-                    STA.W $14C8,X             
+                    LDA.B #$08                ; \ Sprite status = Normal
+                    STA.W $14C8,X             ; /
                     LDA.B #$38                
                     STA $9E,X                 
-                    JSL.L ADDR_07F7D2         
-                    JSL.L ADDR_01ACF9         
+                    JSL.L InitSpriteTables    
+                    JSL.L GetRand             
                     AND.B #$7F                
                     ADC.B #$40                
                     ADC $1C                   
@@ -6164,36 +6155,31 @@ ADDR_02B2D6:        LDA $14
                     ADC.W DATA_02B2D2,Y       
                     STA.W $14E0,X             
                     LDA.W DATA_02B2D4,Y       
-
-Instr02B31C:        .db $95
-
-ADDR_02B31D:        .db $B6
-
-ADDR_02B31E:        RTS                       ; Return 
-
+                    STA $B6,X                 
+Return02B31E:       RTS                       ; Return
 
 DATA_02B31F:        .db $3F,$40,$3F,$3F,$40,$40
 
 DATA_02B325:        .db $FA,$FB,$FC,$FD
 
-ADDR_02B329:        LDA $14                   
+GenParaEnemy:       LDA $14                   
                     AND.B #$7F                
-                    BNE ADDR_02B386           
-                    JSL.L ADDR_02A9DE         
-                    BMI ADDR_02B386           
+                    BNE Return02B386          
+                    JSL.L FindFreeSlotLowPri  
+                    BMI Return02B386          
                     TYX                       
-                    LDA.B #$08                
-                    STA.W $14C8,X             
-                    JSL.L ADDR_01ACF9         
+                    LDA.B #$08                ; \ Sprite status = Normal
+                    STA.W $14C8,X             ; /
+                    JSL.L GetRand             
                     LSR                       
                     LDY.W $18B9               
                     BCC ADDR_02B348           
                     INY                       
                     INY                       
                     INY                       
-ADDR_02B348:        LDA.W ADDR_02B31D,Y       
+ADDR_02B348:        LDA.W DATA_02B31F-2,Y     
                     STA $9E,X                 
-                    JSL.L ADDR_07F7D2         
+                    JSL.L InitSpriteTables    
                     LDA $1C                   
                     SEC                       
                     SBC.B #$20                
@@ -6222,10 +6208,10 @@ ADDR_02B348:        LDA.W ADDR_02B31D,Y
                     PLP                       
                     ADC.B #$00                
                     STA.W $14E0,X             
-ADDR_02B386:        RTS                       ; Return 
+Return02B386:       RTS                       ; Return
 
 ADDR_02B387:        LDA $9D                   
-                    BNE ADDR_02B3AA           
+                    BNE Return02B3AA          
                     LDX.B #$07                
 ADDR_02B38D:        STX.W $15E9               
                     LDA.W $1783,X             
@@ -6241,69 +6227,69 @@ ADDR_02B3A3:        PLA
 ADDR_02B3A4:        JSR.W ADDR_02B3AB         
 ADDR_02B3A7:        DEX                       
                     BPL ADDR_02B38D           
-ADDR_02B3AA:        RTS                       ; Return 
+Return02B3AA:       RTS                       ; Return
 
 ADDR_02B3AB:        DEC A                     
                     JSL.L ExecutePtr          
 
-Ptrs02B3B0:         .dw ADDR_02B466           
-                    .dw ADDR_02B3B6           
-                    .dw ADDR_02B3AA           
+ShooterPtrs:        .dw ShootBullet           ; 00 - Bullet Bill shooter
+                    .dw LaunchTorpedo         ; 01 - Torpedo Ted launcher
+                    .dw Return02B3AA          ; 02 - Unused
 
-ADDR_02B3B6:        LDA.W $17AB,X             
-                    BNE ADDR_02B42C           
+LaunchTorpedo:      LDA.W $17AB,X             
+                    BNE Return02B42C          
                     LDA.B #$50                
                     STA.W $17AB,X             
                     LDA.W $178B,X             
                     CMP $1C                   
                     LDA.W $1793,X             
                     SBC $1D                   
-                    BNE ADDR_02B3AA           
+                    BNE Return02B3AA          
                     LDA.W $179B,X             
                     CMP $1A                   
                     LDA.W $17A3,X             
                     SBC $1B                   
-                    BNE ADDR_02B3AA           
+                    BNE Return02B3AA          
                     LDA.W $179B,X             
                     SEC                       
                     SBC $1A                   
                     CLC                       
                     ADC.B #$10                
                     CMP.B #$20                
-                    BCC ADDR_02B42C           
-                    JSL.L ADDR_02A9DE         
-                    BMI ADDR_02B42C           
-                    LDA.B #$08                
-                    STA.W $14C8,Y             
-                    LDA.B #$44                
-                    STA.W $009E,Y             
-                    LDA.W $179B,X             
-                    STA.W $00E4,Y             
-                    LDA.W $17A3,X             
-                    STA.W $14E0,Y             
-                    LDA.W $178B,X             
-                    STA.W $00D8,Y             
-                    LDA.W $1793,X             
-                    STA.W $14D4,Y             
+                    BCC Return02B42C          
+                    JSL.L FindFreeSlotLowPri  
+                    BMI Return02B42C          
+                    LDA.B #$08                ; \ Sprite status = Normal
+                    STA.W $14C8,Y             ; /
+                    LDA.B #$44                ; \ Sprite = Torpedo Ted
+                    STA.W $009E,Y             ; /
+                    LDA.W $179B,X             ; \ Sprite position = Shooter position
+                    STA.W $00E4,Y             ;  |
+                    LDA.W $17A3,X             ;  |
+                    STA.W $14E0,Y             ;  |
+                    LDA.W $178B,X             ;  |
+                    STA.W $00D8,Y             ;  |
+                    LDA.W $1793,X             ;  |
+                    STA.W $14D4,Y             ; /
                     PHX                       
-                    TYX                       
-                    JSL.L ADDR_07F7D2         
-                    JSR.W ADDR_02848D         
-                    TYA                       
-                    STA.W $157C,X             
-                    STA $00                   
-                    LDA.B #$30                
-                    STA.W $1540,X             
-                    PLX                       
-                    LDY.B #$07                
-ADDR_02B424:        LDA.W $170B,Y             
-                    BEQ ADDR_02B42D           
-                    DEY                       
-                    BPL ADDR_02B424           
-ADDR_02B42C:        RTS                       ; Return 
+                    TYX                       ; X = sprite index
+                    JSL.L InitSpriteTables    ; Setup sprite tables
+                    JSR.W SubHorzPosBnk2      ; \ Direction = Towards Mario
+                    TYA                       ;  |
+                    STA.W $157C,X             ; /
+                    STA $00                   ; $00 = sprite direction
+                    LDA.B #$30                ; \ Set time to stay behind objects
+                    STA.W $1540,X             ; /
+                    PLX                       ; X = shooter index
+                    LDY.B #$07                ; \ Find a free extended sprite slot
+ADDR_02B424:        LDA.W $170B,Y             ;  |
+                    BEQ ADDR_02B42D           ;  |
+                    DEY                       ;  |
+                    BPL ADDR_02B424           ;  |
+Return02B42C:       RTS                       ; / Return if no free slots
 
-ADDR_02B42D:        LDA.B #$08                
-                    STA.W $170B,Y             
+ADDR_02B42D:        LDA.B #$08                ; \ Extended sprite = Torpedo Ted arm
+                    STA.W $170B,Y             ; /
                     LDA.W $179B,X             
                     CLC                       
                     ADC.B #$08                
@@ -6325,95 +6311,93 @@ ADDR_02B42D:        LDA.B #$08
                     LDA.W DATA_02B464,X       
                     STA.W $1747,Y             
                     PLX                       
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02B464:        .db $01,$FF
 
-ADDR_02B466:        LDA.W $17AB,X             ; \ Return if it's not time to generate			        
-                    BNE ADDR_02B4DD           ; /								        
-                    LDA.B #$60                ; \ Set time till next generation = 60			        
-                    STA.W $17AB,X             ; /								        
-                    LDA.W $178B,X             ; \ Don't generate if off screen vertically			        
-                    CMP $1C                   ;  |							        
-                    LDA.W $1793,X             ;  |							        
-                    SBC $1D                   ;  |							        
-                    BNE ADDR_02B4DD           ; /								        
-                    LDA.W $179B,X             ; \ Don't generate if off screen horizontally		        
-                    CMP $1A                   ;  |							        
-                    LDA.W $17A3,X             ;  |							        
-                    SBC $1B                   ;  |							        
-                    BNE ADDR_02B4DD           ; / 							        
-                    LDA.W $179B,X             ; \ ?? something else related to x position of generator??	        
-                    SEC                       ;  | 							        
-                    SBC $1A                   ;  |							        
-                    CLC                       ;  |							        
-                    ADC.B #$10                ;  |							        
-                    CMP.B #$10                ;  |							        
-                    BCC ADDR_02B4DD           ; /								        
-                    LDA $94                   ; \ Don't fire if mario is next to generator		        
-                    SBC.W $179B,X             ;  |							        
-                    CLC                       ;  |							        
-                    ADC.B #$11                ;  |							        
-                    CMP.B #$22                ;  |							        
-                    BCC ADDR_02B4DD           ; /								        
-                    JSL.L ADDR_02A9DE         ; \ Get an index to an unused sprite slot, return if all slots full 
-                    BMI ADDR_02B4DD           ; / After: Y has index of sprite being generated		 
-GenerateBullet:     LDA.B #$09                ; \ 							 
-                    STA.W $1DFC               ; / Play sound effect 
-                    LDA.B #$01                ; \ Set sprite status for new sprite			 
-                    STA.W $14C8,Y             ; /								 
-                    LDA.B #$1C                ; \ Set sprite number for new sprite			 
-                    STA.W $009E,Y             ; /								 
-                    LDA.W $179B,X             ; \ Set x position for new sprite				 
-                    STA.W $00E4,Y             ;  |							 
-                    LDA.W $17A3,X             ;  |							 
-                    STA.W $14E0,Y             ; /								 
-                    LDA.W $178B,X             ; \ Set y position for new sprite				 
-                    SEC                       ;  | (y position of generator - 1)				 
-                    SBC.B #$01                ;  |							 
-                    STA.W $00D8,Y             ;  |							 
-                    LDA.W $1793,X             ;  |							 
-                    SBC.B #$00                ;  |							 
-                    STA.W $14D4,Y             ; /								 
-                    PHX                       ; \ Before: X must have index of sprite being generated	 
-                    TYX                       ;  | Routine clears *all* old sprite values...		 
-                    JSL.L ADDR_07F7D2         ;  | ...and loads in new values for the 6 main sprite tables 
-                    PLX                       ; / 							 
-                    JSR.W ShowShooterSmoke    ; Display smoke graphic                                      
-ADDR_02B4DD:        RTS                       ; Return 
+ShootBullet:        LDA.W $17AB,X             ; \ Return if it's not time to generate
+                    BNE Return02B4DD          ; /
+                    LDA.B #$60                ; \ Set time till next generation = 60
+                    STA.W $17AB,X             ; /
+                    LDA.W $178B,X             ; \ Don't generate if off screen vertically
+                    CMP $1C                   ;  |
+                    LDA.W $1793,X             ;  |
+                    SBC $1D                   ;  |
+                    BNE Return02B4DD          ; /
+                    LDA.W $179B,X             ; \ Don't generate if off screen horizontally
+                    CMP $1A                   ;  |
+                    LDA.W $17A3,X             ;  |
+                    SBC $1B                   ;  |
+                    BNE Return02B4DD          ; /
+                    LDA.W $179B,X             ; \ ?? something else related to x position of generator??
+                    SEC                       ;  |
+                    SBC $1A                   ;  |
+                    CLC                       ;  |
+                    ADC.B #$10                ;  |
+                    CMP.B #$10                ;  |
+                    BCC Return02B4DD          ; /
+                    LDA $94                   ; \ Don't fire if mario is next to generator
+                    SBC.W $179B,X             ;  |
+                    CLC                       ;  |
+                    ADC.B #$11                ;  |
+                    CMP.B #$22                ;  |
+                    BCC Return02B4DD          ; /
+                    JSL.L FindFreeSlotLowPri  ; \ Get an index to an unused sprite slot, return if all slots full
+                    BMI Return02B4DD          ; / After: Y has index of sprite being generated
+GenerateBullet:     LDA.B #$09                ; \ Only shoot every #$80 frames
+                    STA.W $1DFC               ; / Play sound effect
+                    LDA.B #$01                ; \ Sprite status = Initialization
+                    STA.W $14C8,Y             ; /
+                    LDA.B #$1C                ; \ New sprite = Bullet Bill
+                    STA.W $009E,Y             ; /
+                    LDA.W $179B,X             ; \ Set x position for new sprite
+                    STA.W $00E4,Y             ;  |
+                    LDA.W $17A3,X             ;  |
+                    STA.W $14E0,Y             ; /
+                    LDA.W $178B,X             ; \ Set y position for new sprite
+                    SEC                       ;  | (y position of generator - 1)
+                    SBC.B #$01                ;  |
+                    STA.W $00D8,Y             ;  |
+                    LDA.W $1793,X             ;  |
+                    SBC.B #$00                ;  |
+                    STA.W $14D4,Y             ; /
+                    PHX                       ; \ Before: X must have index of sprite being generated
+                    TYX                       ;  | Routine clears *all* old sprite values...
+                    JSL.L InitSpriteTables    ;  | ...and loads in new values for the 6 main sprite tables
+                    PLX                       ; /
+                    JSR.W ShowShooterSmoke    ; Display smoke graphic
+Return02B4DD:       RTS                       ; Return
 
-ShowShooterSmoke:   LDY.B #$03                ; \ Find a free slot to display effect 
-FindFreeSmokeSlot:  LDA.W $17C0,Y             ;  | 
-                    BEQ SetShooterSmoke       ;  | 
-                    DEY                       ;  | 
-                    BPL FindFreeSmokeSlot     ;  | 
-                    RTS                       ; / Return if no slots open 
-
+ShowShooterSmoke:   LDY.B #$03                ; \ Find a free slot to display effect
+FindFreeSmokeSlot:  LDA.W $17C0,Y             ;  |
+                    BEQ SetShooterSmoke       ;  |
+                    DEY                       ;  |
+                    BPL FindFreeSmokeSlot     ;  |
+                    RTS                       ; / Return if no free slots
 
 ShooterSmokeDispX:  .db $F4,$0C
 
-SetShooterSmoke:    LDA.B #$01                ; \ Set effect graphic to smoke graphic		  
-                    STA.W $17C0,Y             ; /							  
-                    LDA.W $178B,X             ; \ Smoke y position = generator y position		  
-                    STA.W $17C4,Y             ; /							  
-                    LDA.B #$1B                ; \ Set time to show smoke				  
-                    STA.W $17CC,Y             ; /							  
-                    LDA.W $179B,X             ; \ Load generator x position and store it for later  
-                    PHA                       ; /							  
-                    LDA $94                   ; \ Determine which side of the generator mario is on 
-                    CMP.W $179B,X             ;  |						  
-                    LDA $95                   ;  |						  
-                    SBC.W $17A3,X             ;  |						  
-                    LDX.B #$00                ;  |						  
-                    BCC ADDR_02B50E           ;  |						  
-                    INX                       ; /							  
-ADDR_02B50E:        PLA                       ; \ Set smoke x position from generator position	  
-                    CLC                       ;  |						  
-                    ADC.W ShooterSmokeDispX,X ;  |						  
-                    STA.W $17C8,Y             ; /   
-                    LDX.W $15E9               
-                    RTS                       ; Return 
+SetShooterSmoke:    LDA.B #$01                ; \ Set effect graphic to smoke graphic
+                    STA.W $17C0,Y             ; /
+                    LDA.W $178B,X             ; \ Smoke y position = generator y position
+                    STA.W $17C4,Y             ; /
+                    LDA.B #$1B                ; \ Set time to show smoke
+                    STA.W $17CC,Y             ; /
+                    LDA.W $179B,X             ; \ Load generator x position and store it for later
+                    PHA                       ; /
+                    LDA $94                   ; \ Determine which side of the generator mario is on
+                    CMP.W $179B,X             ;  |
+                    LDA $95                   ;  |
+                    SBC.W $17A3,X             ;  |
+                    LDX.B #$00                ;  |
+                    BCC ADDR_02B50E           ;  |
+                    INX                       ; /
+ADDR_02B50E:        PLA                       ; \ Set smoke x position from generator position
+                    CLC                       ;  |
+                    ADC.W ShooterSmokeDispX,X ;  |
+                    STA.W $17C8,Y             ; /
+                    LDX.W $15E9               ; X = Sprite index
+                    RTS                       ; Return
 
 ADDR_02B51A:        TXA                       
                     CLC                       
@@ -6421,7 +6405,7 @@ ADDR_02B51A:        TXA
                     TAX                       
                     JSR.W ADDR_02B526         
                     LDX.W $1698               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02B526:        LDA.W $16B1,X             
                     ASL                       
@@ -6448,15 +6432,15 @@ ADDR_02B545:        PLP
                     TYA                       
                     ADC.W $16A9,X             
                     STA.W $16A9,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02B554:        TXA                       
                     CLC                       
                     ADC.B #$0A                
                     TAX                       
                     JSR.W ADDR_02B560         
-                    LDX.W $15E9               
-                    RTS                       ; Return 
+                    LDX.W $15E9               ; X = Sprite index
+                    RTS                       ; Return
 
 ADDR_02B560:        LDA.W $173D,X             
                     ASL                       
@@ -6483,7 +6467,7 @@ ADDR_02B57F:        PLP
                     TYA                       
                     ADC.W $1729,X             
                     STA.W $1729,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02B58E:        LDA.W $17D8,X             
                     ASL                       
@@ -6510,7 +6494,7 @@ ADDR_02B5AD:        PLP
                     TYA                       
                     ADC.W $17E8,X             
                     STA.W $17E8,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02B5BC:        TXA                       
                     CLC                       
@@ -6518,7 +6502,7 @@ ADDR_02B5BC:        TXA
                     TAX                       
                     JSR.W ADDR_02B5C8         
                     LDX.W $1698               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02B5C8:        LDA.W $1820,X             
                     ASL                       
@@ -6540,10 +6524,9 @@ ADDR_02B5C8:        LDA.W $1820,X
 ADDR_02B5E4:        PLP                       
                     ADC.W $17FC,X             
                     STA.W $17FC,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-
-DATA_02B5EC:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+Empty02B5EC:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
@@ -6553,27 +6536,26 @@ DATA_02B5EC:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF
 
-DATA_02B630:        .db $1B,$1B,$1A,$19,$18,$17
+PokeyClipIndex:     .db $1B,$1B,$1A,$19,$18,$17
 
-ADDR_02B636:        PHB                       
+PokeyMain:          PHB                       
                     PHK                       
                     PLB                       
-                    JSR.W ADDR_02B672         
-                    LDA $C2,X                 
-                    PHX                       
-                    LDX.B #$04                
-                    LDY.B #$00                
-ADDR_02B643:        LSR                       
-                    BCC ADDR_02B647           
-                    INY                       
-ADDR_02B647:        DEX                       
-                    BPL ADDR_02B643           
-                    PLX                       
-                    LDA.W DATA_02B630,Y       
-                    STA.W $1662,X             
+                    JSR.W PokeyMainRt         
+                    LDA $C2,X                 ; \ After: Y = number of segments
+                    PHX                       ;  | $C2,x has a bit set for each segment remaining
+                    LDX.B #$04                ;  | for X=0 to X=4...
+                    LDY.B #$00                ;  |
+PokeyLoopStart:     LSR                       ;  |
+                    BCC BitNotSet             ;  |
+                    INY                       ;  | ...Increment Y if bit X is set
+BitNotSet:          DEX                       ;  |
+                    BPL PokeyLoopStart        ;  |
+                    PLX                       ; /
+                    LDA.W PokeyClipIndex,Y    ; \ Update the index into the clipping table
+                    STA.W $1662,X             ; /
                     PLB                       
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 DATA_02B653:        .db $01,$02,$04,$08
 
@@ -6588,14 +6570,15 @@ PokeySpeed:         .db $02,$FE
 DATA_02B665:        .db $00,$05,$09,$0C,$0E,$0F,$10,$10
                     .db $10,$10,$10,$10,$10
 
-ADDR_02B672:        LDA.W $1534,X             
+PokeyMainRt:        LDA.W $1534,X             
                     BNE ADDR_02B681           
-                    LDA.W $14C8,X             
-                    CMP.B #$08                
-                    BEQ ADDR_02B6A7           
+                    LDA.W $14C8,X             ; \ Branch if Status == Normal
+                    CMP.B #$08                ;  |
+                    BEQ ADDR_02B6A7           ; /
                     JMP.W ADDR_02B726         
-ADDR_02B681:        JSL.L GenericSprGfxRt     
-                    LDY.W $15EA,X             
+
+ADDR_02B681:        JSL.L GenericSprGfxRt2    
+                    LDY.W $15EA,X             ; Y = Index into sprite OAM
                     LDA $C2,X                 
                     CMP.B #$01                
                     LDA.B #$8A                
@@ -6604,23 +6587,23 @@ ADDR_02B681:        JSL.L GenericSprGfxRt
 ADDR_02B692:        STA.W $0302,Y             
                     LDA.W $14C8,X             
                     CMP.B #$08                
-                    BNE ADDR_02B6A6           
-                    JSR.W ADDR_02D294         
+                    BNE Return02B6A6          
+                    JSR.W UpdateYPosNoGrvty2  
                     INC $AA,X                 
                     INC $AA,X                 
-                    JSR.W ADDR_02D025         
-ADDR_02B6A6:        RTS                       ; Return 
+                    JSR.W SubOffscreen0Bnk2   
+Return02B6A6:       RTS                       ; Return
 
-ADDR_02B6A7:        LDA $C2,X                 
-                    BNE ADDR_02B6AF           
-ADDR_02B6AB:        STZ.W $14C8,X             
-                    RTS                       ; Return 
+ADDR_02B6A7:        LDA $C2,X                 ; \ Erase sprite if no segments remain
+                    BNE PokeyAlive            ;  |
+ADDR_02B6AB:        STZ.W $14C8,X             ;  |
+                    RTS                       ; / Return
 
-ADDR_02B6AF:        CMP.B #$20                
+PokeyAlive:         CMP.B #$20                
                     BCS ADDR_02B6AB           
                     LDA $9D                   
                     BNE ADDR_02B726           
-                    JSR.W ADDR_02D025         
+                    JSR.W SubOffscreen0Bnk2   
                     JSL.L MarioSprInteract    
                     INC.W $1570,X             
                     LDA.W $1570,X             
@@ -6632,19 +6615,19 @@ ADDR_02B6AF:        CMP.B #$20
 ADDR_02B6CF:        LDY.W $157C,X             
                     LDA.W PokeySpeed,Y        
                     STA $B6,X                 
-                    JSR.W ADDR_02D288         
-                    JSR.W ADDR_02D294         
+                    JSR.W UpdateXPosNoGrvty2  
+                    JSR.W UpdateYPosNoGrvty2  
                     LDA $AA,X                 
                     CMP.B #$40                
                     BPL ADDR_02B6E8           
                     CLC                       
                     ADC.B #$02                
                     STA $AA,X                 
-ADDR_02B6E8:        JSL.L ADDR_019138         
-                    LDA.W $1588,X             
-                    AND.B #$04                
-                    BEQ ADDR_02B6F5           
-                    STZ $AA,X                 
+ADDR_02B6E8:        JSL.L ExtSub019138        
+                    LDA.W $1588,X             ; \ Branch if not on ground
+                    AND.B #$04                ;  |
+                    BEQ ADDR_02B6F5           ; /
+                    STZ $AA,X                 ; Sprite Y Speed = 0
 ADDR_02B6F5:        LDA.W $1588,X             
                     AND.B #$03                
                     BEQ ADDR_02B704           
@@ -6682,7 +6665,7 @@ ADDR_02B726:        JSR.W GetDrawInfo2
                     LDA.W DATA_02B665,Y       
                     STA $03                   
                     STZ $05                   
-                    LDY.W $15EA,X             
+                    LDY.W $15EA,X             ; Y = Index into sprite OAM
                     PHX                       
                     LDX.B #$04                
 ADDR_02B74B:        STX $06                   
@@ -6737,8 +6720,8 @@ ADDR_02B791:        STA.W $0302,Y
                     PLX                       
                     LDA.B #$04                
                     LDY.B #$02                
-ADDR_02B7A7:        JSL.L ADDR_01B7B3         
-                    RTS                       ; Return 
+ADDR_02B7A7:        JSL.L FinishOAMWrite      
+                    RTS                       ; Return
 
 ADDR_02B7AC:        LDY.B #$09                
 ADDR_02B7AE:        TYA                       
@@ -6754,29 +6737,29 @@ ADDR_02B7AE:        TYA
                     PLB                       
                     PHX                       
                     TYX                       
-                    JSL.L ADDR_03B6E5         
+                    JSL.L GetSpriteClippingB  
                     PLX                       
-                    JSL.L ADDR_03B69F         
-                    JSL.L ADDR_03B72B         
+                    JSL.L GetSpriteClippingA  
+                    JSL.L CheckForContact     
                     PLB                       
                     BCS ADDR_02B7D6           
 ADDR_02B7D2:        DEY                       
                     BPL ADDR_02B7AE           
-ADDR_02B7D5:        RTS                       ; Return 
+Return02B7D5:       RTS                       ; Return
 
 ADDR_02B7D6:        LDA.W $1558,X             
-                    BNE ADDR_02B7D5           
+                    BNE Return02B7D5          
                     LDA.W $00D8,Y             
                     SEC                       
                     SBC $D8,X                 
                     PHY                       
                     STY.W $1695               
-                    JSR.W ADDR_02B7ED         
+                    JSR.W RemovePokeySgmntRt  
                     PLY                       
                     JSR.W ADDR_02B82E         
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_02B7ED:        LDY.B #$00                
+RemovePokeySgmntRt: LDY.B #$00                
                     CMP.B #$09                
                     BMI ADDR_02B803           
                     INY                       
@@ -6789,9 +6772,9 @@ ADDR_02B7ED:        LDY.B #$00
                     CMP.B #$39                
                     BMI ADDR_02B803           
                     INY                       
-ADDR_02B803:        LDA $C2,X                 
-                    AND.W DATA_02B824,Y       
-                    STA $C2,X                 
+ADDR_02B803:        LDA $C2,X                 ; \ Take away a segment by unsetting a bit
+                    AND.W PokeyUnsetBit,Y     ;  |
+                    STA $C2,X                 ; /
                     STA.W $151C,X             
                     LDA.W DATA_02B829,Y       
                     STA $0D                   
@@ -6799,24 +6782,23 @@ ADDR_02B803:        LDA $C2,X
                     STA.W $1540,X             
                     ASL                       
                     STA.W $1558,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_02B81C:        PHB                       
+RemovePokeySegment: PHB                       ; Wrapper
                     PHK                       
                     PLB                       
-                    JSR.W ADDR_02B7ED         
+                    JSR.W RemovePokeySgmntRt  
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-
-DATA_02B824:        .db $EF,$F7,$FB,$FD,$FE
+PokeyUnsetBit:      .db $EF,$F7,$FB,$FD,$FE
 
 DATA_02B829:        .db $E0,$F0,$F8,$FC,$FE
 
-ADDR_02B82E:        JSL.L ADDR_02A9E4         
-                    BMI ADDR_02B881           
-                    LDA.B #$02                
-                    STA.W $14C8,Y             
+ADDR_02B82E:        JSL.L FindFreeSprSlot     ; \ Return if no free slots
+                    BMI Return02B881          ; /
+                    LDA.B #$02                ; \ Sprite status = Killed
+                    STA.W $14C8,Y             ; /
                     LDA.B #$70                
                     STA.W $009E,Y             
                     LDA $E4,X                 
@@ -6825,7 +6807,7 @@ ADDR_02B82E:        JSL.L ADDR_02A9E4
                     STA.W $14E0,Y             
                     PHX                       
                     TYX                       
-                    JSL.L ADDR_07F7D2         
+                    JSL.L InitSpriteTables    
                     LDX.W $1695               
                     LDA $D8,X                 
                     STA.W $00D8,Y             
@@ -6846,69 +6828,67 @@ ADDR_02B82E:        JSL.L ADDR_02A9E4
                     LDA.B #$01                
                     STA.W $1534,Y             
                     LDA.B #$01                
-                    JSL.L ADDR_02ACE1         
-ADDR_02B881:        RTS                       ; Return 
+                    JSL.L ExtSub02ACE1        
+Return02B881:       RTS                       ; Return
 
-ADDR_02B882:        PHB                       
+TorpedoTedMain:     PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02B88A         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_02B88A:        LDA $64                   
-                    PHA                       
-                    LDA.W $1540,X             
-                    BEQ ADDR_02B896           
-                    LDA.B #$10                
-                    STA $64                   
-ADDR_02B896:        JSR.W ADDR_02B8F7         
-                    PLA                       
-                    STA $64                   
-                    LDA $9D                   
-                    BNE ADDR_02B8B7           
-                    JSR.W ADDR_02D025         
-                    JSL.L ADDR_01803A         
-                    LDA.W $1540,X             
-                    BEQ ADDR_02B8BC           
-                    LDA.B #$08                
-                    STA $AA,X                 
-                    JSR.W ADDR_02D294         
-                    LDA.B #$10                
-                    STA $AA,X                 
-ADDR_02B8B7:        RTS                       ; Return 
+ADDR_02B88A:        LDA $64                   ; \ Save $64
+                    PHA                       ; /
+                    LDA.W $1540,X             ; \ If being launched...
+                    BEQ ADDR_02B896           ;  | ...set $64 = #$10...
+                    LDA.B #$10                ;  | ...so it will be drawn behind objects
+                    STA $64                   ; /
+ADDR_02B896:        JSR.W TorpedoGfxRt        ; Draw sprite
+                    PLA                       ; \ Restore $64
+                    STA $64                   ; /
+                    LDA $9D                   ; \ Return if sprites locked
+                    BNE Return02B8B7          ; /
+                    JSR.W SubOffscreen0Bnk2   
+                    JSL.L SprSpr_MarioSprRts  
+                    LDA.W $1540,X             ; \ Branch if not being launched
+                    BEQ ADDR_02B8BC           ; /
+                    LDA.B #$08                ; \ Sprite Y speed = #$08
+                    STA $AA,X                 ; /
+                    JSR.W UpdateYPosNoGrvty2  ; Apply speed to position
+                    LDA.B #$10                ; \ Sprite Y speed = #$10
+                    STA $AA,X                 ; /
+Return02B8B7:       RTS                       ; Return
 
+TorpedoMaxSpeed:    .db $20,$F0
 
-DATA_02B8B8:        .db $20,$F0
+TorpedoAccel:       .db $01,$FF
 
-DATA_02B8BA:        .db $01,$FF
-
-ADDR_02B8BC:        LDA $13                   
-                    AND.B #$03                
-                    BNE ADDR_02B8D2           
-                    LDY.W $157C,X             
-                    LDA $B6,X                 
-                    CMP.W DATA_02B8B8,Y       
-                    BEQ ADDR_02B8D2           
-                    CLC                       
-                    ADC.W DATA_02B8BA,Y       
-                    STA $B6,X                 
-ADDR_02B8D2:        JSR.W ADDR_02D288         
-                    JSR.W ADDR_02D294         
-                    LDA $AA,X                 
-                    BEQ ADDR_02B8E4           
-                    LDA $13                   
-                    AND.B #$01                
-                    BNE ADDR_02B8E4           
-                    DEC $AA,X                 
-ADDR_02B8E4:        TXA                       
-                    CLC                       
-                    ADC $14                   
-                    AND.B #$07                
-                    BNE ADDR_02B8EF           
-                    JSR.W ADDR_02B952         
-ADDR_02B8EF:        RTS                       ; Return 
-
+ADDR_02B8BC:        LDA $13                   ; \ Only increase X speed every 4 frames
+                    AND.B #$03                ;  |
+                    BNE ADDR_02B8D2           ; /
+                    LDY.W $157C,X             ; \ If not at maximum, increase X speed
+                    LDA $B6,X                 ;  |
+                    CMP.W TorpedoMaxSpeed,Y   ;  |
+                    BEQ ADDR_02B8D2           ;  |
+                    CLC                       ;  |
+                    ADC.W TorpedoAccel,Y      ;  |
+                    STA $B6,X                 ; /
+ADDR_02B8D2:        JSR.W UpdateXPosNoGrvty2  ; \ Apply speed to position
+                    JSR.W UpdateYPosNoGrvty2  ; /
+                    LDA $AA,X                 ; \ If sprite has Y speed...
+                    BEQ ADDR_02B8E4           ;  |
+                    LDA $13                   ;  | ...Decrease Y speed every other frame
+                    AND.B #$01                ;  |
+                    BNE ADDR_02B8E4           ;  |
+                    DEC $AA,X                 ; /
+ADDR_02B8E4:        TXA                       ; \ Run $02B952 every 8 frames
+                    CLC                       ;  |
+                    ADC $14                   ;  |
+                    AND.B #$07                ;  |
+                    BNE Return02B8EF          ;  |
+                    JSR.W ADDR_02B952         ; /
+Return02B8EF:       RTS                       ; Return
 
 DATA_02B8F0:        .db $10
 
@@ -6916,7 +6896,7 @@ DATA_02B8F1:        .db $00,$10,$80,$82
 
 DATA_02B8F5:        .db $40,$00
 
-ADDR_02B8F7:        JSR.W GetDrawInfo2        
+TorpedoGfxRt:       JSR.W GetDrawInfo2        
                     LDA $01                   
                     STA.W $0301,Y             
                     STA.W $0305,Y             
@@ -6989,7 +6969,7 @@ ADDR_02B969:        LDA $E4,X
                     PLA                       
                     PLX                       
                     SBC $1B                   
-                    BNE ADDR_02B9A3           
+                    BNE Return02B9A3          
                     LDA.B #$01                
                     STA.W $17C0,Y             
                     LDA $02                   
@@ -6998,21 +6978,21 @@ ADDR_02B969:        LDA $E4,X
                     STA.W $17C4,Y             
                     LDA.B #$0F                
                     STA.W $17CC,Y             
-ADDR_02B9A3:        RTS                       ; Return 
+Return02B9A3:       RTS                       ; Return
 
-                    STA $9C                   
-                    LDA $E4,X                 
-                    STA $9A                   
-                    LDA.W $14E0,X             
-                    STA $9B                   
-                    LDA $D8,X                 
-                    STA $98                   
-                    LDA.W $14D4,X             
-                    STA $99                   
-                    JSL.L ADDR_00BEB0         
-                    RTL                       ; Return 
+GenTileFromSpr0:    STA $9C                   ; $9C = tile to generate
+                    LDA $E4,X                 ; \ $9A = Sprite X position
+                    STA $9A                   ;  | for block creation
+                    LDA.W $14E0,X             ;  |
+                    STA $9B                   ; /
+                    LDA $D8,X                 ; \ $98 = Sprite Y position
+                    STA $98                   ;  | for block creation
+                    LDA.W $14D4,X             ;  |
+                    STA $99                   ; /
+                    JSL.L GenerateTile        ; Generate the tile
+                    RTL                       ; Return
 
-ADDR_02B9BD:        LDA.B #$02                
+ExtSub02B9BD:       LDA.B #$02                
                     STA.W $18DD               
                     LDY.B #$09                
 ADDR_02B9C4:        LDA.W $14C8,Y             
@@ -7024,15 +7004,15 @@ ADDR_02B9C4:        LDA.W $14C8,Y
                     JSR.W ADDR_02B9D9         
 ADDR_02B9D5:        DEY                       
                     BPL ADDR_02B9C4           
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_02B9D9:        LDA.B #$21                
                     STA.W $009E,Y             
-                    LDA.B #$08                
-                    STA.W $14C8,Y             
+                    LDA.B #$08                ; \ Sprite status = Normal
+                    STA.W $14C8,Y             ; /
                     PHX                       
                     TYX                       
-                    JSL.L ADDR_07F7D2         
+                    JSL.L InitSpriteTables    
                     LDA.W $15F6,X             
                     AND.B #$F1                
                     ORA.B #$02                
@@ -7040,22 +7020,23 @@ ADDR_02B9D9:        LDA.B #$21
                     LDA.B #$D8                
                     STA.W $00AA,X             
                     PLX                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_02B9FA:        STZ $0F                   
+ExtSub02B9FA:       STZ $0F                   
                     BRA ADDR_02BA48           
-                    LDA $01                   
-                    AND.B #$F0                
+
+                    LDA $01                   ;  \ Unreachable
+                    AND.B #$F0                ;   | Very similar to code below
                     STA $04                   
                     LDA $09                   
                     CMP $5D                   
-                    BCS ADDR_02BA47           
+                    BCS Return02BA47          
                     STA $05                   
                     LDA $00                   
                     STA $07                   
                     LDA $08                   
                     CMP.B #$02                
-                    BCS ADDR_02BA47           
+                    BCS Return02BA47          
                     STA $0A                   
                     LDA $07                   
                     LSR                       
@@ -7079,21 +7060,22 @@ ADDR_02BA30:        CLC
 ADDR_02BA41:        ADC $0A                   
                     STA $06                   
                     BRA ADDR_02BA92           
-ADDR_02BA47:        RTL                       ; Return 
+
+Return02BA47:       RTL                       ; Return
 
 ADDR_02BA48:        LDA $01                   
                     AND.B #$F0                
                     STA $04                   
                     LDA $09                   
                     CMP.B #$02                
-                    BCS ADDR_02BA47           
+                    BCS Return02BA47          
                     STA $0D                   
                     STA.W $18B3               
                     LDA $00                   
                     STA $06                   
                     LDA $08                   
                     CMP $5D                   
-                    BCS ADDR_02BA47           
+                    BCS Return02BA47          
                     STA $07                   
                     LDA $06                   
                     LSR                       
@@ -7116,62 +7098,61 @@ ADDR_02BA7D:        CLC
                     LDA.L DATA_00BAAC,X       
 ADDR_02BA8E:        ADC $0D                   
                     STA $06                   
-ADDR_02BA92:        LDX.W $15E9               
+ADDR_02BA92:        LDX.W $15E9               ; X = Sprite index
                     LDA.B #$7E                
                     STA $07                   
                     LDA [$05]                 
                     STA.W $1693               
                     INC $07                   
                     LDA [$05]                 
-                    BNE ADDR_02BABF           
+                    BNE Return02BABF          
                     LDA.W $1693               
-                    CMP.B #$45                
-                    BCC ADDR_02BABF           
-                    CMP.B #$48                
-                    BCS ADDR_02BABF           
+                    CMP.B #$45                ; If it is <= the Red Berry map16 tile
+                    BCC Return02BABF          ; Return
+                    CMP.B #$48                ; If it is => Map16 always turning block
+                    BCS Return02BABF          ; Return
                     SEC                       
                     SBC.B #$44                
-                    STA.W $18D6               
+                    STA.W $18D6               ; Berry Type
                     LDY.B #$0B                
-ADDR_02BAB7:        LDA.W $14C8,Y             
-                    BEQ ADDR_02BAC0           
-                    DEY                       
-                    BPL ADDR_02BAB7           
-ADDR_02BABF:        RTL                       ; Return 
+ADDR_02BAB7:        LDA.W $14C8,Y             ; \ Find a free sprite slot and branch
+                    BEQ ADDR_02BAC0           ;  |
+                    DEY                       ;  |
+                    BPL ADDR_02BAB7           ; /
+Return02BABF:       RTL                       ; Return if no slots found
 
-ADDR_02BAC0:        LDA.B #$08                
-                    STA.W $14C8,Y             
-                    LDA.B #$74                
-                    STA.W $009E,Y             
-                    LDA $00                   
-                    STA.W $00E4,Y             
-                    STA $9A                   
-                    LDA $08                   
-                    STA.W $14E0,Y             
-                    STA $9B                   
-                    LDA $01                   
-                    STA.W $00D8,Y             
-                    STA $98                   
-                    LDA $09                   
-                    STA.W $14D4,Y             
-                    STA $99                   
+ADDR_02BAC0:        LDA.B #$08                ; \ Sprite status = Normal
+                    STA.W $14C8,Y             ; /
+                    LDA.B #$74                ; \ Sprite number = Mushroom
+                    STA.W $009E,Y             ; /
+                    LDA $00                   ; \ Sprite and block X position = $00,$08
+                    STA.W $00E4,Y             ;  |
+                    STA $9A                   ;  |
+                    LDA $08                   ;  |
+                    STA.W $14E0,Y             ;  |
+                    STA $9B                   ; /
+                    LDA $01                   ; \ Sprite and block Y position = $01,$09
+                    STA.W $00D8,Y             ;  |
+                    STA $98                   ;  |
+                    LDA $09                   ;  |
+                    STA.W $14D4,Y             ;  |
+                    STA $99                   ; /
                     PHX                       
                     TYX                       
-                    JSL.L ADDR_07F7D2         
-                    INC.W $160E,X             
-                    LDA.W $1662,X             
-                    AND.B #$F0                
-                    ORA.B #$0C                
-                    STA.W $1662,X             
-                    LDA.W $167A,X             
-                    AND.B #$BF                
-                    STA.W $167A,X             
+                    JSL.L InitSpriteTables    ; Reset sprite tables
+                    INC.W $160E,X             ; ?
+                    LDA.W $1662,X             ; \ Change the index into sprite clipping table
+                    AND.B #$F0                ;  | to "resize" the sprite
+                    ORA.B #$0C                ;  |
+                    STA.W $1662,X             ; /
+                    LDA.W $167A,X             ; \ No longer gives powerup when eaten
+                    AND.B #$BF                ;  |
+                    STA.W $167A,X             ; /
                     PLX                       
-                    LDA.B #$04                
-                    STA $9C                   
-                    JSL.L ADDR_00BEB0         
-                    RTL                       ; Return 
-
+                    LDA.B #$04                ; \ Block to generate = Tree behind berry
+                    STA $9C                   ; /
+                    JSL.L GenerateTile        ; Generate the tile
+                    RTL                       ; Return
 
 DATA_02BB0B:        .db $02,$FA,$06,$06
 
@@ -7185,9 +7166,9 @@ YoshiWingsGfxProp:  .db $46,$46,$06,$06
 
 YoshiWingsSize:     .db $00,$02,$00,$02
 
-ADDR_02BB23:        STA $02                   
-                    JSR.W ADDR_02D0C9         
-                    BNE ADDR_02BB87           
+ExtSub02BB23:       STA $02                   
+                    JSR.W IsSprOffScreenBnk2  
+                    BNE Return02BB87          
                     LDA $E4,X                 
                     STA $00                   
                     LDA.W $14E0,X             
@@ -7232,19 +7213,18 @@ ADDR_02BB23:        STA $02
                     LDA.L YoshiWingsSize,X    
                     STA.W $0420,Y             
 ADDR_02BB86:        PLX                       
-ADDR_02BB87:        RTL                       ; Return 
-
+Return02BB87:       RTL                       ; Return
 
 DATA_02BB88:        .db $FF,$01,$FF,$01,$00,$00
 
 DATA_02BB8E:        .db $E8,$18,$F8,$08,$00,$00
 
-ADDR_02BB94:        JSR.W ADDR_02BC14         
+DolphinMain:        JSR.W ADDR_02BC14         
                     LDA $9D                   
-                    BNE ADDR_02BBFF           
-                    JSR.W ADDR_02D01F         
-                    JSR.W ADDR_02D294         
-                    JSR.W ADDR_02D288         
+                    BNE Return02BBFF          
+                    JSR.W SubOffscreen1Bnk2   
+                    JSR.W UpdateYPosNoGrvty2  
+                    JSR.W UpdateXPosNoGrvty2  
                     STA.W $1528,X             
                     LDA $14                   
                     AND.B #$00                
@@ -7258,7 +7238,7 @@ ADDR_02BBB7:        TXA
                     EOR $13                   
                     LSR                       
                     BCC ADDR_02BBC1           
-                    JSL.L ADDR_019138         
+                    JSL.L ExtSub019138        
 ADDR_02BBC1:        LDA $AA,X                 
                     BMI ADDR_02BBFB           
                     LDA.W $164A,X             
@@ -7269,7 +7249,7 @@ ADDR_02BBC1:        LDA $AA,X
                     SBC.B #$08                
                     STA $AA,X                 
                     BPL ADDR_02BBD7           
-                    STZ $AA,X                 
+                    STZ $AA,X                 ; Sprite Y Speed = 0
 ADDR_02BBD7:        LDA.W $151C,X             
                     BNE ADDR_02BBF7           
                     LDA $C2,X                 
@@ -7291,27 +7271,27 @@ ADDR_02BBD7:        LDA.W $151C,X
 ADDR_02BBF7:        LDA.B #$C0                
                     STA $AA,X                 
 ADDR_02BBFB:        JSL.L InvisBlkMainRt      
-ADDR_02BBFF:        RTL                       ; Return 
+Return02BBFF:       RTL                       ; Return
 
 ADDR_02BC00:        LDA $14                   
                     AND.B #$04                
                     LSR                       
                     LSR                       
                     STA.W $157C,X             
-                    JSL.L ADDR_019D5F         
-                    RTS                       ; Return 
+                    JSL.L GenericSprGfxRt1    
+                    RTS                       ; Return
 
+DolphinTiles1:      .db $E2,$88
 
-Dolphin1:           .db $E2,$88
+DolphinTiles2:      .db $E7,$A8
 
-Dolphin2:           .db $E7,$A8
-
-Dolphin3:           .db $E8,$A9
+DolphinTiles3:      .db $E8,$A9
 
 ADDR_02BC14:        LDA $9E,X                 
                     CMP.B #$43                
                     BNE ADDR_02BC1D           
                     JMP.W ADDR_02BC00         
+
 ADDR_02BC1D:        JSR.W GetDrawInfo2        
                     LDA $B6,X                 
                     STA $02                   
@@ -7327,6 +7307,7 @@ ADDR_02BC1D:        JSR.W GetDrawInfo2
                     ADC.B #$08                
                     STA.W $0308,Y             
                     BRA ADDR_02BC4E           
+
 ADDR_02BC3C:        CLC                       
                     ADC.B #$18                
                     STA.W $0300,Y             
@@ -7347,11 +7328,11 @@ ADDR_02BC4E:        LDA $01
                     LSR                       
                     LSR                       
                     TAX                       
-                    LDA.W Dolphin1,X          
+                    LDA.W DolphinTiles1,X     
                     STA.W $0302,Y             
-                    LDA.W Dolphin2,X          
+                    LDA.W DolphinTiles2,X     
                     STA.W $0306,Y             
-                    LDA.W Dolphin3,X          
+                    LDA.W DolphinTiles3,X     
                     STA.W $030A,Y             
                     PLX                       
                     LDA.W $15F6,X             
@@ -7377,16 +7358,16 @@ DATA_02BCC7:        .db $00,$C0,$C0,$00,$40,$80,$80,$40
                     .db $80,$C0,$40,$00,$C0,$80,$00,$40
 DATA_02BCD7:        .db $00,$01,$02,$01
 
-ADDR_02BCDB:        JSL.L SprSprInteract      
-                    JSL.L ADDR_01ACF9         
+WallFollowersMain:  JSL.L SprSprInteract      
+                    JSL.L GetRand             
                     AND.B #$FF                
                     ORA $9D                   
                     BNE ADDR_02BCEE           
                     LDA.B #$0C                
                     STA.W $1558,X             
-ADDR_02BCEE:        LDA $9E,X                 
-                    CMP.B #$2E                
-                    BNE ADDR_02BD23           
+ADDR_02BCEE:        LDA $9E,X                 ; \ Branch if not Spike Top
+                    CMP.B #$2E                ;  |
+                    BNE ADDR_02BD23           ; /
                     LDY $C2,X                 
                     LDA.W $1564,X             
                     BEQ ADDR_02BD04           
@@ -7396,6 +7377,7 @@ ADDR_02BCEE:        LDA $9E,X
                     TAY                       
                     LDA.B #$00                
                     BRA ADDR_02BD0B           
+
 ADDR_02BD04:        LDA $14                   
                     LSR                       
                     LSR                       
@@ -7408,12 +7390,14 @@ ADDR_02BD0B:        CLC
                     AND.B #$3F                
                     ORA.W DATA_02BCC7,Y       
                     STA.W $15F6,X             
-                    JSL.L GenericSprGfxRt     
+                    JSL.L GenericSprGfxRt2    
                     BRA ADDR_02BD2F           
+
 ADDR_02BD23:        CMP.B #$A5                
                     BCC ADDR_02BD2C           
                     JSR.W ADDR_02BE4E         
                     BRA ADDR_02BD2F           
+
 ADDR_02BD2C:        JSR.W ADDR_02BF5C         
 ADDR_02BD2F:        LDA.W $14C8,X             
                     CMP.B #$08                
@@ -7421,46 +7405,46 @@ ADDR_02BD2F:        LDA.W $14C8,X
                     STZ.W $1528,X             
                     LDA.B #$FF                
                     STA.W $1558,X             
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_02BD3F:        LDA $9D                   
-                    BNE ADDR_02BD74           
-                    JSR.W ADDR_02D017         
+                    BNE Return02BD74          
+                    JSR.W SubOffscreen3Bnk2   
                     JSL.L MarioSprInteract    
-                    LDA $9E,X                 
-                    CMP.B #$2E                
-                    BEQ ADDR_02BDA7           
-                    CMP.B #$3C                
-                    BEQ ADDR_02BDB3           
-                    CMP.B #$A5                
-                    BEQ ADDR_02BDB3           
-                    CMP.B #$A6                
-                    BEQ ADDR_02BDB3           
+                    LDA $9E,X                 ; \ Branch if Spike Top
+                    CMP.B #$2E                ;  |
+                    BEQ ADDR_02BDA7           ; /
+                    CMP.B #$3C                ; \ Branch if Wall-follow Urchin
+                    BEQ ADDR_02BDB3           ; /
+                    CMP.B #$A5                ; \ Branch if Ground-guided Fuzzball/Sparky
+                    BEQ ADDR_02BDB3           ; /
+                    CMP.B #$A6                ; \ Branch if Ground-guided Hothead
+                    BEQ ADDR_02BDB3           ; /
                     LDA $C2,X                 
                     AND.B #$01                
                     JSL.L ExecutePtr          
 
-Ptrs02BD64:         .dw ADDR_02BD68           
+UrchinPtrs?:        .dw ADDR_02BD68           
                     .dw ADDR_02BD75           
 
 ADDR_02BD68:        LDA.W $1540,X             
-                    BNE ADDR_02BD74           
+                    BNE Return02BD74          
                     LDA.B #$80                
                     STA.W $1540,X             
                     INC $C2,X                 
-ADDR_02BD74:        RTL                       ; Return 
+Return02BD74:       RTL                       ; Return
 
-ADDR_02BD75:        LDA $9E,X                 
-                    CMP.B #$3B                
-                    BEQ ADDR_02BD80           
+ADDR_02BD75:        LDA $9E,X                 ; \ Branch if Wall-detect Urchin
+                    CMP.B #$3B                ;  |
+                    BEQ ADDR_02BD80           ; /
                     LDA.W $1540,X             
                     BEQ ADDR_02BD91           
-ADDR_02BD80:        JSR.W ADDR_02D288         
-                    JSR.W ADDR_02D294         
-                    JSL.L ADDR_019138         
+ADDR_02BD80:        JSR.W UpdateXPosNoGrvty2  
+                    JSR.W UpdateYPosNoGrvty2  
+                    JSL.L ExtSub019138        
                     LDA.W $1588,X             
                     AND.B #$0F                
-                    BEQ ADDR_02BDA6           
+                    BEQ Return02BDA6          
 ADDR_02BD91:        LDA $B6,X                 
                     EOR.B #$FF                
                     INC A                     
@@ -7472,7 +7456,7 @@ ADDR_02BD91:        LDA $B6,X
                     LDA.B #$40                
                     STA.W $1540,X             
                     INC $C2,X                 
-ADDR_02BDA6:        RTL                       ; Return 
+Return02BDA6:       RTL                       ; Return
 
 ADDR_02BDA7:        LDA $D8,X                 
                     SEC                       
@@ -7487,16 +7471,16 @@ ADDR_02BDB3:        LDA.W $1540,X
                     STA $AA,X                 
                     LDA.W DATA_02BC9F,Y       
                     STA $B6,X                 
-                    JSL.L ADDR_019138         
+                    JSL.L ExtSub019138        
                     LDA.W $1588,X             
                     AND.B #$0F                
                     BNE ADDR_02BDE7           
                     LDA.B #$08                
                     STA.W $1564,X             
                     LDA.B #$38                
-                    LDY $9E,X                 
-                    CPY.B #$3C                
-                    BEQ ADDR_02BDE4           
+                    LDY $9E,X                 ; \ Branch if Wall-follow Urchin
+                    CPY.B #$3C                ;  |
+                    BEQ ADDR_02BDE4           ; /
                     LDA.B #$1A                
                     CPY.B #$A5                
                     BNE ADDR_02BDE4           
@@ -7504,9 +7488,9 @@ ADDR_02BDB3:        LDA.W $1540,X
                     NOP                       
 ADDR_02BDE4:        STA.W $1540,X             
 ADDR_02BDE7:        LDA.B #$20                
-                    LDY $9E,X                 
-                    CPY.B #$3C                
-                    BEQ ADDR_02BDF7           
+                    LDY $9E,X                 ; \ Branch if Wall-follow Urchin
+                    CPY.B #$3C                ;  |
+                    BEQ ADDR_02BDF7           ; /
                     LDA.B #$10                
                     CPY.B #$A5                
                     BNE ADDR_02BDF7           
@@ -7534,6 +7518,7 @@ ADDR_02BE0E:        LDY $C2,X
                     BPL ADDR_02BE27           
                     LDA.B #$03                
                     BRA ADDR_02BE2D           
+
 ADDR_02BE27:        CMP.B #$03                
                     BNE ADDR_02BE2F           
                     LDA.B #$07                
@@ -7543,23 +7528,22 @@ ADDR_02BE2F:        LDY $C2,X
                     STA $AA,X                 
                     LDA.W DATA_02BC8F,Y       
                     STA $B6,X                 
-                    LDA $9E,X                 
-                    CMP.B #$A5                
-                    BNE ADDR_02BE45           
+                    LDA $9E,X                 ; \ Branch if not Ground-guided Fuzzball/Sparky
+                    CMP.B #$A5                ;  |
+                    BNE ADDR_02BE45           ; /
                     ASL $B6,X                 
                     ASL $AA,X                 
-ADDR_02BE45:        JSR.W ADDR_02D288         
-                    JSR.W ADDR_02D294         
-                    RTL                       ; Return 
-
+ADDR_02BE45:        JSR.W UpdateXPosNoGrvty2  
+                    JSR.W UpdateYPosNoGrvty2  
+                    RTL                       ; Return
 
 DATA_02BE4C:        .db $05,$45
 
 ADDR_02BE4E:        LDA $9E,X                 
                     CMP.B #$A5                
                     BNE ADDR_02BEB5           
-                    JSL.L GenericSprGfxRt     
-                    LDY.W $15EA,X             
+                    JSL.L GenericSprGfxRt2    
+                    LDY.W $15EA,X             ; Y = Index into sprite OAM
                     LDA.W $192B               
                     CMP.B #$02                
                     BNE ADDR_02BE79           
@@ -7575,7 +7559,7 @@ ADDR_02BE4E:        LDA $9E,X
                     ORA $64                   
                     STA.W $0303,Y             
                     PLX                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02BE79:        LDA.B #$0A                
                     STA.W $0302,Y             
@@ -7587,8 +7571,7 @@ ADDR_02BE79:        LDA.B #$0A
                     ASL                       
                     EOR.W $0303,Y             
                     STA.W $0303,Y             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02BE8D:        .db $F8,$08,$F8,$08
 
@@ -7719,6 +7702,7 @@ ADDR_02BF84:        LDX $05
                     BEQ ADDR_02BFAA           
                     LDA.B #$CC                
 ADDR_02BFAA:        BRA ADDR_02BFB1           
+
 ADDR_02BFAC:        LDX $02                   
                     LDA.W UrchinTiles,X       
 ADDR_02BFB1:        STA.W $0302,Y             
@@ -7730,7 +7714,7 @@ ADDR_02BFB1:        STA.W $0302,Y
                     LDA $05                   
                     CMP.B #$05                
                     BNE ADDR_02BF84           
-                    LDX.W $15E9               
+                    LDX.W $15E9               ; X = Sprite index
                     LDY.B #$02                
                     JMP.W ADDR_02C82B         
 
@@ -7738,19 +7722,19 @@ DATA_02BFC8:        .db $10,$F0
 
 DATA_02BFCA:        .db $01,$FF
 
-ADDR_02BFCC:        RTL                       ; Return 
+Return02BFCC:       RTL                       ; Return
 
-ADDR_02BFCD:        JSL.L GenericSprGfxRt     
+RipVanFishMain:     JSL.L GenericSprGfxRt2    
                     LDA $9D                   
-                    BNE ADDR_02BFCC           
-                    JSR.W ADDR_02D025         
-                    JSL.L ADDR_01803A         
+                    BNE Return02BFCC          
+                    JSR.W SubOffscreen0Bnk2   
+                    JSL.L SprSpr_MarioSprRts  
                     LDA $B6,X                 
                     PHA                       
                     LDA $AA,X                 
                     PHA                       
-                    LDY.W $1490               
-                    BEQ ADDR_02BFF3           
+                    LDY.W $1490               ; \ Branch if Mario doesn't have star
+                    BEQ ADDR_02BFF3           ; /
                     EOR.B #$FF                
                     INC A                     
                     STA $AA,X                 
@@ -7759,22 +7743,22 @@ ADDR_02BFCD:        JSL.L GenericSprGfxRt
                     INC A                     
                     STA $B6,X                 
 ADDR_02BFF3:        JSR.W ADDR_02C126         
-                    JSR.W ADDR_02D288         
-                    JSR.W ADDR_02D294         
-                    JSL.L ADDR_019138         
+                    JSR.W UpdateXPosNoGrvty2  
+                    JSR.W UpdateYPosNoGrvty2  
+                    JSL.L ExtSub019138        
                     PLA                       
                     STA $AA,X                 
                     PLA                       
                     STA $B6,X                 
                     INC.W $1570,X             
-                    LDA.W $1588,X             
-                    AND.B #$03                
-                    BEQ ADDR_02C012           
-                    STZ $B6,X                 
+                    LDA.W $1588,X             ; \ Branch if not touching object
+                    AND.B #$03                ;  |
+                    BEQ ADDR_02C012           ; /
+                    STZ $B6,X                 ; Sprite X Speed = 0
 ADDR_02C012:        LDA.W $1588,X             
                     AND.B #$0C                
                     BEQ ADDR_02C01B           
-                    STZ $AA,X                 
+                    STZ $AA,X                 ; Sprite Y Speed = 0
 ADDR_02C01B:        LDA.W $164A,X             
                     BNE ADDR_02C024           
                     LDA.B #$10                
@@ -7782,7 +7766,7 @@ ADDR_02C01B:        LDA.W $164A,X
 ADDR_02C024:        LDA $C2,X                 
                     JSL.L ExecutePtr          
 
-Ptrs02C02A:         .dw ADDR_02C02E           
+RipVanFishPtrs:     .dw ADDR_02C02E           
                     .dw ADDR_02C08A           
 
 ADDR_02C02E:        LDA.B #$02                
@@ -7795,11 +7779,12 @@ ADDR_02C02E:        LDA.B #$02
                     BPL ADDR_02C042           
                     INC $B6,X                 
                     BRA ADDR_02C044           
+
 ADDR_02C042:        DEC $B6,X                 
-ADDR_02C044:        LDA.W $1588,X             
-                    AND.B #$04                
-                    BEQ ADDR_02C053           
-                    STZ $AA,X                 
+ADDR_02C044:        LDA.W $1588,X             ; \ Branch if not on ground
+                    AND.B #$04                ;  |
+                    BEQ ADDR_02C053           ; /
+                    STZ $AA,X                 ; Sprite Y Speed = 0
                     LDA $D8,X                 
                     AND.B #$F0                
                     STA $D8,X                 
@@ -7820,6 +7805,7 @@ ADDR_02C072:        INC $C2,X
                     LDA.B #$FF                
                     STA.W $151C,X             
                     BRA ADDR_02C08A           
+
 ADDR_02C07B:        LDY.B #$02                
                     LDA.W $1570,X             
                     AND.B #$30                
@@ -7827,7 +7813,7 @@ ADDR_02C07B:        LDY.B #$02
                     INY                       
 ADDR_02C085:        TYA                       
                     STA.W $1602,X             
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_02C08A:        LDA $13                   
                     AND.B #$01                
@@ -7858,23 +7844,25 @@ ADDR_02C0BB:        LDY.B #$00
                     INY                       
 ADDR_02C0C5:        TYA                       
                     STA.W $1602,X             
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_02C0CA:        STZ $C2,X                 
                     JMP.W ADDR_02C02E         
-ADDR_02C0CF:        LDA.B #$08                
-                    LDY.W $157C,X             
-                    BEQ ADDR_02C0D7           
-                    INC A                     
+
+ADDR_02C0CF:        LDA.B #$08                ;  \ Unreachable
+                    LDY.W $157C,X             ;   | A = #$08 or #$09 depending on sprite direction
+                    BEQ ADDR_02C0D7           ;   |
+                    INC A                     ;  /
 ADDR_02C0D7:        BRA ADDR_02C0DB           
+
 ADDR_02C0D9:        LDA.B #$06                
 ADDR_02C0DB:        TAY                       
-                    LDA.W $15A0,X             
-                    ORA.W $186C,X             
-                    BNE ADDR_02C125           
+                    LDA.W $15A0,X             ;  \ Return if sprite is offscreen
+                    ORA.W $186C,X             ;   |
+                    BNE Return02C125          ;  /
                     TYA                       
                     DEC.W $1528,X             
-                    BPL ADDR_02C125           
+                    BPL Return02C125          
                     PHA                       
                     LDA.B #$28                
                     STA.W $1528,X             
@@ -7902,7 +7890,7 @@ ADDR_02C107:        PLA
                     STA.W $1850,Y             
                     LDA.B #$FA                
                     STA.W $182C,Y             
-ADDR_02C125:        RTL                       ; Return 
+Return02C125:       RTL                       ; Return
 
 ADDR_02C126:        LDY.B #$00                
                     LDA $B6,X                 
@@ -7910,8 +7898,7 @@ ADDR_02C126:        LDY.B #$00
                     INY                       
 ADDR_02C12D:        TYA                       
                     STA.W $157C,X             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02C132:        .db $30,$20,$0A,$30
 
@@ -7928,7 +7915,7 @@ ADDR_02C13A:        LDA.W $1558,X
                     STZ.W $1570,X             
 ADDR_02C150:        LDA.B #$02                
                     STA.W $151C,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02C156:        LDA.W $1540,X             
                     BNE ADDR_02C181           
@@ -7946,7 +7933,7 @@ ADDR_02C156:        LDA.W $1540,X
                     BNE ADDR_02C17E           
                     LDA.B #$40                
                     STA.W $1558,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02C17E:        JSR.W ADDR_02C19A         
 ADDR_02C181:        LDY.W $1570,X             
@@ -7955,8 +7942,7 @@ ADDR_02C181:        LDY.W $1570,X
                     LDY.W $157C,X             
                     LDA.W DATA_02C1F3,Y       
                     STA.W $151C,X             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02C194:        .db $14,$EC
 
@@ -7964,10 +7950,10 @@ DATA_02C196:        .db $00,$FF
 
 DATA_02C198:        .db $08,$F8
 
-ADDR_02C19A:        JSL.L ADDR_02A9E4         
-                    BMI ADDR_02C1F2           
-                    LDA.B #$08                
-                    STA.W $14C8,Y             
+ADDR_02C19A:        JSL.L FindFreeSprSlot     ; \ Return if no free slots
+                    BMI Return02C1F2          ; /
+                    LDA.B #$08                ; \ Sprite status = Normal
+                    STA.W $14C8,Y             ; /
                     LDA.B #$48                
                     STA.W $009E,Y             
                     LDA.W $157C,X             
@@ -7978,7 +7964,7 @@ ADDR_02C19A:        JSL.L ADDR_02A9E4
                     STA $01                   
                     PHX                       
                     TYX                       
-                    JSL.L ADDR_07F7D2         
+                    JSL.L InitSpriteTables    
                     LDX $02                   
                     LDA $00                   
                     CLC                       
@@ -8001,12 +7987,11 @@ ADDR_02C19A:        JSL.L ADDR_02A9E4
                     STA.W $00AA,Y             
                     LDA.B #$2C                
                     STA.W $1540,Y             
-ADDR_02C1F2:        RTS                       ; Return 
-
+Return02C1F2:       RTS                       ; Return
 
 DATA_02C1F3:        .db $01,$03
 
-ADDR_02C1F5:        PHB                       
+ChucksMain:         PHB                       
                     PHK                       
                     PLB                       
                     LDA.W $187B,X             
@@ -8021,8 +8006,7 @@ ADDR_02C1F5:        PHB
                     LDA.B #$28                
                     STA.W $163E,X             
 ADDR_02C211:        PLB                       
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 DATA_02C213:        .db $01,$02,$03,$02
 
@@ -8034,8 +8018,7 @@ ADDR_02C217:        LDA $14
                     LDA.W DATA_02C213,Y       
                     STA.W $151C,X             
                     JSR.W ADDR_02C81A         
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02C228:        .db $40,$10
 
@@ -8048,9 +8031,9 @@ ADDR_02C22C:        LDA.W $14C8,X
                     BEQ ADDR_02C23D           
                     LDA.B #$05                
                     STA.W $1602,X             
-ADDR_02C23D:        LDA.W $1588,X             
-                    AND.B #$04                
-                    BNE ADDR_02C253           
+ADDR_02C23D:        LDA.W $1588,X             ; \ Branch if on ground
+                    AND.B #$04                ;  |
+                    BNE ADDR_02C253           ; /
                     LDA $AA,X                 
                     BPL ADDR_02C253           
                     LDA $C2,X                 
@@ -8061,20 +8044,20 @@ ADDR_02C23D:        LDA.W $1588,X
 ADDR_02C253:        JSR.W ADDR_02C81A         
                     LDA $9D                   
                     BEQ ADDR_02C25B           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_02C25B:        JSR.W ADDR_02D025         
+ADDR_02C25B:        JSR.W SubOffscreen0Bnk2   
                     JSR.W ADDR_02C79D         
                     JSL.L SprSprInteract      
-                    JSL.L ADDR_019138         
+                    JSL.L ExtSub019138        
                     LDA.W $1588,X             
                     AND.B #$08                
                     BEQ ADDR_02C274           
                     LDA.B #$10                
                     STA $AA,X                 
-ADDR_02C274:        LDA.W $1588,X             
-                    AND.B #$03                
-                    BEQ ADDR_02C2F4           
+ADDR_02C274:        LDA.W $1588,X             ; \ Branch if not touching object
+                    AND.B #$03                ;  |
+                    BEQ ADDR_02C2F4           ; /
                     LDA.W $15A0,X             
                     ORA.W $186C,X             
                     BNE ADDR_02C2E4           
@@ -8087,17 +8070,17 @@ ADDR_02C274:        LDA.W $1588,X
                     ADC.B #$14                
                     CMP.B #$1C                
                     BCC ADDR_02C2E4           
-                    LDA.W $1588,X             
-                    AND.B #$40                
-                    BNE ADDR_02C2E4           
+                    LDA.W $1588,X             ; \ Branch if on ground
+                    AND.B #$40                ;  |
+                    BNE ADDR_02C2E4           ; /
                     LDA.W $18A7               
                     CMP.B #$2E                
                     BEQ ADDR_02C2A6           
                     CMP.B #$1E                
                     BNE ADDR_02C2E4           
-ADDR_02C2A6:        LDA.W $1588,X             
-                    AND.B #$04                
-                    BEQ ADDR_02C2F7           
+ADDR_02C2A6:        LDA.W $1588,X             ; \ Branch if not on ground
+                    AND.B #$04                ;  |
+                    BEQ ADDR_02C2F7           ; /
                     LDA $9B                   
                     PHA                       
                     LDA $9A                   
@@ -8107,9 +8090,9 @@ ADDR_02C2A6:        LDA.W $1588,X
                     LDA $98                   
                     PHA                       
                     JSL.L ShatterBlock        
-                    LDA.B #$02                
-                    STA $9C                   
-                    JSL.L ADDR_00BEB0         
+                    LDA.B #$02                ; \ Block to generate = #$02
+                    STA $9C                   ; /
+                    JSL.L GenerateTile        
                     PLA                       
                     SEC                       
                     SBC.B #$10                
@@ -8122,23 +8105,25 @@ ADDR_02C2A6:        LDA.W $1588,X
                     PLA                       
                     STA $9B                   
                     JSL.L ShatterBlock        
-                    LDA.B #$02                
-                    STA $9C                   
-                    JSL.L ADDR_00BEB0         
+                    LDA.B #$02                ; \ Block to generate = #$02
+                    STA $9C                   ; /
+                    JSL.L GenerateTile        
                     BRA ADDR_02C2F4           
-ADDR_02C2E4:        LDA.W $1588,X             
-                    AND.B #$04                
-                    BEQ ADDR_02C2F7           
+
+ADDR_02C2E4:        LDA.W $1588,X             ; \ Branch if not on ground
+                    AND.B #$04                ;  |
+                    BEQ ADDR_02C2F7           ; /
                     LDA.B #$C0                
                     STA $AA,X                 
-                    JSR.W ADDR_02D294         
+                    JSR.W UpdateYPosNoGrvty2  
                     BRA ADDR_02C301           
-ADDR_02C2F4:        JSR.W ADDR_02D288         
-ADDR_02C2F7:        LDA.W $1588,X             
-                    AND.B #$04                
-                    BEQ ADDR_02C301           
+
+ADDR_02C2F4:        JSR.W UpdateXPosNoGrvty2  
+ADDR_02C2F7:        LDA.W $1588,X             ; \ Branch if not on ground
+                    AND.B #$04                ;  |
+                    BEQ ADDR_02C301           ; /
                     JSR.W ADDR_02C579         
-ADDR_02C301:        JSR.W ADDR_02D294         
+ADDR_02C301:        JSR.W UpdateYPosNoGrvty2  
                     LDY.W $164A,X             
                     CPY.B #$01                
                     LDY.B #$00                
@@ -8167,7 +8152,7 @@ ADDR_02C334:        STA $AA,X
                     LDA $C2,X                 
                     JSL.L ExecutePtr          
 
-Ptrs02C33C:         .dw ADDR_02C63B           
+ChuckPtrs:          .dw ADDR_02C63B           
                     .dw ADDR_02C6A7           
                     .dw ADDR_02C726           
                     .dw ADDR_02C74A           
@@ -8200,8 +8185,8 @@ DATA_02C373:        .db $05,$05,$05,$02,$02,$06,$06,$06
 ADDR_02C37B:        LDA $14                   
                     AND.B #$3F                
                     BNE ADDR_02C386           
-                    LDA.B #$1E                
-                    STA.W $1DFC               ; / Play sound effect 
+                    LDA.B #$1E                ; \ Play sound effect
+                    STA.W $1DFC               ; /
 ADDR_02C386:        LDY.B #$03                
                     LDA $14                   
                     AND.B #$30                
@@ -8226,8 +8211,7 @@ ADDR_02C390:        TYA
                     BCC ADDR_02C3AF           
                     STA.W $18B9               
 ADDR_02C3AF:        STA.W $18FD               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02C3B3:        .db $7F,$BF,$FF,$DF
 
@@ -8268,7 +8252,7 @@ ADDR_02C40C:        LDA.W $1540,X
                     BCS ADDR_02C419           
                     LDA.B #$00                
                     STA.W $1602,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02C419:        SEC                       
                     SBC.B #$40                
@@ -8282,11 +8266,11 @@ ADDR_02C419:        SEC
                     LDA.W $1540,X             
                     AND.B #$1F                
                     CMP.B #$06                
-                    BNE ADDR_02C439           
+                    BNE Return02C439          
                     JSR.W ADDR_02C466         
                     LDA.B #$08                
                     STA.W $1558,X             
-ADDR_02C439:        RTS                       ; Return 
+Return02C439:       RTS                       ; Return
 
 ADDR_02C43A:        LDA.W $1540,X             
                     BEQ ADDR_02C45C           
@@ -8295,7 +8279,7 @@ ADDR_02C43A:        LDA.W $1540,X
                     BCC ADDR_02C44A           
                     CMP.B #$30                
                     BCS ADDR_02C44A           
-                    STZ $AA,X                 
+                    STZ $AA,X                 ; Sprite Y Speed = 0
 ADDR_02C44A:        LSR                       
                     LSR                       
                     TAY                       
@@ -8303,13 +8287,12 @@ ADDR_02C44A:        LSR
                     STA.W $1602,X             
                     PLA                       
                     CMP.B #$26                
-                    BNE ADDR_02C45B           
+                    BNE Return02C45B          
                     JSR.W ADDR_02C466         
-ADDR_02C45B:        RTS                       ; Return 
+Return02C45B:       RTS                       ; Return
 
 ADDR_02C45C:        STZ.W $1534,X             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 BaseballTileDispX:  .db $10,$F8
 
@@ -8319,16 +8302,16 @@ BaseballSpeed:      .db $18,$E8
 
 ADDR_02C466:        LDA.W $1558,X             
                     ORA.W $186C,X             
-                    BNE ADDR_02C439           
-                    LDY.B #$07                
-ADDR_02C470:        LDA.W $170B,Y             
-                    BEQ ADDR_02C479           
-                    DEY                       
-                    BPL ADDR_02C470           
-                    RTS                       ; Return 
+                    BNE Return02C439          
+                    LDY.B #$07                ; \ Find a free extended sprite slot
+ADDR_02C470:        LDA.W $170B,Y             ;  |
+                    BEQ ADDR_02C479           ;  |
+                    DEY                       ;  |
+                    BPL ADDR_02C470           ;  |
+                    RTS                       ; / Return if no free slots
 
-ADDR_02C479:        LDA.B #$0D                
-                    STA.W $170B,Y             
+ADDR_02C479:        LDA.B #$0D                ; \ Extended sprite = Baseball
+                    STA.W $170B,Y             ; /
                     LDA $E4,X                 
                     STA $00                   
                     LDA.W $14E0,X             
@@ -8353,8 +8336,7 @@ ADDR_02C479:        LDA.B #$0D
                     LDA.W BaseballSpeed,X     
                     STA.W $1747,Y             
                     PLX                       
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02C4B5:        .db $00,$00,$11,$11,$11,$11,$00,$00
 
@@ -8369,16 +8351,16 @@ ADDR_02C4BD:        STZ.W $1602,X
                     BNE ADDR_02C4D5           
                     PHA                       
                     JSR.W ADDR_02C556         
-                    JSL.L ADDR_03CBB3         
+                    JSL.L ExtSub03CBB3        
                     PLA                       
 ADDR_02C4D5:        CMP.B #$20                
-                    BCS ADDR_02C4E2           
+                    BCS Return02C4E2          
                     LSR                       
                     LSR                       
                     TAY                       
                     LDA.W DATA_02C4B5,Y       
                     STA.W $1602,X             
-ADDR_02C4E2:        RTS                       ; Return 
+Return02C4E2:       RTS                       ; Return
 
 ADDR_02C4E3:        JSR.W ADDR_02C556         
                     LDA.B #$06                
@@ -8389,68 +8371,67 @@ ADDR_02C4E3:        JSR.W ADDR_02C556
                     BEQ ADDR_02C504           
                     LDA.W $1FE2,X             
                     BNE ADDR_02C502           
-                    LDA.B #$19                
-                    STA.W $1DFC               ; / Play sound effect 
+                    LDA.B #$19                ; \ Play sound effect
+                    STA.W $1DFC               ; /
                     LDA.B #$20                
                     STA.W $1FE2,X             
 ADDR_02C502:        LDA.B #$07                
 ADDR_02C504:        STA.W $1602,X             
-                    LDA.W $1588,X             
-                    AND.B #$04                
-                    BEQ ADDR_02C53B           
+                    LDA.W $1588,X             ; \ Branch if not on ground
+                    AND.B #$04                ;  |
+                    BEQ Return02C53B          ; /
                     STZ.W $160E,X             
                     LDA.B #$04                
                     STA.W $1602,X             
                     LDA.W $1540,X             
-                    BNE ADDR_02C53B           
+                    BNE Return02C53B          
                     LDA.B #$20                
                     STA.W $1540,X             
                     LDA.B #$F0                
                     STA $AA,X                 
                     JSR.W ADDR_02D50C         
                     LDA $0E                   
-                    BPL ADDR_02C53B           
+                    BPL Return02C53B          
                     CMP.B #$D0                
-                    BCS ADDR_02C53B           
+                    BCS Return02C53B          
                     LDA.B #$C0                
                     STA $AA,X                 
                     INC.W $160E,X             
-ADDR_02C536:        LDA.B #$08                
-                    STA.W $1DFC               ; / Play sound effect 
-ADDR_02C53B:        RTS                       ; Return 
+ADDR_02C536:        LDA.B #$08                ; \ Play sound effect
+                    STA.W $1DFC               ; /
+Return02C53B:       RTS                       ; Return
 
 ADDR_02C53C:        LDA.B #$06                
                     STA.W $1602,X             
-                    LDA.W $1588,X             
-                    AND.B #$04                
-                    BEQ ADDR_02C555           
+                    LDA.W $1588,X             ; \ Branch if not on ground
+                    AND.B #$04                ;  |
+                    BEQ Return02C555          ; /
                     JSR.W ADDR_02C579         
                     JSR.W ADDR_02C556         
                     LDA.B #$08                
                     STA.W $1540,X             
                     INC $C2,X                 
-ADDR_02C555:        RTS                       ; Return 
+Return02C555:       RTS                       ; Return
 
 ADDR_02C556:        JSR.W ADDR_02D4FA         
                     TYA                       
                     STA.W $157C,X             
                     LDA.W DATA_02C639,Y       
                     STA.W $151C,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02C564:        LDA.B #$03                
                     STA.W $1602,X             
                     LDA.W $1540,X             
                     BNE ADDR_02C579           
-                    LDA.W $1588,X             
-                    AND.B #$04                
-                    BEQ ADDR_02C57D           
+                    LDA.W $1588,X             ; \ Branch if not on ground
+                    AND.B #$04                ;  |
+                    BEQ Return02C57D          ; /
                     LDA.B #$05                
                     STA $C2,X                 
-ADDR_02C579:        STZ $B6,X                 
-                    STZ $AA,X                 
-ADDR_02C57D:        RTS                       ; Return 
-
+ADDR_02C579:        STZ $B6,X                 ; Sprite X Speed = 0
+                    STZ $AA,X                 ; Sprite Y Speed = 0
+Return02C57D:       RTS                       ; Return
 
 DATA_02C57E:        .db $10,$F0
 
@@ -8472,18 +8453,19 @@ ADDR_02C582:        JSR.W ADDR_02C556
                     LDA.B #$06                
                     STA $C2,X                 
                     JMP.W ADDR_02C536         
+
 ADDR_02C5A7:        STZ $C2,X                 
                     LDA.B #$50                
                     STA.W $1540,X             
-                    LDA.B #$10                
-                    STA.W $1DF9               ; / Play sound effect 
+                    LDA.B #$10                ; \ Play sound effect
+                    STA.W $1DF9               ; /
                     STZ.W $185E               
                     JSR.W ADDR_02C5BC         
                     INC.W $185E               
-ADDR_02C5BC:        JSL.L ADDR_02A9E4         
+ADDR_02C5BC:        JSL.L FindFreeSprSlot     
                     BMI ADDR_02C5FC           
-                    LDA.B #$08                
-                    STA.W $14C8,Y             
+                    LDA.B #$08                ; \ Sprite status = Normal
+                    STA.W $14C8,Y             ; /
                     LDA.B #$91                
                     STA.W $009E,Y             
                     LDA $E4,X                 
@@ -8496,7 +8478,7 @@ ADDR_02C5BC:        JSL.L ADDR_02A9E4
                     STA.W $14D4,Y             
                     PHX                       
                     TYX                       
-                    JSL.L ADDR_07F7D2         
+                    JSL.L InitSpriteTables    
                     LDX.W $185E               
                     LDA.W DATA_02C57E,X       
                     STA.W $00B6,Y             
@@ -8507,7 +8489,7 @@ ADDR_02C5BC:        JSL.L ADDR_02A9E4
                     STA.W $1540,Y             
 ADDR_02C5FC:        LDA.B #$09                
                     STA.W $1602,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02C602:        JSR.W ADDR_02D4FA         
                     TYA                       
@@ -8519,21 +8501,20 @@ ADDR_02C602:        JSR.W ADDR_02D4FA
                     BCS ADDR_02C618           
                     LDA.B #$40                
                     STA.W $1540,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02C618:        LDA.B #$03                
                     STA.W $1602,X             
                     LDA $13                   
                     AND.B #$3F                
-                    BNE ADDR_02C627           
+                    BNE Return02C627          
                     LDA.B #$E0                
                     STA $AA,X                 
-ADDR_02C627:        RTS                       ; Return 
+Return02C627:       RTS                       ; Return
 
 ADDR_02C628:        LDA.B #$08                
                     STA.W $15AC,X             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02C62E:        .db $00,$00,$00,$00,$01,$02,$03,$04
                     .db $04,$04,$04
@@ -8558,8 +8539,7 @@ ADDR_02C65C:        LDA.B #$02
                     STA $C2,X                 
                     LDA.B #$18                
                     STA.W $1540,X             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02C666:        .db $01,$FF
 
@@ -8569,6 +8549,7 @@ ADDR_02C668:        LDA.W $1540,X
                     EOR.B #$01                
                     STA.W $157C,X             
                     BRA ADDR_02C65C           
+
 ADDR_02C677:        LDA $14                   
                     AND.B #$03                
                     BNE ADDR_02C691           
@@ -8584,24 +8565,24 @@ ADDR_02C677:        LDA $14
 ADDR_02C691:        LDY.W $1594,X             
                     LDA.W DATA_02C62E,Y       
                     STA.W $151C,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02C69B:        INC.W $1534,X             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02C69F:        .db $10,$F0,$18,$E8
 
 DATA_02C6A3:        .db $12,$13,$12,$13
 
-ADDR_02C6A7:        LDA.W $1588,X             
-                    AND.B #$04                
-                    BEQ ADDR_02C6BA           
+ADDR_02C6A7:        LDA.W $1588,X             ; \ Branch if not on ground
+                    AND.B #$04                ;  |
+                    BEQ ADDR_02C6BA           ; /
                     LDA.W $163E,X             
                     CMP.B #$01                
                     BRA ADDR_02C6BA           
-                    LDA.B #$24                
-                    STA.W $1DF9               ; / Play sound effect 
+
+                    LDA.B #$24                ; \ Unreachable
+                    STA.W $1DF9               ; / Play sound effect
 ADDR_02C6BA:        JSR.W ADDR_02D50C         
                     LDA $0E                   
                     CLC                       
@@ -8619,23 +8600,23 @@ ADDR_02C6D7:        LDA.W $1540,X
                     BNE ADDR_02C6EC           
                     STZ $C2,X                 
                     JSR.W ADDR_02C628         
-                    JSL.L ADDR_01ACF9         
+                    JSL.L GetRand             
                     AND.B #$3F                
                     ORA.B #$40                
                     STA.W $1540,X             
 ADDR_02C6EC:        LDY.W $157C,X             
                     LDA.W DATA_02C639,Y       
                     STA.W $151C,X             
-                    LDA.W $1588,X             
-                    AND.B #$04                
-                    BEQ ADDR_02C713           
+                    LDA.W $1588,X             ; \ Branch if not on ground
+                    AND.B #$04                ;  |
+                    BEQ ADDR_02C713           ; /
                     LDA.W $187B,X             
                     BEQ ADDR_02C70E           
                     LDA $14                   
                     AND.B #$07                
                     BNE ADDR_02C70C           
-                    LDA.B #$01                
-                    STA.W $1DF9               ; / Play sound effect 
+                    LDA.B #$01                ; \ Play sound effect
+                    STA.W $1DF9               ; /
 ADDR_02C70C:        INY                       
                     INY                       
 ADDR_02C70E:        LDA.W DATA_02C69F,Y       
@@ -8649,19 +8630,18 @@ ADDR_02C71B:        LSR
                     TAY                       
                     LDA.W DATA_02C6A3,Y       
                     STA.W $1602,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02C726:        LDA.B #$03                
                     STA.W $1602,X             
                     LDA.W $1540,X             
-                    BNE ADDR_02C73C           
+                    BNE Return02C73C          
                     JSR.W ADDR_02C628         
                     LDA.B #$01                
                     STA $C2,X                 
                     LDA.B #$40                
                     STA.W $1540,X             
-ADDR_02C73C:        RTS                       ; Return 
-
+Return02C73C:       RTS                       ; Return
 
 DATA_02C73D:        .db $0A,$0B,$0A,$0C,$0D,$0C
 
@@ -8687,7 +8667,7 @@ ADDR_02C760:        LDA.W DATA_02C73D,Y
                     AND.B #$02                
                     INC A                     
 ADDR_02C773:        STA.W $151C,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02C777:        LDA $9E,X                 
                     CMP.B #$94                
@@ -8702,31 +8682,31 @@ ADDR_02C785:        LDA.B #$30
                     STA $C2,X                 
                     INC.W $187B,X             
                     JMP.W ADDR_02C556         
+
 ADDR_02C794:        LDA.B #$0C                
                     STA $C2,X                 
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02C799:        .db $F0,$10
 
 DATA_02C79B:        .db $20,$E0
 
 ADDR_02C79D:        LDA.W $1564,X             
-                    BNE ADDR_02C80F           
+                    BNE Return02C80F          
                     JSL.L MarioSprInteract    
-                    BCC ADDR_02C80F           
-                    LDA.W $1490               
-                    BEQ ADDR_02C7C4           
+                    BCC Return02C80F          
+                    LDA.W $1490               ; \ Branch if Mario doesn't have star
+                    BEQ ADDR_02C7C4           ; /
                     LDA.B #$D0                
                     STA $AA,X                 
-ADDR_02C7B1:        STZ $B6,X                 
-                    LDA.B #$02                
-                    STA.W $14C8,X             
-                    LDA.B #$03                
-                    STA.W $1DF9               ; / Play sound effect 
+ADDR_02C7B1:        STZ $B6,X                 ; Sprite X Speed = 0
+                    LDA.B #$02                ; \ Sprite status = Killed
+                    STA.W $14C8,X             ; /
+                    LDA.B #$03                ; \ Play sound effect
+                    STA.W $1DF9               ; /
                     LDA.B #$03                
                     JSL.L GivePoints          
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02C7C4:        JSR.W ADDR_02D50C         
                     LDA $0E                   
@@ -8734,22 +8714,23 @@ ADDR_02C7C4:        JSR.W ADDR_02D50C
                     BPL ADDR_02C810           
                     LDA.B #$05                
                     STA.W $1564,X             
-                    LDA.B #$02                
-                    STA.W $1DF9               ; / Play sound effect 
+                    LDA.B #$02                ; \ Play sound effect
+                    STA.W $1DF9               ; /
                     JSL.L DisplayContactGfx   
                     JSL.L BoostMarioSpeed     
                     STZ.W $163E,X             
                     LDA $C2,X                 
                     CMP.B #$03                
-                    BEQ ADDR_02C80F           
-                    INC.W $1528,X             
-                    LDA.W $1528,X             
-                    CMP.B #$03                
-                    BCC ADDR_02C7F6           
-                    STZ $AA,X                 
-                    BRA ADDR_02C7B1           
-ADDR_02C7F6:        LDA.B #$28                
-                    STA.W $1DFC               ; / Play sound effect 
+                    BEQ Return02C80F          
+                    INC.W $1528,X             ; Increase Chuck stomp count
+                    LDA.W $1528,X             ; \ Kill Chuck if stomp count >= 3
+                    CMP.B #$03                ;  |
+                    BCC ADDR_02C7F6           ;  |
+                    STZ $AA,X                 ;  | Sprite Y Speed = 0
+                    BRA ADDR_02C7B1           ; /
+
+ADDR_02C7F6:        LDA.B #$28                ; \ Play sound effect
+                    STA.W $1DFC               ; /
                     LDA.B #$03                
                     STA $C2,X                 
                     LDA.B #$03                
@@ -8758,12 +8739,12 @@ ADDR_02C7F6:        LDA.B #$28
                     JSR.W ADDR_02D4FA         
                     LDA.W DATA_02C79B,Y       
                     STA $7B                   
-ADDR_02C80F:        RTS                       ; Return 
+Return02C80F:       RTS                       ; Return
 
 ADDR_02C810:        LDA.W $187A               
-                    BNE ADDR_02C819           
+                    BNE Return02C819          
                     JSL.L HurtMario           
-ADDR_02C819:        RTS                       ; Return 
+Return02C819:       RTS                       ; Return
 
 ADDR_02C81A:        JSR.W GetDrawInfo2        
                     JSR.W ADDR_02C88C         
@@ -8856,9 +8837,8 @@ ADDR_02C8D8:        CLC
                     TAY                       
                     LDA.B #$02                
                     STA.W $0460,Y             
-                    LDX.W $15E9               
-                    RTS                       ; Return 
-
+                    LDX.W $15E9               ; X = Sprite index
+                    RTS                       ; Return
 
 DATA_02C909:        .db $F8,$F8,$F8,$FC,$FC,$FC,$FC,$F8
                     .db $01,$FC,$FC,$FC,$FC,$FC,$FC,$FC
@@ -8960,9 +8940,8 @@ ADDR_02CA36:        TAX
                     STA.W $0460,Y             
                     LDA.B #$02                
                     STA.W $0461,Y             
-                    LDX.W $15E9               
-                    RTS                       ; Return 
-
+                    LDX.W $15E9               ; X = Sprite index
+                    RTS                       ; Return
 
 DATA_02CA93:        .db $FA,$00
 
@@ -8978,6 +8957,7 @@ ADDR_02CA9D:        LDA $04
                     CMP.B #$14                
                     BCC ADDR_02CAA6           
                     JMP.W ADDR_02CB53         
+
 ADDR_02CAA6:        CMP.B #$12                
                     BEQ ADDR_02CAFC           
                     CMP.B #$13                
@@ -8985,7 +8965,7 @@ ADDR_02CAA6:        CMP.B #$12
                     SEC                       
                     SBC.B #$06                
                     CMP.B #$02                
-                    BCS ADDR_02CAF9           
+                    BCS Return02CAF9          
                     TAX                       
                     LDY $05                   
                     LDA $00                   
@@ -9015,9 +8995,8 @@ ADDR_02CAA6:        CMP.B #$12
                     LDA.W DATA_02CA9B,X       
                     STA.W $0460,Y             
                     STA.W $0461,Y             
-                    LDX.W $15E9               
-ADDR_02CAF9:        RTS                       ; Return 
-
+                    LDX.W $15E9               ; X = Sprite index
+Return02CAF9:       RTS                       ; Return
 
 ChuckGfxProp:       .db $47,$07
 
@@ -9047,18 +9026,17 @@ ADDR_02CAFC:        LDY $05
                     STA.W $0301,Y             
                     STA.W $0305,Y             
                     LDA.W ChuckGfxProp,X      
-ADDR_02CB2D:        ORA $64                   
+                    ORA $64                   
                     STA.W $0303,Y             
                     STA.W $0307,Y             
                     TYA                       
                     LSR                       
                     LSR                       
                     TAX                       
-ADDR_02CB39:        STZ.W $0460,X             
+                    STZ.W $0460,X             
                     STZ.W $0461,X             
                     PLX                       
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02CB41:        .db $FA,$0A,$06,$00,$00,$01,$0E,$FE
                     .db $02,$00,$00,$09,$08,$F4,$F4,$00
@@ -9077,10 +9055,10 @@ ADDR_02CB5E:        TAX
                     TAY                       
                     LDA $00                   
                     CLC                       
-                    ADC.W ADDR_02CB2D,X       
+                    ADC.W DATA_02CB41-20,X    
                     STA.W $0300,Y             
                     LDX $02                   
-                    LDA.W ADDR_02CB39,X       
+                    LDA.W DATA_02CB41-8,X     
                     BEQ ADDR_02CB8E           
                     CLC                       
                     ADC $01                   
@@ -9096,8 +9074,7 @@ ADDR_02CB5E:        TAX
                     TAX                       
                     STZ.W $0460,X             
 ADDR_02CB8E:        PLX                       
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DigChuckTileDispX:  .db $FC,$04,$10,$F0,$12,$EE
 
@@ -9111,14 +9088,15 @@ DigChuckTileSize:   .db $00,$02,$02
 
 ADDR_02CBA1:        LDA $9E,X                 
                     CMP.B #$46                
-                    BNE ADDR_02CBFB           
+                    BNE Return02CBFB          
                     LDA.W $1602,X             
                     CMP.B #$05                
                     BNE ADDR_02CBB2           
                     LDA.B #$01                
                     BRA ADDR_02CBB9           
+
 ADDR_02CBB2:        CMP.B #$0E                
-                    BCC ADDR_02CBFB           
+                    BCC Return02CBFB          
                     SEC                       
                     SBC.B #$0E                
 ADDR_02CBB9:        STA $02                   
@@ -9155,18 +9133,18 @@ ADDR_02CBB9:        STA $02
                     LDA.W DigChuckTileSize,X  
                     STA.W $0460,Y             
                     PLX                       
-ADDR_02CBFB:        RTS                       ; Return 
+Return02CBFB:       RTS                       ; Return
 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_02CBFD:        RTL                       ; Return 
+Return02CBFD:       RTL                       ; Return
 
-ADDR_02CBFE:        LDA $9D                   
-                    BNE ADDR_02CC05           
-                    INC.W $1570,X             
+WingedCageMain:     LDA $9D                   ; \ If sprites not locked,
+                    BNE ADDR_02CC05           ;  | increment sprite frame counter
+                    INC.W $1570,X             ; /
 ADDR_02CC05:        JSR.W ADDR_02CCB9         
                     PHX                       
-                    JSL.L ADDR_00FF32         
+                    JSL.L ExtSub00FF32        
                     PLX                       
                     LDA $E4,X                 
                     CLC                       
@@ -9175,12 +9153,12 @@ ADDR_02CC05:        JSR.W ADDR_02CCB9
                     LDA.W $14E0,X             
                     ADC.B #$00                
                     STA.W $14E0,X             
-                    LDA $71                   
-                    CMP.B #$01                
-                    BCS ADDR_02CBFD           
+                    LDA $71                   ; \ Return if Mario animation sequence active
+                    CMP.B #$01                ;  |
+                    BCS Return02CBFD          ; /
                     LDA.W $18B5               
                     BEQ ADDR_02CC2D           
-                    JSL.L ADDR_00FF07         
+                    JSL.L ExtSub00FF07        
 ADDR_02CC2D:        LDY.B #$00                
                     LDA.W $17BC               
                     BPL ADDR_02CC35           
@@ -9191,14 +9169,14 @@ ADDR_02CC35:        CLC
                     TYA                       
                     ADC.W $14D4,X             
                     STA.W $14D4,X             
-                    LDA $E4,X                 
-                    STA $00                   
-                    LDA.W $14E0,X             
-                    STA $01                   
-                    LDA $D8,X                 
-                    STA $02                   
-                    LDA.W $14D4,X             
-                    STA $03                   
+                    LDA $E4,X                 ; \ $00 = Sprite X position
+                    STA $00                   ;  |
+                    LDA.W $14E0,X             ;  |
+                    STA $01                   ; /
+                    LDA $D8,X                 ; \ $02 = Sprite Y position
+                    STA $02                   ;  |
+                    LDA.W $14D4,X             ;  |
+                    STA $03                   ; /
                     REP #$20                  ; Accum (16 bit) 
                     LDA $00                   
                     LDY $7B                   
@@ -9209,9 +9187,10 @@ ADDR_02CC35:        CLC
                     CMP $94                   
                     BCC ADDR_02CC7F           
                     STA $94                   
-                    LDY.B #$00                
-                    STY $7B                   
+                    LDY.B #$00                ; \ Mario's X speed = 0
+                    STY $7B                   ; /
                     BRA ADDR_02CC7F           
+
 ADDR_02CC6C:        CLC                       
                     ADC.W #$0090              
                     CMP $94                   
@@ -9231,6 +9210,7 @@ ADDR_02CC7F:        LDA $02
                     LDY.B #$00                
                     STY $7D                   
                     BRA ADDR_02CCAE           
+
 ADDR_02CC93:        CLC                       
                     ADC.W #$0060              
                     CMP $96                   
@@ -9244,8 +9224,7 @@ ADDR_02CC93:        CLC
                     STY.W $1471               
                     STY.W $18B5               
 ADDR_02CCAE:        SEP #$20                  ; Accum (8 bit) 
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 CageWingTileDispX:  .db $00,$30,$60,$90
 
@@ -9261,7 +9240,7 @@ ADDR_02CCB9:        LDA.B #$03
                     SEC                       
                     SBC $1C                   
                     STA $01                   
-                    LDY.W $15EA,X             
+                    LDY.W $15EA,X             ; Y = Index into sprite OAM
                     STY $02                   
 ADDR_02CCD0:        LDY $02                   
                     LDX $08                   
@@ -9277,7 +9256,7 @@ ADDR_02CCD0:        LDY $02
                     CLC                       
                     ADC.B #$08                
                     STA.W $0305,Y             
-                    LDX.W $15E9               
+                    LDX.W $15E9               ; X = Sprite index
                     LDA.W $1570,X             
                     LSR                       
                     LSR                       
@@ -9308,15 +9287,14 @@ ADDR_02CD0A:        STA.W $0306,Y
                     STA $02                   
                     DEC $08                   
                     BPL ADDR_02CCD0           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_02CD2D:        PHB                       
+ExtSub02CD2D:       PHB                       ; Wrapper
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02CD59         
                     PLB                       
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 DATA_02CD35:        .db $00,$08,$10,$18,$00,$08,$10,$18
 DATA_02CD3D:        .db $00,$00,$00,$00,$08,$08,$08,$08
@@ -9327,8 +9305,8 @@ DATA_02CD55:        .db $0A,$04,$06,$08
 ADDR_02CD59:        LDA.W $1540,X             
                     CMP.B #$5E                
                     BNE ADDR_02CD7F           
-                    LDA.B #$1B                
-                    STA $9C                   
+                    LDA.B #$1B                ; \ Block to generate = #$1B
+                    STA $9C                   ; /
                     LDA $E4,X                 
                     STA $9A                   
                     LDA.W $14E0,X             
@@ -9340,7 +9318,7 @@ ADDR_02CD59:        LDA.W $1540,X
                     LDA.W $14D4,X             
                     SBC.B #$00                
                     STA $99                   
-                    JSL.L ADDR_00BEB0         
+                    JSL.L GenerateTile        
 ADDR_02CD7F:        JSL.L InvisBlkMainRt      
                     JSR.W GetDrawInfo2        
                     PHX                       
@@ -9373,15 +9351,15 @@ ADDR_02CDB2:        STA.W $0303,Y
                     LDY.B #$00                
                     LDA.B #$07                
                     JMP.W ADDR_02B7A7         
-                    RTS                       ; Return 
 
+                    RTS                       ; Return
 
 DATA_02CDC5:        .db $00,$07,$F9,$00,$01,$FF
 
-ADDR_02CDCB:        JSR.W ADDR_02D025         
+PeaBouncerMain:     JSR.W SubOffscreen0Bnk2   
                     JSR.W ADDR_02CEE0         
                     LDA $9D                   
-                    BNE ADDR_02CDFE           
+                    BNE Return02CDFE          
                     LDA.W $1534,X             
                     BEQ ADDR_02CDF1           
                     DEC.W $1534,X             
@@ -9391,17 +9369,16 @@ ADDR_02CDCB:        JSR.W ADDR_02D025
                     LDY.W $151C,X             
                     LDA.W DATA_02CDFF,Y       
                     STA $7D                   
-                    LDA.B #$08                
-                    STA.W $1DFC               ; / Play sound effect 
+                    LDA.B #$08                ; \ Play sound effect
+                    STA.W $1DFC               ; /
 ADDR_02CDF1:        LDA.W $1528,X             
                     JSL.L ExecutePtr          
 
-Ptrs02CDF8:         .dw ADDR_02CDFE           
+PeaBouncerPtrs:     .dw Return02CDFE          
                     .dw ADDR_02CE0F           
                     .dw ADDR_02CE3A           
 
-ADDR_02CDFE:        RTL                       ; Return 
-
+Return02CDFE:       RTL                       ; Return
 
 DATA_02CDFF:        .db $B6,$B4,$B0,$A8,$A0,$98,$90,$88
 DATA_02CE07:        .db $00,$00,$E8,$E0,$D0,$C8,$C0,$B8
@@ -9409,11 +9386,11 @@ DATA_02CE07:        .db $00,$00,$E8,$E0,$D0,$C8,$C0,$B8
 ADDR_02CE0F:        LDA.W $1540,X             
                     BEQ ADDR_02CE20           
                     DEC A                     
-                    BNE ADDR_02CE1F           
+                    BNE Return02CE1F          
                     INC.W $1528,X             
                     LDA.B #$01                
                     STA.W $157C,X             
-ADDR_02CE1F:        RTL                       ; Return 
+Return02CE1F:       RTL                       ; Return
 
 ADDR_02CE20:        LDA $C2,X                 
                     BMI ADDR_02CE29           
@@ -9422,13 +9399,13 @@ ADDR_02CE20:        LDA $C2,X
 ADDR_02CE29:        CLC                       
                     ADC.B #$01                
                     STA $C2,X                 
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_02CE2F:        LDA.W $151C,X             
                     STA $C2,X                 
                     LDA.B #$08                
                     STA.W $1540,X             
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_02CE3A:        INC.W $1570,X             
                     LDA.W $1570,X             
@@ -9447,37 +9424,36 @@ ADDR_02CE49:        LDA.W $151C,X
                     CLC                       
                     ADC.B #$04                
                     STA $C2,X                 
-                    BMI ADDR_02CE66           
+                    BMI Return02CE66          
                     CMP.W $151C,X             
                     BCS ADDR_02CE67           
-ADDR_02CE66:        RTL                       ; Return 
+Return02CE66:       RTL                       ; Return
 
 ADDR_02CE67:        LDA.W $151C,X             
                     STA $C2,X                 
                     INC.W $157C,X             
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_02CE70:        LDA $C2,X                 
                     SEC                       
                     SBC.B #$04                
                     STA $C2,X                 
-                    BPL ADDR_02CE7D           
+                    BPL Return02CE7D          
                     CMP $00                   
                     BCC ADDR_02CE7E           
-ADDR_02CE7D:        RTL                       ; Return 
+Return02CE7D:       RTL                       ; Return
 
 ADDR_02CE7E:        LDA $00                   
                     STA $C2,X                 
                     INC.W $157C,X             
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_02CE86:        STZ $C2,X                 
                     STZ.W $1528,X             
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-                    JSR.W ADDR_02CEE0         
-                    RTL                       ; Return 
-
+                    JSR.W ADDR_02CEE0         ; \ Unreachable
+                    RTL                       ;  / Wrapper for Pea Bouncer gfx routine
 
 DATA_02CE90:        .db $00,$08,$10,$18,$20,$00,$08,$10
                     .db $18,$20,$00,$08,$10,$18,$20,$00
@@ -9503,7 +9479,7 @@ ADDR_02CEE0:        JSR.W GetDrawInfo2
                     EOR.B #$FF                
                     INC A                     
 ADDR_02CEF7:        STA $04                   
-                    LDY.W $15EA,X             
+                    LDY.W $15EA,X             ; Y = Index into sprite OAM
 ADDR_02CEFC:        LDA $04                   
                     ASL                       
                     ASL                       
@@ -9535,7 +9511,7 @@ ADDR_02CF23:        STA $09
                     LDA $64                   
                     ORA.B #$0A                
                     STA.W $0303,Y             
-                    LDX.W $15E9               
+                    LDX.W $15E9               ; X = Sprite index
                     PHY                       
                     JSR.W ADDR_02CF52         
                     PLY                       
@@ -9546,19 +9522,21 @@ ADDR_02CF23:        STA $09
                     DEC $02                   
                     BMI ADDR_02CF4A           
                     JMP.W ADDR_02CEFC         
+
 ADDR_02CF4A:        LDY.B #$00                
                     LDA.B #$04                
                     JMP.W ADDR_02B7A7         
-ADDR_02CF51:        RTS                       ; Return 
+
+Return02CF51:       RTS                       ; Return
 
 ADDR_02CF52:        LDA $71                   
                     CMP.B #$01                
-                    BCS ADDR_02CF51           
+                    BCS Return02CF51          
                     LDA $81                   
                     ORA $7F                   
                     ORA.W $15A0,X             
                     ORA.W $186C,X             
-                    BNE ADDR_02CF51           
+                    BNE Return02CF51          
                     LDA $7E                   
                     CLC                       
                     ADC.B #$02                
@@ -9577,7 +9555,7 @@ ADDR_02CF76:        CLC
                     CLC                       
                     ADC.B #$08                
                     CMP.B #$14                
-                    BCS ADDR_02CFFD           
+                    BCS Return02CFFD          
                     LDA $19                   
                     CMP.B #$01                
                     LDA.B #$1A                
@@ -9590,9 +9568,9 @@ ADDR_02CF92:        STA $0F
                     CLC                       
                     ADC.B #$08                
                     CMP $0F                   
-                    BCS ADDR_02CFFD           
+                    BCS Return02CFFD          
                     LDA $7D                   
-                    BMI ADDR_02CFFD           
+                    BMI Return02CFFD          
                     LDA.B #$1F                
                     PHX                       
                     LDX.W $187A               
@@ -9621,13 +9599,13 @@ ADDR_02CFAF:        STA $0F
                     BEQ ADDR_02CFEB           
                     LDA.W $1540,X             
                     CMP.B #$01                
-                    BNE ADDR_02CFEA           
+                    BNE Return02CFEA          
                     LDA.B #$08                
                     STA.W $1534,X             
                     LDY $C2,X                 
                     LDA.W DATA_02CE07,Y       
                     STA $7D                   
-ADDR_02CFEA:        RTS                       ; Return 
+Return02CFEA:       RTS                       ; Return
 
 ADDR_02CFEB:        STZ $7B                   
                     LDY $02                   
@@ -9636,8 +9614,7 @@ ADDR_02CFEB:        STZ $7B
                     LDA.B #$01                
                     STA.W $1528,X             
                     STZ.W $1570,X             
-ADDR_02CFFD:        RTS                       ; Return 
-
+Return02CFFD:       RTS                       ; Return
 
 PeaBouncerPhysics:  .db $01,$01,$03,$05,$07
 
@@ -9648,32 +9625,35 @@ DATA_02D005:        .db $01,$FF
 DATA_02D007:        .db $30,$C0,$A0,$C0,$A0,$70,$60,$B0
 DATA_02D00F:        .db $01,$FF,$01,$FF,$01,$FF,$01,$FF
 
-ADDR_02D017:        LDA.B #$06                
-                    BRA ADDR_02D021           
-ADDR_02D01B:        LDA.B #$04                
-                    BRA ADDR_02D021           
-ADDR_02D01F:        LDA.B #$02                
-ADDR_02D021:        STA $03                   
-                    BRA ADDR_02D027           
-ADDR_02D025:        STZ $03                   
-ADDR_02D027:        JSR.W ADDR_02D0C9         
-                    BEQ ADDR_02D090           
-                    LDA $5B                   
-                    AND.B #$01                
-                    BNE ADDR_02D091           
+SubOffscreen3Bnk2:  LDA.B #$06                ; \ Entry point of routine determines value of $03
+                    BRA ADDR_02D021           ;  |
+
+SubOffscreen2Bnk2:  LDA.B #$04                ;  |
+                    BRA ADDR_02D021           ;  |
+
+SubOffscreen1Bnk2:  LDA.B #$02                ;  |
+ADDR_02D021:        STA $03                   ;  |
+                    BRA ADDR_02D027           ;  |
+
+SubOffscreen0Bnk2:  STZ $03                   ; /
+ADDR_02D027:        JSR.W IsSprOffScreenBnk2  ; \ if sprite is not off screen, return
+                    BEQ Return02D090          ; /
+                    LDA $5B                   ; \  vertical level
+                    AND.B #$01                ;  |
+                    BNE VerticalLevelBnk2     ; /
                     LDA $03                   
                     CMP.B #$04                
                     BEQ ADDR_02D04D           
-                    LDA $D8,X                 
-                    CLC                       
-                    ADC.B #$50                
-                    LDA.W $14D4,X             
-                    ADC.B #$00                
-                    CMP.B #$02                
-                    BPL ADDR_02D07A           
-                    LDA.W $167A,X             
-                    AND.B #$04                
-                    BNE ADDR_02D090           
+                    LDA $D8,X                 ; \
+                    CLC                       ;  |
+                    ADC.B #$50                ;  | if the sprite has gone off the bottom of the level...
+                    LDA.W $14D4,X             ;  | (if adding 0x50 to the sprite y position would make the high byte >= 2)
+                    ADC.B #$00                ;  |
+                    CMP.B #$02                ;  |
+                    BPL OffScrEraseSprBnk2    ; /    ...erase the sprite
+                    LDA.W $167A,X             ; \ if "process offscreen" flag is set, return
+                    AND.B #$04                ;  |
+                    BNE Return02D090          ; /
 ADDR_02D04D:        LDA $13                   
                     AND.B #$01                
                     ORA $03                   
@@ -9696,24 +9676,24 @@ ADDR_02D04D:        LDA $13
                     EOR.B #$80                
                     STA $00                   
 ADDR_02D076:        LDA $00                   
-                    BPL ADDR_02D090           
-ADDR_02D07A:        LDA.W $14C8,X             
-                    CMP.B #$08                
-                    BCC ADDR_02D08D           
-                    LDY.W $161A,X             
-                    CPY.B #$FF                
-                    BEQ ADDR_02D08D           
-                    LDA.B #$00                
-                    STA.W $1938,Y             
-ADDR_02D08D:        STZ.W $14C8,X             
-ADDR_02D090:        RTS                       ; Return 
+                    BPL Return02D090          
+OffScrEraseSprBnk2: LDA.W $14C8,X             ; \ If sprite status < 8, permanently erase sprite
+                    CMP.B #$08                ;  |
+                    BCC OffScrKillSprBnk2     ; /
+                    LDY.W $161A,X             ;  \ Branch if should permanently erase sprite
+                    CPY.B #$FF                ;   |
+                    BEQ OffScrKillSprBnk2     ;  /
+                    LDA.B #$00                ;  \ Allow sprite to be reloaded by level loading routine
+                    STA.W $1938,Y             ;  /
+OffScrKillSprBnk2:  STZ.W $14C8,X             ; Erase sprite
+Return02D090:       RTS                       ; Return
 
-ADDR_02D091:        LDA.W $167A,X             
-                    AND.B #$04                
-                    BNE ADDR_02D090           
-                    LDA $13                   
-                    LSR                       
-                    BCS ADDR_02D090           
+VerticalLevelBnk2:  LDA.W $167A,X             ; \ If "process offscreen" flag is set, return
+                    AND.B #$04                ;  |
+                    BNE Return02D090          ; /
+                    LDA $13                   ; \ Return every other frame
+                    LSR                       ;  |
+                    BCS Return02D090          ; /
                     AND.B #$01                
                     STA $01                   
                     TAY                       
@@ -9734,39 +9714,39 @@ ADDR_02D091:        LDA.W $167A,X
                     EOR.B #$80                
                     STA $00                   
 ADDR_02D0C3:        LDA $00                   
-                    BPL ADDR_02D090           
-                    BMI ADDR_02D07A           
-ADDR_02D0C9:        LDA.W $15A0,X             
+                    BPL Return02D090          
+                    BMI OffScrEraseSprBnk2    
+IsSprOffScreenBnk2: LDA.W $15A0,X             
                     ORA.W $186C,X             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02D0D0:        .db $14,$FC
 
 DATA_02D0D2:        .db $00,$FF
 
-ADDR_02D0D4:        LDA.W $1564,X             
-                    BNE ADDR_02D0E5           
+ExtSub02D0D4:       LDA.W $1564,X             
+                    BNE Return02D0E5          
                     LDA.W $160E,X             
-                    BPL ADDR_02D0E5           
+                    BPL Return02D0E5          
                     PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02D0E6         
                     PLB                       
-ADDR_02D0E5:        RTL                       ; Return 
+Return02D0E5:       RTL                       ; Return
 
 ADDR_02D0E6:        STZ $0F                   
                     BRA ADDR_02D149           
-                    LDA $D8,X                 
-                    CLC                       
+
+                    LDA $D8,X                 ; \ Unreachable
+                    CLC                       ;  | Something to do with Yoshi?
                     ADC.B #$08                
                     AND.B #$F0                
                     STA $00                   
                     LDA.W $14D4,X             
                     ADC.B #$00                
                     CMP $5D                   
-                    BCS ADDR_02D148           
+                    BCS Return02D148          
                     STA $03                   
                     AND.B #$10                
                     STA $08                   
@@ -9778,7 +9758,7 @@ ADDR_02D0E6:        STZ $0F
                     LDA.W $14E0,X             
                     ADC.W DATA_02D0D2,Y       
                     CMP.B #$02                
-                    BCS ADDR_02D148           
+                    BCS Return02D148          
                     STA $02                   
                     LDA $01                   
                     LSR                       
@@ -9802,39 +9782,40 @@ ADDR_02D131:        CLC
 ADDR_02D142:        ADC $02                   
                     STA $06                   
                     BRA ADDR_02D1AD           
-ADDR_02D148:        RTS                       ; Return 
 
-ADDR_02D149:        LDA $D8,X                 
-                    CLC                       
-                    ADC.B #$08                
-                    STA.W $18B2               
-                    AND.B #$F0                
-                    STA $00                   
-                    LDA.W $14D4,X             
-                    ADC.B #$00                
-                    CMP.B #$02                
-                    BCS ADDR_02D148           
-                    STA $02                   
-                    STA.W $18B3               
-                    LDY.W $157C,X             
-                    LDA $E4,X                 
-                    CLC                       
-                    ADC.W DATA_02D0D0,Y       
-                    STA $01                   
-                    STA.W $18B0               
-                    LDA.W $14E0,X             
-                    ADC.W DATA_02D0D2,Y       
-                    CMP $5D                   
-                    BCS ADDR_02D148           
-                    STA.W $18B1               
-                    STA $03                   
-                    LDA $01                   
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    ORA $00                   
-                    STA $00                   
+Return02D148:       RTS                       ; Return
+
+ADDR_02D149:        LDA $D8,X                 ; \ $18B2 = Sprite Y position + #$08
+                    CLC                       ;  |
+                    ADC.B #$08                ;  |
+                    STA.W $18B2               ; /
+                    AND.B #$F0                ; \ $00 = (Sprite Y position + #$08) rounded down to closest #$10 low byte
+                    STA $00                   ; /
+                    LDA.W $14D4,X             ; \
+                    ADC.B #$00                ;  | Return if off screen
+                    CMP.B #$02                ;  |
+                    BCS Return02D148          ;  |
+                    STA $02                   ;  | $02 = (Sprite Y position + #$08) High byte
+                    STA.W $18B3               ; /
+                    LDY.W $157C,X             ; \ $18B0 = Sprite X position + $0014/$FFFC
+                    LDA $E4,X                 ;  |
+                    CLC                       ;  |
+                    ADC.W DATA_02D0D0,Y       ;  |
+                    STA $01                   ;  | $01 = (Sprite X position + $0014/$FFFC) Low byte
+                    STA.W $18B0               ;  |
+                    LDA.W $14E0,X             ;  |
+                    ADC.W DATA_02D0D2,Y       ;  |
+                    CMP $5D                   ;  | Return if past end of level
+                    BCS Return02D148          ;  |
+                    STA.W $18B1               ;  |
+                    STA $03                   ; / $03 = (Sprite X position + $0014/$FFFC) High byte
+                    LDA $01                   ; \ $00 = bits 4-7 of Y position, bits 4-7 of X position
+                    LSR                       ;  |
+                    LSR                       ;  |
+                    LSR                       ;  |
+                    LSR                       ;  |
+                    ORA $00                   ;  |
+                    STA $00                   ; /
                     LDX $03                   
                     LDA.L DATA_00BA60,X       
                     LDY $0F                   
@@ -9851,17 +9832,17 @@ ADDR_02D1A9:        ADC $02
                     STA $06                   
 ADDR_02D1AD:        LDA.B #$7E                
                     STA $07                   
-                    LDX.W $15E9               
+                    LDX.W $15E9               ; X = Sprite index
                     LDA [$05]                 
                     STA.W $1693               
                     INC $07                   
                     LDA [$05]                 
-                    BNE ADDR_02D1F0           
+                    BNE Return02D1F0          
                     LDA.W $1693               
                     CMP.B #$45                
-                    BCC ADDR_02D1F0           
+                    BCC Return02D1F0          
                     CMP.B #$48                
-                    BCS ADDR_02D1F0           
+                    BCS Return02D1F0          
                     SEC                       
                     SBC.B #$44                
                     STA.W $18D6               
@@ -9879,30 +9860,28 @@ ADDR_02D1AD:        LDA.B #$7E
                     LDA $97                   
                     ADC.B #$00                
                     STA $97                   
-ADDR_02D1F0:        RTS                       ; Return 
-
+Return02D1F0:       RTS                       ; Return
 
 DATA_02D1F1:        .db $00,$04
 
-ADDR_02D1F3:        LDA.W $18B0               
-                    STA $9A                   
-                    LDA.W $18B1               
-                    STA $9B                   
-                    LDA.W $18B2               
-                    STA $98                   
-                    LDA.W $18B3               
-                    STA $99                   
-                    LDA.B #$04                
-                    STA $9C                   
-                    JSL.L ADDR_00BEB0         
-ADDR_02D20F:        RTL                       ; Return 
+SetTreeTile:        LDA.W $18B0               ; \ Set X position of block
+                    STA $9A                   ;  |
+                    LDA.W $18B1               ;  |
+                    STA $9B                   ; /
+                    LDA.W $18B2               ; \ Set Y position of block
+                    STA $98                   ;  |
+                    LDA.W $18B3               ;  |
+                    STA $99                   ; /
+                    LDA.B #$04                ; \ Block to generate = Tree behind berry
+                    STA $9C                   ; /
+                    JSL.L GenerateTile        
+                    RTL                       ; Return
 
+DATA_02D210:        .db $01,$FF
 
-DATA_02D210:        .db $01
+DATA_02D212:        .db $10,$F0
 
-DATA_02D211:        .db $FF,$10,$F0
-
-ADDR_02D214:        LDA $15                   
+ExtSub02D214:       LDA $15                   
                     AND.B #$03                
                     BNE ADDR_02D228           
 ADDR_02D21A:        LDA $B6,X                 
@@ -9912,20 +9891,22 @@ ADDR_02D21A:        LDA $B6,X
                     INC $B6,X                 
 ADDR_02D224:        DEC $B6,X                 
 ADDR_02D226:        BRA ADDR_02D247           
+
 ADDR_02D228:        TAY                       
                     CPY.B #$01                
                     BNE ADDR_02D238           
                     LDA $B6,X                 
-                    CMP.W DATA_02D211,Y       
+                    CMP.W DATA_02D212-1,Y     
                     BEQ ADDR_02D247           
                     BPL ADDR_02D21A           
                     BRA ADDR_02D241           
+
 ADDR_02D238:        LDA $B6,X                 
-                    CMP.W DATA_02D211,Y       
+                    CMP.W DATA_02D212-1,Y     
                     BEQ ADDR_02D247           
                     BMI ADDR_02D21A           
 ADDR_02D241:        CLC                       
-                    ADC.W ADDR_02D20F,Y       
+                    ADC.W DATA_02D210-1,Y     
                     STA $B6,X                 
 ADDR_02D247:        LDY.B #$00                
                     LDA $9E,X                 
@@ -9939,6 +9920,7 @@ ADDR_02D247:        LDY.B #$00
                     BEQ ADDR_02D26F           
                     LDY.B #$F0                
                     BRA ADDR_02D26F           
+
 ADDR_02D25F:        LDY.B #$F8                
                     LDA $15                   
                     AND.B #$0C                
@@ -9959,77 +9941,77 @@ ADDR_02D27F:        LDA $B6,X
                     STA $7B                   
                     LDA $AA,X                 
                     STA $7D                   
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_02D288:        TXA                       
-                    CLC                       
-                    ADC.B #$0C                
-                    TAX                       
-                    JSR.W ADDR_02D294         
-                    LDX.W $15E9               
-                    RTS                       ; Return 
+UpdateXPosNoGrvty2: TXA                       ; \ Adjust index so we use X values rather than Y
+                    CLC                       ;  |
+                    ADC.B #$0C                ;  |
+                    TAX                       ; /
+                    JSR.W UpdateYPosNoGrvty2  
+                    LDX.W $15E9               ; X = sprite index
+                    RTS                       ; Return
 
-ADDR_02D294:        LDA $AA,X                 
-                    ASL                       
-                    ASL                       
-                    ASL                       
-                    ASL                       
-                    CLC                       
-                    ADC.W $14EC,X             
-                    STA.W $14EC,X             
+UpdateYPosNoGrvty2: LDA $AA,X                 ; \ $14EC or $14F8 += 16 * speed
+                    ASL                       ;  |
+                    ASL                       ;  |
+                    ASL                       ;  |
+                    ASL                       ;  |
+                    CLC                       ;  |
+                    ADC.W $14EC,X             ;  |
+                    STA.W $14EC,X             ; /
                     PHP                       
                     PHP                       
                     LDY.B #$00                
-                    LDA $AA,X                 
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    CMP.B #$08                
-                    BCC ADDR_02D2B2           
-                    ORA.B #$F0                
-                    DEY                       
+                    LDA $AA,X                 ; \ Amount to move sprite = speed / 16
+                    LSR                       ;  |
+                    LSR                       ;  |
+                    LSR                       ;  |
+                    LSR                       ; /
+                    CMP.B #$08                ; \ If speed was negative...
+                    BCC ADDR_02D2B2           ;  |
+                    ORA.B #$F0                ;  | ...set high bits
+                    DEY                       ; /
 ADDR_02D2B2:        PLP                       
-                    PHA                       
-                    ADC $D8,X                 
-                    STA $D8,X                 
-                    TYA                       
-                    ADC.W $14D4,X             
-                    STA.W $14D4,X             
-                    PLA                       
+                    PHA                       ; \ Add to position
+                    ADC $D8,X                 ;  |
+                    STA $D8,X                 ;  |
+                    TYA                       ;  |
+                    ADC.W $14D4,X             ;  |
+                    STA.W $14D4,X             ;  |
+                    PLA                       ; /
                     PLP                       
                     ADC.B #$00                
-                    STA.W $1491               
-                    RTS                       ; Return 
+                    STA.W $1491               ; $1491 = amount sprite was moved
+                    RTS                       ; Return
 
-                    STA $00                   
-                    LDA $94                   
-                    PHA                       
-                    LDA $95                   
-                    PHA                       
-                    LDA $96                   
-                    PHA                       
-                    LDA $97                   
-                    PHA                       
-                    LDA.W $00E4,Y             
-                    STA $94                   
-                    LDA.W $14E0,Y             
-                    STA $95                   
-                    LDA.W $00D8,Y             
-                    STA $96                   
-                    LDA.W $14D4,Y             
-                    STA $97                   
+                    STA $00                   ;  Unreachable
+                    LDA $94                   ;  \ Save Mario's position
+                    PHA                       ;   |
+                    LDA $95                   ;   |
+                    PHA                       ;   |
+                    LDA $96                   ;   |
+                    PHA                       ;   |
+                    LDA $97                   ;   |
+                    PHA                       ;  /
+                    LDA.W $00E4,Y             ;  \ Mario's position = Sprite position
+                    STA $94                   ;   |
+                    LDA.W $14E0,Y             ;   |
+                    STA $95                   ;   |
+                    LDA.W $00D8,Y             ;   |
+                    STA $96                   ;   |
+                    LDA.W $14D4,Y             ;   |
+                    STA $97                   ;  /
                     LDA $00                   
                     JSR.W ADDR_02D2FB         
-                    PLA                       
-                    STA $97                   
-                    PLA                       
-                    STA $96                   
-                    PLA                       
-                    STA $95                   
-                    PLA                       
-                    STA $94                   
-                    RTS                       ; Return 
+                    PLA                       ;  \ Restore Mario's position
+                    STA $97                   ;   |
+                    PLA                       ;   |
+                    STA $96                   ;   |
+                    PLA                       ;   |
+                    STA $95                   ;   |
+                    PLA                       ;   |
+                    STA $94                   ;  /
+                    RTS                       ;  Return
 
 ADDR_02D2FB:        STA $01                   
                     PHX                       
@@ -10098,8 +10080,7 @@ ADDR_02D364:        LDA $01
                     STA $01                   
 ADDR_02D371:        PLY                       
                     PLX                       
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02D374:        .db $0C,$1C
 
@@ -10149,7 +10130,7 @@ ADDR_02D3B2:        LDA $D8,X
                     STA.W $186C,X             
 ADDR_02D3D2:        DEY                       
                     BPL ADDR_02D3B2           
-                    LDY.W $15EA,X             
+                    LDY.W $15EA,X             ; Y = Index into sprite OAM
                     LDA $E4,X                 
                     SEC                       
                     SBC $1A                   
@@ -10158,15 +10139,15 @@ ADDR_02D3D2:        DEY
                     SEC                       
                     SBC $1C                   
                     STA $01                   
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02D3E7:        PLA                       
                     PLA                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_02D3EA:        JSL.L ADDR_00FF61         
+Layer3SmashMain:    JSL.L ExtSub00FF61        
                     LDA $9D                   
-                    BNE ADDR_02D444           
+                    BNE Return02D444          
                     JSR.W ADDR_02D49C         
                     LDY.B #$00                
                     LDA.W $17BD               
@@ -10181,7 +10162,7 @@ ADDR_02D3FD:        CLC
                     LDA $C2,X                 
                     JSL.L ExecutePtr          
 
-Ptrs02D40F:         .dw ADDR_02D419           
+Layer3SmashPtrs:    .dw ADDR_02D419           
                     .dw ADDR_02D445           
                     .dw ADDR_02D455           
                     .dw ADDR_02D481           
@@ -10189,15 +10170,15 @@ Ptrs02D40F:         .dw ADDR_02D419
 
 ADDR_02D419:        LDA.W $18BF               
                     BEQ ADDR_02D422           
-                    JSR.W ADDR_02D07A         
-                    RTS                       ; Return 
+                    JSR.W OffScrEraseSprBnk2  
+                    RTS                       ; Return
 
 ADDR_02D422:        LDA.W $1540,X             
-                    BNE ADDR_02D444           
+                    BNE Return02D444          
                     INC $C2,X                 
                     LDA.B #$80                
                     STA.W $1540,X             
-                    JSL.L ADDR_01ACF9         
+                    JSL.L GetRand             
                     AND.B #$3F                
                     ORA.B #$80                
                     STA $E4,X                 
@@ -10205,20 +10186,20 @@ ADDR_02D422:        LDA.W $1540,X
                     STA.W $14E0,X             
                     STZ $D8,X                 
                     STZ.W $14D4,X             
-                    STZ $AA,X                 
-ADDR_02D444:        RTL                       ; Return 
+                    STZ $AA,X                 ; Sprite Y Speed = 0
+Return02D444:       RTL                       ; Return
 
 ADDR_02D445:        LDA.W $1540,X             
                     BEQ ADDR_02D452           
                     LDA.B #$04                
                     STA $AA,X                 
-                    JSR.W ADDR_02D294         
-                    RTL                       ; Return 
+                    JSR.W UpdateYPosNoGrvty2  
+                    RTL                       ; Return
 
 ADDR_02D452:        INC $C2,X                 
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_02D455:        JSR.W ADDR_02D294         
+ADDR_02D455:        JSR.W UpdateYPosNoGrvty2  
                     LDA $AA,X                 
                     BMI ADDR_02D460           
                     CMP.B #$40                
@@ -10228,32 +10209,32 @@ ADDR_02D460:        CLC
                     STA $AA,X                 
 ADDR_02D465:        LDA $D8,X                 
                     CMP.B #$A0                
-                    BCC ADDR_02D480           
+                    BCC Return02D480          
                     AND.B #$F0                
                     STA $D8,X                 
-                    LDA.B #$50                
-                    STA.W $1887               
-                    LDA.B #$09                
-                    STA.W $1DFC               ; / Play sound effect 
+                    LDA.B #$50                ;  \ Set ground shake timer
+                    STA.W $1887               ;  /
+                    LDA.B #$09                ; \ Play sound effect
+                    STA.W $1DFC               ; /
                     LDA.B #$30                
                     STA.W $1540,X             
                     INC $C2,X                 
-ADDR_02D480:        RTL                       ; Return 
+Return02D480:       RTL                       ; Return
 
 ADDR_02D481:        LDA.W $1540,X             
-                    BNE ADDR_02D488           
+                    BNE Return02D488          
                     INC $C2,X                 
-ADDR_02D488:        RTL                       ; Return 
+Return02D488:       RTL                       ; Return
 
 ADDR_02D489:        LDA.B #$E0                
                     STA $AA,X                 
-                    JSR.W ADDR_02D294         
+                    JSR.W UpdateYPosNoGrvty2  
                     LDA $D8,X                 
-                    BNE ADDR_02D49B           
+                    BNE Return02D49B          
                     STZ $C2,X                 
                     LDA.B #$A0                
                     STA.W $1540,X             
-ADDR_02D49B:        RTL                       ; Return 
+Return02D49B:       RTL                       ; Return
 
 ADDR_02D49C:        LDA.B #$00                
                     LDY $19                   
@@ -10285,13 +10266,13 @@ ADDR_02D4A8:        CLC
                     LDA $72                   
                     BNE ADDR_02D4DC           
                     JSL.L HurtMario           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02D4DC:        STZ $7D                   
                     LDA $AA,X                 
-                    BMI ADDR_02D4E4           
+                    BMI Return02D4E4          
                     STA $7D                   
-ADDR_02D4E4:        RTS                       ; Return 
+Return02D4E4:       RTS                       ; Return
 
 ADDR_02D4E5:        PHP                       
                     LDA.B #$08                
@@ -10300,8 +10281,7 @@ ADDR_02D4E5:        PHP
                     LDA.B #$F8                
 ADDR_02D4ED:        STA $7B                   
 ADDR_02D4EF:        SEP #$20                  ; Accum (8 bit) 
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02D4F2:        .db $80,$40,$20,$10,$08,$04,$02,$01
 
@@ -10312,9 +10292,9 @@ ADDR_02D4FA:        LDY.B #$00
                     STA $0F                   
                     LDA $95                   
                     SBC.W $14E0,X             
-                    BPL ADDR_02D50B           
+                    BPL Return02D50B          
                     INY                       
-ADDR_02D50B:        RTS                       ; Return 
+Return02D50B:       RTS                       ; Return
 
 ADDR_02D50C:        LDY.B #$00                
                     LDA $96                   
@@ -10323,10 +10303,9 @@ ADDR_02D50C:        LDY.B #$00
                     STA $0E                   
                     LDA $97                   
                     SBC.W $14D4,X             
-                    BPL ADDR_02D51D           
+                    BPL Return02D51D          
                     INY                       
-ADDR_02D51D:        RTS                       ; Return 
-
+Return02D51D:       RTS                       ; Return
 
 DATA_02D51E:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
@@ -10347,16 +10326,15 @@ DATA_02D57F:        .db $FF,$13,$14,$15,$16,$17,$18,$19
 ADDR_02D587:        JSR.W ADDR_02D5E4         
                     LDA.W $14C8,X             
                     CMP.B #$02                
-                    BEQ ADDR_02D5A3           
+                    BEQ Return02D5A3          
                     LDA $9D                   
-                    BNE ADDR_02D5A3           
-                    JSR.W ADDR_02D025         
+                    BNE Return02D5A3          
+                    JSR.W SubOffscreen0Bnk2   
                     LDA.B #$E8                
                     STA $B6,X                 
-                    JSR.W ADDR_02D288         
+                    JSR.W UpdateXPosNoGrvty2  
                     JSL.L MarioSprInteract    
-ADDR_02D5A3:        RTS                       ; Return 
-
+Return02D5A3:       RTS                       ; Return
 
 DATA_02D5A4:        .db $00,$10,$20,$30,$00,$10,$20,$30
                     .db $00,$10,$20,$30,$00,$10,$20,$30
@@ -10392,7 +10370,8 @@ ADDR_02D5EA:        LDA $00
                     LDY.B #$02                
                     LDA.B #$0F                
                     JMP.W ADDR_02B7A7         
-ADDR_02D617:        PHB                       
+
+Banzai_Rotating:    PHB                       
                     PHK                       
                     PLB                       
                     LDA $9E,X                 
@@ -10400,11 +10379,12 @@ ADDR_02D617:        PHB
                     BNE ADDR_02D625           
                     JSR.W ADDR_02D587         
                     BRA ADDR_02D628           
+
 ADDR_02D625:        JSR.W ADDR_02D62A         
 ADDR_02D628:        PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_02D62A:        JSR.W ADDR_02D017         
+ADDR_02D62A:        JSR.W SubOffscreen3Bnk2   
                     LDA $9D                   
                     BNE ADDR_02D653           
                     LDA $E4,X                 
@@ -10447,7 +10427,7 @@ ADDR_02D653:        LDA.W $151C,X
                     LDA.L CircleCoords,X      
                     STA $06                   
                     SEP #$30                  ; Index (8 bit) Accum (8 bit) 
-                    LDX.W $15E9               
+                    LDX.W $15E9               ; X = Sprite index
                     LDA $04                   
                     STA.W $4202               ; Multiplicand A
                     LDA.W $187B,X             
@@ -10526,19 +10506,21 @@ ADDR_02D70B:        CLC
                     LDA.W $187A               
                     BNE ADDR_02D74B           
                     PHX                       
-                    JSL.L ADDR_00E2BD         
+                    JSL.L ExtSub00E2BD        
                     PLX                       
                     LDA.B #$FF                
                     STA $78                   
                     BRA ADDR_02D74B           
+
 ADDR_02D73D:        LDA.W $160E,X             
                     BEQ ADDR_02D74B           
                     STZ.W $160E,X             
                     PHX                       
-                    JSL.L ADDR_00E2BD         
+                    JSL.L ExtSub00E2BD        
                     PLX                       
 ADDR_02D74B:        JSR.W ADDR_02D848         
                     BRA ADDR_02D757           
+
 ADDR_02D750:        JSL.L MarioSprInteract    
                     JSR.W ADDR_02D813         
 ADDR_02D757:        PLA                       
@@ -10572,7 +10554,7 @@ ADDR_02D757:        PLA
                     SBC $1C                   
                     STA $01                   
                     LDA.W $15C4,X             
-                    BNE ADDR_02D806           
+                    BNE Return02D806          
                     LDA.W $15EA,X             
                     CLC                       
                     ADC.B #$10                
@@ -10636,14 +10618,14 @@ ADDR_02D7AF:        LDA $00
                     LDY.B #$02                
                     LDA.B #$05                
                     JMP.W ADDR_02B7A7         
-ADDR_02D800:        NOP                       
-                    NOP                       
-                    NOP                       
-                    NOP                       
-                    NOP                       
-                    NOP                       
-ADDR_02D806:        RTS                       ; Return 
 
+ADDR_02D800:        NOP                       ; TODO: does this actually act as data? consult trace
+                    NOP                       
+                    NOP                       
+                    NOP                       
+                    NOP                       
+                    NOP                       
+Return02D806:       RTS                       ; Return
 
 DATA_02D807:        .db $F8,$08,$F8,$08
 
@@ -10673,8 +10655,7 @@ ADDR_02D819:        LDA $00
                     DEX                       
                     BPL ADDR_02D819           
                     PLX                       
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02D840:        .db $00,$F0,$00,$10
 
@@ -10700,7 +10681,7 @@ ADDR_02D84E:        LDA $00
                     DEX                       
                     BPL ADDR_02D84E           
                     PLX                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02D870:        PHP                       
                     BPL ADDR_02D876           
@@ -10724,11 +10705,10 @@ ADDR_02D876:        STA.W $4205               ; Dividend (High-Byte)
                     ASL $0E                   
                     ROL                       
                     PLP                       
-                    BPL ADDR_02D8A0           
+                    BPL Return02D8A0          
                     EOR.B #$FF                
                     INC A                     
-ADDR_02D8A0:        RTS                       ; Return 
-
+Return02D8A0:       RTS                       ; Return
 
 BubbleSprTiles1:    .db $A8,$CA,$67,$24
 
@@ -10736,13 +10716,12 @@ BubbleSprTiles2:    .db $AA,$CC,$69,$24
 
 BubbleSprGfxProp1:  .db $84,$85,$05,$08
 
-ADDR_02D8AD:        PHB                       
+BubbleSpriteMain:   PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02D8BB         
                     PLB                       
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 BubbleSprGfxProp2:  .db $08,$F8
 
@@ -10754,10 +10733,10 @@ ADDR_02D8BB:        LDA.W $15EA,X
                     CLC                       
                     ADC.B #$14                
                     STA.W $15EA,X             
-                    JSL.L GenericSprGfxRt     
+                    JSL.L GenericSprGfxRt2    
                     PHX                       
                     LDA $C2,X                 
-                    LDY.W $15EA,X             
+                    LDY.W $15EA,X             ; Y = Index into sprite OAM
                     TAX                       
                     LDA.W BubbleSprGfxProp1,X 
                     ORA $64                   
@@ -10780,11 +10759,12 @@ ADDR_02D8F3:        JSR.W ADDR_02D9D6
 ADDR_02D8F6:        LDA.W $14C8,X             
                     CMP.B #$02                
                     BNE ADDR_02D904           
-                    LDA.B #$08                
-                    STA.W $14C8,X             
+                    LDA.B #$08                ; \ Sprite status = Normal
+                    STA.W $14C8,X             ; /
                     BRA ADDR_02D96B           
+
 ADDR_02D904:        LDA $9D                   
-                    BNE ADDR_02D977           
+                    BNE Return02D977          
                     LDA $13                   
                     AND.B #$01                
                     BNE ADDR_02D91D           
@@ -10792,17 +10772,17 @@ ADDR_02D904:        LDA $9D
                     LDA.W $1534,X             
                     CMP.B #$04                
                     BNE ADDR_02D91D           
-                    LDA.B #$19                
-                    STA.W $1DFC               ; / Play sound effect 
+                    LDA.B #$19                ; \ Play sound effect
+                    STA.W $1DFC               ; /
 ADDR_02D91D:        LDA.W $1534,X             
                     DEC A                     
                     BEQ ADDR_02D978           
                     CMP.B #$07                
-                    BCC ADDR_02D977           
-                    JSR.W ADDR_02D025         
-                    JSR.W ADDR_02D288         
-                    JSR.W ADDR_02D294         
-                    JSL.L ADDR_019138         
+                    BCC Return02D977          
+                    JSR.W SubOffscreen0Bnk2   
+                    JSR.W UpdateXPosNoGrvty2  
+                    JSR.W UpdateYPosNoGrvty2  
+                    JSL.L ExtSub019138        
                     LDY.W $157C,X             
                     LDA.W BubbleSprGfxProp2,Y 
                     STA $B6,X                 
@@ -10823,21 +10803,21 @@ ADDR_02D958:        LDA.W $1588,X
                     BNE ADDR_02D96B           
                     JSL.L SprSprInteract      
                     JSL.L MarioSprInteract    
-                    BCC ADDR_02D9A0           
+                    BCC Return02D9A0          
                     STZ $7D                   
                     STZ $7B                   
 ADDR_02D96B:        LDA.W $1534,X             
                     CMP.B #$07                
-                    BCC ADDR_02D977           
+                    BCC Return02D977          
                     LDA.B #$06                
                     STA.W $1534,X             
-ADDR_02D977:        RTS                       ; Return 
+Return02D977:       RTS                       ; Return
 
 ADDR_02D978:        LDY $C2,X                 
                     LDA.W BubbleSprites,Y     
                     STA $9E,X                 
                     PHA                       
-                    JSL.L ADDR_07F7D2         
+                    JSL.L InitSpriteTables    
                     PLY                       
                     LDA.B #$20                
                     CPY.B #$74                
@@ -10851,8 +10831,7 @@ ADDR_02D98D:        STA.W $154C,X
 ADDR_02D999:        JSR.W ADDR_02D4FA         
                     TYA                       
                     STA.W $157C,X             
-ADDR_02D9A0:        RTS                       ; Return 
-
+Return02D9A0:       RTS                       ; Return
 
 BubbleSprites:      .db $0F,$0D,$15,$74
 
@@ -10936,32 +10915,33 @@ ADDR_02DA37:        PHY
                     LDY.B #$FF                
                     LDA.B #$04                
                     JMP.W ADDR_02B7A7         
-ADDR_02DA52:        PHB                       
+
+HammerBrotherMain:  PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02DA5A         
                     PLB                       
-ADDR_02DA59:        RTL                       ; Return 
+Return02DA59:       RTL                       ; Return
 
 ADDR_02DA5A:        STZ.W $157C,X             
                     LDA.W $14C8,X             
                     CMP.B #$02                
                     BNE ADDR_02DA6E           
-                    JMP.W ADDR_02DAFD         
+                    JMP.W HammerBroGfx        
 
 HammerFreq:         .db $1F,$0F,$0F,$0F,$0F,$0F,$0F
 
 ADDR_02DA6E:        LDA $9D                   
-                    BNE ADDR_02DAE8           
-                    JSL.L ADDR_01803A         
-                    JSR.W ADDR_02D01F         
+                    BNE Return02DAE8          
+                    JSL.L SprSpr_MarioSprRts  
+                    JSR.W SubOffscreen1Bnk2   
                     LDY.W $0DB3               
                     LDA.W $1F11,Y             
                     TAY                       
-                    LDA $13                   
-                    AND.B #$03                
-                    BEQ ADDR_02DA89           
-                    INC.W $1570,X             
+                    LDA $13                   ; \ Increment $1570,x 3 out of every 4 frames
+                    AND.B #$03                ;  |
+                    BEQ ADDR_02DA89           ;  |
+                    INC.W $1570,X             ; /
 ADDR_02DA89:        LDA.W $1570,X             
                     ASL                       
                     CPY.B #$00                
@@ -10969,62 +10949,61 @@ ADDR_02DA89:        LDA.W $1570,X
                     ASL                       
 ADDR_02DA92:        AND.B #$40                
                     STA.W $157C,X             
-                    LDA.W $1570,X             
-                    AND.W HammerFreq,Y        
-                    ORA.W $15A0,X             
-                    ORA.W $186C,X             
-                    ORA.W $1540,X             
-                    BNE ADDR_02DAE8           
-                    LDA.B #$03                
-                    STA.W $1540,X             
-                    LDY.B #$10                
-                    LDA.W $157C,X             
-                    BNE ADDR_02DAB6           
-                    LDY.B #$F0                
-ADDR_02DAB6:        STY $00                   
-                    LDY.B #$07                
-ADDR_02DABA:        LDA.W $170B,Y             
-                    BEQ ADDR_02DAC3           
-                    DEY                       
-                    BPL ADDR_02DABA           
-                    RTS                       ; Return 
+                    LDA.W $1570,X             ; \ Don't throw if...
+                    AND.W HammerFreq,Y        ;  | ...not yet time
+                    ORA.W $15A0,X             ;  | ...sprite offscreen
+                    ORA.W $186C,X             ;  |
+                    ORA.W $1540,X             ;  | ...we just threw one
+                    BNE Return02DAE8          ; /
+                    LDA.B #$03                ; \ Set minimum time in between throws
+                    STA.W $1540,X             ; /
+                    LDY.B #$10                ; \ $00 = Hammer X speed,
+                    LDA.W $157C,X             ;  | based on sprite's direction
+                    BNE ADDR_02DAB6           ;  |
+                    LDY.B #$F0                ;  |
+ADDR_02DAB6:        STY $00                   ; /
+                    LDY.B #$07                ; \ Find a free extended sprite slots
+ADDR_02DABA:        LDA.W $170B,Y             ;  |
+                    BEQ GenerateHammer        ;  |
+                    DEY                       ;  |
+                    BPL ADDR_02DABA           ;  |
+                    RTS                       ; / Return if no free slots
 
-ADDR_02DAC3:        LDA.B #$04                
-                    STA.W $170B,Y             
-                    LDA $E4,X                 
-                    STA.W $171F,Y             
-                    LDA.W $14E0,X             
-                    STA.W $1733,Y             
-                    LDA $D8,X                 
-                    STA.W $1715,Y             
-                    LDA.W $14D4,X             
-                    STA.W $1729,Y             
-                    LDA.B #$D0                
-                    STA.W $173D,Y             
-                    LDA $00                   
-                    STA.W $1747,Y             
-ADDR_02DAE8:        RTS                       ; Return 
+GenerateHammer:     LDA.B #$04                ; \ Extended sprite = Hammer
+                    STA.W $170B,Y             ; /
+                    LDA $E4,X                 ; \ Hammer X pos = sprite X pos
+                    STA.W $171F,Y             ;  |
+                    LDA.W $14E0,X             ;  |
+                    STA.W $1733,Y             ; /
+                    LDA $D8,X                 ; \ Hammer Y pos = sprite Y pos
+                    STA.W $1715,Y             ;  |
+                    LDA.W $14D4,X             ;  |
+                    STA.W $1729,Y             ; /
+                    LDA.B #$D0                ; \ Hammer Y speed = #$D0
+                    STA.W $173D,Y             ; /
+                    LDA $00                   ; \ Hammer X speed = $00
+                    STA.W $1747,Y             ; /
+Return02DAE8:       RTS                       ; Return
 
+HammerBroDispX:     .db $08,$10,$00,$10
 
-DATA_02DAE9:        .db $08,$10,$00,$10
-
-DATA_02DAED:        .db $F8,$F8,$00,$00
+HammerBroDispY:     .db $F8,$F8,$00,$00
 
 HammerBroTiles:     .db $5A,$4A,$46,$48,$4A,$5A,$48,$46
-DATA_02DAF9:        .db $00,$00,$02,$02
+HammerBroTileSize:  .db $00,$00,$02,$02
 
-ADDR_02DAFD:        JSR.W GetDrawInfo2        
+HammerBroGfx:       JSR.W GetDrawInfo2        
                     LDA.W $157C,X             
                     STA $02                   
                     PHX                       
                     LDX.B #$03                
 ADDR_02DB08:        LDA $00                   
                     CLC                       
-                    ADC.W DATA_02DAE9,X       
+                    ADC.W HammerBroDispX,X    
                     STA.W $0300,Y             
                     LDA $01                   
                     CLC                       
-                    ADC.W DATA_02DAED,X       
+                    ADC.W HammerBroDispY,X    
                     STA.W $0301,Y             
                     PHX                       
                     LDA $02                   
@@ -11045,7 +11024,7 @@ ADDR_02DB2A:        LDA.W HammerBroTiles,X
                     LSR                       
                     LSR                       
                     TAY                       
-                    LDA.W DATA_02DAF9,X       
+                    LDA.W HammerBroTileSize,X 
                     STA.W $0460,Y             
                     PLY                       
                     INY                       
@@ -11058,13 +11037,13 @@ ADDR_02DB44:        PLX
                     LDY.B #$FF                
                     LDA.B #$03                
                     JMP.W ADDR_02B7A7         
-ADDR_02DB4C:        PHB                       
+
+FlyingPlatformMain: PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02DB5C         
                     PLB                       
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 DATA_02DB54:        .db $01,$FF
 
@@ -11074,39 +11053,40 @@ DATA_02DB58:        .db $02,$FE
 
 DATA_02DB5A:        .db $20,$E0
 
-ADDR_02DB5C:        JSR.W ADDR_02DC3F         
-                    LDA.B #$FF                
-                    STA.W $1594,X             
-                    LDY.B #$09                
-ADDR_02DB66:        LDA.W $14C8,Y             
-                    CMP.B #$08                
-                    BNE ADDR_02DB74           
-                    LDA.W $009E,Y             
-                    CMP.B #$9B                
-                    BEQ ADDR_02DB79           
-ADDR_02DB74:        DEY                       
-                    BPL ADDR_02DB66           
-                    BRA ADDR_02DB9E           
-ADDR_02DB79:        TYA                       
-                    STA.W $1594,X             
-                    LDA $E4,X                 
-                    STA.W $00E4,Y             
-                    LDA.W $14E0,X             
-                    STA.W $14E0,Y             
-                    LDA $D8,X                 
-                    SEC                       
-                    SBC.B #$10                
-                    STA.W $00D8,Y             
-                    LDA.W $14D4,X             
-                    SBC.B #$00                
-                    STA.W $14D4,Y             
-                    PHX                       
-                    TYX                       
-                    JSR.W ADDR_02DAFD         
-                    PLX                       
+ADDR_02DB5C:        JSR.W FlyingPlatformGfx   ; Draw sprite
+                    LDA.B #$FF                ; \ $1594 = #$FF
+                    STA.W $1594,X             ; /
+                    LDY.B #$09                ; \ Check sprite slots 0-9 for Hammer Brother
+ADDR_02DB66:        LDA.W $14C8,Y             ;  |
+                    CMP.B #$08                ;  |
+                    BNE ADDR_02DB74           ;  |
+                    LDA.W $009E,Y             ;  |
+                    CMP.B #$9B                ;  |
+                    BEQ PutHammerBroOnPlat    ;  |
+ADDR_02DB74:        DEY                       ;  |
+                    BPL ADDR_02DB66           ;  |
+                    BRA ADDR_02DB9E           ; / Branch if no Hammer Brother
+
+PutHammerBroOnPlat: TYA                       ; \ $1594 = index of Hammer Bro
+                    STA.W $1594,X             ; /
+                    LDA $E4,X                 ; \ Hammer Bro X postion = Platform X position
+                    STA.W $00E4,Y             ;  |
+                    LDA.W $14E0,X             ;  |
+                    STA.W $14E0,Y             ; /
+                    LDA $D8,X                 ; \ Hammer Bro Y position = Platform Y position - #$10
+                    SEC                       ;  |
+                    SBC.B #$10                ;  |
+                    STA.W $00D8,Y             ;  |
+                    LDA.W $14D4,X             ;  |
+                    SBC.B #$00                ;  |
+                    STA.W $14D4,Y             ; /
+                    PHX                       ; \ Draw Hammer Bro
+                    TYX                       ;  |
+                    JSR.W HammerBroGfx        ;  |
+                    PLX                       ; /
 ADDR_02DB9E:        LDA $9D                   
-                    BNE ADDR_02DC0E           
-                    JSR.W ADDR_02D01F         
+                    BNE Return02DC0E          
+                    JSR.W SubOffscreen1Bnk2   
                     LDA $13                   
                     AND.B #$01                
                     BNE ADDR_02DBD7           
@@ -11130,12 +11110,12 @@ ADDR_02DBC1:        LDA.W $151C,X
                     CMP.W DATA_02DB5A,Y       
                     BNE ADDR_02DBD7           
                     INC.W $151C,X             
-ADDR_02DBD7:        JSR.W ADDR_02D294         
-                    JSR.W ADDR_02D288         
+ADDR_02DBD7:        JSR.W UpdateYPosNoGrvty2  
+                    JSR.W UpdateXPosNoGrvty2  
                     STA.W $1528,X             
                     JSL.L InvisBlkMainRt      
                     LDA.W $1558,X             
-                    BEQ ADDR_02DC0E           
+                    BEQ Return02DC0E          
                     LDA.B #$01                
                     STA $C2,X                 
                     JSR.W ADDR_02D4FA         
@@ -11144,17 +11124,16 @@ ADDR_02DBD7:        JSR.W ADDR_02D294
                     BMI ADDR_02DBF8           
                     INC $C2,X                 
 ADDR_02DBF8:        LDY.W $1594,X             
-                    BMI ADDR_02DC0E           
-                    LDA.B #$02                
-                    STA.W $14C8,Y             
+                    BMI Return02DC0E          
+                    LDA.B #$02                ; \ Sprite status = Killed
+                    STA.W $14C8,Y             ; /
                     LDA.B #$C0                
                     STA.W $00AA,Y             
                     PHX                       
                     TYX                       
-                    JSL.L ADDR_01AB6F         
+                    JSL.L ExtSub01AB6F        
                     PLX                       
-ADDR_02DC0E:        RTS                       ; Return 
-
+Return02DC0E:       RTS                       ; Return
 
 DATA_02DC0F:        .db $00,$10,$F2,$1E,$00,$10,$FA,$1E
 DATA_02DC17:        .db $00,$00,$F6,$F6,$00,$00,$FE,$FE
@@ -11163,7 +11142,7 @@ DATA_02DC27:        .db $32,$32,$72,$32,$32,$32,$72,$32
 DATA_02DC2F:        .db $02,$02,$02,$02,$02,$02,$00,$00
 DATA_02DC37:        .db $00,$04,$06,$08,$08,$06,$04,$00
 
-ADDR_02DC3F:        JSR.W GetDrawInfo2        
+FlyingPlatformGfx:  JSR.W GetDrawInfo2        
                     LDA $C2,X                 
                     STA $07                   
                     LDA.W $1558,X             
@@ -11171,7 +11150,7 @@ ADDR_02DC3F:        JSR.W GetDrawInfo2
                     TAY                       
                     LDA.W DATA_02DC37,Y       
                     STA $05                   
-                    LDY.W $15EA,X             
+                    LDY.W $15EA,X             ; Y = Index into sprite OAM
                     PHX                       
                     LDA $14                   
                     LSR                       
@@ -11222,54 +11201,55 @@ ADDR_02DC8A:        PLX
                     DEX                       
                     BPL ADDR_02DC5D           
                     JMP.W ADDR_02DB44         
-ADDR_02DCAF:        PHB                       
+
+SumoBrotherMain:    PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02DCB7         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_02DCB7:        JSR.W ADDR_02DE3E         
+ADDR_02DCB7:        JSR.W SumoBroGfx          
                     LDA $9D                   
-                    BNE ADDR_02DCE9           
+                    BNE Return02DCE9          
                     LDA.W $14C8,X             
                     CMP.B #$08                
-                    BNE ADDR_02DCE9           
-                    JSR.W ADDR_02D025         
-                    JSL.L ADDR_01803A         
+                    BNE Return02DCE9          
+                    JSR.W SubOffscreen0Bnk2   
+                    JSL.L SprSpr_MarioSprRts  
                     JSL.L UpdateSpritePos     
-                    LDA.W $1588,X             
-                    AND.B #$04                
-                    BEQ ADDR_02DCDB           
-                    STZ $AA,X                 
-                    STZ $B6,X                 
+                    LDA.W $1588,X             ; \ Branch if not on ground
+                    AND.B #$04                ;  |
+                    BEQ ADDR_02DCDB           ; /
+                    STZ $AA,X                 ; Sprite Y Speed = 0
+                    STZ $B6,X                 ; Sprite X Speed = 0
 ADDR_02DCDB:        LDA $C2,X                 
                     JSL.L ExecutePtr          
 
-Ptrs02DCE1:         .dw ADDR_02DCEA           
+SumoBroPtrs:        .dw ADDR_02DCEA           
                     .dw ADDR_02DCFF           
                     .dw ADDR_02DD0E           
                     .dw ADDR_02DD4B           
 
-ADDR_02DCE9:        RTS                       ; Return 
+Return02DCE9:       RTS                       ; Return
 
 ADDR_02DCEA:        LDA.B #$01                
                     STA.W $1602,X             
                     LDA.W $1540,X             
-                    BNE ADDR_02DCFE           
+                    BNE Return02DCFE          
                     STZ.W $1602,X             
                     LDA.B #$03                
 ADDR_02DCF9:        STA.W $1540,X             
                     INC $C2,X                 
-ADDR_02DCFE:        RTS                       ; Return 
+Return02DCFE:       RTS                       ; Return
 
 ADDR_02DCFF:        LDA.W $1540,X             
-                    BNE ADDR_02DD0B           
+                    BNE Return02DD0B          
                     INC.W $1602,X             
                     LDA.B #$03                
                     BRA ADDR_02DCF9           
-ADDR_02DD0B:        RTS                       ; Return 
 
+Return02DD0B:       RTS                       ; Return
 
 DATA_02DD0C:        .db $20,$E0
 
@@ -11279,7 +11259,7 @@ ADDR_02DD0E:        LDA.W $1558,X
                     LDA.W DATA_02DD0C,Y       
                     STA $B6,X                 
                     LDA.W $1540,X             
-                    BNE ADDR_02DD44           
+                    BNE Return02DD44          
                     INC.W $1570,X             
                     LDA.W $1570,X             
                     AND.B #$01                
@@ -11292,14 +11272,15 @@ ADDR_02DD2F:        LDA.W $1570,X
                     STZ.W $1570,X             
                     LDA.B #$70                
                     BRA ADDR_02DCF9           
+
 ADDR_02DD3D:        LDA.B #$03                
 ADDR_02DD3F:        JSR.W ADDR_02DCF9         
                     STZ $C2,X                 
-ADDR_02DD44:        RTS                       ; Return 
+Return02DD44:       RTS                       ; Return
 
 ADDR_02DD45:        LDA.B #$01                
                     STA.W $1602,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02DD4B:        LDA.B #$03                
                     LDY.W $1540,X             
@@ -11310,12 +11291,12 @@ ADDR_02DD4B:        LDA.B #$03
                     LDA.W $15A0,X             
                     ORA.W $186C,X             
                     BNE ADDR_02DD6E           
-                    LDA.B #$30                
-                    STA.W $1887               
-                    LDA.B #$09                
-                    STA.W $1DFC               ; / Play sound effect 
+                    LDA.B #$30                ;  \ Set ground shake timer
+                    STA.W $1887               ;  /
+                    LDA.B #$09                ; \ Play sound effect
+                    STA.W $1DFC               ; /
                     PHY                       
-                    JSR.W ADDR_02DD8F         
+                    JSR.W GenSumoLightning    
                     PLY                       
 ADDR_02DD6E:        PLA                       
 ADDR_02DD6F:        CPY.B #$30                
@@ -11327,57 +11308,56 @@ ADDR_02DD6F:        CPY.B #$30
                     BCS ADDR_02DD7D           
                     INC A                     
 ADDR_02DD7D:        STA.W $1602,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02DD81:        LDA.W $157C,X             
                     EOR.B #$01                
                     STA.W $157C,X             
                     LDA.B #$40                
                     JSR.W ADDR_02DD3F         
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_02DD8F:        JSL.L ADDR_02A9E4         
-                    BMI ADDR_02DDC5           
-                    LDA.B #$2B                
-                    STA.W $009E,Y             
-                    LDA.B #$08                
-                    STA.W $14C8,Y             
-                    LDA $E4,X                 
-                    ADC.B #$04                
-                    STA.W $00E4,Y             
-                    LDA.W $14E0,X             
-                    ADC.B #$00                
-                    STA.W $14E0,Y             
-                    LDA $D8,X                 
-                    STA.W $00D8,Y             
-                    LDA.W $14D4,X             
-                    STA.W $14D4,Y             
+GenSumoLightning:   JSL.L FindFreeSprSlot     ;  \ Return if no free slots
+                    BMI Return02DDC5          ; /
+                    LDA.B #$2B                ;  \ Sprite = Lightning
+                    STA.W $009E,Y             ;  /
+                    LDA.B #$08                ; \ Sprite status = Normal
+                    STA.W $14C8,Y             ; /
+                    LDA $E4,X                 ;  \ Lightning X position = Sprite X position + #$04
+                    ADC.B #$04                ;   |
+                    STA.W $00E4,Y             ;   |
+                    LDA.W $14E0,X             ;   |
+                    ADC.B #$00                ;   |
+                    STA.W $14E0,Y             ;  /
+                    LDA $D8,X                 ;  \ Lightning Y position = Sprite Y position
+                    STA.W $00D8,Y             ;   |
+                    LDA.W $14D4,X             ;   |
+                    STA.W $14D4,Y             ;  /
                     PHX                       
-                    TYX                       
-                    JSL.L ADDR_07F7D2         
-                    LDA.B #$10                
-                    STA.W $1FE2,X             
+                    TYX                       ;  \ Reset sprite tables
+                    JSL.L InitSpriteTables    ;  /
+                    LDA.B #$10                ;  \ $1FE2,x = #$10
+                    STA.W $1FE2,X             ;  / Time to not interact with ground??
                     PLX                       
-ADDR_02DDC5:        RTS                       ; Return 
+Return02DDC5:       RTS                       ; Return
 
-
-DATA_02DDC6:        .db $FF,$07,$FC,$04,$FF,$07,$FC,$04
+SumoBrosDispX:      .db $FF,$07,$FC,$04,$FF,$07,$FC,$04
                     .db $FF,$FF,$FC,$04,$FF,$FF,$FC,$04
                     .db $02,$02,$F4,$04,$02,$02,$F4,$04
                     .db $09,$01,$04,$FC,$09,$01,$04,$FC
                     .db $01,$01,$04,$FC,$01,$01,$04,$FC
                     .db $FF,$FF,$0C,$FC,$FF,$FF,$0C,$FC
-DATA_02DDF6:        .db $F8,$F8,$00,$00,$F8,$F8,$00,$00
+SumoBrosDispY:      .db $F8,$F8,$00,$00,$F8,$F8,$00,$00
                     .db $F8,$F0,$00,$00,$F8,$F8,$00,$00
                     .db $F8,$F8,$01,$00,$F8,$F8,$FF,$00
 SumoBrosTiles:      .db $98,$99,$A7,$A8,$98,$99,$AA,$AB
                     .db $8A,$66,$AA,$AB,$EE,$EE,$C5,$C6
                     .db $80,$80,$C1,$C3,$80,$80,$C1,$C3
-DATA_02DE26:        .db $00,$00,$02,$02,$00,$00,$02,$02
+SumoBrosTileSize:   .db $00,$00,$02,$02,$00,$00,$02,$02
                     .db $02,$02,$02,$02,$02,$02,$02,$02
                     .db $02,$02,$02,$02,$02,$02,$02,$02
 
-ADDR_02DE3E:        JSR.W GetDrawInfo2        
+SumoBroGfx:         JSR.W GetDrawInfo2        
                     LDA.W $157C,X             
                     LSR                       
                     ROR                       
@@ -11385,7 +11365,7 @@ ADDR_02DE3E:        JSR.W GetDrawInfo2
                     AND.B #$40                
                     EOR.B #$40                
                     STA $02                   
-                    LDY.W $15EA,X             
+                    LDY.W $15EA,X             ; Y = Index into sprite OAM
                     LDA.W $1602,X             
                     ASL                       
                     ASL                       
@@ -11402,12 +11382,12 @@ ADDR_02DE5B:        PHX
                     TAX                       
 ADDR_02DE65:        LDA $00                   
                     CLC                       
-                    ADC.W DATA_02DDC6,X       
+                    ADC.W SumoBrosDispX,X     
                     STA.W $0300,Y             
                     PLX                       
                     LDA $01                   
                     CLC                       
-                    ADC.W DATA_02DDF6,X       
+                    ADC.W SumoBrosDispY,X     
                     STA.W $0301,Y             
                     LDA.W SumoBrosTiles,X     
                     STA.W $0302,Y             
@@ -11423,7 +11403,7 @@ ADDR_02DE84:        LDA.B #$34
                     LSR                       
                     LSR                       
                     TAY                       
-                    LDA.W DATA_02DE26,X       
+                    LDA.W SumoBrosTileSize,X  
                     STA.W $0460,Y             
                     PLY                       
                     INY                       
@@ -11437,26 +11417,27 @@ ADDR_02DE84:        LDA.B #$34
                     LDY.B #$FF                
                     LDA.B #$03                
                     JMP.W ADDR_02B7A7         
-ADDR_02DEA8:        PHB                       
+
+SumosLightningMain: PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02DEB0         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_02DEB0:        LDA.W $1540,X             
                     BNE ADDR_02DEFC           
                     LDA.B #$30                
                     STA $AA,X                 
-                    JSR.W ADDR_02D294         
+                    JSR.W UpdateYPosNoGrvty2  
                     LDA.W $1FE2,X             
                     BNE ADDR_02DEEA           
-                    JSL.L ADDR_019138         
-                    LDA.W $1588,X             
-                    AND.B #$04                
-                    BEQ ADDR_02DEEA           
-                    LDA.B #$17                
-                    STA.W $1DFC               ; / Play sound effect 
+                    JSL.L ExtSub019138        
+                    LDA.W $1588,X             ; \ Branch if not on ground
+                    AND.B #$04                ;  |
+                    BEQ ADDR_02DEEA           ; /
+                    LDA.B #$17                ; \ Play sound effect
+                    STA.W $1DFC               ; /
                     LDA.B #$22                
                     STA.W $1540,X             
                     LDA.W $15A0,X             
@@ -11466,14 +11447,14 @@ ADDR_02DEB0:        LDA.W $1540,X
                     STA $9A                   
                     LDA $D8,X                 
                     STA $98                   
-                    JSL.L ADDR_028A44         
+                    JSL.L ExtSub028A44        
 ADDR_02DEEA:        LDA.B #$00                
-                    JSL.L ADDR_018042         
-                    LDY.W $15EA,X             
+                    JSL.L GenericSprGfxRt0    
+                    LDY.W $15EA,X             ; Y = Index into sprite OAM
                     LDA.W $0307,Y             
                     EOR.B #$C0                
                     STA.W $0307,Y             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02DEFC:        STA $02                   
                     CMP.B #$01                
@@ -11481,17 +11462,16 @@ ADDR_02DEFC:        STA $02
                     STZ.W $14C8,X             
 ADDR_02DF05:        AND.B #$0F                
                     CMP.B #$01                
-                    BNE ADDR_02DF21           
+                    BNE Return02DF21          
                     STA.W $18B8               
                     JSR.W ADDR_02DF2C         
                     INC.W $1570,X             
                     LDA.W $1570,X             
                     CMP.B #$01                
-                    BEQ ADDR_02DF21           
+                    BEQ Return02DF21          
                     JSR.W ADDR_02DF2C         
                     INC.W $1570,X             
-ADDR_02DF21:        RTS                       ; Return 
-
+Return02DF21:       RTS                       ; Return
 
 DATA_02DF22:        .db $FC,$0C,$EC,$1C,$DC
 
@@ -11536,65 +11516,66 @@ ADDR_02DF4C:        PHX
                     CMP $1A                   
                     LDA.W $1E3E,Y             
                     SBC $1B                   
-                    BNE ADDR_02DF8A           
+                    BNE Return02DF8A          
                     LDA.B #$06                
                     STA.W $1892,Y             
-ADDR_02DF8A:        RTS                       ; Return 
+Return02DF8A:       RTS                       ; Return
 
-ADDR_02DF8B:        PHB                       
+VolcanoLotusMain:   PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02DF93         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_02DF93:        JSR.W ADDR_02E00B         
+ADDR_02DF93:        JSR.W VolcanoLotusGfx     
                     LDA $9D                   
-                    BNE ADDR_02DFC8           
+                    BNE Return02DFC8          
                     STZ.W $151C,X             
-                    JSL.L ADDR_01803A         
-                    JSR.W ADDR_02D025         
-                    JSR.W ADDR_02D294         
+                    JSL.L SprSpr_MarioSprRts  
+                    JSR.W SubOffscreen0Bnk2   
+                    JSR.W UpdateYPosNoGrvty2  
                     LDA $AA,X                 
                     CMP.B #$40                
                     BPL ADDR_02DFAF           
                     INC $AA,X                 
-ADDR_02DFAF:        JSL.L ADDR_019138         
-                    LDA.W $1588,X             
-                    AND.B #$04                
-                    BEQ ADDR_02DFBC           
-                    STZ $AA,X                 
+ADDR_02DFAF:        JSL.L ExtSub019138        
+                    LDA.W $1588,X             ; \ Branch if not on ground
+                    AND.B #$04                ;  |
+                    BEQ ADDR_02DFBC           ; /
+                    STZ $AA,X                 ; Sprite Y Speed = 0
 ADDR_02DFBC:        LDA $C2,X                 
                     JSL.L ExecutePtr          
 
-Ptrs02DFC2:         .dw ADDR_02DFC9           
+VolcanoLotusPtrs:   .dw ADDR_02DFC9           
                     .dw ADDR_02DFDF           
                     .dw ADDR_02DFEF           
 
-ADDR_02DFC8:        RTS                       ; Return 
+Return02DFC8:       RTS                       ; Return
 
 ADDR_02DFC9:        LDA.W $1540,X             
                     BNE ADDR_02DFD6           
                     LDA.B #$40                
 ADDR_02DFD0:        STA.W $1540,X             
                     INC $C2,X                 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02DFD6:        LSR                       
                     LSR                       
                     LSR                       
                     AND.B #$01                
                     STA.W $1602,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02DFDF:        LDA.W $1540,X             
                     BNE ADDR_02DFE8           
                     LDA.B #$40                
                     BRA ADDR_02DFD0           
+
 ADDR_02DFE8:        LSR                       
                     AND.B #$01                
                     STA.W $151C,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02DFEF:        LDA.W $1540,X             
                     BNE ADDR_02DFFB           
@@ -11606,13 +11587,12 @@ ADDR_02DFFB:        CMP.B #$38
                     JSR.W ADDR_02E079         
 ADDR_02E002:        LDA.B #$02                
                     STA.W $1602,X             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 VolcanoLotusTiles:  .db $8E,$9E,$E2
 
-ADDR_02E00B:        JSR.W ADDR_02E57E         
-                    LDY.W $15EA,X             
+VolcanoLotusGfx:    JSR.W MushroomScaleGfx    
+                    LDY.W $15EA,X             ; Y = Index into sprite OAM
                     LDA.B #$CE                
                     STA.W $0302,Y             
                     STA.W $0306,Y             
@@ -11661,18 +11641,18 @@ DATA_02E075:        .db $EC,$EC,$E8,$E8
 
 ADDR_02E079:        LDA.W $15A0,X             
                     ORA.W $186C,X             
-                    BNE ADDR_02E0C4           
+                    BNE Return02E0C4          
                     LDA.B #$03                
                     STA $00                   
-ADDR_02E085:        LDY.B #$07                
-ADDR_02E087:        LDA.W $170B,Y             
-                    BEQ ADDR_02E090           
-                    DEY                       
-                    BPL ADDR_02E087           
-                    RTS                       ; Return 
+ADDR_02E085:        LDY.B #$07                ; \ Find a free extended sprite slot
+ADDR_02E087:        LDA.W $170B,Y             ;  |
+                    BEQ ADDR_02E090           ;  |
+                    DEY                       ;  |
+                    BPL ADDR_02E087           ;  |
+                    RTS                       ; / Return if no free slots
 
-ADDR_02E090:        LDA.B #$0C                
-                    STA.W $170B,Y             
+ADDR_02E090:        LDA.B #$0C                ; \ Extended sprite = Volcano Lotus fire
+                    STA.W $170B,Y             ; /
                     LDA $E4,X                 
                     CLC                       
                     ADC.B #$04                
@@ -11693,16 +11673,16 @@ ADDR_02E090:        LDA.B #$0C
                     PLX                       
                     DEC $00                   
                     BPL ADDR_02E085           
-ADDR_02E0C4:        RTS                       ; Return 
+Return02E0C4:       RTS                       ; Return
 
-ADDR_02E0C5:        PHB                       
+JumpingPiranhaMain: PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02E0CD         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_02E0CD:        JSL.L ADDR_07F78B         
+ADDR_02E0CD:        JSL.L LoadSpriteTables    
                     LDA $64                   
                     PHA                       
                     LDA.B #$10                
@@ -11713,7 +11693,7 @@ ADDR_02E0CD:        JSL.L ADDR_07F78B
                     LSR                       
                     EOR.B #$02                
                     STA.W $1602,X             
-                    JSL.L GenericSprGfxRt     
+                    JSL.L GenericSprGfxRt2    
                     LDA.W $15EA,X             
                     CLC                       
                     ADC.B #$04                
@@ -11736,7 +11716,7 @@ ADDR_02E0CD:        JSL.L ADDR_07F78B
                     LDA.B #$0A                
                     STA.W $15F6,X             
                     LDA.B #$01                
-                    JSL.L ADDR_018042         
+                    JSL.L GenericSprGfxRt0    
                     PLA                       
                     STA.W $14D4,X             
                     PLA                       
@@ -11744,31 +11724,31 @@ ADDR_02E0CD:        JSL.L ADDR_07F78B
                     PLA                       
                     STA $64                   
                     LDA $9D                   
-                    BNE ADDR_02E158           
-                    JSR.W ADDR_02D025         
-                    JSL.L ADDR_01803A         
-                    JSR.W ADDR_02D294         
+                    BNE Return02E158          
+                    JSR.W SubOffscreen0Bnk2   
+                    JSL.L SprSpr_MarioSprRts  
+                    JSR.W UpdateYPosNoGrvty2  
                     LDA $C2,X                 
                     JSL.L ExecutePtr          
 
-Ptrs02E136:         .dw ADDR_02E13C           
+JumpingPiranhaPtrs: .dw ADDR_02E13C           
                     .dw ADDR_02E159           
                     .dw ADDR_02E177           
 
-ADDR_02E13C:        STZ $AA,X                 
+ADDR_02E13C:        STZ $AA,X                 ; Sprite Y Speed = 0
                     LDA.W $1540,X             
-                    BNE ADDR_02E158           
+                    BNE Return02E158          
                     JSR.W ADDR_02D4FA         
                     LDA $0F                   
                     CLC                       
                     ADC.B #$1B                
                     CMP.B #$37                
-                    BCC ADDR_02E158           
+                    BCC Return02E158          
                     LDA.B #$C0                
                     STA $AA,X                 
                     INC $C2,X                 
                     STZ.W $1602,X             
-ADDR_02E158:        RTS                       ; Return 
+Return02E158:       RTS                       ; Return
 
 ADDR_02E159:        LDA $AA,X                 
                     BMI ADDR_02E161           
@@ -11780,11 +11760,11 @@ ADDR_02E161:        CLC
 ADDR_02E166:        INC.W $1570,X             
                     LDA $AA,X                 
                     CMP.B #$F0                
-                    BMI ADDR_02E176           
+                    BMI Return02E176          
                     LDA.B #$50                
                     STA.W $1540,X             
                     INC $C2,X                 
-ADDR_02E176:        RTS                       ; Return 
+Return02E176:       RTS                       ; Return
 
 ADDR_02E177:        INC.W $151C,X             
                     LDA.W $1540,X             
@@ -11798,14 +11778,14 @@ ADDR_02E17F:        INC.W $1570,X
                     BPL ADDR_02E191           
                     INC A                     
                     STA $AA,X                 
-ADDR_02E191:        JSL.L ADDR_019138         
-                    LDA.W $1588,X             
-                    AND.B #$04                
-                    BEQ ADDR_02E176           
+ADDR_02E191:        JSL.L ExtSub019138        
+                    LDA.W $1588,X             ; \ Branch if not on ground
+                    AND.B #$04                ;  |
+                    BEQ Return02E176          ; /
                     STZ $C2,X                 
                     LDA.B #$40                
                     STA.W $1540,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02E1A4:        LDY $9E,X                 
                     CPY.B #$50                
@@ -11820,15 +11800,15 @@ ADDR_02E1A4:        LDY $9E,X
                     JSR.W ADDR_02E1C0         
                     LDA.B #$F0                
 ADDR_02E1C0:        STA $00                   
-                    LDY.B #$07                
-ADDR_02E1C4:        LDA.W $170B,Y             
-                    BEQ ADDR_02E1CD           
-                    DEY                       
-                    BPL ADDR_02E1C4           
-                    RTS                       ; Return 
+                    LDY.B #$07                ; \ Find a free extended sprite slot
+ADDR_02E1C4:        LDA.W $170B,Y             ;  |
+                    BEQ ADDR_02E1CD           ;  |
+                    DEY                       ;  |
+                    BPL ADDR_02E1C4           ;  |
+                    RTS                       ; / Return if no free slots
 
-ADDR_02E1CD:        LDA.B #$0B                
-                    STA.W $170B,Y             
+ADDR_02E1CD:        LDA.B #$0B                ; \ Extended sprite = Piranha fireball
+                    STA.W $170B,Y             ; /
                     LDA $E4,X                 
                     CLC                       
                     ADC.B #$04                
@@ -11854,12 +11834,12 @@ DATA_02E201:        .db $00,$03,$02,$00,$01,$03,$02,$00
                     .db $00,$03,$02,$00,$00,$00,$00,$00
 DATA_02E211:        .db $01,$00,$03,$02
 
-ADDR_02E215:        PHB                       
+DirectionCoinsMain: PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02E21D         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_02E21D:        LDA $64                   
                     PHA                       
@@ -11879,10 +11859,11 @@ ADDR_02E22B:        LDA $1C
                     STA $1D                   
                     LDA.W $14AD               
                     BNE ADDR_02E245           
-                    JSL.L ADDR_01C641         
+                    JSL.L CoinSprGfx          
                     BRA ADDR_02E259           
-ADDR_02E245:        JSL.L GenericSprGfxRt     
-                    LDY.W $15EA,X             
+
+ADDR_02E245:        JSL.L GenericSprGfxRt2    
+                    LDY.W $15EA,X             ; Y = Index into sprite OAM
                     LDA.B #$2E                
                     STA.W $0302,Y             
                     LDA.W $0303,Y             
@@ -11905,19 +11886,19 @@ ADDR_02E271:        STZ.W $190C
                     STZ.W $14C8,X             
                     LDA.W $14AD               
                     ORA.W $14AE               
-                    BNE ADDR_02E287           
+                    BNE Return02E287          
                     LDA.W $0DDA               
-                    BMI ADDR_02E287           
-                    STA.W $1DFB               ; / Play sound effect 
-ADDR_02E287:        RTS                       ; Return 
+                    BMI Return02E287          
+                    STA.W $1DFB               ; / Change music
+Return02E287:       RTS                       ; Return
 
 ADDR_02E288:        LDY $C2,X                 
                     LDA.W DATA_02E1F9,Y       
                     STA $B6,X                 
                     LDA.W DATA_02E1FD,Y       
                     STA $AA,X                 
-                    JSR.W ADDR_02D294         
-                    JSR.W ADDR_02D288         
+                    JSR.W UpdateYPosNoGrvty2  
+                    JSR.W UpdateXPosNoGrvty2  
                     LDA $15                   
                     AND.B #$0F                
                     BEQ ADDR_02E2B0           
@@ -11938,20 +11919,20 @@ ADDR_02E2B0:        LDA $D8,X
                     BNE ADDR_02E2DE           
                     LDA.W $151C,X             
                     STA $C2,X                 
-                    LDA $E4,X                 
-                    STA $9A                   
-                    LDA.W $14E0,X             
-                    STA $9B                   
-                    LDA $D8,X                 
-                    STA $98                   
-                    LDA.W $14D4,X             
-                    STA $99                   
-                    LDA.B #$06                
-                    STA $9C                   
-                    JSL.L ADDR_00BEB0         
-                    RTS                       ; Return 
+                    LDA $E4,X                 ; \ $9A = Sprite X position
+                    STA $9A                   ;  | for block creation
+                    LDA.W $14E0,X             ;  |
+                    STA $9B                   ; /
+                    LDA $D8,X                 ; \ $98 = Sprite Y position
+                    STA $98                   ;  | for block creation
+                    LDA.W $14D4,X             ;  |
+                    STA $99                   ; /
+                    LDA.B #$06                ; \ Block to generate = Coin
+                    STA $9C                   ; /
+                    JSL.L GenerateTile        
+                    RTS                       ; Return
 
-ADDR_02E2DE:        JSL.L ADDR_019138         
+ADDR_02E2DE:        JSL.L ExtSub019138        
                     LDA $B6,X                 
                     BNE ADDR_02E2F3           
                     LDA.W $18D7               
@@ -11959,23 +11940,22 @@ ADDR_02E2DE:        JSL.L ADDR_019138
                     LDA.W $185F               
                     CMP.B #$25                
                     BNE ADDR_02E2FF           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02E2F3:        LDA.W $1862               
                     BNE ADDR_02E2FF           
                     LDA.W $1860               
                     CMP.B #$25                
-                    BEQ ADDR_02E302           
+                    BEQ Return02E302          
 ADDR_02E2FF:        JSR.W ADDR_02E271         
-ADDR_02E302:        RTS                       ; Return 
+Return02E302:       RTS                       ; Return
 
-ADDR_02E303:        PHB                       
+GasBubbleMain:      PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02E311         
                     PLB                       
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 DATA_02E30B:        .db $10,$F0
 
@@ -11983,16 +11963,16 @@ DATA_02E30D:        .db $01,$FF
 
 DATA_02E30F:        .db $10,$F0
 
-ADDR_02E311:        JSR.W ADDR_02E3AA         
+ADDR_02E311:        JSR.W GasBubbleGfx        
                     LDA $9D                   
-                    BNE ADDR_02E351           
+                    BNE Return02E351          
                     LDA.W $14C8,X             
                     CMP.B #$08                
-                    BNE ADDR_02E351           
+                    BNE Return02E351          
                     LDY.W $157C,X             
                     LDA.W DATA_02E30B,Y       
                     STA $B6,X                 
-                    JSR.W ADDR_02D288         
+                    JSR.W UpdateXPosNoGrvty2  
                     LDA $13                   
                     AND.B #$03                
                     BNE ADDR_02E344           
@@ -12006,12 +11986,11 @@ ADDR_02E311:        JSR.W ADDR_02E3AA
                     CMP.W DATA_02E30F,Y       
                     BNE ADDR_02E344           
                     INC $C2,X                 
-ADDR_02E344:        JSR.W ADDR_02D294         
+ADDR_02E344:        JSR.W UpdateYPosNoGrvty2  
                     INC.W $1570,X             
-                    JSR.W ADDR_02D025         
+                    JSR.W SubOffscreen0Bnk2   
                     JSL.L MarioSprInteract    
-ADDR_02E351:        RTS                       ; Return 
-
+Return02E351:       RTS                       ; Return
 
 DATA_02E352:        .db $00,$10,$20,$30,$00,$10,$20,$30
                     .db $00,$10,$20,$30,$00,$10,$20,$30
@@ -12027,7 +12006,7 @@ DATA_02E3A2:        .db $00,$01,$02,$01
 
 DATA_02E3A6:        .db $02,$01,$00,$01
 
-ADDR_02E3AA:        JSR.W GetDrawInfo2        
+GasBubbleGfx:       JSR.W GetDrawInfo2        
                     LDA.W $1570,X             
                     LSR                       
                     LSR                       
@@ -12038,7 +12017,7 @@ ADDR_02E3AA:        JSR.W GetDrawInfo2
                     STA $02                   
                     LDA.W DATA_02E3A6,Y       
                     STA $03                   
-                    LDY.W $15EA,X             
+                    LDY.W $15EA,X             ; Y = Index into sprite OAM
                     PHX                       
                     LDX.B #$0F                
 ADDR_02E3C6:        LDA $00                   
@@ -12052,6 +12031,7 @@ ADDR_02E3C6:        LDA $00
                     CLC                       
                     ADC $02                   
                     BRA ADDR_02E3DE           
+
 ADDR_02E3DA:        PLA                       
                     SEC                       
                     SBC $02                   
@@ -12067,6 +12047,7 @@ ADDR_02E3DE:        STA.W $0300,Y
                     CLC                       
                     ADC $03                   
                     BRA ADDR_02E3F9           
+
 ADDR_02E3F5:        PLA                       
                     SEC                       
                     SBC $03                   
@@ -12085,18 +12066,20 @@ ADDR_02E3F9:        STA.W $0301,Y
                     LDY.B #$02                
                     LDA.B #$0F                
                     JMP.W ADDR_02B7A7         
-ADDR_02E417:        PHB                       
+
+ExplodingBlkMain:   PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02E41F         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_02E41F:        JSL.L GenericSprGfxRt     
+ADDR_02E41F:        JSL.L GenericSprGfxRt2    
                     LDA $9D                   
-                    BNE ADDR_02E462           
+                    BNE Return02E462          
                     BRA ADDR_02E42D           
-                    JSL.L ADDR_02C0CF         
+
+                    JSL.L ADDR_02C0CF         ; Unreachable instruction
 ADDR_02E42D:        LDY.B #$00                
                     INC.W $1570,X             
                     LDA.W $1570,X             
@@ -12108,22 +12091,22 @@ ADDR_02E42D:        LDY.B #$00
                     BEQ ADDR_02E444           
                     LDY.B #$FC                
 ADDR_02E444:        STY $B6,X                 
-                    JSR.W ADDR_02D288         
-                    JSL.L ADDR_01803A         
+                    JSR.W UpdateXPosNoGrvty2  
+                    JSL.L SprSpr_MarioSprRts  
                     JSR.W ADDR_02D4FA         
                     LDA $0F                   
                     CLC                       
                     ADC.B #$60                
                     CMP.B #$C0                
-                    BCS ADDR_02E462           
+                    BCS Return02E462          
                     LDY.W $15A0,X             
-                    BNE ADDR_02E462           
-                    JSL.L ADDR_02E463         
-ADDR_02E462:        RTS                       ; Return 
+                    BNE Return02E462          
+                    JSL.L ExtSub02E463        
+Return02E462:       RTS                       ; Return
 
-ADDR_02E463:        LDA $C2,X                 
+ExtSub02E463:       LDA $C2,X                 
                     STA $9E,X                 
-                    JSL.L ADDR_07F7D2         
+                    JSL.L InitSpriteTables    
                     LDA.B #$D0                
                     STA $AA,X                 
                     JSR.W ADDR_02D4FA         
@@ -12144,9 +12127,9 @@ ADDR_02E463:        LDA $C2,X
                     LDA.B #$00                
                     JSL.L ShatterBlock        
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_02E495:        LDA.W $15EA,X             
+ScalePlatformMain:  LDA.W $15EA,X             
                     PHA                       
                     PHB                       
                     PHK                       
@@ -12155,9 +12138,9 @@ ADDR_02E495:        LDA.W $15EA,X
                     PLB                       
                     PLA                       
                     STA.W $15EA,X             
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_02E4A5:        JSR.W ADDR_02D01B         
+ADDR_02E4A5:        JSR.W SubOffscreen2Bnk2   
                     STZ.W $185E               
                     LDA $E4,X                 
                     PHA                       
@@ -12200,19 +12183,18 @@ ADDR_02E4EB:        LDA.W $15EA,X
                     LDA.B #$08                
                     JSR.W ADDR_02E559         
 ADDR_02E503:        LDA.W $185E               
-                    BNE ADDR_02E51F           
+                    BNE Return02E51F          
                     LDY.B #$02                
                     LDA $D8,X                 
                     CMP.W $1534,X             
-                    BEQ ADDR_02E51F           
+                    BEQ Return02E51F          
                     LDA.W $14D4,X             
                     SBC.W $151C,X             
                     BMI ADDR_02E51B           
                     LDY.B #$FE                
 ADDR_02E51B:        TYA                       
                     JSR.W ADDR_02E559         
-ADDR_02E51F:        RTS                       ; Return 
-
+Return02E51F:       RTS                       ; Return
 
 MushrmScaleTiles:   .db $02,$07,$07,$02
 
@@ -12225,25 +12207,25 @@ ADDR_02E524:        LDA $D8,X
                     BPL ADDR_02E533           
                     INY                       
 ADDR_02E533:        LDA.W MushrmScaleTiles,Y  
-                    STA $9C                   
-                    LDA $E4,X                 
-                    STA $9A                   
-                    LDA.W $14E0,X             
-                    STA $9B                   
-                    LDA $D8,X                 
-                    STA $98                   
-                    LDA.W $14D4,X             
-                    STA $99                   
-                    JSL.L ADDR_00BEB0         
-ADDR_02E54E:        JSR.W ADDR_02E57E         
+                    STA $9C                   ; $9C = tile to generate
+                    LDA $E4,X                 ; \ $9A = Sprite X position
+                    STA $9A                   ;  | for block creation
+                    LDA.W $14E0,X             ;  |
+                    STA $9B                   ; /
+                    LDA $D8,X                 ; \ $98 = Sprite Y position
+                    STA $98                   ;  | for block creation
+                    LDA.W $14D4,X             ;  |
+                    STA $99                   ; /
+                    JSL.L GenerateTile        ; Generate the tile
+ADDR_02E54E:        JSR.W MushroomScaleGfx    
                     STZ.W $1528,X             
                     JSL.L InvisBlkMainRt      
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02E559:        LDY $9D                   
-                    BNE ADDR_02E57D           
+                    BNE Return02E57D          
                     PHA                       
-                    JSR.W ADDR_02D294         
+                    JSR.W UpdateYPosNoGrvty2  
                     PLA                       
                     STA $AA,X                 
                     LDY.B #$00                
@@ -12258,9 +12240,9 @@ ADDR_02E56F:        CLC
                     TYA                       
                     ADC.W $151C,X             
                     STA.W $151C,X             
-ADDR_02E57D:        RTS                       ; Return 
+Return02E57D:       RTS                       ; Return
 
-ADDR_02E57E:        JSR.W GetDrawInfo2        
+MushroomScaleGfx:   JSR.W GetDrawInfo2        
                     LDA $00                   
                     SEC                       
                     SBC.B #$08                
@@ -12283,14 +12265,15 @@ ADDR_02E57E:        JSR.W GetDrawInfo2
                     LDA.B #$01                
                     LDY.B #$02                
                     JMP.W ADDR_02B7A7         
-ADDR_02E5B4:        PHB                       
+
+MovingLedgeMain:    PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02E5BC         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_02E5BC:        JSR.W ADDR_02D025         
+ADDR_02E5BC:        JSR.W SubOffscreen0Bnk2   
                     LDA $9D                   
                     BNE ADDR_02E5D7           
                     INC.W $1570,X             
@@ -12301,21 +12284,21 @@ ADDR_02E5BC:        JSR.W ADDR_02D025
                     LDY.B #$F0                
 ADDR_02E5D1:        TYA                       
                     STA $B6,X                 
-                    JSR.W ADDR_02D288         
+                    JSR.W UpdateXPosNoGrvty2  
 ADDR_02E5D7:        JSR.W ADDR_02E637         
                     JSR.W ADDR_02E5F7         
                     LDA.W $185C               
                     BEQ ADDR_02E5E8           
                     DEC A                     
                     CMP.W $15E9               
-                    BNE ADDR_02E5F6           
+                    BNE Return02E5F6          
 ADDR_02E5E8:        JSL.L MarioSprInteract    
                     STZ.W $185C               
-                    BCC ADDR_02E5F6           
+                    BCC Return02E5F6          
                     INX                       
                     STX.W $185C               
                     DEX                       
-ADDR_02E5F6:        RTS                       ; Return 
+Return02E5F6:       RTS                       ; Return
 
 ADDR_02E5F7:        LDY.B #$0B                
 ADDR_02E5F9:        CPY.W $15E9               
@@ -12333,10 +12316,10 @@ ADDR_02E5F9:        CPY.W $15E9
                     CMP.W $15E9               
                     BNE ADDR_02E633           
 ADDR_02E617:        TYX                       
-                    JSL.L ADDR_03B6E5         
-                    LDX.W $15E9               
-                    JSL.L ADDR_03B69F         
-                    JSL.L ADDR_03B72B         
+                    JSL.L GetSpriteClippingB  
+                    LDX.W $15E9               ; X = Sprite index
+                    JSL.L GetSpriteClippingA  
+                    JSL.L CheckForContact     
                     LDA.B #$00                
                     STA.W $15DC,Y             
                     BCC ADDR_02E633           
@@ -12345,7 +12328,7 @@ ADDR_02E617:        TYX
                     STA.W $15DC,Y             
 ADDR_02E633:        DEY                       
                     BPL ADDR_02E5F9           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02E637:        JSR.W GetDrawInfo2        
                     PHX                       
@@ -12377,12 +12360,12 @@ MovingHoleTiles:    .db $EB,$EA,$EA,$EB
 
 DATA_02E66E:        .db $71,$31,$31,$31
 
-ADDR_02E672:        PHB                       
+ExtSub02E672:       PHB                       ; Wrapper
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02E67A         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_02E67A:        JSR.W GetDrawInfo2        
                     TYA                       
@@ -12419,7 +12402,7 @@ ADDR_02E67A:        JSR.W GetDrawInfo2
                     JSR.W ADDR_02B7A7         
                     LDA.W $15A0,X             
                     BNE ADDR_02E6EB           
-                    LDY.W $15EA,X             
+                    LDY.W $15EA,X             ; Y = Index into sprite OAM
                     LDA $7E                   
                     SEC                       
                     SBC.W $0304,Y             
@@ -12435,7 +12418,7 @@ ADDR_02E67A:        JSR.W GetDrawInfo2
                     CMP.B #$18                
                     BCS ADDR_02E6EB           
                     STZ.W $151C,X             
-                    JSL.L ADDR_00F388         
+                    JSL.L ExtSub00F388        
 ADDR_02E6EB:        PHX                       
                     LDA.B #$38                
                     STA.W $15EA,X             
@@ -12462,39 +12445,39 @@ ADDR_02E6F4:        LDA.W $185E
                     LDA.B #$07                
                     LDY.B #$00                
                     JMP.W ADDR_02B7A7         
-ADDR_02E71F:        PHB                       
+
+SwimJumpFishMain:   PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02E727         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_02E727:        JSL.L GenericSprGfxRt     
+ADDR_02E727:        JSL.L GenericSprGfxRt2    
                     LDA $9D                   
-                    BNE ADDR_02E74B           
-                    JSR.W ADDR_02D025         
-                    JSL.L ADDR_01803A         
-                    JSL.L ADDR_019138         
+                    BNE Return02E74B          
+                    JSR.W SubOffscreen0Bnk2   
+                    JSL.L SprSpr_MarioSprRts  
+                    JSL.L ExtSub019138        
                     LDY.B #$00                
                     JSR.W ADDR_02EB3D         
                     LDA $C2,X                 
                     AND.B #$01                
                     JSL.L ExecutePtr          
 
-Ptrs02E747:         .dw ADDR_02E74E           
+FishPtrs:           .dw ADDR_02E74E           
                     .dw ADDR_02E788           
 
-ADDR_02E74B:        RTS                       ; Return 
-
+Return02E74B:       RTS                       ; Return
 
 DATA_02E74C:        .db $14,$EC
 
 ADDR_02E74E:        LDY.W $157C,X             
                     LDA.W DATA_02E74C,Y       
                     STA $B6,X                 
-                    JSR.W ADDR_02D288         
+                    JSR.W UpdateXPosNoGrvty2  
                     LDA.W $1540,X             
-                    BNE ADDR_02E77B           
+                    BNE Return02E77B          
                     INC.W $1570,X             
                     LDY.W $1570,X             
                     CPY.B #$04                
@@ -12507,29 +12490,29 @@ ADDR_02E74E:        LDY.W $157C,X
                     BEQ ADDR_02E778           
                     LDA.B #$40                
 ADDR_02E778:        STA.W $1540,X             
-ADDR_02E77B:        RTS                       ; Return 
+Return02E77B:       RTS                       ; Return
 
 ADDR_02E77C:        INC $C2,X                 
                     LDA.B #$80                
                     STA.W $1540,X             
                     LDA.B #$A0                
                     STA $AA,X                 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02E788:        LDA.W $1540,X             
                     BEQ ADDR_02E7A4           
                     CMP.B #$70                
-                    BCS ADDR_02E7A3           
-                    STZ $B6,X                 
-                    JSR.W ADDR_02D294         
+                    BCS Return02E7A3          
+                    STZ $B6,X                 ; Sprite X Speed = 0
+                    JSR.W UpdateYPosNoGrvty2  
                     LDA $AA,X                 
                     BMI ADDR_02E79E           
                     CMP.B #$30                
-                    BCS ADDR_02E7A3           
+                    BCS Return02E7A3          
 ADDR_02E79E:        CLC                       
                     ADC.B #$02                
                     STA $AA,X                 
-ADDR_02E7A3:        RTS                       ; Return 
+Return02E7A3:       RTS                       ; Return
 
 ADDR_02E7A4:        LDA $D8,X                 
                     AND.B #$F0                
@@ -12538,14 +12521,14 @@ ADDR_02E7A4:        LDA $D8,X
                     STZ.W $1570,X             
                     LDA.B #$20                
                     STA.W $1540,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_02E7B5:        PHB                       
+ChucksRockMain:     PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02E7BD         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_02E7BD:        LDA $64                   
                     PHA                       
@@ -12553,25 +12536,25 @@ ADDR_02E7BD:        LDA $64
                     BEQ ADDR_02E7C9           
                     LDA.B #$10                
                     STA $64                   
-ADDR_02E7C9:        JSL.L GenericSprGfxRt     
+ADDR_02E7C9:        JSL.L GenericSprGfxRt2    
                     PLA                       
                     STA $64                   
                     LDA $9D                   
-                    BNE ADDR_02E82C           
+                    BNE Return02E82C          
                     LDA.W $1540,X             
                     CMP.B #$08                
-                    BCS ADDR_02E82C           
+                    BCS Return02E82C          
                     LDY.B #$00                
                     LDA $13                   
                     LSR                       
                     JSR.W ADDR_02EB3D         
-                    JSR.W ADDR_02D025         
+                    JSR.W SubOffscreen0Bnk2   
                     JSL.L UpdateSpritePos     
                     LDA.W $1540,X             
                     BNE ADDR_02E828           
-                    LDA.W $1588,X             
-                    AND.B #$03                
-                    BEQ ADDR_02E7FD           
+                    LDA.W $1588,X             ; \ Branch if not touching object
+                    AND.B #$03                ;  |
+                    BEQ ADDR_02E7FD           ; /
                     LDA $B6,X                 
                     EOR.B #$FF                
                     INC A                     
@@ -12581,9 +12564,9 @@ ADDR_02E7FD:        LDA.W $1588,X
                     BEQ ADDR_02E808           
                     LDA.B #$10                
                     STA $AA,X                 
-ADDR_02E808:        LDA.W $1588,X             
-                    AND.B #$04                
-                    BEQ ADDR_02E828           
+ADDR_02E808:        LDA.W $1588,X             ; \ Branch if not on ground
+                    AND.B #$04                ;  |
+                    BEQ ADDR_02E828           ; /
                     LDA $AA,X                 
                     CMP.B #$38                
                     LDA.B #$E0                
@@ -12596,16 +12579,15 @@ ADDR_02E819:        STA $AA,X
                     BPL ADDR_02E826           
                     LDA.B #$F8                
 ADDR_02E826:        STA $B6,X                 
-ADDR_02E828:        JSL.L ADDR_01803A         
-ADDR_02E82C:        RTS                       ; Return 
+ADDR_02E828:        JSL.L SprSpr_MarioSprRts  
+Return02E82C:       RTS                       ; Return
 
-ADDR_02E82D:        PHB                       
+GrowingPipeMain:    PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02E845         
                     PLB                       
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 DATA_02E835:        .db $00,$F0,$00,$10
 
@@ -12627,7 +12609,7 @@ ADDR_02E845:        LDA.W $1534,X
                     SBC.B #$00                
                     STA.W $14D4,X             
                     LDY.B #$03                
-                    JSR.W ADDR_02E8BA         
+                    JSR.W GrowingPipeGfx      
                     PLA                       
                     STA.W $14D4,X             
                     PLA                       
@@ -12636,10 +12618,10 @@ ADDR_02E845:        LDA.W $1534,X
                     SEC                       
                     SBC.B #$10                
                     STA.W $1534,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02E872:        JSR.W ADDR_02E902         
-                    JSR.W ADDR_02D025         
+                    JSR.W SubOffscreen0Bnk2   
                     LDA $9D                   
                     ORA.W $15A0,X             
                     BNE ADDR_02E8B5           
@@ -12659,47 +12641,48 @@ ADDR_02E872:        JSR.W ADDR_02E902
                     STZ.W $1570,X             
                     INC $C2,X                 
                     BRA ADDR_02E8B5           
+
 ADDR_02E8A2:        LDA.W DATA_02E835,Y       
                     STA $AA,X                 
                     BEQ ADDR_02E8B2           
                     LDA $D8,X                 
                     AND.B #$0F                
                     BNE ADDR_02E8B2           
-                    JSR.W ADDR_02E8BA         
-ADDR_02E8B2:        JSR.W ADDR_02D294         
+                    JSR.W GrowingPipeGfx      
+ADDR_02E8B2:        JSR.W UpdateYPosNoGrvty2  
 ADDR_02E8B5:        JSL.L InvisBlkMainRt      
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_02E8BA:        LDA.W GrowingPipeTiles1,Y 
+GrowingPipeGfx:     LDA.W GrowingPipeTiles1,Y 
                     STA.W $185E               
                     LDA.W GrowingPipeTiles2,Y 
                     STA.W $18B6               
                     LDA.W $185E               
-                    STA $9C                   
-                    LDA $E4,X                 
-                    STA $9A                   
-                    LDA.W $14E0,X             
-                    STA $9B                   
-                    LDA $D8,X                 
-                    STA $98                   
-                    LDA.W $14D4,X             
-                    STA $99                   
-                    JSL.L ADDR_00BEB0         
+                    STA $9C                   ; $9C = tile to generate
+                    LDA $E4,X                 ; \ $9A = Sprite X position
+                    STA $9A                   ;  | for block creation
+                    LDA.W $14E0,X             ;  |
+                    STA $9B                   ; /
+                    LDA $D8,X                 ; \ $98 = Sprite Y position
+                    STA $98                   ;  | for block creation
+                    LDA.W $14D4,X             ;  |
+                    STA $99                   ; /
+                    JSL.L GenerateTile        ; Generate the tile
                     LDA.W $18B6               
-                    STA $9C                   
-                    LDA $E4,X                 
-                    CLC                       
-                    ADC.B #$10                
-                    STA $9A                   
-                    LDA.W $14E0,X             
-                    ADC.B #$00                
-                    STA $9B                   
-                    LDA $D8,X                 
-                    STA $98                   
-                    LDA.W $14D4,X             
-                    STA $99                   
-                    JSL.L ADDR_00BEB0         
-                    RTS                       ; Return 
+                    STA $9C                   ; $9C = tile to generate
+                    LDA $E4,X                 ; \ $9A = Sprite X position + #$10
+                    CLC                       ;  | for block creation
+                    ADC.B #$10                ;  |
+                    STA $9A                   ;  |
+                    LDA.W $14E0,X             ;  |
+                    ADC.B #$00                ;  |
+                    STA $9B                   ; /
+                    LDA $D8,X                 ; \ $98 = Sprite Y position
+                    STA $98                   ;  | for block creation
+                    LDA.W $14D4,X             ;  |
+                    STA $99                   ; /
+                    JSL.L GenerateTile        ; Generate the tile
+                    RTS                       ; Return
 
 ADDR_02E902:        JSR.W GetDrawInfo2        
                     LDA $00                   
@@ -12722,12 +12705,13 @@ ADDR_02E902:        JSR.W GetDrawInfo2
 ADDR_02E92E:        LDA.B #$01                
                     LDY.B #$02                
                     JMP.W ADDR_02B7A7         
-ADDR_02E935:        PHB                       
+
+PipeLakituMain:     PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02E93D         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_02E93D:        LDA.W $14C8,X             
                     CMP.B #$02                
@@ -12735,33 +12719,34 @@ ADDR_02E93D:        LDA.W $14C8,X
                     LDA.B #$02                
                     STA.W $1602,X             
                     JMP.W ADDR_02E9EC         
+
 ADDR_02E94C:        JSR.W ADDR_02E9EC         
                     LDA $9D                   
-                    BNE ADDR_02E985           
+                    BNE Return02E985          
                     STZ.W $1602,X             
-                    JSR.W ADDR_02D025         
-                    JSL.L ADDR_01803A         
+                    JSR.W SubOffscreen0Bnk2   
+                    JSL.L SprSpr_MarioSprRts  
                     LDA $C2,X                 
                     JSL.L ExecutePtr          
 
-Ptrs02E963:         .dw ADDR_02E96D           
+PipeLakituPtrs:     .dw ADDR_02E96D           
                     .dw ADDR_02E986           
                     .dw ADDR_02E9B4           
                     .dw ADDR_02E9BD           
                     .dw ADDR_02E9D5           
 
 ADDR_02E96D:        LDA.W $1540,X             
-                    BNE ADDR_02E985           
+                    BNE Return02E985          
                     JSR.W ADDR_02D4FA         
                     LDA $0F                   
                     CLC                       
                     ADC.B #$13                
                     CMP.B #$36                
-                    BCC ADDR_02E985           
+                    BCC Return02E985          
                     LDA.B #$90                
 ADDR_02E980:        STA.W $1540,X             
                     INC $C2,X                 
-ADDR_02E985:        RTS                       ; Return 
+Return02E985:       RTS                       ; Return
 
 ADDR_02E986:        LDA.W $1540,X             
                     BNE ADDR_02E996           
@@ -12770,15 +12755,16 @@ ADDR_02E986:        LDA.W $1540,X
                     STA.W $157C,X             
                     LDA.B #$0C                
                     BRA ADDR_02E980           
+
 ADDR_02E996:        CMP.B #$7C                
                     BCC ADDR_02E9A2           
 ADDR_02E99A:        LDA.B #$F8                
 ADDR_02E99C:        STA $AA,X                 
-                    JSR.W ADDR_02D294         
-                    RTS                       ; Return 
+                    JSR.W UpdateYPosNoGrvty2  
+                    RTS                       ; Return
 
 ADDR_02E9A2:        CMP.B #$50                
-                    BCS ADDR_02E9B3           
+                    BCS Return02E9B3          
                     LDY.B #$00                
                     LDA $13                   
                     AND.B #$20                
@@ -12786,31 +12772,33 @@ ADDR_02E9A2:        CMP.B #$50
                     INY                       
 ADDR_02E9AF:        TYA                       
                     STA.W $157C,X             
-ADDR_02E9B3:        RTS                       ; Return 
+Return02E9B3:       RTS                       ; Return
 
 ADDR_02E9B4:        LDA.W $1540,X             
                     BNE ADDR_02E99A           
                     LDA.B #$80                
                     BRA ADDR_02E980           
+
 ADDR_02E9BD:        LDA.W $1540,X             
                     BNE ADDR_02E9C6           
                     LDA.B #$20                
                     BRA ADDR_02E980           
+
 ADDR_02E9C6:        CMP.B #$40                
                     BNE ADDR_02E9CF           
-                    JSL.L ADDR_01EA19         
-                    RTS                       ; Return 
+                    JSL.L ExtSub01EA19        
+                    RTS                       ; Return
 
-ADDR_02E9CF:        BCS ADDR_02E9D4           
+ADDR_02E9CF:        BCS Return02E9D4          
                     INC.W $1602,X             
-ADDR_02E9D4:        RTS                       ; Return 
+Return02E9D4:       RTS                       ; Return
 
 ADDR_02E9D5:        LDA.W $1540,X             
                     BNE ADDR_02E9E2           
                     LDA.B #$50                
                     JSR.W ADDR_02E980         
                     STZ $C2,X                 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02E9E2:        LDA.B #$08                
                     BRA ADDR_02E99C           
@@ -12844,7 +12832,8 @@ ADDR_02E9EC:        JSR.W GetDrawInfo2
                     STA.W $0303,Y             
                     STA.W $0307,Y             
                     JMP.W ADDR_02E92E         
-ADDR_02EA25:        LDY.W $15EA,X             
+
+ExtSub02EA25:       LDY.W $15EA,X             ; Y = Index into sprite OAM
                     LDA.W $0302,Y             
                     STA $00                   
                     STZ $01                   
@@ -12864,9 +12853,9 @@ ADDR_02EA25:        LDY.W $15EA,X
                     ADC.W #$0200              
                     STA.W $0D95               
                     SEP #$20                  ; Accum (8 bit) 
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_02EA4E:        LDY.B #$0B                
+ExtSub02EA4E:       LDY.B #$0B                
 ADDR_02EA50:        TYA                       
                     CMP.W $160E,X             
                     BEQ ADDR_02EA86           
@@ -12893,18 +12882,18 @@ ADDR_02EA50:        TYA
 ADDR_02EA83:        JSR.W ADDR_02EA8A         
 ADDR_02EA86:        DEY                       
                     BPL ADDR_02EA50           
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_02EA8A:        PHX                       
                     TYX                       
-                    JSL.L ADDR_03B6E5         
+                    JSL.L GetSpriteClippingB  
                     PLX                       
-                    JSL.L ADDR_03B69F         
-                    JSL.L ADDR_03B72B         
-                    BCC ADDR_02EACD           
+                    JSL.L GetSpriteClippingA  
+                    JSL.L CheckForContact     
+                    BCC Return02EACD          
                     LDA.W $163E,X             
                     BEQ ADDR_02EAA9           
-                    JSL.L ADDR_03C023         
+                    JSL.L ExtSub03C023        
                     LDA.W $18E8               
                     BNE ADDR_02EACE           
 ADDR_02EAA9:        LDA.B #$37                
@@ -12918,22 +12907,22 @@ ADDR_02EAA9:        LDA.B #$37
                     CMP.W $00E4,Y             
                     LDA.W $14E0,X             
                     SBC.W $14E0,Y             
-                    BCC ADDR_02EACD           
+                    BCC Return02EACD          
                     INC.W $157C,X             
-ADDR_02EACD:        RTS                       ; Return 
+Return02EACD:       RTS                       ; Return
 
 ADDR_02EACE:        STZ.W $163E,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_02EAD2:        PHB                       
+WarpBlocksMain:     PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02EADA         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_02EADA:        JSL.L MarioSprInteract    
-                    BCC ADDR_02EAF0           
+                    BCC Return02EAF0          
                     STZ $7B                   
                     LDA $E4,X                 
                     CLC                       
@@ -12942,14 +12931,14 @@ ADDR_02EADA:        JSL.L MarioSprInteract
                     LDA.W $14E0,X             
                     ADC.B #$00                
                     STA $95                   
-ADDR_02EAF0:        RTS                       ; Return 
+Return02EAF0:       RTS                       ; Return
 
                     RTS                       
 
-ADDR_02EAF2:        JSL.L ADDR_02A9E4         
-                    BMI ADDR_02EB26           
-                    LDA.B #$08                
-                    STA.W $14C8,Y             
+ExtSub02EAF2:       JSL.L FindFreeSprSlot     ; \ Return if no free slots
+                    BMI Return02EB26          ; /
+                    LDA.B #$08                ; \ Sprite status = Normal
+                    STA.W $14C8,Y             ; /
                     LDA.B #$77                
                     STA.W $009E,Y             
                     LDA $E4,X                 
@@ -12961,20 +12950,19 @@ ADDR_02EAF2:        JSL.L ADDR_02A9E4
                     LDA.W $14D4,X             
                     STA.W $14D4,Y             
                     TYX                       
-                    JSL.L ADDR_07F7D2         
+                    JSL.L InitSpriteTables    
                     LDA.B #$30                
                     STA.W $154C,X             
                     LDA.B #$D0                
                     STA $AA,X                 
-ADDR_02EB26:        RTL                       ; Return 
+Return02EB26:       RTL                       ; Return
 
-ADDR_02EB27:        PHB                       
+SuperKoopaMain:     PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02EB31         
                     PLB                       
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 DATA_02EB2F:        .db $18,$E8
 
@@ -12989,14 +12977,14 @@ ADDR_02EB3D:        LDA $14
                     INY                       
 ADDR_02EB44:        TYA                       
                     STA.W $1602,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02EB49:        LDA $9D                   
-                    BNE ADDR_02EB7C           
-                    JSR.W ADDR_02D025         
-                    JSL.L ADDR_01803A         
-                    JSR.W ADDR_02D288         
-                    JSR.W ADDR_02D294         
+                    BNE Return02EB7C          
+                    JSR.W SubOffscreen0Bnk2   
+                    JSL.L SprSpr_MarioSprRts  
+                    JSR.W UpdateXPosNoGrvty2  
+                    JSR.W UpdateYPosNoGrvty2  
                     LDA $9E,X                 
                     CMP.B #$73                
                     BEQ ADDR_02EB7D           
@@ -13006,19 +12994,19 @@ ADDR_02EB49:        LDA $9D
                     JSR.W ADDR_02EBF8         
                     LDA $13                   
                     AND.B #$01                
-                    BNE ADDR_02EB7C           
+                    BNE Return02EB7C          
                     LDA $AA,X                 
                     CMP.B #$F0                
-                    BMI ADDR_02EB7C           
+                    BMI Return02EB7C          
                     CLC                       
                     ADC.B #$FF                
                     STA $AA,X                 
-ADDR_02EB7C:        RTS                       ; Return 
+Return02EB7C:       RTS                       ; Return
 
 ADDR_02EB7D:        LDA $C2,X                 
                     JSL.L ExecutePtr          
 
-Ptrs02EB83:         .dw ADDR_02EB8D           
+SuperKoopaPtrs:     .dw ADDR_02EB8D           
                     .dw ADDR_02EBD1           
                     .dw ADDR_02EBE7           
 
@@ -13055,12 +13043,12 @@ ADDR_02EBBE:        TYA
                     CLC                       
                     ADC.B #$06                
 ADDR_02EBC6:        STA.W $1602,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02EBCA:        INC $C2,X                 
                     LDA.B #$D0                
                     STA $AA,X                 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02EBD1:        LDA $AA,X                 
                     CLC                       
@@ -13072,7 +13060,7 @@ ADDR_02EBD1:        LDA $AA,X
 ADDR_02EBDE:        STZ $00                   
                     JSR.W ADDR_02EBB5         
                     INC.W $1602,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02EBE7:        LDY.W $157C,X             
                     LDA.W DATA_02EB89,Y       
@@ -13089,8 +13077,7 @@ ADDR_02EBF8:        LDY.B #$02
                     INY                       
 ADDR_02EC01:        TYA                       
                     STA.W $1602,X             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02EC06:        .db $08,$08,$10,$00,$08,$08,$10,$00
                     .db $08,$10,$10,$00,$08,$10,$10,$00
@@ -13137,7 +13124,7 @@ ADDR_02ECDE:        JSR.W GetDrawInfo2
                     STA $03                   
                     PHX                       
                     STZ $04                   
-                    LDA $03                   
+ADDR_02ECF7:        LDA $03                   
                     CLC                       
                     ADC $04                   
                     TAX                       
@@ -13162,7 +13149,7 @@ ADDR_02ECDE:        JSR.W GetDrawInfo2
                     BEQ ADDR_02ED4D           
                     PHP                       
                     PHX                       
-                    LDX.W $15E9               
+                    LDX.W $15E9               ; X = Sprite index
                     LDA.W $1534,X             
                     BEQ ADDR_02ED3B           
                     LDA $14                   
@@ -13186,6 +13173,7 @@ ADDR_02ED44:        PLX
                     ORA.W DATA_02EC96,X       
                     AND.B #$FD                
                     BRA ADDR_02ED52           
+
 ADDR_02ED4D:        LDA.W DATA_02EC96,X       
                     ORA $05                   
 ADDR_02ED52:        ORA $64                   
@@ -13209,9 +13197,7 @@ ADDR_02ED5F:        STA.W $0303,Y
                     INC $04                   
                     LDA $04                   
                     CMP.B #$04                
-
-Instr02ED75:        .db $D0,$80
-
+                    BNE ADDR_02ECF7           
                     PLX                       
                     LDY.B #$FF                
                     LDA.B #$03                
@@ -13219,21 +13205,21 @@ Instr02ED75:        .db $D0,$80
 
 DATA_02ED7F:        .db $10,$20,$30
 
-ADDR_02ED82:        PHB                       
+FloatingSkullInit:  PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02ED8A         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_02ED8A:        STZ.W $18BC               
                     INC $C2,X                 
                     LDA.B #$02                
                     STA $00                   
-ADDR_02ED93:        JSL.L ADDR_02A9E4         
-                    BMI ADDR_02EDCB           
-                    LDA.B #$08                
-                    STA.W $14C8,Y             
+ADDR_02ED93:        JSL.L FindFreeSprSlot     ; \ Branch if no free slots
+                    BMI ADDR_02EDCB           ; /
+                    LDA.B #$08                ; \ Sprite status = Normal
+                    STA.W $14C8,Y             ; /
                     LDA.B #$61                
                     STA.W $009E,Y             
                     LDA $D8,X                 
@@ -13242,7 +13228,7 @@ ADDR_02ED93:        JSL.L ADDR_02A9E4
                     STA.W $14D4,Y             
                     LDX $00                   
                     LDA.W DATA_02ED7F,X       
-                    LDX.W $15E9               
+                    LDX.W $15E9               ; X = Sprite index
                     CLC                       
                     ADC $E4,X                 
                     STA.W $00E4,Y             
@@ -13251,36 +13237,36 @@ ADDR_02ED93:        JSL.L ADDR_02A9E4
                     STA.W $14E0,Y             
                     PHX                       
                     TYX                       
-                    JSL.L ADDR_07F7D2         
+                    JSL.L InitSpriteTables    
                     PLX                       
 ADDR_02EDCB:        DEC $00                   
                     BPL ADDR_02ED93           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_02EDD0:        PHB                       
+FloatingSkullMain:  PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02EDD8         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_02EDD8:        LDA $C2,X                 
-                    BEQ ADDR_02EDF6           
-                    JSR.W ADDR_02D025         
+                    BEQ ADDR_02EDF6           ; IF SKULLS DIEING
+                    JSR.W SubOffscreen0Bnk2   
                     LDA.W $14C8,X             
-                    BNE ADDR_02EDF6           
+                    BNE ADDR_02EDF6           ; IF LIVING, DO BELOW
                     LDY.B #$09                
 ADDR_02EDE6:        LDA.W $009E,Y             
-                    CMP.B #$61                
+                    CMP.B #$61                ; SEARCH OUT OTHERS
                     BNE ADDR_02EDF2           
-                    LDA.B #$00                
+                    LDA.B #$00                ; ERASE THEM TOO
                     STA.W $14C8,Y             
 ADDR_02EDF2:        DEY                       
                     BPL ADDR_02EDE6           
-ADDR_02EDF5:        RTS                       ; Return 
+Return02EDF5:       RTS                       ; Return
 
-ADDR_02EDF6:        JSL.L GenericSprGfxRt     
-                    LDY.W $15EA,X             
+ADDR_02EDF6:        JSL.L GenericSprGfxRt2    
+                    LDY.W $15EA,X             ; Y = Index into sprite OAM
                     LDA $14                   
                     LSR                       
                     LSR                       
@@ -13297,7 +13283,7 @@ ADDR_02EE09:        STA.W $0302,Y
                     ADC.B #$03                
                     STA.W $0301,Y             
 ADDR_02EE19:        LDA $9D                   
-                    BNE ADDR_02EDF5           
+                    BNE Return02EDF5          
                     STZ $00                   
                     LDY.B #$09                
 ADDR_02EE21:        LDA.W $14C8,Y             
@@ -13319,21 +13305,21 @@ ADDR_02EE36:        DEY
                     LDA.B #$20                
                     STA $AA,X                 
 ADDR_02EE48:        JSL.L UpdateSpritePos     
-                    LDA.W $1588,X             
-                    AND.B #$04                
-                    BEQ ADDR_02EE57           
+                    LDA.W $1588,X             ; \ Branch if not on ground
+                    AND.B #$04                ;  |
+                    BEQ ADDR_02EE57           ; /
                     LDA.B #$10                
                     STA $AA,X                 
 ADDR_02EE57:        JSL.L MarioSprInteract    
-                    BCC ADDR_02EEA8           
+                    BCC Return02EEA8          
                     LDA $7D                   
-                    BMI ADDR_02EEA8           
+                    BMI Return02EEA8          
                     LDA.B #$0C                
                     STA.W $18BC               
                     LDA.W $15EA,X             
                     TAX                       
                     INC.W $0301,X             
-                    LDX.W $15E9               
+                    LDX.W $15E9               ; X = Sprite index
                     LDA.B #$01                
                     STA.W $1471               
                     STZ $72                   
@@ -13351,7 +13337,7 @@ ADDR_02EE80:        STA $01
                     STA $97                   
                     LDA $77                   
                     AND.B #$01                
-                    BNE ADDR_02EEA8           
+                    BNE Return02EEA8          
                     LDY.B #$00                
                     LDA.W $1491               
                     BPL ADDR_02EE9E           
@@ -13362,15 +13348,14 @@ ADDR_02EE9E:        CLC
                     TYA                       
                     ADC $95                   
                     STA $95                   
-ADDR_02EEA8:        RTS                       ; Return 
+Return02EEA8:       RTS                       ; Return
 
-ADDR_02EEA9:        PHB                       
+CoinCloudMain:      PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02EEB5         
                     PLB                       
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 DATA_02EEB1:        .db $01,$FF
 
@@ -13411,7 +13396,7 @@ ADDR_02EED5:        LDA $14
 ADDR_02EEF9:        LDA.W $1570,X             
                     CMP.B #$0B                
                     BCC ADDR_02EF05           
-                    JSR.W ADDR_02D025         
+                    JSR.W SubOffscreen0Bnk2   
                     LDY.B #$01                
 ADDR_02EF05:        LDA $AA,X                 
                     CMP.W DATA_02EEB3,Y       
@@ -13419,17 +13404,17 @@ ADDR_02EF05:        LDA $AA,X
                     CLC                       
                     ADC.W DATA_02EEB1,Y       
                     STA $AA,X                 
-ADDR_02EF12:        JSR.W ADDR_02D294         
+ADDR_02EF12:        JSR.W UpdateYPosNoGrvty2  
                     LDA.B #$08                
                     STA $B6,X                 
-                    JSR.W ADDR_02D288         
+                    JSR.W UpdateXPosNoGrvty2  
 ADDR_02EF1C:        LDA.W $15EA,X             
                     PHA                       
                     CLC                       
                     ADC.B #$04                
                     STA.W $15EA,X             
-                    JSL.L GenericSprGfxRt     
-                    LDY.W $15EA,X             
+                    JSL.L GenericSprGfxRt2    
+                    LDY.W $15EA,X             ; Y = Index into sprite OAM
                     LDA.B #$60                
                     STA.W $0302,Y             
                     LDA $14                   
@@ -13457,7 +13442,7 @@ ADDR_02EF1C:        LDA.W $15EA,X
                     LDY.B #$00                
                     LDA.B #$00                
                     JSR.W ADDR_02B7A7         
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02EF67:        LDA.W $18E3               
                     CMP.B #$0A                
@@ -13468,10 +13453,10 @@ ADDR_02EF70:        LDA.W $14C8,Y
                     DEY                       
                     CPY.B #$09                
                     BNE ADDR_02EF70           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_02EF7B:        LDA.B #$08                
-                    STA.W $14C8,Y             
+ADDR_02EF7B:        LDA.B #$08                ; \ Sprite status = Normal
+                    STA.W $14C8,Y             ; /
                     LDA.B #$78                
                     STA.W $009E,Y             
                     LDA $E4,X                 
@@ -13484,25 +13469,25 @@ ADDR_02EF7B:        LDA.B #$08
                     STA.W $14D4,Y             
                     PHX                       
                     TYX                       
-                    JSL.L ADDR_07F7D2         
+                    JSL.L InitSpriteTables    
                     LDA.B #$E0                
                     STA $AA,X                 
                     INC.W $157C,X             
                     PLX                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02EFAA:        LDA.W $1570,X             
                     CMP.B #$0B                
-                    BCS ADDR_02EFBB           
-                    LDY.B #$07                
-ADDR_02EFB3:        LDA.W $170B,Y             
-                    BEQ ADDR_02EFBC           
-                    DEY                       
-                    BPL ADDR_02EFB3           
-ADDR_02EFBB:        RTS                       ; Return 
+                    BCS Return02EFBB          
+                    LDY.B #$07                ; \ Find a free extended sprite slot
+ADDR_02EFB3:        LDA.W $170B,Y             ;  |
+                    BEQ ADDR_02EFBC           ;  |
+                    DEY                       ;  |
+                    BPL ADDR_02EFB3           ;  |
+Return02EFBB:       RTS                       ; / Return if no free slots
 
-ADDR_02EFBC:        LDA.B #$0A                
-                    STA.W $170B,Y             
+ADDR_02EFBC:        LDA.B #$0A                ; \ Extended sprite = Cloud game coin
+                    STA.W $170B,Y             ; /
                     LDA $E4,X                 
                     CLC                       
                     ADC.B #$04                
@@ -13519,14 +13504,13 @@ ADDR_02EFBC:        LDA.B #$0A
                     LDA.B #$00                
                     STA.W $1747,Y             
                     STA.W $1765,Y             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02EFEA:        .db $00,$80,$00,$80
 
 DATA_02EFEE:        .db $00,$00,$01,$01
 
-ADDR_02EFF2:        PHB                       
+WigglerInit:        PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02F011         
@@ -13544,7 +13528,7 @@ ADDR_02EFFA:        LDA $E4,X
                     TYA                       
                     STA.W $157C,X             
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_02F011:        TXA                       
                     AND.B #$03                
@@ -13558,22 +13542,22 @@ ADDR_02F011:        TXA
                     STA $D6                   
                     LDA.B #$7F                
                     STA $D7                   
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_02F029:        PHB                       
+WigglerMain:        PHB                       
                     PHK                       
                     PLB                       
-                    JSR.W ADDR_02F035         
+                    JSR.W WigglerMainRt       
                     PLB                       
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 WigglerSpeed:       .db $08,$F8,$10,$F0
 
-ADDR_02F035:        JSR.W ADDR_02F011         
+WigglerMainRt:      JSR.W ADDR_02F011         
                     LDA $9D                   
                     BEQ ADDR_02F03F           
                     JMP.W ADDR_02F0D8         
+
 ADDR_02F03F:        JSL.L SprSprInteract      
                     LDA.W $1540,X             
                     BEQ ADDR_02F061           
@@ -13581,6 +13565,7 @@ ADDR_02F03F:        JSL.L SprSprInteract
                     BNE ADDR_02F050           
                     LDA.B #$08                
                     BRA ADDR_02F052           
+
 ADDR_02F050:        AND.B #$0E                
 ADDR_02F052:        STA $00                   
                     LDA.W $15F6,X             
@@ -13588,9 +13573,10 @@ ADDR_02F052:        STA $00
                     ORA $00                   
                     STA.W $15F6,X             
                     JMP.W ADDR_02F0D8         
-ADDR_02F061:        JSR.W ADDR_02D288         
-                    JSR.W ADDR_02D294         
-                    JSR.W ADDR_02D025         
+
+ADDR_02F061:        JSR.W UpdateXPosNoGrvty2  
+                    JSR.W UpdateYPosNoGrvty2  
+                    JSR.W SubOffscreen0Bnk2   
                     INC.W $1570,X             
                     LDA.W $151C,X             
                     BEQ ADDR_02F086           
@@ -13610,15 +13596,16 @@ ADDR_02F086:        LDY.W $157C,X
 ADDR_02F090:        LDA.W WigglerSpeed,Y      
                     STA $B6,X                 
                     INC $AA,X                 
-                    JSL.L ADDR_019138         
-                    LDA.W $1588,X             
-                    AND.B #$03                
-                    BNE ADDR_02F0AE           
-                    LDA.W $1588,X             
-                    AND.B #$04                
-                    BEQ ADDR_02F0AE           
+                    JSL.L ExtSub019138        
+                    LDA.W $1588,X             ; \ Branch if touching object
+                    AND.B #$03                ;  |
+                    BNE ADDR_02F0AE           ; /
+                    LDA.W $1588,X             ; \ Branch if not on ground
+                    AND.B #$04                ;  |
+                    BEQ ADDR_02F0AE           ; /
                     JSR.W ADDR_02FFD1         
                     BRA ADDR_02F0C3           
+
 ADDR_02F0AE:        LDA.W $15AC,X             
                     BNE ADDR_02F0C3           
                     LDA.W $157C,X             
@@ -13637,6 +13624,7 @@ ADDR_02F0C3:        JSR.W ADDR_02F0DB
                     ORA.W $157C,X             
                     STA $C2,X                 
 ADDR_02F0D8:        JMP.W ADDR_02F110         
+
 ADDR_02F0DB:        PHX                       
                     PHB                       
                     REP #$30                  ; Index (16 bit) Accum (16 bit) 
@@ -13659,8 +13647,7 @@ ADDR_02F0DB:        PHX
                     LDA $D8,X                 
                     INY                       
                     STA [$D5],Y               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02F103:        .db $00,$1E,$3E,$5E,$7E
 
@@ -13751,11 +13738,11 @@ ADDR_02F186:        STA.W $0303,Y
                     INX                       
                     CPX.B #$05                
                     BNE ADDR_02F12D           
-                    LDX.W $15E9               
+                    LDX.W $15E9               ; X = Sprite index
                     LDA $08                   
                     BEQ ADDR_02F1C7           
                     PHX                       
-                    LDY.W $15EA,X             
+                    LDY.W $15EA,X             ; Y = Index into sprite OAM
                     LDA.W $157C,X             
                     TAX                       
                     LDA.W $0304,Y             
@@ -13769,8 +13756,9 @@ ADDR_02F186:        STA.W $0303,Y
                     STA.W $0302,Y             
                     LDA.W $0307,Y             
                     BRA ADDR_02F1EF           
+
 ADDR_02F1C7:        PHX                       
-                    LDY.W $15EA,X             
+                    LDY.W $15EA,X             ; Y = Index into sprite OAM
                     LDA.W $157C,X             
                     TAX                       
                     LDA.W $0304,Y             
@@ -13809,13 +13797,13 @@ ADDR_02F1EF:        STA.W $0303,Y
                     ADC.W #$0050              
                     CMP.W #$00A0              
                     SEP #$20                  ; Accum (8 bit) 
-                    BCS ADDR_02F295           
+                    BCS Return02F295          
                     LDA.W $14C8,X             
                     CMP.B #$08                
-                    BNE ADDR_02F295           
+                    BNE Return02F295          
                     LDA.B #$04                
                     STA $00                   
-                    LDY.W $15EA,X             
+                    LDY.W $15EA,X             ; Y = Index into sprite OAM
 ADDR_02F22B:        LDA.W $0304,Y             
                     SEC                       
                     SBC $7E                   
@@ -13835,8 +13823,8 @@ ADDR_02F247:        PLY
                     ADC.B #$0C                
                     CMP.B #$18                
                     BCS ADDR_02F29B           
-                    LDA.W $1490               
-                    BNE ADDR_02F29D           
+                    LDA.W $1490               ; \ Branch if Mario has star
+                    BNE ADDR_02F29D           ; /
                     LDA.W $154C,X             
                     ORA $81                   
                     BNE ADDR_02F29B           
@@ -13847,28 +13835,29 @@ ADDR_02F247:        PLY
                     LDA $7D                   
                     CMP.B #$08                
                     BMI ADDR_02F296           
-ADDR_02F26B:        LDA.B #$03                
-                    STA.W $1DF9               ; / Play sound effect 
+ADDR_02F26B:        LDA.B #$03                ; \ Play sound effect
+                    STA.W $1DF9               ; /
                     JSL.L BoostMarioSpeed     
                     LDA.W $151C,X             
                     ORA.W $15D0,X             
-                    BNE ADDR_02F295           
+                    BNE Return02F295          
                     JSL.L DisplayContactGfx   
                     LDA.W $1697               
-                    INC.W $1697               
+                    INC.W $1697               ;  Bug: Value should capped at #$08 to prevent wiggler 1up/score glitch.  See wigglerfix.asm
                     JSL.L GivePoints          
                     LDA.B #$40                
                     STA.W $1540,X             
                     INC.W $151C,X             
                     JSR.W ADDR_02F2D7         
-ADDR_02F295:        RTS                       ; Return 
+Return02F295:       RTS                       ; Return
 
 ADDR_02F296:        JSL.L HurtMario           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02F29B:        BRA ADDR_02F2C7           
-ADDR_02F29D:        LDA.B #$02                
-                    STA.W $14C8,X             
+
+ADDR_02F29D:        LDA.B #$02                ; \ Sprite status = Killed
+                    STA.W $14C8,X             ; /
                     LDA.B #$D0                
                     STA $AA,X                 
                     INC.W $18D2               
@@ -13880,34 +13869,34 @@ ADDR_02F29D:        LDA.B #$02
 ADDR_02F2B5:        JSL.L GivePoints          
                     LDY.W $18D2               
                     CPY.B #$08                
-                    BCS ADDR_02F2C6           
-                    LDA.W DATA_02D57F,Y       
-                    STA.W $1DF9               ; / Play sound effect 
-ADDR_02F2C6:        RTS                       ; Return 
+                    BCS Return02F2C6          
+                    LDA.W DATA_02D57F,Y       ; \ Play sound effect
+                    STA.W $1DF9               ; /
+Return02F2C6:       RTS                       ; Return
 
 ADDR_02F2C7:        INY                       
                     INY                       
                     INY                       
                     INY                       
                     DEC $00                   
-                    BMI ADDR_02F2D2           
+                    BMI Return02F2D2          
                     JMP.W ADDR_02F22B         
-ADDR_02F2D2:        RTS                       ; Return 
 
+Return02F2D2:       RTS                       ; Return
 
 DATA_02F2D3:        .db $00,$08
 
 WigglerEyesX:       .db $04,$04
 
-ADDR_02F2D7:        LDY.B #$07                
-ADDR_02F2D9:        LDA.W $170B,Y             
-                    BEQ ADDR_02F2E2           
-                    DEY                       
-                    BPL ADDR_02F2D9           
-                    RTS                       ; Return 
+ADDR_02F2D7:        LDY.B #$07                ; \ Find a free extended sprite slot
+ADDR_02F2D9:        LDA.W $170B,Y             ;  |
+                    BEQ ADDR_02F2E2           ;  |
+                    DEY                       ;  |
+                    BPL ADDR_02F2D9           ;  |
+                    RTS                       ; / Return if no free slots
 
-ADDR_02F2E2:        LDA.B #$0E                
-                    STA.W $170B,Y             
+ADDR_02F2E2:        LDA.B #$0E                ; \ Extended sprite = Wiggler flower
+                    STA.W $170B,Y             ; /
                     LDA.B #$01                
                     STA.W $1765,Y             
                     LDA $E4,X                 
@@ -13924,22 +13913,22 @@ ADDR_02F2E2:        LDA.B #$0E
                     EOR.B #$FF                
                     INC A                     
                     STA.W $1747,Y             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_02F30F:        PHB                       
+BirdsMain:          PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02F317         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_02F317:        LDA.W $15AC,X             
                     BEQ ADDR_02F321           
                     LDA.B #$04                
                     STA.W $1602,X             
 ADDR_02F321:        JSR.W ADDR_02F3EA         
-                    JSR.W ADDR_02D288         
-                    JSR.W ADDR_02D294         
+                    JSR.W UpdateXPosNoGrvty2  
+                    JSR.W UpdateYPosNoGrvty2  
                     LDA $AA,X                 
                     CLC                       
                     ADC.B #$03                
@@ -13947,11 +13936,10 @@ ADDR_02F321:        JSR.W ADDR_02F3EA
                     LDA $C2,X                 
                     JSL.L ExecutePtr          
 
-Ptrs02F337:         .dw ADDR_02F342           
+BirdsPtrs:          .dw ADDR_02F342           
                     .dw ADDR_02F38F           
 
                     RTS                       
-
 
 DATA_02F33C:        .db $02,$03,$05,$01
 
@@ -13962,10 +13950,10 @@ ADDR_02F342:        LDY.W $157C,X
                     STA $B6,X                 
                     STZ.W $1602,X             
                     LDA $AA,X                 
-                    BMI ADDR_02F370           
+                    BMI Return02F370          
                     LDA $D8,X                 
                     CMP.B #$E8                
-                    BCC ADDR_02F370           
+                    BCC Return02F370          
                     AND.B #$F8                
                     STA $D8,X                 
                     LDA.B #$F0                
@@ -13978,44 +13966,44 @@ ADDR_02F342:        LDY.W $157C,X
                     LDA.W $1570,X             
                     BEQ ADDR_02F371           
                     DEC.W $1570,X             
-ADDR_02F370:        RTS                       ; Return 
+Return02F370:       RTS                       ; Return
 
 ADDR_02F371:        INC $C2,X                 
-                    JSL.L ADDR_01ACF9         
+                    JSL.L GetRand             
                     AND.B #$03                
                     TAY                       
                     LDA.W DATA_02F33C,Y       
                     STA.W $1570,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02F381:        LDA.W $154C,X             
-                    BNE ADDR_02F38E           
+                    BNE Return02F38E          
                     JSR.W ADDR_02F3C1         
                     LDA.B #$10                
                     STA.W $154C,X             
-ADDR_02F38E:        RTS                       ; Return 
+Return02F38E:       RTS                       ; Return
 
-ADDR_02F38F:        STZ $AA,X                 
-                    STZ $B6,X                 
+ADDR_02F38F:        STZ $AA,X                 ; Sprite Y Speed = 0
+                    STZ $B6,X                 ; Sprite X Speed = 0
                     STZ.W $1602,X             
                     LDA.W $1540,X             
                     BEQ ADDR_02F3A3           
                     CMP.B #$08                
-                    BCS ADDR_02F3A2           
+                    BCS Return02F3A2          
                     INC.W $1602,X             
-ADDR_02F3A2:        RTS                       ; Return 
+Return02F3A2:       RTS                       ; Return
 
 ADDR_02F3A3:        LDA.W $1570,X             
                     BEQ ADDR_02F3B7           
                     DEC.W $1570,X             
-                    JSL.L ADDR_01ACF9         
+                    JSL.L GetRand             
                     AND.B #$1F                
                     ORA.B #$0A                
                     STA.W $1540,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02F3B7:        STZ $C2,X                 
-                    JSL.L ADDR_01ACF9         
+                    JSL.L GetRand             
                     AND.B #$01                
                     BNE ADDR_02F3CE           
 ADDR_02F3C1:        LDA.W $157C,X             
@@ -14023,13 +14011,12 @@ ADDR_02F3C1:        LDA.W $157C,X
                     STA.W $157C,X             
                     LDA.B #$0A                
                     STA.W $15AC,X             
-ADDR_02F3CE:        JSL.L ADDR_01ACF9         
+ADDR_02F3CE:        JSL.L GetRand             
                     AND.B #$03                
                     CLC                       
                     ADC.B #$02                
                     STA.W $1570,X             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 BirdsTilemap:       .db $D2,$D3,$D0,$D1,$9B
 
@@ -14073,14 +14060,14 @@ ADDR_02F3EA:        TXA
                     TAY                       
                     LDA.B #$00                
                     STA.W $0420,Y             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_02F42C:        PHB                       
+SmokeMain:          PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02F434         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_02F434:        INC.W $1570,X             
                     LDY.B #$04                
@@ -14091,19 +14078,18 @@ ADDR_02F434:        INC.W $1570,X
 ADDR_02F442:        STY $B6,X                 
                     LDA.B #$FC                
                     STA $AA,X                 
-                    JSR.W ADDR_02D294         
+                    JSR.W UpdateYPosNoGrvty2  
                     LDA.W $1540,X             
                     BNE ADDR_02F453           
-                    JSR.W ADDR_02D288         
+                    JSR.W UpdateXPosNoGrvty2  
 ADDR_02F453:        JSR.W ADDR_02F47C         
                     LDA $D8,X                 
                     SEC                       
                     SBC $1C                   
                     CMP.B #$F0                
-                    BNE ADDR_02F462           
+                    BNE Return02F462          
                     STZ.W $14C8,X             
-ADDR_02F462:        RTS                       ; Return 
-
+Return02F462:       RTS                       ; Return
 
 DATA_02F463:        .db $03,$04,$05,$04,$05,$06,$05,$06
                     .db $07,$06,$07,$08,$07,$08,$07,$08
@@ -14117,7 +14103,7 @@ ADDR_02F47C:        LDA $14
 ADDR_02F485:        LDY.W $151C,X             
                     LDA.W DATA_02F463,Y       
                     STA $00                   
-                    LDY.W $15EA,X             
+                    LDY.W $15EA,X             ; Y = Index into sprite OAM
                     LDA $E4,X                 
                     SEC                       
                     SBC $1A                   
@@ -14148,24 +14134,23 @@ ADDR_02F485:        LDY.W $151C,X
                     LDA.B #$02                
                     STA.W $0460,Y             
                     STA.W $0461,Y             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_02F4CD:        PHB                       
+SideExitMain:       PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02F4D5         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_02F4D5:        LDA.B #$01                
                     STA.W $1B96               
                     LDA $E4,X                 
                     AND.B #$10                
-                    BNE ADDR_02F4E6           
+                    BNE Return02F4E6          
                     JSR.W ADDR_02F4EB         
                     JSR.W ADDR_02F53E         
-ADDR_02F4E6:        RTS                       ; Return 
-
+Return02F4E6:       RTS                       ; Return
 
 DATA_02F4E7:        .db $D4,$AB
 
@@ -14186,7 +14171,7 @@ ADDR_02F4EB:        LDA.W $15EA,X
                     AND.B #$03                
                     BNE ADDR_02F516           
                     PHY                       
-                    JSL.L ADDR_01ACF9         
+                    JSL.L GetRand             
                     PLY                       
                     AND.B #$03                
                     BNE ADDR_02F516           
@@ -14210,28 +14195,28 @@ ADDR_02F516:        PHX
                     STA.W $0460,Y             
                     STA.W $0461,Y             
                     PLX                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02F53E:        LDA $14                   
                     AND.B #$3F                
-                    BNE ADDR_02F547           
+                    BNE Return02F547          
                     JSR.W ADDR_02F548         
-ADDR_02F547:        RTS                       ; Return 
+Return02F547:       RTS                       ; Return
 
 ADDR_02F548:        LDY.B #$09                
 ADDR_02F54A:        LDA.W $14C8,Y             
                     BEQ ADDR_02F553           
                     DEY                       
                     BPL ADDR_02F54A           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02F553:        LDA.B #$8B                
                     STA.W $009E,Y             
-                    LDA.B #$08                
-                    STA.W $14C8,Y             
+                    LDA.B #$08                ; \ Sprite status = Normal
+                    STA.W $14C8,Y             ; /
                     PHX                       
                     TYX                       
-                    JSL.L ADDR_07F7D2         
+                    JSL.L InitSpriteTables    
                     LDA.B #$BB                
                     STA $E4,X                 
                     LDA.B #$00                
@@ -14243,38 +14228,37 @@ ADDR_02F553:        LDA.B #$8B
                     LDA.B #$20                
                     STA.W $1540,X             
                     PLX                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_02F57C:        PHB                       
+ExtSub02F57C:       PHB                       ; Wrapper
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02F759         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_02F584:        PHB                       
+ExtSub02F584:       PHB                       ; Wrapper
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02F66E         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_02F58C:        PHB                       
+ExtSub02F58C:       PHB                       ; Wrapper
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02F639         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_02F594:        PHB                       
+GhostExitMain:      PHB                       
                     PHK                       
                     PLB                       
                     PHX                       
                     JSR.W ADDR_02F5D0         
                     PLX                       
                     PLB                       
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 DATA_02F59E:        .db $08,$18,$F8,$F8,$F8,$F8,$28,$28
                     .db $28,$28
@@ -14293,7 +14277,7 @@ DATA_02F5C6:        .db $23,$23,$2D,$2D,$AD,$AD,$6D,$6D
 
 ADDR_02F5D0:        LDA $1A                   
                     CMP.B #$46                
-                    BCS ADDR_02F618           
+                    BCS Return02F618          
                     LDX.B #$09                
                     LDY.B #$A0                
 ADDR_02F5DA:        STZ $02                   
@@ -14328,8 +14312,7 @@ ADDR_02F5ED:        LDA $00
                     INY                       
                     DEX                       
                     BPL ADDR_02F5DA           
-ADDR_02F618:        RTS                       ; Return 
-
+Return02F618:       RTS                       ; Return
 
 DATA_02F619:        .db $F8,$08,$F8,$08,$00,$00,$00,$00
 DATA_02F621:        .db $00,$00,$10,$10,$20,$30,$40,$08
@@ -14364,19 +14347,19 @@ ADDR_02F63D:        LDA.B #$C0
                     INY                       
                     DEX                       
                     BPL ADDR_02F63D           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02F66E:        LDA.W $18D9               
                     BEQ ADDR_02F676           
                     DEC.W $18D9               
 ADDR_02F676:        CMP.B #$B0                
                     BNE ADDR_02F67F           
-                    LDY.B #$0F                
-                    STY.W $1DFC               ; / Play sound effect 
+                    LDY.B #$0F                ; \ Play sound effect
+                    STY.W $1DFC               ; /
 ADDR_02F67F:        CMP.B #$01                
                     BNE ADDR_02F688           
-                    LDY.B #$10                
-                    STY.W $1DFC               ; / Play sound effect 
+                    LDY.B #$10                ; \ Play sound effect
+                    STY.W $1DFC               ; /
 ADDR_02F688:        CMP.B #$30                
                     BCC ADDR_02F69A           
                     CMP.B #$81                
@@ -14386,11 +14369,11 @@ ADDR_02F688:        CMP.B #$30
                     EOR.B #$FF                
                     INC A                     
                     BRA ADDR_02F69A           
+
 ADDR_02F698:        LDA.B #$30                
 ADDR_02F69A:        STA $00                   
                     JSR.W ADDR_02F6B8         
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02F6A0:        .db $00,$10,$20,$00,$10,$20,$00,$10
                     .db $20,$00,$10,$20
@@ -14430,8 +14413,7 @@ ADDR_02F6BC:        LDA.B #$B8
                     INY                       
                     DEX                       
                     BPL ADDR_02F6BC           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02F6F1:        .db $00,$00,$00,$00,$10,$10,$10,$10
                     .db $00,$00,$00,$00,$10,$10,$10,$10
@@ -14452,12 +14434,12 @@ ADDR_02F759:        LDA.W $18D9
                     DEC.W $18D9               
 ADDR_02F761:        CMP.B #$76                
                     BNE ADDR_02F76A           
-                    LDY.B #$0F                
-                    STY.W $1DFC               ; / Play sound effect 
+                    LDY.B #$0F                ; \ Play sound effect
+                    STY.W $1DFC               ; /
 ADDR_02F76A:        CMP.B #$08                
                     BNE ADDR_02F773           
-                    LDY.B #$10                
-                    STY.W $1DFC               ; / Play sound effect 
+                    LDY.B #$10                ; \ Play sound effect
+                    STY.W $1DFC               ; /
 ADDR_02F773:        LSR                       
                     LSR                       
                     LSR                       
@@ -14508,6 +14490,7 @@ ADDR_02F7C2:        STA.W $0303,Y
                     LDA.B #$02                
                     STA.W $0460,Y             
                     BRA ADDR_02F801           
+
 ADDR_02F7D0:        LDA $00                   
                     CLC                       
                     ADC.W DATA_02F6F1,X       
@@ -14532,16 +14515,17 @@ ADDR_02F7F5:        STA.W $0203,Y
                     LDA.B #$02                
                     STA.W $0420,Y             
 ADDR_02F801:        DEX                       
-                    BMI ADDR_02F807           
+                    BMI Return02F807          
                     JMP.W ADDR_02F78C         
-ADDR_02F807:        RTS                       ; Return 
 
-ADDR_02F808:        PHB                       
+Return02F807:       RTS                       ; Return
+
+ExtSub02F808:       PHB                       ; Wrapper
                     PHK                       
                     PLB                       
                     JSR.W ADDR_02F810         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_02F810:        LDX.B #$13                
 ADDR_02F812:        STX.W $15E9               
@@ -14550,11 +14534,11 @@ ADDR_02F812:        STX.W $15E9
                     JSR.W ADDR_02F821         
 ADDR_02F81D:        DEX                       
                     BPL ADDR_02F812           
-ADDR_02F820:        RTS                       ; Return 
+Return02F820:       RTS                       ; Return
 
 ADDR_02F821:        JSL.L ExecutePtr          
 
-Ptrs02F825:         .dw ADDR_02F820           
+Ptrs02F825:         .dw Return02F820          
                     .dw ADDR_02FDBC           
                     .dw $0000                 
                     .dw ADDR_02FBC7           
@@ -14584,7 +14568,7 @@ ADDR_02F855:        CMP.B #$00
                     BEQ ADDR_02F865           
                     STZ.W $1892,X             
                     STZ.W $18BA               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02F865:        LDA.W $1E66,X             
                     STA $00                   
@@ -14636,12 +14620,13 @@ ADDR_02F89E:        TXA
                     STA.W $1E2A,X             
 ADDR_02F8C8:        LDY.W $185E               
                     CPY.B #$20                
-                    BCC ADDR_02F8FB           
+                    BCC Return02F8FB          
                     CPY.B #$40                
                     BCS ADDR_02F8D8           
                     TYA                       
                     SBC.B #$1F                
                     BRA ADDR_02F8E2           
+
 ADDR_02F8D8:        CPY.B #$E0                
                     BCC ADDR_02F8E6           
                     TYA                       
@@ -14651,16 +14636,16 @@ ADDR_02F8D8:        CPY.B #$E0
 ADDR_02F8E2:        LSR                       
                     LSR                       
                     BRA ADDR_02F8EB           
+
 ADDR_02F8E6:        JSR.W ADDR_02FBB0         
                     LDA.B #$08                
 ADDR_02F8EB:        STA.W $190B               
                     CPX.B #$00                
                     BNE ADDR_02F8F6           
-                    JSL.L ADDR_038239         
+                    JSL.L ExtSub038239        
 ADDR_02F8F6:        LDA.B #$0F                
                     JSR.W ADDR_02FD48         
-ADDR_02F8FB:        RTS                       ; Return 
-
+Return02F8FB:       RTS                       ; Return
 
 DATA_02F8FC:        .db $00,$10,$00,$10,$08,$10,$FF,$10
 SumoBroFlameTiles:  .db $DC,$EC,$CC,$EC,$CC,$DC,$00,$CC
@@ -14683,10 +14668,10 @@ ADDR_02F928:        LSR
                     PHX                       
                     JSR.W ADDR_02F940         
                     PLX                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02F93C:        STZ.W $1892,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02F940:        TXA                       
                     ASL                       
@@ -14738,22 +14723,21 @@ ADDR_02F993:        PLX
                     LDX.B #$00                
                     LDY.B #$02                
                     LDA.B #$01                
-                    JSL.L ADDR_01B7B3         
-                    RTS                       ; Return 
+                    JSL.L FinishOAMWrite      
+                    RTS                       ; Return
 
 ADDR_02F9A6:        STZ.W $1892,X             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02F9AA:        .db $02,$0A,$12,$1A
 
 ADDR_02F9AE:        TXA                       
                     EOR $13                   
                     AND.B #$03                
-                    BNE ADDR_02F9FE           
+                    BNE Return02F9FE          
                     LDA.W $0F4A,X             
                     CMP.B #$10                
-                    BCC ADDR_02F9FE           
+                    BCC Return02F9FE          
                     LDA.W $1E16,X             
                     CLC                       
                     ADC.B #$02                
@@ -14773,28 +14757,28 @@ ADDR_02F9AE:        TXA
                     LDA.W $1E2A,X             
                     ADC.B #$00                
                     STA $0B                   
-                    JSL.L ADDR_03B664         
-                    JSL.L ADDR_03B72B         
-                    BCC ADDR_02F9FE           
-                    LDA.W $1490               
-                    BNE ADDR_02F9A6           
+                    JSL.L GetMarioClipping    
+                    JSL.L CheckForContact     
+                    BCC Return02F9FE          
+                    LDA.W $1490               ; \ Branch if Mario has star
+                    BNE ADDR_02F9A6           ; /
 ADDR_02F9F5:        LDA.W $187A               
                     BNE ADDR_02F9FF           
                     JSL.L HurtMario           
-ADDR_02F9FE:        RTS                       ; Return 
+Return02F9FE:       RTS                       ; Return
 
 ADDR_02F9FF:        JMP.W ADDR_02A473         
 
 DATA_02FA02:        .db $03,$07,$07,$07,$0F,$07,$07,$0F
 DATA_02FA0A:        .db $F0,$F4,$F8,$FC
 
-CstleBGFlameTiles:  .db $E2,$E4,$E2,$E4
+CastleFlameTiles:   .db $E2,$E4,$E2,$E4
 
-DATA_02FA12:        .db $09,$09,$49,$49
+CastleFlameGfxProp: .db $09,$09,$49,$49
 
 ADDR_02FA16:        LDA $9D                   
                     BNE ADDR_02FA2B           
-                    JSL.L ADDR_01ACF9         
+                    JSL.L GetRand             
                     AND.B #$07                
                     TAY                       
                     LDA $13                   
@@ -14815,9 +14799,9 @@ ADDR_02FA2B:        LDY.W DATA_02FA0A,X
                     LDA.W $0F4A,X             
                     AND.B #$03                
                     TAX                       
-                    LDA.W CstleBGFlameTiles,X 
+                    LDA.W CastleFlameTiles,X  
                     STA.W $0302,Y             
-                    LDA.W DATA_02FA12,X       
+                    LDA.W CastleFlameGfxProp,X
                     STA.W $0303,Y             
                     PLX                       
                     TYA                       
@@ -14829,7 +14813,7 @@ ADDR_02FA2B:        LDY.W DATA_02FA0A,X
                     PLY                       
                     LDA.W $0300,Y             
                     CMP.B #$F0                
-                    BCC ADDR_02FA83           
+                    BCC Return02FA83          
                     LDA.W $0300,Y             
                     STA.W $03EC               
                     LDA.W $0301,Y             
@@ -14840,8 +14824,7 @@ ADDR_02FA2B:        LDY.W DATA_02FA0A,X
                     STA.W $03EF               
                     LDA.B #$03                
                     STA.W $049B               
-ADDR_02FA83:        RTS                       ; Return 
-
+Return02FA83:       RTS                       ; Return
 
 DATA_02FA84:        .db $00
 
@@ -14853,7 +14836,7 @@ ADDR_02FA98:        LDY.W $0F86,X
                     LDA.W $0FBA,Y             
                     BEQ ADDR_02FAA4           
                     STZ.W $1892,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02FAA4:        LDA $9D                   
                     BNE ADDR_02FAF0           
@@ -14886,7 +14869,7 @@ ADDR_02FAB3:        CLC
                     STA.W $0FBA,Y             
                     PHX                       
                     LDX.W $0FBC,Y             
-                    STZ.W $1938,X             
+                    STZ.W $1938,X             ;  Allow sprite to be reloaded by level loading routine
                     PLX                       
                     DEC.W $18BA               
 ADDR_02FAF0:        PHX                       
@@ -14957,7 +14940,7 @@ ADDR_02FB70:        LSR $03
                     EOR.B #$FF                
                     INC A                     
 ADDR_02FB77:        STA $06                   
-                    LDX.W $15E9               
+                    LDX.W $15E9               ; X = Sprite index
                     LDY.W $0F86,X             
                     STZ $00                   
                     LDA $04                   
@@ -14983,10 +14966,9 @@ ADDR_02FB9E:        CLC
 ADDR_02FBB0:        TXA                       
                     EOR $13                   
                     AND.B #$03                
-                    BNE ADDR_02FBBA           
+                    BNE Return02FBBA          
                     JSR.W ADDR_02FE71         
-ADDR_02FBBA:        RTS                       ; Return 
-
+Return02FBBA:       RTS                       ; Return
 
 DATA_02FBBB:        .db $01,$FF
 
@@ -14997,11 +14979,12 @@ BooRingTiles:       .db $88,$8C,$A8,$8E,$AA,$AE,$88,$8C
 ADDR_02FBC7:        CPX.B #$00                
                     BEQ ADDR_02FBCE           
                     JMP.W ADDR_02FC41         
+
 ADDR_02FBCE:        LDA $13                   
                     AND.B #$07                
                     ORA $9D                   
                     BNE ADDR_02FC3E           
-                    JSL.L ADDR_01ACF9         
+                    JSL.L GetRand             
                     AND.B #$1F                
                     CMP.B #$14                
                     BCC ADDR_02FBE2           
@@ -15047,7 +15030,7 @@ ADDR_02FBE2:        TAX
                     STA.W $1E52,X             
                     LDA $01                   
                     STA.W $1E66,X             
-ADDR_02FC3E:        LDX.W $15E9               
+ADDR_02FC3E:        LDX.W $15E9               ; X = Sprite index
 ADDR_02FC41:        LDA $9D                   
                     BNE ADDR_02FC4D           
                     LDA.W $0F9A,X             
@@ -15056,6 +15039,7 @@ ADDR_02FC41:        LDA $9D
 ADDR_02FC4D:        LDA.W $0F86,X             
                     BNE ADDR_02FC55           
                     JMP.W ADDR_02FCE2         
+
 ADDR_02FC55:        LDA $9D                   
                     BNE ADDR_02FC8D           
                     LDA.W $0F9A,X             
@@ -15091,7 +15075,7 @@ ADDR_02FC8D:        LDA.W $1E16,X
                     ADC.W #$0040              
                     CMP.W #$0180              
                     SEP #$20                  ; Accum (8 bit) 
-                    BCS ADDR_02FCD8           
+                    BCS Return02FCD8          
                     LDA.B #$02                
                     JSR.W ADDR_02FD48         
                     LDA.W $1E02,X             
@@ -15108,19 +15092,19 @@ ADDR_02FC8D:        LDA.W $1E16,X
                     CMP $1A                   
                     LDA.W $1E3E,X             
                     SBC $1B                   
-                    BEQ ADDR_02FCD8           
+                    BEQ Return02FCD8          
                     LDA.W DATA_02FF50,X       
                     LSR                       
                     LSR                       
                     TAY                       
                     LDA.B #$03                
                     STA.W $0460,Y             
-ADDR_02FCD8:        RTS                       ; Return 
+Return02FCD8:       RTS                       ; Return
 
 ADDR_02FCD9:        LDY.W DATA_02FF50,X       
                     LDA.B #$F0                
                     STA.W $0301,Y             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02FCE2:        LDA $9D                   
                     BNE ADDR_02FD46           
@@ -15211,7 +15195,7 @@ ADDR_02FD81:        ORA.B #$31
                     STA.W $0460,Y             
                     LDA.W $1892,X             
                     CMP.B #$08                
-                    BNE ADDR_02FDB7           
+                    BNE Return02FDB7          
                     LDY.W DATA_02FF50,X       
                     LDA $14                   
                     LSR                       
@@ -15228,8 +15212,7 @@ ADDR_02FD81:        ORA.B #$31
                     LDA.B #$37                
                     STA.W $0303,Y             
                     PLX                       
-ADDR_02FDB7:        RTS                       ; Return 
-
+Return02FDB7:       RTS                       ; Return
 
 BatCeilingTiles:    .db $AE,$AE,$C0,$EB
 
@@ -15316,11 +15299,12 @@ ADDR_02FE48:        LDY.W DATA_02FF64,X
                     TAY                       
                     LDA.B #$02                
                     STA.W $0420,Y             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02FE71:        LDA.B #$14                
                     BRA ADDR_02FE77           
-                    LDA.B #$0C                
+
+                    LDA.B #$0C                ; Unreachable instruction
 ADDR_02FE77:        STA $02                   
                     STZ $03                   
                     LDA.W $1E16,X             
@@ -15335,7 +15319,7 @@ ADDR_02FE77:        STA $02
                     ADC.W #$000A              
                     CMP $02                   
                     SEP #$20                  ; Accum (8 bit) 
-                    BCS ADDR_02FEC4           
+                    BCS Return02FEC4          
                     LDA.W $1E02,X             
                     ADC.B #$03                
                     STA $02                   
@@ -15355,10 +15339,9 @@ ADDR_02FEB0:        STA $04
                     ADC.W #$001C              
                     CMP $04                   
                     SEP #$20                  ; Accum (8 bit) 
-                    BCS ADDR_02FEC4           
+                    BCS Return02FEC4          
                     JSR.W ADDR_02F9F5         
-ADDR_02FEC4:        RTS                       ; Return 
-
+Return02FEC4:       RTS                       ; Return
 
 DATA_02FEC5:        .db $40,$B0
 
@@ -15368,7 +15351,7 @@ DATA_02FEC9:        .db $30,$C0
 
 DATA_02FECB:        .db $01,$FF
 
-                    LDA $5B                   
+                    LDA $5B                   ; \ Unreachable
                     AND.B #$01                
                     BNE ADDR_02FF1E           
                     LDA.W $1E02,X             
@@ -15399,18 +15382,18 @@ DATA_02FECB:        .db $01,$FF
                     EOR.B #$80                
                     STA $00                   
 ADDR_02FF0A:        LDA $00                   
-                    BPL ADDR_02FF1D           
+                    BPL Return02FF1D          
 ADDR_02FF0E:        LDY.W $0F86,X             
                     CPY.B #$FF                
                     BEQ ADDR_02FF1A           
-                    LDA.B #$00                
-                    STA.W $1938,Y             
+                    LDA.B #$00                ;  \ Allow sprite to be reloaded by level loading routine
+                    STA.W $1938,Y             ;  /
 ADDR_02FF1A:        STZ.W $1892,X             
-ADDR_02FF1D:        RTS                       ; Return 
+Return02FF1D:       RTS                       ; / Return
 
-ADDR_02FF1E:        LDA $13                   
+ADDR_02FF1E:        LDA $13                   ; \ Unreachable, called from above routine
                     LSR                       
-                    BCS ADDR_02FF1D           
+                    BCS Return02FF1D          
                     AND.B #$01                
                     STA $01                   
                     TAY                       
@@ -15431,16 +15414,15 @@ ADDR_02FF1E:        LDA $13
                     EOR.B #$80                
                     STA $00                   
 ADDR_02FF4A:        LDA $00                   
-                    BPL ADDR_02FF1D           
-                    BMI ADDR_02FF0E           
-
+                    BPL Return02FF1D          
+                    BMI ADDR_02FF0E           ; /
 DATA_02FF50:        .db $E0,$E4,$E8,$EC,$F0,$F4,$F8,$FC
                     .db $5C,$58,$54,$50,$4C,$48,$44,$40
                     .db $3C,$38,$34,$30
 
 DATA_02FF64:        .db $90,$94,$98,$9C,$A0,$A4,$A8,$AC
 
-ADDR_02FF6C:        JSL.L ADDR_02AD34         
+ADDR_02FF6C:        JSL.L ExtSub02AD34        
                     LDA.B #$0D                
                     STA.W $16E1,Y             
                     LDA.W $1E02,X             
@@ -15456,7 +15438,7 @@ ADDR_02FF6C:        JSL.L ADDR_02AD34
                     STA.W $16F3,Y             
                     LDA.B #$30                
                     STA.W $16FF,Y             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02FF98:        PHX                       
                     TXA                       
@@ -15465,7 +15447,7 @@ ADDR_02FF98:        PHX
                     TAX                       
                     JSR.W ADDR_02FFA3         
                     PLX                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02FFA3:        LDA.W $1E52,X             
                     ASL                       
@@ -15492,7 +15474,7 @@ ADDR_02FFC2:        PLP
                     TYA                       
                     ADC.W $1E2A,X             
                     STA.W $1E2A,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_02FFD1:        LDA.W $1588,X             
                     BMI ADDR_02FFDD           
@@ -15501,10 +15483,11 @@ ADDR_02FFD1:        LDA.W $1588,X
                     BEQ ADDR_02FFDF           
 ADDR_02FFDD:        LDA.B #$18                
 ADDR_02FFDF:        STA $AA,X                 
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_02FFE2:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF
+
+

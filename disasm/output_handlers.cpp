@@ -41,7 +41,7 @@ void DefaultOutput::PrintInstruction(const Instruction& instr, const string& lab
         cout << left << setw(20) << label + ":";
     }
     else {
-        cout << setw(20) << "";
+        cout << left << setw(20) << "";
     }
 
     if (print_bytes){
@@ -80,9 +80,42 @@ void DefaultOutput::PrintInstruction(const Instruction& instr, const string& lab
     }
 }
 
-void NoOutput::PrintData(const vector<unsigned char>& bytes, const string& label, const string& comment, bool print_bytes, bool end_of_chunk)
-{}
+void DefaultOutput::BankStart(int bank)
+{
+    cout << ".BANK " << bank << endl;
+}
 
-void NoOutput::PrintInstruction(const Instruction& instr, const string& label, const string& comment, bool print_bytes, int flags)
-{}
+void DefaultOutput::PassStart()
+{
+    cout << ".INCLUDE \"snes.cfg\"" << endl;
+}
 
+void DefaultOutput::CodeBlockStart()
+{
+
+}
+
+void DefaultOutput::CodeBlockEnd()
+{
+
+}
+
+void DefaultOutput::PtrBlockStart()
+{
+    cout << endl;
+}
+
+void DefaultOutput::PtrBlockEnd()
+{
+    cout << endl;
+}
+
+void DefaultOutput::DataBlockStart()
+{
+
+}
+
+void DefaultOutput::DataBlockEnd()
+{
+
+}

@@ -62,6 +62,7 @@ m_flag(0),
 m_accum_16(false),
 m_index_16(false),
 m_output_handler(new DefaultOutput()),
+m_noop_handler(new NoOutput()),
 m_rom_file(rom_file)
 { 
     initialize_instruction_lookup(); 
@@ -71,6 +72,7 @@ m_rom_file(rom_file)
 
 Disassembler::~Disassembler()
 {
+    delete m_noop_handler;
     delete m_output_handler;
     delete [] m_data;
 }
@@ -161,10 +163,7 @@ void Disassembler::disassembleRange(const Request& request)
         else if (request.m_type == Request::Asm)
             doDisasm();
         else{
-            cout << "; ============ PASS " << m_current_pass << " ===============" << endl;
-            if (finalPass()){
-                cout << ".INCLUDE \"snes.cfg\"" << endl;
-            }
+            output_handler()->PassStart();
             doSmart();
             m_current_pass++;
             if (m_current_pass > m_passes_to_make)               
@@ -247,7 +246,7 @@ void Disassembler::load_offsets(char* fname)
 
         int offset = 1;
         if (!(ss >> dec >> offset)){
-            cout << "couldn't read offset size in: " << line << endl;
+            cerr << "couldn't read offset size in: " << line << endl;
             exit(-1);
         }
 
@@ -338,7 +337,7 @@ void Disassembler::load_data(char *fname, bool is_ptr_data)
         if (is_ptr_data){
             int ptr_bank;
             if (!(line_stream >> flag_byte >> hex >> ptr_bank)){
-                cout << "couldn't read pointer size in: " << line << endl;
+                cerr << "couldn't read pointer size in: " << line << endl;
                 exit(-1);
             }
             for (int i = 0; i < size; i += flag_byte){
@@ -420,8 +419,7 @@ string Disassembler::get_label_helper(unsigned char bank, int pc, bool use_addr_
         map<int, string>::iterator it = m_label_lookup.find(key);
         if (it != m_label_lookup.end()){
             label = it->second;
-            if (mark_instruction_used)
-                mark_label_used(bank, pc, label);
+            mark_label_used(bank, pc, label); // always include user-provided labels
         }
 
         else if (((pc >= 0x8000 && use_addr_label) ||
@@ -495,6 +493,8 @@ void Disassembler::doSmart()
 
 void Disassembler::doDcb(int bytes_per_line)
 {
+    output_handler()->DataBlockStart();
+
     unsigned int end_full_address = m_range_properties.full_end_address();
 
     while (current_full_address() < end_full_address){
@@ -525,8 +525,8 @@ void Disassembler::doDcb(int bytes_per_line)
                 }
             }
 
-            if (finalPass() && m_current_addr == 0x8000){
-                cout << ".BANK " << int(m_current_bank) << endl;
+            if (m_current_addr == 0x8000){
+                output_handler()->BankStart(m_current_bank);
             }
 
             unsigned char c = read_next_byte();
@@ -536,20 +536,23 @@ void Disassembler::doDcb(int bytes_per_line)
         if (current_full_address() == end_full_address){
             end_of_chunk = true;
         }
-        m_output_handler->PrintData(bytes, label, comment, !m_range_properties.m_quiet, end_of_chunk);
+
+        output_handler()->PrintData(bytes, label, comment, !m_range_properties.m_quiet, end_of_chunk);
     }
+
+    output_handler()->DataBlockEnd();
 }
 
 void Disassembler::doPtr(bool long_ptrs)
 {
-    cout << endl;
+    output_handler()->PtrBlockStart();
 
     unsigned int end_full_address = m_range_properties.full_end_address();
 
     while (current_full_address() < end_full_address){
 
-        if (finalPass() && m_current_addr == 0x8000){
-            cout << ".BANK " << int(m_current_bank) << endl;
+        if (m_current_addr == 0x8000){
+            output_handler()->BankStart(m_current_bank);
         }
 
         string label = get_line_label(m_current_bank, m_current_addr, false);
@@ -560,17 +563,18 @@ void Disassembler::doPtr(bool long_ptrs)
         disassembleInstruction(m_instruction_lookup[long_ptrs ? 0x101 : 0x100], default_bank, label, comment, 0);
     }
 
-    cout << endl;
+    output_handler()->PtrBlockEnd();
 }
 
 void Disassembler::doDisasm()
 {
+    output_handler()->CodeBlockStart();
     unsigned int end_full_address = m_range_properties.full_end_address();
 
     while (current_full_address() < end_full_address){
 
-        if (finalPass() && m_current_addr == 0x8000){
-            cout << ".BANK " << int(m_current_bank) << endl;
+        if (m_current_addr == 0x8000){
+            output_handler()->BankStart(m_current_bank);
         }
 
         string label = get_line_label(m_current_bank, m_current_addr, true);
@@ -590,6 +594,7 @@ void Disassembler::doDisasm()
             break;
         }
     }
+    output_handler()->CodeBlockEnd();
 }
 
 void Disassembler::disassembleInstruction(const InstructionMetadata& instr, unsigned char default_bank, const string& label, const string& comment, int offset)
@@ -601,9 +606,7 @@ void Disassembler::disassembleInstruction(const InstructionMetadata& instr, unsi
     auto instruction_handler = instr.handler();
     instruction_handler(&context, &output);
 
-    if (finalPass()){
-        m_output_handler->PrintInstruction(output, label, comment, !m_range_properties.m_quiet, m_flag);
-    }
+    output_handler()->PrintInstruction(output, label, comment, !m_range_properties.m_quiet, m_flag);
 }
 
 

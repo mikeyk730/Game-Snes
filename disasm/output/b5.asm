@@ -1,74 +1,72 @@
 .INCLUDE "snes.cfg"
 .BANK 5
-
-
-DATA_058000:        .db $70,$8B,$00,$BC,$00,$C8,$00,$D4
+TilesetMAP16Loc:    .db $70,$8B,$00,$BC,$00,$C8,$00,$D4     ; Addresses to tileset-specific MAP16 data
                     .db $00,$E3,$00,$E3,$00,$C8,$70,$8B
                     .db $00,$C8,$00,$D4,$00,$D4,$00,$D4
                     .db $70,$8B,$00,$E3,$00,$D4
 
-ADDR_05801E:        PHP                       
-                    SEP #$20                  ; Accum (8 bit) 
-                    REP #$10                  ; Index (16 bit) 
-                    LDX.W #$0000              
-ADDR_058026:        LDA.B #$25                
-                    STA.L $7EB900,X           
-                    STA.L $7EBB00,X           
-                    INX                       
-                    CPX.W #$0200              
-                    BNE ADDR_058026           
+ExtSub05801E:       PHP                       
+                    SEP #$20                  ; 8 bit A ; Accum (8 bit) 
+                    REP #$10                  ; 16 bit X,Y ; Index (16 bit) 
+                    LDX.W #$0000              ; \
+ADDR_058026:        LDA.B #$25                ;  |
+                    STA.L $7EB900,X           ;  |Set all background tiles (lower bytes) to x25
+                    STA.L $7EBB00,X           ;  |
+                    INX                       ;  |
+                    CPX.W #$0200              ;  |
+                    BNE ADDR_058026           ; /
                     STZ.W $1928               
-                    LDA $6A                   
-                    CMP.B #$FF                
-                    BNE ADDR_058074           
-                    REP #$10                  ; Index (16 bit) 
-                    LDY.W #$0000              
-                    LDX $68                   
-                    CPX.W #$E8FE              
-                    BCC ADDR_05804E           
-                    LDY.W #$0001              
-ADDR_05804E:        LDX.W #$0000              
-                    TYA                       
-ADDR_058052:        STA.L $7EBD00,X           
-                    STA.L $7EBF00,X           
-                    INX                       
-                    CPX.W #$0200              
-                    BNE ADDR_058052           
-                    LDA.B #$0C                
-                    STA $6A                   
-                    STZ.W $1932               
-                    STZ.W $1931               
+                    LDA $6A                   ; \
+                    CMP.B #$FF                ;  |If the layer 2 data is a background,
+                    BNE ADDR_058074           ; / branch to $8074
+                    REP #$10                  ; 16 bit X,Y ; Index (16 bit) 
+                    LDY.W #$0000              ; \
+                    LDX $68                   ;  |
+                    CPX.W #$E8FE              ;  |If Layer 2 pointer >= $E8FF,
+                    BCC ADDR_05804E           ;  |the background should use Map16 page x11 instead of x10
+                    LDY.W #$0001              ;  |
+ADDR_05804E:        LDX.W #$0000              ; \
+                    TYA                       ;  |
+ADDR_058052:        STA.L $7EBD00,X           ;  |Set the background's Map16 page
+                    STA.L $7EBF00,X           ;  |(i.e. setting all high tile bytes to Y)
+                    INX                       ;  |
+                    CPX.W #$0200              ;  |
+                    BNE ADDR_058052           ; /
+                    LDA.B #$0C                ; \ Set highest Layer 2 address to x0C
+                    STA $6A                   ; / (All backgrounds are stored in bank 0C)
+                    STZ.W $1932               ; \ Set tileset to 0
+                    STZ.W $1931               ; /
                     LDX.W #$B900              
                     STX $0D                   
-                    REP #$20                  ; Accum (16 bit) 
+                    REP #$20                  ; 16 bit A ; Accum (16 bit) 
                     JSR.W ADDR_058126         
-ADDR_058074:        SEP #$20                  ; Accum (8 bit) 
-                    LDX.W #$0000              
-ADDR_058079:        LDA.B #$00                
-                    JSR.W ADDR_05833A         
-                    DEX                       
-                    LDA.B #$25                
-                    JSR.W ADDR_0582C8         
-                    CPX.W #$0200              
-                    BNE ADDR_058079           
+ADDR_058074:        SEP #$20                  ; 8 bit A ; Accum (8 bit) 
+                    LDX.W #$0000              ; \
+ADDR_058079:        LDA.B #$00                ;  |
+                    JSR.W ADDR_05833A         ;  |Clear level data
+                    DEX                       ;  |
+                    LDA.B #$25                ;  |
+                    JSR.W ADDR_0582C8         ;  |
+                    CPX.W #$0200              ;  |
+                    BNE ADDR_058079           ; /
                     STZ.W $1928               
-                    JSR.W ADDR_0583AC         
-                    SEP #$30                  ; Index (8 bit) Accum (8 bit) 
-                    LDA.W $0100               
-                    CMP.B #$22                
-                    BPL ADDR_05809C           
-                    JSL.L ADDR_02A751         
+                    JSR.W LoadLevel           ; Load the level
+                    SEP #$30                  ; 8 bit A,X,Y ; Index (8 bit) Accum (8 bit) 
+                    LDA.W $0100               ; \
+                    CMP.B #$22                ;  |
+                    BPL ADDR_05809C           ;  |If level mode is less than x22,
+                    JSL.L ExtSub02A751        ;  |JSL to $02A751
 ADDR_05809C:        PLP                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_05809E:        PHP                       
+ExtSub05809E:       PHP                       
                     SEP #$20                  ; Accum (8 bit) 
-                    STZ.W $1928               
+                    STZ.W $1928               ; Zero a byte in the middle of the RAM table for the level header
                     REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     LDA.W #$FFFF              
-                    STA $4D                   
+                    STA $4D                   ; $4D to $50 = #$FF
                     STA $4F                   
-                    JSR.W ADDR_05877E         
+                    JSR.W ADDR_05877E         ; -> here
                     LDA $45                   
                     STA $47                   
                     LDA $49                   
@@ -78,7 +76,7 @@ ADDR_05809E:        PHP
 ADDR_0580BD:        REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     JSL.L ADDR_0588EC         
                     JSL.L ADDR_058955         
-                    JSL.L ADDR_0087AD         
+                    JSL.L ExtSub0087AD        
                     REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     INC $47                   
                     INC $4B                   
@@ -95,7 +93,7 @@ ADDR_0580BD:        REP #$30                  ; Index (16 bit) Accum (16 bit)
                     TAY                       
                     LDA.W #$0007              
                     STA $00                   
-                    LDA.L DATA_058776,X       
+                    LDA.L MAP16AppTable,X     
 ADDR_0580EC:        STA.W $0FBE,Y             
                     INY                       
                     INY                       
@@ -121,7 +119,7 @@ ADDR_0580EC:        STA.W $0FBE,Y
                     STA $51                   
                     STA $53                   
                     PLP                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_058126:        PHP                       
                     REP #$30                  ; Index (16 bit) Accum (16 bit) 
@@ -158,6 +156,7 @@ ADDR_05815A:        SEP #$20                  ; Accum (8 bit)
                     REP #$20                  ; Accum (16 bit) 
                     STY $05                   
                     JMP.W ADDR_058188         
+
 ADDR_05816A:        REP #$20                  ; Accum (16 bit) 
                     LDY $03                   
                     SEP #$20                  ; Accum (8 bit) 
@@ -199,8 +198,7 @@ ADDR_0581A5:        LDA $00
                     CPX.W #$0400              
                     BNE ADDR_0581A5           
                     PLP                       
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0581BB:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$E0,$00
@@ -212,32 +210,32 @@ DATA_0581BB:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 
 ADDR_0581FB:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
-                    LDA.W $1931               
-                    ASL                       
-                    TAX                       
-                    LDA.B #$05                
-                    STA $0F                   
-                    LDA.B #$00                
-                    STA $84                   
-                    LDA.B #$C4                
-                    STA.W $1430               
-                    LDA.B #$CA                
-                    STA.W $1431               
+                    LDA.W $1931               ; \
+                    ASL                       ;  |Store tileset*2 in X
+                    TAX                       ; /
+                    LDA.B #$05                ; \Store x05 in $0F
+                    STA $0F                   ; /
+                    LDA.B #$00                ; \Store x00 in $84
+                    STA $84                   ; /
+                    LDA.B #$C4                ; \Store xC4 in $1430
+                    STA.W $1430               ; /
+                    LDA.B #$CA                ; \Store xCA in $1431
+                    STA.W $1431               ; /
                     REP #$20                  ; Accum (16 bit) 
-                    LDA.W #$E55E              
-                    STA $82                   
-                    LDA.L DATA_058000,X       
-                    STA $00                   
-                    LDA.W #$8000              
-                    STA $02                   
-                    LDA.W #$81BB              
-                    STA $0D                   
-                    STZ $04                   
-                    STZ $09                   
-                    STZ $0B                   
+                    LDA.W #$E55E              ; \Store xE55E in $82-$83
+                    STA $82                   ; /
+                    LDA.L TilesetMAP16Loc,X   ; \Store address to MAP16 data in $00-$01
+                    STA $00                   ; /
+                    LDA.W #$8000              ; \Store x8000 in $02-$03
+                    STA $02                   ; /
+                    LDA.W #$81BB              ; \Store x81BB in $0D-$0E
+                    STA $0D                   ; /
+                    STZ $04                   ; \
+                    STZ $09                   ;  |Store x00 in $04, $09 and $0B
+                    STZ $0B                   ; /
                     REP #$10                  ; Index (16 bit) 
-                    LDY.W #$0000              
-                    TYX                       
+                    LDY.W #$0000              ; \Set X and Y to x0000
+                    TYX                       ; /
 ADDR_058237:        SEP #$20                  ; Accum (8 bit) 
                     LDA [$0D],Y               
                     STA $0C                   
@@ -251,6 +249,7 @@ ADDR_05823D:        ASL $0C
                     ADC.W #$0008              
                     STA $02                   
                     JMP.W ADDR_058262         
+
 ADDR_058253:        REP #$20                  ; Accum (16 bit) 
                     LDA $00                   
                     STA.W $0FBE,X             
@@ -309,7 +308,7 @@ ADDR_0582B5:        LDA $00
                     DEX                       
                     BPL ADDR_0582B5           
 ADDR_0582C5:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0582C8:        STA.L $7EC800,X           
                     STA.L $7ECA00,X           
@@ -340,7 +339,7 @@ ADDR_0582C8:        STA.L $7EC800,X
                     STA.L $7EFC00,X           
                     STA.L $7EFE00,X           
                     INX                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_05833A:        STA.L $7FC800,X           
                     STA.L $7FCA00,X           
@@ -371,223 +370,223 @@ ADDR_05833A:        STA.L $7FC800,X
                     STA.L $7FFC00,X           
                     STA.L $7FFE00,X           
                     INX                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_0583AC:        PHP                       
+LoadLevel:          PHP                       
                     SEP #$30                  ; Index (8 bit) Accum (8 bit) 
-                    STZ.W $1933               
-                    JSR.W ADDR_0584E3         
+                    STZ.W $1933               ; Layer number (0=Layer 1, 1=Layer 2)
+                    JSR.W ADDR_0584E3         ; Loads level header
                     JSR.W ADDR_0581FB         
-ADDR_0583B8:        LDA.W $1925               
-                    CMP.B #$09                
-                    BEQ ADDR_058412           
-                    CMP.B #$0B                
-                    BEQ ADDR_058412           
-                    CMP.B #$10                
-                    BEQ ADDR_058412           
-                    LDY.B #$00                
-                    LDA [$65],Y               
-                    CMP.B #$FF                
-                    BEQ ADDR_0583D2           
-                    JSR.W ADDR_0585FF         
-ADDR_0583D2:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
-                    LDA.W $1925               
-                    BEQ ADDR_058412           
-                    CMP.B #$0A                
-                    BEQ ADDR_058412           
-                    CMP.B #$0C                
-                    BEQ ADDR_058412           
-                    CMP.B #$0D                
-                    BEQ ADDR_058412           
-                    CMP.B #$0E                
-                    BEQ ADDR_058412           
-                    CMP.B #$11                
-                    BEQ ADDR_058412           
-                    CMP.B #$1E                
-                    BEQ ADDR_058412           
-                    INC.W $1933               
-                    LDA.W $1933               
-                    CMP.B #$02                
-                    BEQ ADDR_058412           
-                    LDA $68                   
-                    CLC                       
-                    ADC.B #$05                
-                    STA $65                   
-                    LDA $69                   
-                    ADC.B #$00                
-                    STA $66                   
-                    LDA $6A                   
-                    STA $67                   
+LoadAgain:          LDA.W $1925               ; Get current level mode
+                    CMP.B #$09                ; \
+                    BEQ LoadLevelDone         ;  |
+                    CMP.B #$0B                ;  |If the current level is a boss level,
+                    BEQ LoadLevelDone         ;  |don't load anything else.
+                    CMP.B #$10                ;  |
+                    BEQ LoadLevelDone         ; /
+                    LDY.B #$00                ; \
+                    LDA [$65],Y               ;  |
+                    CMP.B #$FF                ;  |If level isn't empty, load the level.
+                    BEQ LevLoadNotEmpty       ;  |
+                    JSR.W LoadLevelData       ; /
+LevLoadNotEmpty:    SEP #$30                  ; Index (8 bit) Accum (8 bit) 
+                    LDA.W $1925               ; Get current level mode
+                    BEQ LoadLevelDone         ; \
+                    CMP.B #$0A                ;  |
+                    BEQ LoadLevelDone         ;  |
+                    CMP.B #$0C                ;  |
+                    BEQ LoadLevelDone         ;  |If the current level isn't a Layer 2 level,
+                    CMP.B #$0D                ;  |branch to LoadLevelDone
+                    BEQ LoadLevelDone         ;  |
+                    CMP.B #$0E                ;  |
+                    BEQ LoadLevelDone         ;  |
+                    CMP.B #$11                ;  |
+                    BEQ LoadLevelDone         ;  |
+                    CMP.B #$1E                ;  |
+                    BEQ LoadLevelDone         ; /
+                    INC.W $1933               ; \Increase layer number and load into A
+                    LDA.W $1933               ; /
+                    CMP.B #$02                ; \If it is x02, end. (Layer 1 and 2 are done)
+                    BEQ LoadLevelDone         ; /
+                    LDA $68                   ; \
+                    CLC                       ;  |
+                    ADC.B #$05                ;  |
+                    STA $65                   ;  |Move address stored in $68-$6A to $65-$67.
+                    LDA $69                   ;  |(Move Layer 2 address to "Level to load" address)
+                    ADC.B #$00                ;  |It also increases the address by 5 (to ignore Layer 2's header)
+                    STA $66                   ;  |
+                    LDA $6A                   ;  |
+                    STA $67                   ; /
                     STZ.W $1928               
-                    JMP.W ADDR_0583B8         
-ADDR_058412:        STZ.W $1933               
+                    JMP.W LoadAgain           
+
+LoadLevelDone:      STZ.W $1933               
                     PLP                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-
-DATA_058417:        .db $00,$00,$80,$01,$81,$02,$82,$03
-                    .db $83,$00,$01,$00,$00,$01,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$80
-DATA_058437:        .db $15,$15,$17,$15,$15,$15,$17,$15
+VerticalTable:      .db $00,$00,$80,$01,$81,$02,$82,$03     ; Vertical level settings for each level mode ; Format:
+                    .db $83,$00,$01,$00,$00,$01,$00,$00     ; ?uuuuu?v
+                    .db $00,$00,$00,$00,$00,$00,$00,$00     ; ?= Unknown purpose ; u= Unused?
+                    .db $00,$00,$00,$00,$00,$00,$00,$80     ; v= Vertical level
+LevMainScrnTbl:     .db $15,$15,$17,$15,$15,$15,$17,$15     ; Main screen settings for each level mode
                     .db $17,$15,$15,$15,$15,$15,$04,$04
                     .db $15,$17,$15,$15,$15,$15,$15,$15
                     .db $15,$15,$15,$15,$15,$15,$01,$02
-DATA_058457:        .db $02,$02,$00,$02,$02,$02,$00,$02
+LevSubScrnTbl:      .db $02,$02,$00,$02,$02,$02,$00,$02     ; Subscreen settings for each level mode
                     .db $00,$00,$02,$00,$02,$02,$13,$13
                     .db $00,$00,$02,$02,$02,$02,$02,$02
                     .db $02,$02,$02,$02,$02,$02,$16,$15
-DATA_058477:        .db $24,$24,$24,$24,$24,$24,$20,$24
+LevCGADSUBtable:    .db $24,$24,$24,$24,$24,$24,$20,$24     ; CGADSUB settings for each level mode
                     .db $24,$20,$24,$20,$70,$70,$24,$24
                     .db $20,$FF,$24,$24,$24,$24,$24,$24
                     .db $24,$24,$24,$24,$24,$24,$21,$22
-DATA_058497:        .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$C0,$00,$80,$00,$00,$00,$00
-                    .db $C1,$00,$00,$00,$00,$00,$00,$00
+SpecialLevTable:    .db $00,$00,$00,$00,$00,$00,$00,$00     ; Special level settings for each level mode ; 00: Normal level
+                    .db $00,$C0,$00,$80,$00,$00,$00,$00     ; 80: Iggy/Larry level ; C0: Morton/Ludwig/Roy level
+                    .db $C1,$00,$00,$00,$00,$00,$00,$00     ; C1: Bowser level
                     .db $00,$00,$00,$00,$00,$00,$00,$00
-DATA_0584B7:        .db $20,$20,$20,$30,$30,$30,$30,$30
-                    .db $30,$30,$30,$30,$30,$30,$20,$20
+LevXYPPCCCTtbl:     .db $20,$20,$20,$30,$30,$30,$30,$30     ; XYPPCCCT settings for each level mode ; (The XYPPCCCT setting appears to be XORed with nearly all
+                    .db $30,$30,$30,$30,$30,$30,$20,$20     ; sprites' XYPPCCCT settings)
                     .db $30,$30,$30,$30,$30,$30,$30,$30
                     .db $30,$30,$30,$30,$30,$30,$30,$30
-DATA_0584D7:        .db $00,$02,$03,$04
+TimerTable:         .db $00,$02,$03,$04     ; How many 100s of seconds to use for the four time limits
 
-DATA_0584DB:        .db $02,$06,$01,$08,$07,$03,$05,$12
+LevelMusicTable:    .db $02,$06,$01,$08,$07,$03,$05,$12     ; A level can choose between 8 tracks. ; This table contains the tracks to choose from.
 
 ADDR_0584E3:        LDY.B #$00                
-                    LDA [$65],Y               
+                    LDA [$65],Y               ; Get first byte
+                    TAX                       ; \
+                    AND.B #$1F                ;  |Get amount of screens
+                    INC A                     ;  |
+                    STA $5D                   ; /
+                    TXA                       ; \
+                    LSR                       ;  |
+                    LSR                       ;  |
+                    LSR                       ;  |Get BG color setting
+                    LSR                       ;  |
+                    LSR                       ;  |
+                    STA.W $1930               ; /
+                    INY                       ; \Get second byte
+                    LDA [$65],Y               ; /
+                    AND.B #$1F                ; \Get level mode
+                    STA.W $1925               ; /
                     TAX                       
-                    AND.B #$1F                
-                    INC A                     
-                    STA $5D                   
-                    TXA                       
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    STA.W $1930               
-                    INY                       
-                    LDA [$65],Y               
-                    AND.B #$1F                
-                    STA.W $1925               
-                    TAX                       
-                    LDA.L DATA_0584B7,X       
-                    STA $64                   
-                    LDA.L DATA_058437,X       
-                    STA.W $0D9D               
-                    LDA.L DATA_058457,X       
-                    STA.W $0D9E               
-                    LDA.L DATA_058477,X       
-                    STA $40                   
-                    LDA.L DATA_058497,X       
-                    STA.W $0D9B               
-                    LDA.L DATA_058417,X       
-                    STA $5B                   
-                    LSR                       
-                    LDA $5D                   
-                    LDX.B #$01                
-                    BCC ADDR_058530           
-                    TAX                       
-                    LDA.B #$01                
-ADDR_058530:        STA $5E                   
-                    STX $5F                   
-                    LDA [$65],Y               
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    STA.W $192F               
-                    INY                       
-                    LDA [$65],Y               
-                    STA $00                   
-                    TAX                       
-                    AND.B #$0F                
-                    STA.W $192B               
-                    TXA                       
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    AND.B #$07                
-                    TAX                       
-                    LDA.L DATA_0584DB,X       
-                    LDX.W $0DDA               
-                    BPL ADDR_05855C           
-                    ORA.B #$80                
-ADDR_05855C:        CMP.W $0DDA               
-                    BNE ADDR_058563           
-                    ORA.B #$40                
-ADDR_058563:        STA.W $0DDA               
-                    LDA $00                   
-                    AND.B #$80                
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    ORA.B #$01                
-                    STA $3E                   
-                    INY                       
-                    LDA [$65],Y               
-                    STA $00                   
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    TAX                       
-                    LDA.W $141A               
-                    BNE ADDR_058590           
-                    LDA.L DATA_0584D7,X       
-                    STA.W $0F31               
-                    STZ.W $0F32               
-                    STZ.W $0F33               
-ADDR_058590:        LDA $00                   
-                    AND.B #$07                
-                    STA.W $192D               
-                    LDA $00                   
-                    AND.B #$38                
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    STA.W $192E               
-                    INY                       
-                    LDA [$65],Y               
-                    AND.B #$0F                
-                    STA.W $1931               
-                    STA.W $1932               
-                    LDA [$65],Y               
-                    AND.B #$C0                
-                    ASL                       
-                    ROL                       
-                    ROL                       
-                    STA.W $13BE               
-                    LDA [$65],Y               
-                    AND.B #$30                
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    CMP.B #$03                
-                    BNE ADDR_0585C7           
-                    STZ.W $1411               
-                    LDA.B #$00                
-ADDR_0585C7:        STA.W $1412               
-                    LDA $65                   
-                    CLC                       
-                    ADC.B #$05                
-                    STA $65                   
-                    LDA $66                   
-                    ADC.B #$00                
-                    STA $66                   
-                    RTS                       ; Return 
+                    LDA.L LevXYPPCCCTtbl,X    ; \Get XYPPCCCT settings from table
+                    STA $64                   ; /
+                    LDA.L LevMainScrnTbl,X    ; \Get main screen setting from table
+                    STA.W $0D9D               ; /
+                    LDA.L LevSubScrnTbl,X     ; \Get subscreen setting from table
+                    STA.W $0D9E               ; /
+                    LDA.L LevCGADSUBtable,X   ; \Get CGADSUB settings from table
+                    STA $40                   ; /
+                    LDA.L SpecialLevTable,X   ; \Get special level setting from table
+                    STA.W $0D9B               ; /
+                    LDA.L VerticalTable,X     ; \Get vertical level setting from table
+                    STA $5B                   ; /
+                    LSR                       ; \
+                    LDA $5D                   ;  |
+                    LDX.B #$01                ;  |If level mode is even:
+                    BCC LevelModeEven         ;  |Store screen amount in $5E and x01 in $5F
+                    TAX                       ;  |Otherwise:
+                    LDA.B #$01                ;  |Store x01 in $5E and screen amount in $5F
+LevelModeEven:      STA $5E                   ;  |
+                    STX $5F                   ; /
+                    LDA [$65],Y               ; Reload second byte
+                    LSR                       ; \
+                    LSR                       ;  |
+                    LSR                       ;  |Get BG color settings
+                    LSR                       ;  |
+                    LSR                       ;  |
+                    STA.W $192F               ; /
+                    INY                       ; \Get third byte
+                    LDA [$65],Y               ; /
+                    STA $00                   ; "Push" third byte
+                    TAX                       ; "Push" third byte
+                    AND.B #$0F                ; \Load sprite set
+                    STA.W $192B               ; /
+                    TXA                       ; "Pull" third byte
+                    LSR                       ; \
+                    LSR                       ;  |
+                    LSR                       ;  |
+                    LSR                       ;  |
+                    AND.B #$07                ;  |
+                    TAX                       ;  |Get music
+                    LDA.L LevelMusicTable,X   ;  |
+                    LDX.W $0DDA               ;  | \
+                    BPL ADDR_05855C           ;  |  |
+                    ORA.B #$80                ;  |  |Related to not restarting music if the new track
+ADDR_05855C:        CMP.W $0DDA               ;  |  |is the same as the old one?
+                    BNE ADDR_058563           ;  |  |
+                    ORA.B #$40                ;  | /
+ADDR_058563:        STA.W $0DDA               ; /
+                    LDA $00                   ; "Pull" third byte
+                    AND.B #$80                ; \
+                    LSR                       ;  |
+                    LSR                       ;  |
+                    LSR                       ;  |Get Layer 3 priority
+                    LSR                       ;  |
+                    ORA.B #$01                ;  |
+                    STA $3E                   ; /
+                    INY                       ; \Get fourth bit
+                    LDA [$65],Y               ; /
+                    STA $00                   ; "Push" fourth bit
+                    LSR                       ; \
+                    LSR                       ;  |
+                    LSR                       ;  |
+                    LSR                       ;  |
+                    LSR                       ;  |
+                    LSR                       ;  |
+                    TAX                       ;  |Get time
+                    LDA.W $141A               ;  |
+                    BNE ADDR_058590           ;  |
+                    LDA.L TimerTable,X        ;  |
+                    STA.W $0F31               ;  |
+                    STZ.W $0F32               ;  |
+                    STZ.W $0F33               ; /
+ADDR_058590:        LDA $00                   ; "Pull" fourth bit
+                    AND.B #$07                ; \Get FG color settings
+                    STA.W $192D               ; /
+                    LDA $00                   ; "Pull" fourth bit (again)
+                    AND.B #$38                ; \
+                    LSR                       ;  |
+                    LSR                       ;  |Get sprite palette
+                    LSR                       ;  |
+                    STA.W $192E               ; /
+                    INY                       ; \Get fifth byte
+                    LDA [$65],Y               ; /
+                    AND.B #$0F                ; \
+                    STA.W $1931               ;  |Get tileset
+                    STA.W $1932               ; /
+                    LDA [$65],Y               ; Reload fifth byte
+                    AND.B #$C0                ; \
+                    ASL                       ;  |
+                    ROL                       ;  |Get item memory settings
+                    ROL                       ;  |
+                    STA.W $13BE               ; /
+                    LDA [$65],Y               ; Reload fifth byte
+                    AND.B #$30                ; \
+                    LSR                       ;  |Get horizontal/vertical scroll
+                    LSR                       ;  |
+                    LSR                       ;  |
+                    LSR                       ;  |
+                    CMP.B #$03                ;  | \
+                    BNE HeaderVHscroll        ;  |  |If scroll mode is x03, disable both
+                    STZ.W $1411               ;  |  |vertical and horizontal scroll
+                    LDA.B #$00                ;  | /
+HeaderVHscroll:     STA.W $1412               ; /
+                    LDA $65                   ; \
+                    CLC                       ;  |
+                    ADC.B #$05                ;  |
+                    STA $65                   ;  |Make $65 point at the level data
+                    LDA $66                   ;  |(Level data comes right after the header)
+                    ADC.B #$00                ;  |
+                    STA $66                   ; /
+                    RTS                       ; We're done!
 
 ADDR_0585D8:        LDA $5A                   
                     BNE ADDR_0585E2           
                     LDA $59                   
                     CMP.B #$02                
-                    BCC ADDR_0585FE           
+                    BCC Return0585FE          
 ADDR_0585E2:        LDA $0A                   
                     AND.B #$0F                
                     STA $00                   
@@ -602,68 +601,68 @@ ADDR_0585E2:        LDA $0A
                     AND.B #$F0                
                     ORA $00                   
                     STA $0B                   
-ADDR_0585FE:        RTS                       ; Return 
+Return0585FE:       RTS                       ; Return
 
-ADDR_0585FF:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
-                    LDY.B #$00                
-                    LDA [$65],Y               
-                    STA $0A                   
-                    INY                       
-                    LDA [$65],Y               
-                    STA $0B                   
-                    INY                       
-                    LDA [$65],Y               
-                    STA $59                   
-                    INY                       
-                    TYA                       
-                    CLC                       
-                    ADC $65                   
-                    STA $65                   
-                    LDA $66                   
-                    ADC.B #$00                
-                    STA $66                   
-                    LDA $0B                   
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    STA $5A                   
-                    LDA $0A                   
-                    AND.B #$60                
-                    LSR                       
-                    ORA $5A                   
-                    STA $5A                   
-                    LDA $5B                   
-                    LDY.W $1933               
-                    BEQ ADDR_058637           
-                    LSR                       
-ADDR_058637:        AND.B #$01                
-                    BEQ ADDR_05863E           
-                    JSR.W ADDR_0585D8         
-ADDR_05863E:        LDA $0A                   
-                    AND.B #$0F                
-                    ASL                       
-                    ASL                       
-                    ASL                       
-                    ASL                       
-                    STA $57                   
-                    LDA $0B                   
-                    AND.B #$0F                
-                    ORA $57                   
-                    STA $57                   
+LoadLevelData:      SEP #$30                  ; Index (8 bit) Accum (8 bit) 
+                    LDY.B #$00                ; \
+                    LDA [$65],Y               ;  |
+                    STA $0A                   ;  |
+                    INY                       ;  |
+                    LDA [$65],Y               ;  |Read three bytes of level data
+                    STA $0B                   ;  |Store them in $0A, $0B and $59
+                    INY                       ;  |
+                    LDA [$65],Y               ;  |
+                    STA $59                   ;  |
+                    INY                       ; /
+                    TYA                       ; \
+                    CLC                       ;  |
+                    ADC $65                   ;  |
+                    STA $65                   ;  |Increase address by 3 (as 3 bytes were read)
+                    LDA $66                   ;  |
+                    ADC.B #$00                ;  |
+                    STA $66                   ; /
+                    LDA $0B                   ; \
+                    LSR                       ;  |
+                    LSR                       ;  |
+                    LSR                       ;  |
+                    LSR                       ;  |
+                    STA $5A                   ;  |Get block number, store in $5A
+                    LDA $0A                   ;  |
+                    AND.B #$60                ;  |
+                    LSR                       ;  |
+                    ORA $5A                   ;  |
+                    STA $5A                   ; /
+                    LDA $5B                   ; A = vertical level setting
+                    LDY.W $1933               ; \
+                    BEQ ADDR_058637           ;  |If $1933=x00, divide A by 2
+                    LSR                       ; /
+ADDR_058637:        AND.B #$01                ; \
+                    BEQ ADDR_05863E           ;  |If lowest bit of A is set, jump to sub
+                    JSR.W ADDR_0585D8         ; /
+ADDR_05863E:        LDA $0A                   ; \
+                    AND.B #$0F                ;  |
+                    ASL                       ;  |
+                    ASL                       ;  |
+                    ASL                       ;  |Set upper half of $57 to Y pos
+                    ASL                       ;  |and lower half of $57 to X pos
+                    STA $57                   ;  |
+                    LDA $0B                   ;  |
+                    AND.B #$0F                ;  |
+                    ORA $57                   ;  |
+                    STA $57                   ; /
                     REP #$20                  ; Accum (16 bit) 
-                    LDA.W $1933               
-                    AND.W #$00FF              
-                    ASL                       
-                    TAX                       
-                    LDA.L LoadBlkTable1,X     
+                    LDA.W $1933               ; \
+                    AND.W #$00FF              ;  |Load $1993*2 into X
+                    ASL                       ;  |
+                    TAX                       ; /
+                    LDA.L LoadBlkPtrs,X       
                     STA $03                   
                     LDA.L LoadBlkTable2,X     
                     STA $06                   
-                    LDA.W $1925               
-                    AND.W #$001F              
-                    ASL                       
-                    TAY                       
+                    LDA.W $1925               ; \
+                    AND.W #$001F              ;  |Set Y to Level Mode*2
+                    ASL                       ;  |
+                    TAY                       ; /
                     SEP #$20                  ; Accum (8 bit) 
                     LDA.B #$00                
                     STA $05                   
@@ -680,16 +679,16 @@ ADDR_05863E:        LDA $0A
                     LDA.B #$00                
                     STA $02                   
                     STA $0F                   
-                    LDA $0A                   
-                    AND.B #$80                
-                    ASL                       
-                    ADC.W $1928               
-                    STA.W $1928               
-                    STA.W $1BA1               
-                    ASL                       
-                    CLC                       
-                    ADC.W $1928               
-                    TAY                       
+                    LDA $0A                   ; \
+                    AND.B #$80                ;  |
+                    ASL                       ;  |If New Page flag is set, increase $1928 by 1
+                    ADC.W $1928               ;  |(A = $1928)
+                    STA.W $1928               ; /
+                    STA.W $1BA1               ; Store A in $1BA1
+                    ASL                       ; \
+                    CLC                       ;  |Multiply A by 2 and add $1928 to it
+                    ADC.W $1928               ;  |Set Y to A
+                    TAY                       ; /
                     LDA [$00],Y               
                     STA $6B                   
                     LDA [$0D],Y               
@@ -704,34 +703,36 @@ ADDR_05863E:        LDA $0A
                     STA $6D                   
                     LDA [$0D],Y               
                     STA $70                   
-                    LDA $0A                   
-                    AND.B #$10                
-                    BEQ ADDR_0586C5           
-                    INC $6C                   
-                    INC $6F                   
-ADDR_0586C5:        LDA $5A                   
-                    BNE ADDR_0586CF           
-                    JSR.W ADDR_0586E3         
-                    JMP.W ADDR_0586D2         
-ADDR_0586CF:        JSR.W ADDR_0586EA         
-ADDR_0586D2:        SEP #$20                  ; Accum (8 bit) 
+                    LDA $0A                   ; \
+                    AND.B #$10                ;  |If high coordinate is set...
+                    BEQ LoadNoHiCoord         ;  |(Lower half of horizontal level)
+                    INC $6C                   ;  |(Right half of vertical level)
+                    INC $6F                   ;  |...increase $6C and $6F
+LoadNoHiCoord:      LDA $5A                   ; \
+                    BNE LevLoadJsrNrm         ;  |If block number is x00 (extended object),
+                    JSR.W LevLoadExtObj       ;  |Jump to sub LevLoadExtObj
+                    JMP.W LevLoadContinue     ;  |                  (Why didn't they use BRA here?)
+
+LevLoadJsrNrm:      JSR.W LevLoadNrmObj       ;  |Jump to sub LevLoadNrmObj
+LevLoadContinue:    SEP #$20                  ; Accum (8 bit) 
                     REP #$10                  ; Index (16 bit) 
-                    LDY.W #$0000              
-                    LDA [$65],Y               
-                    CMP.B #$FF                
-                    BEQ ADDR_0586E2           
-                    JMP.W ADDR_0585FF         
-ADDR_0586E2:        RTS                       ; Return 
+                    LDY.W #$0000              ; \
+                    LDA [$65],Y               ;  |
+                    CMP.B #$FF                ;  |If the next byte is xFF, return (loading is done).
+                    BEQ LevelDataEnd          ;  |Otherwise, repeat this routine.
+                    JMP.W LoadLevelData       ;  |
 
-ADDR_0586E3:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
-                    JSL.L ADDR_0DA100         
-                    RTS                       ; Return 
+LevelDataEnd:       RTS                       ; /
 
-ADDR_0586EA:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
-                    JSL.L ADDR_0DA40F         
-                    RTS                       ; Return 
+LevLoadExtObj:      SEP #$30                  ; Index (8 bit) Accum (8 bit) 
+                    JSL.L ExtSub0DA100        
+                    RTS                       ; Return
 
-ADDR_0586F1:        PHP                       
+LevLoadNrmObj:      SEP #$30                  ; Index (8 bit) Accum (8 bit) 
+                    JSL.L ExtSub0DA40F        
+                    RTS                       ; Return
+
+ExtSub0586F1:       PHP                       
                     REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     JSR.W ADDR_05877E         
                     SEP #$20                  ; Accum (8 bit) 
@@ -747,6 +748,7 @@ ADDR_0586F1:        PHP
                     CMP $4D,X                 
                     BEQ ADDR_058737           
                     JMP.W ADDR_058724         
+
 ADDR_058713:        REP #$20                  ; Accum (16 bit) 
                     LDA $55                   
                     AND.W #$00FF              
@@ -761,8 +763,9 @@ ADDR_058724:        STA $4D,X
                     TAX                       
                     LDA.W #$FFFF              
                     STA $4D,X                 
-                    JSL.L ADDR_05881A         
+                    JSL.L ExtSub05881A        
                     JMP.W ADDR_058774         
+
 ADDR_058737:        SEP #$20                  ; Accum (8 bit) 
                     LDA $5B                   
                     AND.B #$02                
@@ -776,6 +779,7 @@ ADDR_058737:        SEP #$20                  ; Accum (8 bit)
                     CMP $51,X                 
                     BEQ ADDR_058774           
                     JMP.W ADDR_058764         
+
 ADDR_058753:        REP #$20                  ; Accum (16 bit) 
                     LDA $56                   
                     AND.W #$00FF              
@@ -792,10 +796,9 @@ ADDR_058764:        STA $51,X
                     STA $51,X                 
                     JSL.L ADDR_058883         
 ADDR_058774:        PLP                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-
-DATA_058776:        .db $B0,$8A,$E0,$84,$F0,$8A,$30,$8B
+MAP16AppTable:      .db $B0,$8A,$E0,$84,$F0,$8A,$30,$8B
 
 ADDR_05877E:        PHP                       
                     SEP #$20                  ; Accum (8 bit) 
@@ -803,43 +806,44 @@ ADDR_05877E:        PHP
                     AND.B #$01                
                     BNE ADDR_0587CB           
                     REP #$20                  ; Accum (16 bit) 
-                    LDA $1A                   
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    LSR                       
+                    LDA $1A                   ; Load "Xpos of Screen Boundary"
+                    LSR                       ; \
+                    LSR                       ;  |Multiply by 16
+                    LSR                       ;  |
+                    LSR                       ; /
                     TAY                       
-                    SEC                       
-                    SBC.W #$0008              
-                    STA $45                   
-                    TYA                       
+                    SEC                       ; \
+                    SBC.W #$0008              ; /Subtract 8
+                    STA $45                   ; Store to $45 (Seems to be Scratch RAM)
+                    TYA                       ; Get back the multiplied XPos
                     CLC                       
-                    ADC.W #$0017              
-                    STA $47                   
+                    ADC.W #$0017              ; Add $17
+                    STA $47                   ; Store to $47 (Seems to be Scratch RAM)
                     SEP #$30                  ; Index (8 bit) Accum (8 bit) 
-                    LDA $55                   
-                    TAX                       
-                    LDA $45,X                 
-                    LSR                       
-                    LSR                       
-                    LSR                       
+                    LDA $55                   ; \
+                    TAX                       ;  | LDA $45,x  / $55
+                    LDA $45,X                 ; /
+                    LSR                       ; \ multiply by 8
+                    LSR                       ;  |
+                    LSR                       ; /
                     REP #$30                  ; Index (16 bit) Accum (16 bit) 
-                    AND.W #$0006              
+                    AND.W #$0006              ; AND to make it either 6, 4, 2, or 0.
                     TAX                       
-                    LDA.W #$0133              
-                    ASL                       
-                    TAY                       
+                    LDA.W #$0133              ; \LDY #$0266
+                    ASL                       ; |
+                    TAY                       ; /
                     LDA.W #$0007              
                     STA $00                   
-                    LDA.L DATA_058776,X       
-ADDR_0587BB:        STA.W $0FBE,Y             
+                    LDA.L MAP16AppTable,X     
+ADDR_0587BB:        STA.W $0FBE,Y             ; MAP16 pointer table
                     INY                       
                     INY                       
                     CLC                       
-                    ADC.W #$0008              
+                    ADC.W #$0008              ; 8 bytes per tile?
                     DEC $00                   
                     BPL ADDR_0587BB           
                     JMP.W ADDR_0587E1         
+
 ADDR_0587CB:        REP #$20                  ; Accum (16 bit) 
                     LDA $1C                   
                     LSR                       
@@ -855,16 +859,16 @@ ADDR_0587CB:        REP #$20                  ; Accum (16 bit)
                     ADC.W #$0017              
                     STA $47                   
 ADDR_0587E1:        SEP #$20                  ; Accum (8 bit) 
-                    LDA $5B                   
-                    AND.B #$02                
-                    BNE ADDR_058802           
-                    REP #$20                  ; Accum (16 bit) 
-                    LDA $1E                   
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    TAY                       
+                    LDA $5B                   ; Load the vertical level flag
+                    AND.B #$02                ; \if bit 1 is set, process based on that
+                    BNE ADDR_058802           ; /
+                    REP #$20                  ; Not a vertical level ; Accum (16 bit) 
+                    LDA $1E                   ; \Y = L2XPos * 16
+                    LSR                       ; |
+                    LSR                       ; |
+                    LSR                       ; |
+                    LSR                       ; |
+                    TAY                       ; /
                     SEC                       
                     SBC.W #$0008              
                     STA $49                   
@@ -873,188 +877,317 @@ ADDR_0587E1:        SEP #$20                  ; Accum (8 bit)
                     ADC.W #$0017              
                     STA $4B                   
                     JMP.W ADDR_058818         
-ADDR_058802:        REP #$20                  ; Accum (16 bit) 
-                    LDA $20                   
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    LSR                       
-                    TAY                       
-                    SEC                       
-                    SBC.W #$0008              
-                    STA $49                   
-                    TYA                       
-                    CLC                       
-                    ADC.W #$0017              
-                    STA $4B                   
-ADDR_058818:        PLP                       
-                    RTS                       ; Return 
 
-ADDR_05881A:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
+ADDR_058802:        REP #$20                  ; \A = Y = $04*16 (?) ; Accum (16 bit) 
+                    LDA $20                   ; |
+                    LSR                       ; |
+                    LSR                       ; |
+                    LSR                       ; |
+                    LSR                       ; |
+                    TAY                       ; /
+                    SEC                       ; \
+                    SBC.W #$0008              ;  |Subtract x08 and store in $49
+                    STA $49                   ; /
+                    TYA                       ; \
+                    CLC                       ;  |"Undo", add x17 and store in $4B
+                    ADC.W #$0017              ;  |
+                    STA $4B                   ; /
+ADDR_058818:        PLP                       
+                    RTS                       ; Return
+
+ExtSub05881A:       SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     LDA.W $1925               
                     JSL.L ExecutePtrLong      
 
-PtrsLong058823:     .db $CE,$89,$05
-                    .db $CE,$89,$05
-                    .db $CE,$89,$05
-                    .db $9B,$8A,$05
-                    .db $9B,$8A,$05
-                    .db $CE,$89,$05
-                    .db $CE,$89,$05
-                    .db $9B,$8A,$05
-                    .db $9B,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $9B,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $CE,$89,$05
-                    .db $9B,$8A,$05
-                    .db $CE,$89,$05
-                    .db $CE,$89,$05
-                    .db $9A,$8A,$05
-                    .db $CE,$89,$05
-                    .db $9A,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $CE,$89,$05
-                    .db $CE,$89,$05
+PtrsLong058823:     .dw ADDR_0589CE           
+                    .db :ADDR_0589CE
+                    .dw ADDR_0589CE           
+                    .db :ADDR_0589CE
+                    .dw ADDR_0589CE           
+                    .db :ADDR_0589CE
+                    .dw ADDR_058A9B           
+                    .db :ADDR_058A9B
+                    .dw ADDR_058A9B           
+                    .db :ADDR_058A9B
+                    .dw ADDR_0589CE           
+                    .db :ADDR_0589CE
+                    .dw ADDR_0589CE           
+                    .db :ADDR_0589CE
+                    .dw ADDR_058A9B           
+                    .db :ADDR_058A9B
+                    .dw ADDR_058A9B           
+                    .db :ADDR_058A9B
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw ADDR_058A9B           
+                    .db :ADDR_058A9B
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw ADDR_0589CE           
+                    .db :ADDR_0589CE
+                    .dw ADDR_058A9B           
+                    .db :ADDR_058A9B
+                    .dw ADDR_0589CE           
+                    .db :ADDR_0589CE
+                    .dw ADDR_0589CE           
+                    .db :ADDR_0589CE
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw ADDR_0589CE           
+                    .db :ADDR_0589CE
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw ADDR_0589CE           
+                    .db :ADDR_0589CE
+                    .dw ADDR_0589CE           
+                    .db :ADDR_0589CE
 
 ADDR_058883:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     LDA.W $1925               
                     JSL.L ExecutePtrLong      
 
-PtrsLong05888C:     .db $70,$8C,$05
-                    .db $8D,$8B,$05
-                    .db $8D,$8B,$05
-                    .db $8D,$8B,$05
-                    .db $8D,$8B,$05
-                    .db $71,$8C,$05
-                    .db $71,$8C,$05
-                    .db $71,$8C,$05
-                    .db $71,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $8D,$8B,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $8D,$8B,$05
+PtrsLong05888C:     .dw Return058C70          
+                    .db :Return058C70
+                    .dw ADDR_058B8D           
+                    .db :ADDR_058B8D
+                    .dw ADDR_058B8D           
+                    .db :ADDR_058B8D
+                    .dw ADDR_058B8D           
+                    .db :ADDR_058B8D
+                    .dw ADDR_058B8D           
+                    .db :ADDR_058B8D
+                    .dw ADDR_058C71           
+                    .db :ADDR_058C71
+                    .dw ADDR_058C71           
+                    .db :ADDR_058C71
+                    .dw ADDR_058C71           
+                    .db :ADDR_058C71
+                    .dw ADDR_058C71           
+                    .db :ADDR_058C71
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw ADDR_058B8D           
+                    .db :ADDR_058B8D
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw ADDR_058B8D           
+                    .db :ADDR_058B8D
 
 ADDR_0588EC:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     LDA.W $1925               
                     JSL.L ExecutePtrLong      
 
-PtrsLong0588F5:     .db $CE,$89,$05
-                    .db $CE,$89,$05
-                    .db $CE,$89,$05
-                    .db $9B,$8A,$05
-                    .db $9B,$8A,$05
-                    .db $CE,$89,$05
-                    .db $CE,$89,$05
-                    .db $9B,$8A,$05
-                    .db $9B,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $9B,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $CE,$89,$05
-                    .db $9B,$8A,$05
-                    .db $CE,$89,$05
-                    .db $CE,$89,$05
-                    .db $9A,$8A,$05
-                    .db $CE,$89,$05
-                    .db $9A,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $9A,$8A,$05
-                    .db $CE,$89,$05
-                    .db $CE,$89,$05
+PtrsLong0588F5:     .dw ADDR_0589CE           
+                    .db :ADDR_0589CE
+                    .dw ADDR_0589CE           
+                    .db :ADDR_0589CE
+                    .dw ADDR_0589CE           
+                    .db :ADDR_0589CE
+                    .dw ADDR_058A9B           
+                    .db :ADDR_058A9B
+                    .dw ADDR_058A9B           
+                    .db :ADDR_058A9B
+                    .dw ADDR_0589CE           
+                    .db :ADDR_0589CE
+                    .dw ADDR_0589CE           
+                    .db :ADDR_0589CE
+                    .dw ADDR_058A9B           
+                    .db :ADDR_058A9B
+                    .dw ADDR_058A9B           
+                    .db :ADDR_058A9B
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw ADDR_058A9B           
+                    .db :ADDR_058A9B
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw ADDR_0589CE           
+                    .db :ADDR_0589CE
+                    .dw ADDR_058A9B           
+                    .db :ADDR_058A9B
+                    .dw ADDR_0589CE           
+                    .db :ADDR_0589CE
+                    .dw ADDR_0589CE           
+                    .db :ADDR_0589CE
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw ADDR_0589CE           
+                    .db :ADDR_0589CE
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw Return058A9A          
+                    .db :Return058A9A
+                    .dw ADDR_0589CE           
+                    .db :ADDR_0589CE
+                    .dw ADDR_0589CE           
+                    .db :ADDR_0589CE
 
 ADDR_058955:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     LDA.W $1925               
                     JSL.L ExecutePtrLong      
 
-PtrsLong05895E:     .db $7A,$8D,$05
-                    .db $8D,$8B,$05
-                    .db $8D,$8B,$05
-                    .db $8D,$8B,$05
-                    .db $8D,$8B,$05
-                    .db $71,$8C,$05
-                    .db $71,$8C,$05
-                    .db $71,$8C,$05
-                    .db $71,$8C,$05
-                    .db $70,$8C,$05
-                    .db $7A,$8D,$05
-                    .db $70,$8C,$05
-                    .db $7A,$8D,$05
-                    .db $7A,$8D,$05
-                    .db $7A,$8D,$05
-                    .db $8D,$8B,$05
-                    .db $70,$8C,$05
-                    .db $7A,$8D,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $70,$8C,$05
-                    .db $7A,$8D,$05
-                    .db $8D,$8B,$05
+PtrsLong05895E:     .dw ADDR_058D7A           
+                    .db :ADDR_058D7A
+                    .dw ADDR_058B8D           
+                    .db :ADDR_058B8D
+                    .dw ADDR_058B8D           
+                    .db :ADDR_058B8D
+                    .dw ADDR_058B8D           
+                    .db :ADDR_058B8D
+                    .dw ADDR_058B8D           
+                    .db :ADDR_058B8D
+                    .dw ADDR_058C71           
+                    .db :ADDR_058C71
+                    .dw ADDR_058C71           
+                    .db :ADDR_058C71
+                    .dw ADDR_058C71           
+                    .db :ADDR_058C71
+                    .dw ADDR_058C71           
+                    .db :ADDR_058C71
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw ADDR_058D7A           
+                    .db :ADDR_058D7A
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw ADDR_058D7A           
+                    .db :ADDR_058D7A
+                    .dw ADDR_058D7A           
+                    .db :ADDR_058D7A
+                    .dw ADDR_058D7A           
+                    .db :ADDR_058D7A
+                    .dw ADDR_058B8D           
+                    .db :ADDR_058B8D
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw ADDR_058D7A           
+                    .db :ADDR_058D7A
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw Return058C70          
+                    .db :Return058C70
+                    .dw ADDR_058D7A           
+                    .db :ADDR_058D7A
+                    .dw ADDR_058B8D           
+                    .db :ADDR_058B8D
 
 DATA_0589BE:        .db $80,$00,$40,$00,$20,$00,$10,$00
                     .db $08,$00,$04,$00,$02,$00,$01,$00
 
-                    PHP                       
+ADDR_0589CE:        PHP                       
                     REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     LDA.W $1925               
                     AND.W #$00FF              
                     ASL                       
                     TAX                       
                     SEP #$20                  ; Accum (8 bit) 
-                    LDA.L DATA_00BDA8,X       
+                    LDA.L Ptrs00BDA8,X        
                     STA $0A                   
-                    LDA.L DATA_00BDA9,X       
+                    LDA.L Ptrs00BDA8+1,X      
                     STA $0B                   
-                    LDA.L DATA_00BE28,X       
+                    LDA.L Ptrs00BE28,X        
                     STA $0D                   
-                    LDA.L DATA_00BE29,X       
+                    LDA.L Ptrs00BE28+1,X      
                     STA $0E                   
                     LDA.B #$00                
                     STA $0C                   
@@ -1144,22 +1277,22 @@ ADDR_058A55:        LDY $08
                     CMP.W #$01B0              
                     BCC ADDR_058A55           
                     PLP                       
-                    RTL                       ; Return 
+Return058A9A:       RTL                       ; Return
 
-                    PHP                       
+ADDR_058A9B:        PHP                       
                     REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     LDA.W $1925               
                     AND.W #$00FF              
                     ASL                       
                     TAX                       
                     SEP #$20                  ; Accum (8 bit) 
-                    LDA.L DATA_00BDA8,X       
+                    LDA.L Ptrs00BDA8,X        
                     STA $0A                   
-                    LDA.L DATA_00BDA9,X       
+                    LDA.L Ptrs00BDA8+1,X      
                     STA $0B                   
-                    LDA.L DATA_00BE28,X       
+                    LDA.L Ptrs00BE28,X        
                     STA $0D                   
-                    LDA.L DATA_00BE29,X       
+                    LDA.L Ptrs00BE28+1,X      
                     STA $0E                   
                     LDA.B #$00                
                     STA $0C                   
@@ -1273,9 +1406,9 @@ ADDR_058B84:        LDA $08
                     AND.W #$010F              
                     BNE ADDR_058B35           
                     PLP                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-                    PHP                       
+ADDR_058B8D:        PHP                       
                     REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     LDA.W $1925               
                     AND.W #$00FF              
@@ -1288,13 +1421,13 @@ ADDR_058B84:        LDA $08
                     BNE ADDR_058BA7           
                     LDY.W #$1000              
 ADDR_058BA7:        STY $03                   
-                    LDA.L DATA_00BDE8,X       
+                    LDA.L Ptrs00BDE8,X        
                     STA $0A                   
-                    LDA.L DATA_00BDE9,X       
+                    LDA.L Ptrs00BDE8+1,X      
                     STA $0B                   
-                    LDA.L DATA_00BE68,X       
+                    LDA.L Ptrs00BE68,X        
                     STA $0D                   
-                    LDA.L DATA_00BE69,X       
+                    LDA.L Ptrs00BE68+1,X      
                     STA $0E                   
                     LDA.B #$00                
                     STA $0C                   
@@ -1388,9 +1521,9 @@ ADDR_058C23:        LDY $08
                     CMP.W #$01B0              
                     BCC ADDR_058C23           
                     PLP                       
-                    RTL                       ; Return 
+Return058C70:       RTL                       ; Return
 
-                    PHP                       
+ADDR_058C71:        PHP                       
                     REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     LDA.W $1925               
                     AND.W #$00FF              
@@ -1403,13 +1536,13 @@ ADDR_058C23:        LDY $08
                     BNE ADDR_058C8B           
                     LDY.W #$1000              
 ADDR_058C8B:        STY $03                   
-                    LDA.L DATA_00BDE8,X       
+                    LDA.L Ptrs00BDE8,X        
                     STA $0A                   
-                    LDA.L DATA_00BDE9,X       
+                    LDA.L Ptrs00BDE8+1,X      
                     STA $0B                   
-                    LDA.L DATA_00BE68,X       
+                    LDA.L Ptrs00BE68,X        
                     STA $0D                   
-                    LDA.L DATA_00BE69,X       
+                    LDA.L Ptrs00BE68+1,X      
                     STA $0E                   
                     LDA.B #$00                
                     STA $0C                   
@@ -1527,9 +1660,9 @@ ADDR_058D71:        LDA $08
                     AND.W #$010F              
                     BNE ADDR_058D1A           
                     PLP                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-                    PHP                       
+ADDR_058D7A:        PHP                       
                     SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     LDA.W $1928               
                     AND.B #$0F                
@@ -1608,8 +1741,7 @@ ADDR_058DD9:        LDY $08
                     CMP.W #$01B0              
                     BCC ADDR_058DD9           
                     PLP                       
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 DATA_058E19:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
@@ -1673,698 +1805,779 @@ DATA_058E19:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF
 
-DATA_059000:        .db $49
 
-DATA_059001:        .db $95
+Layer3Ptr:          .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059087           
+                    .db :DATA_059087
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059294           
+                    .db :DATA_059294
+                    .dw DATA_059AE0           
+                    .db :DATA_059AE0
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059087           
+                    .db :DATA_059087
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_05A221           
+                    .db :DATA_05A221
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059087           
+                    .db :DATA_059087
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_0595DE           
+                    .db :DATA_0595DE
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059087           
+                    .db :DATA_059087
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059087           
+                    .db :DATA_059087
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059087           
+                    .db :DATA_059087
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059A17           
+                    .db :DATA_059A17
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059087           
+                    .db :DATA_059087
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059087           
+                    .db :DATA_059087
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059087           
+                    .db :DATA_059087
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_0595DE           
+                    .db :DATA_0595DE
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_059549           
+                    .db :DATA_059549
+                    .dw DATA_05A221           
+                    .db :DATA_05A221
 
-DATA_059002:        .db $05,$49,$95,$05,$87,$90,$05,$49
-                    .db $95,$05,$94,$92,$05,$E0,$9A,$05
-                    .db $49,$95,$05,$49,$95,$05,$87,$90
-                    .db $05,$49,$95,$05,$49,$95,$05,$21
-                    .db $A2,$05,$49,$95,$05,$49,$95,$05
-                    .db $87,$90,$05,$49,$95,$05,$49,$95
-                    .db $05,$DE,$95,$05,$49,$95,$05,$49
-                    .db $95,$05,$87,$90,$05,$49,$95,$05
-                    .db $49,$95,$05,$87,$90,$05,$49,$95
-                    .db $05,$49,$95,$05,$87,$90,$05,$49
-                    .db $95,$05,$49,$95,$05,$17,$9A,$05
-                    .db $49,$95,$05,$49,$95,$05,$87,$90
-                    .db $05,$49,$95,$05,$49,$95,$05,$87
-                    .db $90,$05,$49,$95,$05,$49,$95,$05
-                    .db $87,$90,$05,$49,$95,$05,$49,$95
-                    .db $05,$DE,$95,$05,$49,$95,$05,$49
-                    .db $95,$05,$21,$A2,$05,$58,$06,$00
-                    .db $03,$87,$39,$88,$39,$58,$12,$00
-                    .db $03,$87,$39,$88,$39,$58,$26,$00
-                    .db $03,$97,$39,$98,$39,$58,$2C,$00
-                    .db $03,$87,$39,$88,$39,$58,$32,$00
-                    .db $03,$97,$39,$98,$39,$58,$38,$00
-                    .db $03,$87,$39,$88,$39,$58,$46,$00
-                    .db $03,$85,$39,$86,$39,$58,$4C,$00
-                    .db $03,$97,$39,$98,$39,$58,$52,$00
-                    .db $03,$85,$39,$86,$39,$58,$58,$00
-                    .db $03,$97,$39,$98,$39,$58,$66,$00
-                    .db $03,$95,$39,$96,$39,$58,$6C,$00
-                    .db $03,$95,$39,$96,$39,$58,$72,$00
-                    .db $03,$95,$39,$96,$39,$58,$78,$00
-                    .db $03,$95,$39,$96,$39,$58,$84,$00
-                    .db $2F,$80,$3D,$81,$3D,$82,$3D,$82
-                    .db $7D,$82,$3D,$82,$7D,$82,$3D,$82
-                    .db $7D,$82,$3D,$82,$7D,$82,$3D,$82
-                    .db $7D,$82,$3D,$82,$7D,$82,$3D,$82
-                    .db $7D,$82,$3D,$82,$7D,$82,$3D,$82
-                    .db $7D,$82,$3D,$82,$7D,$81,$7D,$80
-                    .db $7D,$58,$A4,$00,$2F,$90,$3D,$91
-                    .db $3D,$92,$3D,$92,$7D,$92,$3D,$92
-                    .db $7D,$92,$3D,$92,$7D,$92,$3D,$92
-                    .db $7D,$92,$3D,$92,$7D,$92,$3D,$92
-                    .db $7D,$92,$3D,$92,$7D,$92,$3D,$92
-                    .db $7D,$92,$3D,$92,$7D,$92,$3D,$92
-                    .db $7D,$91,$7D,$90,$7D,$58,$C4,$80
-                    .db $13,$83,$3D,$83,$BD,$83,$3D,$83
-                    .db $BD,$83,$3D,$83,$BD,$83,$3D,$83
-                    .db $BD,$83,$3D,$83,$BD,$58,$C5,$80
-                    .db $13,$84,$3D,$84,$BD,$84,$3D,$84
-                    .db $BD,$84,$3D,$84,$BD,$84,$3D,$84
-                    .db $BD,$84,$3D,$84,$BD,$58,$C7,$C0
-                    .db $12,$93,$39,$58,$C8,$C0,$12,$94
-                    .db $39,$58,$C9,$C0,$12,$93,$39,$58
-                    .db $CA,$C0,$12,$94,$39,$58,$CB,$C0
-                    .db $12,$93,$39,$58,$CC,$C0,$12,$94
-                    .db $39,$58,$CD,$C0,$12,$93,$39,$58
-                    .db $CE,$C0,$12,$94,$39,$58,$CF,$C0
-                    .db $12,$93,$39,$58,$D0,$C0,$12,$94
-                    .db $39,$58,$D1,$C0,$12,$93,$39,$58
-                    .db $D2,$C0,$12,$94,$39,$58,$D3,$C0
-                    .db $12,$93,$39,$58,$D4,$C0,$12,$94
-                    .db $39,$58,$D5,$C0,$12,$93,$39,$58
-                    .db $D6,$C0,$12,$94,$39,$58,$D7,$C0
-                    .db $12,$93,$39,$58,$D8,$C0,$12,$94
-                    .db $39,$58,$DA,$80,$13,$83,$3D,$83
-                    .db $BD,$83,$3D,$83,$BD,$83,$3D,$83
-                    .db $BD,$83,$3D,$83,$BD,$83,$3D,$83
-                    .db $BD,$58,$DB,$80,$13,$84,$3D,$84
-                    .db $BD,$84,$3D,$84,$BD,$84,$3D,$84
-                    .db $BD,$84,$3D,$84,$BD,$84,$3D,$84
-                    .db $BD,$5A,$04,$00,$2F,$90,$BD,$91
-                    .db $BD,$82,$3D,$82,$7D,$82,$3D,$82
-                    .db $7D,$82,$3D,$82,$7D,$82,$3D,$82
-                    .db $7D,$82,$3D,$82,$7D,$82,$3D,$82
-                    .db $7D,$82,$3D,$82,$7D,$82,$3D,$82
-                    .db $7D,$82,$3D,$82,$7D,$82,$3D,$82
-                    .db $7D,$91,$FD,$90,$FD,$5A,$24,$00
-                    .db $2F,$80,$BD,$81,$BD,$92,$3D,$92
-                    .db $7D,$92,$3D,$92,$7D,$92,$3D,$92
-                    .db $7D,$92,$3D,$92,$7D,$92,$3D,$92
-                    .db $7D,$92,$3D,$92,$7D,$92,$3D,$92
-                    .db $7D,$92,$3D,$92,$7D,$92,$3D,$92
-                    .db $7D,$92,$3D,$92,$7D,$81,$FD,$80
-                    .db $FD,$FF,$50,$A8,$00,$1F,$99,$3D
-                    .db $9A,$3D,$A1,$AD,$B2,$2D,$B3,$2D
-                    .db $B4,$2D,$A5,$AD,$B6,$2D,$B7,$2D
-                    .db $B8,$2D,$B4,$2D,$BA,$2D,$BB,$2D
-                    .db $BC,$2D,$FE,$2C,$FE,$2C,$50,$C8
-                    .db $00,$1F,$8B,$3D,$8C,$3D,$C1,$2D
-                    .db $C2,$2D,$C3,$2D,$B4,$AD,$A3,$2D
-                    .db $A4,$2D,$C7,$2D,$C8,$2D,$B4,$AD
-                    .db $BA,$AD,$D5,$2D,$CC,$2D,$FE,$2C
-                    .db $FE,$2C,$50,$E8,$00,$1F,$9B,$3D
-                    .db $9C,$3D,$D1,$2D,$D2,$2D,$D3,$2D
-                    .db $B7,$AD,$D5,$2D,$B4,$2D,$D7,$2D
-                    .db $C7,$2D,$D9,$2D,$D9,$6D,$DB,$2D
-                    .db $DC,$2D,$FE,$2C,$FE,$2C,$51,$08
-                    .db $00,$1F,$89,$3D,$8A,$3D,$A1,$2D
-                    .db $A2,$2D,$A3,$2D,$A4,$2D,$A5,$2D
-                    .db $B4,$AD,$D5,$2D,$C7,$AD,$FD,$2C
-                    .db $AA,$2D,$AB,$2D,$AC,$2D,$FE,$2C
-                    .db $FE,$2C,$51,$28,$00,$1F,$99,$3D
-                    .db $9A,$3D,$A1,$AD,$B2,$2D,$B3,$2D
-                    .db $B4,$2D,$A5,$AD,$B6,$2D,$B7,$2D
-                    .db $B8,$2D,$B4,$2D,$BA,$2D,$BB,$2D
-                    .db $BC,$2D,$FE,$2C,$FE,$2C,$51,$48
-                    .db $00,$1F,$8B,$3D,$8C,$3D,$C1,$2D
-                    .db $C2,$2D,$C3,$2D,$B4,$AD,$A3,$2D
-                    .db $A4,$2D,$C7,$2D,$C8,$2D,$B4,$AD
-                    .db $BA,$AD,$D5,$2D,$CC,$2D,$FE,$2C
-                    .db $FE,$2C,$51,$68,$00,$1F,$9B,$3D
-                    .db $9C,$3D,$D1,$2D,$D2,$2D,$D3,$2D
-                    .db $B7,$AD,$D5,$2D,$B4,$2D,$D7,$2D
-                    .db $C7,$2D,$D9,$2D,$D9,$6D,$DB,$2D
-                    .db $DC,$2D,$FE,$2C,$FE,$2C,$51,$88
-                    .db $00,$1F,$89,$3D,$8A,$3D,$A1,$2D
-                    .db $A2,$2D,$A3,$2D,$A4,$2D,$A5,$2D
-                    .db $B4,$AD,$D5,$2D,$C7,$AD,$FD,$2C
-                    .db $AA,$2D,$AB,$2D,$AC,$2D,$FE,$2C
-                    .db $FE,$2C,$51,$A8,$00,$1F,$99,$3D
-                    .db $9A,$3D,$A1,$AD,$B2,$2D,$B3,$2D
-                    .db $B4,$2D,$A5,$AD,$B6,$2D,$B7,$2D
-                    .db $B8,$2D,$B4,$2D,$BA,$2D,$BB,$2D
-                    .db $BC,$2D,$FE,$2C,$FE,$2C,$51,$C8
-                    .db $00,$1F,$8B,$3D,$8C,$3D,$C1,$2D
-                    .db $C2,$2D,$C3,$2D,$B4,$AD,$A3,$2D
-                    .db $A4,$2D,$C7,$2D,$C8,$2D,$B4,$AD
-                    .db $BA,$AD,$D5,$2D,$CC,$2D,$FE,$2C
-                    .db $FE,$2C,$51,$E8,$00,$1F,$9B,$3D
-                    .db $9C,$3D,$D1,$2D,$D2,$2D,$D3,$2D
-                    .db $B7,$AD,$D5,$2D,$B4,$2D,$D7,$2D
-                    .db $C7,$2D,$D9,$2D,$D9,$6D,$DB,$2D
-                    .db $DC,$2D,$FE,$2C,$FE,$2C,$52,$08
-                    .db $00,$1F,$89,$3D,$8A,$3D,$A1,$2D
-                    .db $A2,$2D,$A3,$2D,$A4,$2D,$A5,$2D
-                    .db $B4,$AD,$D5,$2D,$C7,$AD,$FD,$2C
-                    .db $AA,$2D,$AB,$2D,$AC,$2D,$FE,$2C
-                    .db $FE,$2C,$52,$28,$00,$1F,$99,$3D
-                    .db $9A,$3D,$A1,$AD,$B2,$2D,$B3,$2D
-                    .db $B4,$2D,$A5,$AD,$B6,$2D,$B7,$2D
-                    .db $B8,$2D,$B4,$2D,$BA,$2D,$BB,$2D
-                    .db $BC,$2D,$FE,$2C,$FE,$2C,$52,$48
-                    .db $00,$1F,$8B,$3D,$8C,$3D,$C1,$2D
-                    .db $C2,$2D,$C3,$2D,$B4,$AD,$A3,$2D
-                    .db $A4,$2D,$C7,$2D,$C8,$2D,$B4,$AD
-                    .db $BA,$AD,$D5,$2D,$CC,$2D,$FE,$2C
-                    .db $FE,$2C,$52,$68,$00,$1F,$9B,$3D
-                    .db $9C,$3D,$D1,$2D,$D2,$2D,$D3,$2D
-                    .db $B7,$AD,$D5,$2D,$B4,$2D,$D7,$2D
-                    .db $C7,$2D,$D9,$2D,$D9,$6D,$DB,$2D
-                    .db $DC,$2D,$FE,$2C,$FE,$2C,$52,$88
-                    .db $00,$1F,$89,$3D,$8A,$3D,$A1,$2D
-                    .db $A2,$2D,$A3,$2D,$A4,$2D,$A5,$2D
-                    .db $B4,$AD,$D5,$2D,$C7,$AD,$FD,$2C
-                    .db $AA,$2D,$AB,$2D,$AC,$2D,$FE,$2C
-                    .db $FE,$2C,$52,$A8,$00,$1F,$99,$3D
-                    .db $9A,$3D,$A1,$AD,$B2,$2D,$B3,$2D
-                    .db $B4,$2D,$A5,$AD,$B6,$2D,$B7,$2D
-                    .db $B8,$2D,$B4,$2D,$BA,$2D,$BB,$2D
-                    .db $BC,$2D,$FE,$2C,$FE,$2C,$52,$C7
-                    .db $00,$23,$CD,$2D,$CE,$2D,$CF,$2D
-                    .db $E1,$2D,$E2,$2D,$E3,$2D,$E4,$2D
-                    .db $E5,$2D,$E6,$2D,$E7,$2D,$E8,$2D
-                    .db $E9,$2D,$EA,$2D,$EB,$2D,$EC,$2D
-                    .db $ED,$2D,$EE,$2D,$CD,$6D,$52,$E7
-                    .db $00,$23,$DD,$2D,$DE,$2D,$DF,$2D
-                    .db $F1,$2D,$F2,$2D,$DE,$2D,$DF,$2D
-                    .db $F1,$2D,$F2,$2D,$DE,$2D,$DF,$2D
-                    .db $F1,$2D,$F2,$2D,$DE,$2D,$DF,$2D
-                    .db $F1,$2D,$F2,$2D,$DD,$6D,$FF,$58
-                    .db $00,$00,$3F,$7D,$39,$7E,$39,$7D
-                    .db $39,$7E,$39,$7D,$39,$7E,$39,$7D
-                    .db $39,$7E,$39,$7D,$39,$7E,$39,$7D
-                    .db $39,$7E,$39,$7D,$39,$7E,$39,$7D
-                    .db $39,$7E,$39,$7D,$39,$7E,$39,$7D
-                    .db $39,$7E,$39,$7D,$39,$7E,$39,$7D
-                    .db $39,$7E,$39,$7D,$39,$7E,$39,$7D
-                    .db $39,$7E,$39,$7D,$39,$7E,$39,$7D
-                    .db $39,$7E,$39,$58,$20,$47,$7E,$8E
-                    .db $39,$5C,$00,$00,$3F,$7D,$39,$7E
-                    .db $39,$7D,$39,$7E,$39,$7D,$39,$7E
-                    .db $39,$7D,$39,$7E,$39,$7D,$39,$7E
-                    .db $39,$7D,$39,$7E,$39,$7D,$39,$7E
-                    .db $39,$7D,$39,$7E,$39,$7D,$39,$7E
-                    .db $39,$7D,$39,$7E,$39,$7D,$39,$7E
-                    .db $39,$7D,$39,$7E,$39,$7D,$39,$7E
-                    .db $39,$7D,$39,$7E,$39,$7D,$39,$7E
-                    .db $39,$7D,$39,$7E,$39,$5C,$20,$47
-                    .db $7E,$8E,$39,$FF,$53,$A0,$00,$03
-                    .db $FF,$60,$9E,$61,$53,$B8,$00,$01
-                    .db $9E,$21,$53,$B9,$40,$0C,$FF,$20
-                    .db $53,$C0,$00,$03,$FF,$60,$9E,$E1
-                    .db $53,$D8,$00,$01,$9E,$A1,$53,$D9
-                    .db $40,$0C,$FF,$20,$53,$E0,$40,$08
-                    .db $FF,$60,$53,$E5,$00,$01,$9E,$61
-                    .db $53,$EA,$00,$0B,$9E,$21,$FF,$20
-                    .db $FF,$20,$FF,$20,$FF,$60,$9E,$61
-                    .db $53,$FB,$00,$01,$9E,$21,$53,$FC
-                    .db $40,$06,$FF,$20,$58,$00,$40,$08
-                    .db $FF,$60,$58,$05,$00,$01,$9E,$E1
-                    .db $58,$0A,$00,$0B,$9E,$A1,$FF,$20
-                    .db $FF,$20,$FF,$20,$FF,$60,$9E,$E1
-                    .db $58,$1B,$00,$01,$9E,$A1,$58,$1C
-                    .db $40,$06,$FF,$20,$58,$60,$80,$0F
-                    .db $FF,$20,$FF,$20,$8F,$61,$8F,$E1
-                    .db $FF,$20,$FF,$20,$FF,$60,$FF,$60
-                    .db $58,$61,$80,$0F,$FF,$20,$FF,$20
-                    .db $FC,$60,$FC,$60,$FF,$20,$FF,$20
-                    .db $9E,$61,$9E,$E1,$58,$62,$00,$03
-                    .db $FF,$60,$9E,$61,$58,$82,$00,$03
-                    .db $FF,$60,$9E,$E1,$58,$E2,$40,$06
-                    .db $FF,$20,$58,$E6,$00,$03,$FF,$60
-                    .db $9E,$61,$59,$02,$40,$06,$FF,$20
-                    .db $59,$06,$00,$03,$FF,$60,$9E,$E1
-                    .db $58,$6C,$00,$01,$9E,$21,$58,$6D
-                    .db $40,$24,$FF,$20,$58,$8C,$00,$01
-                    .db $9E,$A1,$58,$8D,$40,$24,$FF,$20
-                    .db $58,$B2,$00,$01,$9E,$21,$58,$B3
-                    .db $40,$18,$FF,$20,$58,$D2,$00,$01
-                    .db $9E,$A1,$58,$D3,$40,$18,$FF,$20
-                    .db $58,$FC,$00,$07,$FC,$20,$8F,$21
-                    .db $FF,$20,$FF,$20,$59,$1C,$00,$07
-                    .db $FC,$20,$8F,$A1,$FF,$20,$FF,$20
-                    .db $59,$2E,$00,$0B,$9E,$21,$FF,$20
-                    .db $FF,$20,$FF,$20,$FF,$60,$9E,$61
-                    .db $59,$4E,$00,$0B,$9E,$A1,$FF,$20
-                    .db $FF,$20,$FF,$20,$FF,$60,$9E,$E1
-                    .db $59,$38,$00,$01,$9E,$21,$59,$39
-                    .db $40,$0C,$FF,$20,$59,$58,$00,$01
-                    .db $9E,$A1,$59,$59,$40,$0C,$FF,$20
-                    .db $59,$A4,$00,$01,$9E,$21,$59,$A5
-                    .db $40,$0E,$FF,$20,$59,$AD,$00,$05
-                    .db $FF,$60,$FF,$60,$9E,$61,$59,$C4
-                    .db $00,$01,$9E,$A1,$59,$C5,$40,$0E
-                    .db $FF,$20,$59,$CD,$00,$05,$FF,$60
-                    .db $FF,$60,$9E,$E1,$59,$E0,$00,$03
-                    .db $FF,$60,$9E,$61,$5A,$00,$00,$03
-                    .db $FF,$60,$9E,$E1,$59,$E8,$00,$01
-                    .db $9E,$21,$59,$E9,$40,$12,$FF,$20
-                    .db $59,$F3,$00,$05,$FF,$60,$FF,$60
-                    .db $9E,$61,$5A,$08,$00,$01,$9E,$A1
-                    .db $5A,$09,$40,$12,$FF,$20,$5A,$13
-                    .db $00,$05,$FF,$60,$FF,$60,$9E,$E1
-                    .db $59,$FC,$00,$07,$9E,$21,$FF,$20
-                    .db $FF,$20,$FF,$20,$5A,$1C,$00,$07
-                    .db $9E,$A1,$FF,$20,$FF,$20,$FF,$20
-                    .db $5A,$2E,$00,$03,$FC,$20,$8F,$21
-                    .db $5A,$30,$40,$0C,$FF,$20,$5A,$37
-                    .db $00,$05,$FF,$60,$FF,$60,$9E,$61
-                    .db $5A,$4E,$00,$03,$FC,$20,$8F,$A1
-                    .db $5A,$50,$40,$0C,$FF,$20,$5A,$57
-                    .db $00,$05,$FF,$60,$FF,$60,$9E,$E1
-                    .db $5A,$6C,$00,$0B,$9E,$21,$FF,$20
-                    .db $FF,$20,$FF,$20,$FF,$60,$9E,$61
-                    .db $5A,$8C,$00,$0B,$9E,$A1,$FF,$20
-                    .db $FF,$20,$FF,$20,$FF,$60,$9E,$E1
-                    .db $57,$A0,$00,$03,$FF,$60,$9E,$61
-                    .db $57,$B8,$00,$01,$9E,$21,$57,$B9
-                    .db $40,$0C,$FF,$20,$57,$C0,$00,$03
-                    .db $FF,$60,$9E,$E1,$57,$D8,$00,$01
-                    .db $9E,$A1,$57,$D9,$40,$0C,$FF,$20
-                    .db $57,$E0,$40,$08,$FF,$60,$57,$E5
-                    .db $00,$01,$9E,$61,$57,$EA,$00,$0B
+DATA_059087:        .db $58,$06,$00,$03,$87,$39,$88,$39
+                    .db $58,$12,$00,$03,$87,$39,$88,$39
+                    .db $58,$26,$00,$03,$97,$39,$98,$39
+                    .db $58,$2C,$00,$03,$87,$39,$88,$39
+                    .db $58,$32,$00,$03,$97,$39,$98,$39
+                    .db $58,$38,$00,$03,$87,$39,$88,$39
+                    .db $58,$46,$00,$03,$85,$39,$86,$39
+                    .db $58,$4C,$00,$03,$97,$39,$98,$39
+                    .db $58,$52,$00,$03,$85,$39,$86,$39
+                    .db $58,$58,$00,$03,$97,$39,$98,$39
+                    .db $58,$66,$00,$03,$95,$39,$96,$39
+                    .db $58,$6C,$00,$03,$95,$39,$96,$39
+                    .db $58,$72,$00,$03,$95,$39,$96,$39
+                    .db $58,$78,$00,$03,$95,$39,$96,$39
+                    .db $58,$84,$00,$2F,$80,$3D,$81,$3D
+                    .db $82,$3D,$82,$7D,$82,$3D,$82,$7D
+                    .db $82,$3D,$82,$7D,$82,$3D,$82,$7D
+                    .db $82,$3D,$82,$7D,$82,$3D,$82,$7D
+                    .db $82,$3D,$82,$7D,$82,$3D,$82,$7D
+                    .db $82,$3D,$82,$7D,$82,$3D,$82,$7D
+                    .db $81,$7D,$80,$7D,$58,$A4,$00,$2F
+                    .db $90,$3D,$91,$3D,$92,$3D,$92,$7D
+                    .db $92,$3D,$92,$7D,$92,$3D,$92,$7D
+                    .db $92,$3D,$92,$7D,$92,$3D,$92,$7D
+                    .db $92,$3D,$92,$7D,$92,$3D,$92,$7D
+                    .db $92,$3D,$92,$7D,$92,$3D,$92,$7D
+                    .db $92,$3D,$92,$7D,$91,$7D,$90,$7D
+                    .db $58,$C4,$80,$13,$83,$3D,$83,$BD
+                    .db $83,$3D,$83,$BD,$83,$3D,$83,$BD
+                    .db $83,$3D,$83,$BD,$83,$3D,$83,$BD
+                    .db $58,$C5,$80,$13,$84,$3D,$84,$BD
+                    .db $84,$3D,$84,$BD,$84,$3D,$84,$BD
+                    .db $84,$3D,$84,$BD,$84,$3D,$84,$BD
+                    .db $58,$C7,$C0,$12,$93,$39,$58,$C8
+                    .db $C0,$12,$94,$39,$58,$C9,$C0,$12
+                    .db $93,$39,$58,$CA,$C0,$12,$94,$39
+                    .db $58,$CB,$C0,$12,$93,$39,$58,$CC
+                    .db $C0,$12,$94,$39,$58,$CD,$C0,$12
+                    .db $93,$39,$58,$CE,$C0,$12,$94,$39
+                    .db $58,$CF,$C0,$12,$93,$39,$58,$D0
+                    .db $C0,$12,$94,$39,$58,$D1,$C0,$12
+                    .db $93,$39,$58,$D2,$C0,$12,$94,$39
+                    .db $58,$D3,$C0,$12,$93,$39,$58,$D4
+                    .db $C0,$12,$94,$39,$58,$D5,$C0,$12
+                    .db $93,$39,$58,$D6,$C0,$12,$94,$39
+                    .db $58,$D7,$C0,$12,$93,$39,$58,$D8
+                    .db $C0,$12,$94,$39,$58,$DA,$80,$13
+                    .db $83,$3D,$83,$BD,$83,$3D,$83,$BD
+                    .db $83,$3D,$83,$BD,$83,$3D,$83,$BD
+                    .db $83,$3D,$83,$BD,$58,$DB,$80,$13
+                    .db $84,$3D,$84,$BD,$84,$3D,$84,$BD
+                    .db $84,$3D,$84,$BD,$84,$3D,$84,$BD
+                    .db $84,$3D,$84,$BD,$5A,$04,$00,$2F
+                    .db $90,$BD,$91,$BD,$82,$3D,$82,$7D
+                    .db $82,$3D,$82,$7D,$82,$3D,$82,$7D
+                    .db $82,$3D,$82,$7D,$82,$3D,$82,$7D
+                    .db $82,$3D,$82,$7D,$82,$3D,$82,$7D
+                    .db $82,$3D,$82,$7D,$82,$3D,$82,$7D
+                    .db $82,$3D,$82,$7D,$91,$FD,$90,$FD
+                    .db $5A,$24,$00,$2F,$80,$BD,$81,$BD
+                    .db $92,$3D,$92,$7D,$92,$3D,$92,$7D
+                    .db $92,$3D,$92,$7D,$92,$3D,$92,$7D
+                    .db $92,$3D,$92,$7D,$92,$3D,$92,$7D
+                    .db $92,$3D,$92,$7D,$92,$3D,$92,$7D
+                    .db $92,$3D,$92,$7D,$92,$3D,$92,$7D
+                    .db $81,$FD,$80,$FD,$FF
+
+DATA_059294:        .db $50,$A8,$00,$1F,$99,$3D,$9A,$3D
+                    .db $A1,$AD,$B2,$2D,$B3,$2D,$B4,$2D
+                    .db $A5,$AD,$B6,$2D,$B7,$2D,$B8,$2D
+                    .db $B4,$2D,$BA,$2D,$BB,$2D,$BC,$2D
+                    .db $FE,$2C,$FE,$2C,$50,$C8,$00,$1F
+                    .db $8B,$3D,$8C,$3D,$C1,$2D,$C2,$2D
+                    .db $C3,$2D,$B4,$AD,$A3,$2D,$A4,$2D
+                    .db $C7,$2D,$C8,$2D,$B4,$AD,$BA,$AD
+                    .db $D5,$2D,$CC,$2D,$FE,$2C,$FE,$2C
+                    .db $50,$E8,$00,$1F,$9B,$3D,$9C,$3D
+                    .db $D1,$2D,$D2,$2D,$D3,$2D,$B7,$AD
+                    .db $D5,$2D,$B4,$2D,$D7,$2D,$C7,$2D
+                    .db $D9,$2D,$D9,$6D,$DB,$2D,$DC,$2D
+                    .db $FE,$2C,$FE,$2C,$51,$08,$00,$1F
+                    .db $89,$3D,$8A,$3D,$A1,$2D,$A2,$2D
+                    .db $A3,$2D,$A4,$2D,$A5,$2D,$B4,$AD
+                    .db $D5,$2D,$C7,$AD,$FD,$2C,$AA,$2D
+                    .db $AB,$2D,$AC,$2D,$FE,$2C,$FE,$2C
+                    .db $51,$28,$00,$1F,$99,$3D,$9A,$3D
+                    .db $A1,$AD,$B2,$2D,$B3,$2D,$B4,$2D
+                    .db $A5,$AD,$B6,$2D,$B7,$2D,$B8,$2D
+                    .db $B4,$2D,$BA,$2D,$BB,$2D,$BC,$2D
+                    .db $FE,$2C,$FE,$2C,$51,$48,$00,$1F
+                    .db $8B,$3D,$8C,$3D,$C1,$2D,$C2,$2D
+                    .db $C3,$2D,$B4,$AD,$A3,$2D,$A4,$2D
+                    .db $C7,$2D,$C8,$2D,$B4,$AD,$BA,$AD
+                    .db $D5,$2D,$CC,$2D,$FE,$2C,$FE,$2C
+                    .db $51,$68,$00,$1F,$9B,$3D,$9C,$3D
+                    .db $D1,$2D,$D2,$2D,$D3,$2D,$B7,$AD
+                    .db $D5,$2D,$B4,$2D,$D7,$2D,$C7,$2D
+                    .db $D9,$2D,$D9,$6D,$DB,$2D,$DC,$2D
+                    .db $FE,$2C,$FE,$2C,$51,$88,$00,$1F
+                    .db $89,$3D,$8A,$3D,$A1,$2D,$A2,$2D
+                    .db $A3,$2D,$A4,$2D,$A5,$2D,$B4,$AD
+                    .db $D5,$2D,$C7,$AD,$FD,$2C,$AA,$2D
+                    .db $AB,$2D,$AC,$2D,$FE,$2C,$FE,$2C
+                    .db $51,$A8,$00,$1F,$99,$3D,$9A,$3D
+                    .db $A1,$AD,$B2,$2D,$B3,$2D,$B4,$2D
+                    .db $A5,$AD,$B6,$2D,$B7,$2D,$B8,$2D
+                    .db $B4,$2D,$BA,$2D,$BB,$2D,$BC,$2D
+                    .db $FE,$2C,$FE,$2C,$51,$C8,$00,$1F
+                    .db $8B,$3D,$8C,$3D,$C1,$2D,$C2,$2D
+                    .db $C3,$2D,$B4,$AD,$A3,$2D,$A4,$2D
+                    .db $C7,$2D,$C8,$2D,$B4,$AD,$BA,$AD
+                    .db $D5,$2D,$CC,$2D,$FE,$2C,$FE,$2C
+                    .db $51,$E8,$00,$1F,$9B,$3D,$9C,$3D
+                    .db $D1,$2D,$D2,$2D,$D3,$2D,$B7,$AD
+                    .db $D5,$2D,$B4,$2D,$D7,$2D,$C7,$2D
+                    .db $D9,$2D,$D9,$6D,$DB,$2D,$DC,$2D
+                    .db $FE,$2C,$FE,$2C,$52,$08,$00,$1F
+                    .db $89,$3D,$8A,$3D,$A1,$2D,$A2,$2D
+                    .db $A3,$2D,$A4,$2D,$A5,$2D,$B4,$AD
+                    .db $D5,$2D,$C7,$AD,$FD,$2C,$AA,$2D
+                    .db $AB,$2D,$AC,$2D,$FE,$2C,$FE,$2C
+                    .db $52,$28,$00,$1F,$99,$3D,$9A,$3D
+                    .db $A1,$AD,$B2,$2D,$B3,$2D,$B4,$2D
+                    .db $A5,$AD,$B6,$2D,$B7,$2D,$B8,$2D
+                    .db $B4,$2D,$BA,$2D,$BB,$2D,$BC,$2D
+                    .db $FE,$2C,$FE,$2C,$52,$48,$00,$1F
+                    .db $8B,$3D,$8C,$3D,$C1,$2D,$C2,$2D
+                    .db $C3,$2D,$B4,$AD,$A3,$2D,$A4,$2D
+                    .db $C7,$2D,$C8,$2D,$B4,$AD,$BA,$AD
+                    .db $D5,$2D,$CC,$2D,$FE,$2C,$FE,$2C
+                    .db $52,$68,$00,$1F,$9B,$3D,$9C,$3D
+                    .db $D1,$2D,$D2,$2D,$D3,$2D,$B7,$AD
+                    .db $D5,$2D,$B4,$2D,$D7,$2D,$C7,$2D
+                    .db $D9,$2D,$D9,$6D,$DB,$2D,$DC,$2D
+                    .db $FE,$2C,$FE,$2C,$52,$88,$00,$1F
+                    .db $89,$3D,$8A,$3D,$A1,$2D,$A2,$2D
+                    .db $A3,$2D,$A4,$2D,$A5,$2D,$B4,$AD
+                    .db $D5,$2D,$C7,$AD,$FD,$2C,$AA,$2D
+                    .db $AB,$2D,$AC,$2D,$FE,$2C,$FE,$2C
+                    .db $52,$A8,$00,$1F,$99,$3D,$9A,$3D
+                    .db $A1,$AD,$B2,$2D,$B3,$2D,$B4,$2D
+                    .db $A5,$AD,$B6,$2D,$B7,$2D,$B8,$2D
+                    .db $B4,$2D,$BA,$2D,$BB,$2D,$BC,$2D
+                    .db $FE,$2C,$FE,$2C,$52,$C7,$00,$23
+                    .db $CD,$2D,$CE,$2D,$CF,$2D,$E1,$2D
+                    .db $E2,$2D,$E3,$2D,$E4,$2D,$E5,$2D
+                    .db $E6,$2D,$E7,$2D,$E8,$2D,$E9,$2D
+                    .db $EA,$2D,$EB,$2D,$EC,$2D,$ED,$2D
+                    .db $EE,$2D,$CD,$6D,$52,$E7,$00,$23
+                    .db $DD,$2D,$DE,$2D,$DF,$2D,$F1,$2D
+                    .db $F2,$2D,$DE,$2D,$DF,$2D,$F1,$2D
+                    .db $F2,$2D,$DE,$2D,$DF,$2D,$F1,$2D
+                    .db $F2,$2D,$DE,$2D,$DF,$2D,$F1,$2D
+                    .db $F2,$2D,$DD,$6D,$FF
+
+DATA_059549:        .db $58,$00,$00,$3F,$7D,$39,$7E,$39
+                    .db $7D,$39,$7E,$39,$7D,$39,$7E,$39
+                    .db $7D,$39,$7E,$39,$7D,$39,$7E,$39
+                    .db $7D,$39,$7E,$39,$7D,$39,$7E,$39
+                    .db $7D,$39,$7E,$39,$7D,$39,$7E,$39
+                    .db $7D,$39,$7E,$39,$7D,$39,$7E,$39
+                    .db $7D,$39,$7E,$39,$7D,$39,$7E,$39
+                    .db $7D,$39,$7E,$39,$7D,$39,$7E,$39
+                    .db $7D,$39,$7E,$39,$58,$20,$47,$7E
+                    .db $8E,$39,$5C,$00,$00,$3F,$7D,$39
+                    .db $7E,$39,$7D,$39,$7E,$39,$7D,$39
+                    .db $7E,$39,$7D,$39,$7E,$39,$7D,$39
+                    .db $7E,$39,$7D,$39,$7E,$39,$7D,$39
+                    .db $7E,$39,$7D,$39,$7E,$39,$7D,$39
+                    .db $7E,$39,$7D,$39,$7E,$39,$7D,$39
+                    .db $7E,$39,$7D,$39,$7E,$39,$7D,$39
+                    .db $7E,$39,$7D,$39,$7E,$39,$7D,$39
+                    .db $7E,$39,$7D,$39,$7E,$39,$5C,$20
+                    .db $47,$7E,$8E,$39,$FF
+
+DATA_0595DE:        .db $53,$A0,$00,$03,$FF,$60,$9E,$61
+                    .db $53,$B8,$00,$01,$9E,$21,$53,$B9
+                    .db $40,$0C,$FF,$20,$53,$C0,$00,$03
+                    .db $FF,$60,$9E,$E1,$53,$D8,$00,$01
+                    .db $9E,$A1,$53,$D9,$40,$0C,$FF,$20
+                    .db $53,$E0,$40,$08,$FF,$60,$53,$E5
+                    .db $00,$01,$9E,$61,$53,$EA,$00,$0B
                     .db $9E,$21,$FF,$20,$FF,$20,$FF,$20
-                    .db $FF,$20,$9E,$61,$57,$FB,$00,$01
-                    .db $9E,$21,$57,$FC,$40,$06,$FF,$20
-                    .db $5C,$00,$40,$08,$FF,$60,$5C,$05
-                    .db $00,$01,$9E,$E1,$5C,$0A,$00,$0B
+                    .db $FF,$60,$9E,$61,$53,$FB,$00,$01
+                    .db $9E,$21,$53,$FC,$40,$06,$FF,$20
+                    .db $58,$00,$40,$08,$FF,$60,$58,$05
+                    .db $00,$01,$9E,$E1,$58,$0A,$00,$0B
                     .db $9E,$A1,$FF,$20,$FF,$20,$FF,$20
-                    .db $FF,$60,$9E,$E1,$5C,$1B,$00,$01
-                    .db $9E,$A1,$5C,$1C,$40,$06,$FF,$20
-                    .db $5C,$60,$80,$0F,$FF,$20,$FF,$20
+                    .db $FF,$60,$9E,$E1,$58,$1B,$00,$01
+                    .db $9E,$A1,$58,$1C,$40,$06,$FF,$20
+                    .db $58,$60,$80,$0F,$FF,$20,$FF,$20
                     .db $8F,$61,$8F,$E1,$FF,$20,$FF,$20
-                    .db $FF,$60,$FF,$60,$5C,$61,$80,$0F
+                    .db $FF,$60,$FF,$60,$58,$61,$80,$0F
                     .db $FF,$20,$FF,$20,$FC,$60,$FC,$60
                     .db $FF,$20,$FF,$20,$9E,$61,$9E,$E1
-                    .db $5C,$62,$00,$03,$FF,$60,$9E,$61
-                    .db $5C,$82,$00,$03,$FF,$60,$9E,$E1
-                    .db $5C,$E2,$40,$06,$FF,$20,$5C,$E6
-                    .db $00,$03,$FF,$60,$9E,$61,$5D,$02
-                    .db $40,$06,$FF,$20,$5D,$06,$00,$03
-                    .db $FF,$60,$9E,$E1,$5C,$6C,$00,$01
-                    .db $9E,$21,$5C,$6D,$40,$24,$FF,$20
-                    .db $5C,$8C,$00,$01,$9E,$A1,$5C,$8D
-                    .db $40,$24,$FF,$20,$5C,$B2,$00,$01
-                    .db $9E,$21,$5C,$B3,$40,$18,$FF,$20
-                    .db $5C,$D2,$00,$01,$9E,$A1,$5C,$D3
-                    .db $40,$18,$FF,$20,$5C,$FC,$00,$07
+                    .db $58,$62,$00,$03,$FF,$60,$9E,$61
+                    .db $58,$82,$00,$03,$FF,$60,$9E,$E1
+                    .db $58,$E2,$40,$06,$FF,$20,$58,$E6
+                    .db $00,$03,$FF,$60,$9E,$61,$59,$02
+                    .db $40,$06,$FF,$20,$59,$06,$00,$03
+                    .db $FF,$60,$9E,$E1,$58,$6C,$00,$01
+                    .db $9E,$21,$58,$6D,$40,$24,$FF,$20
+                    .db $58,$8C,$00,$01,$9E,$A1,$58,$8D
+                    .db $40,$24,$FF,$20,$58,$B2,$00,$01
+                    .db $9E,$21,$58,$B3,$40,$18,$FF,$20
+                    .db $58,$D2,$00,$01,$9E,$A1,$58,$D3
+                    .db $40,$18,$FF,$20,$58,$FC,$00,$07
                     .db $FC,$20,$8F,$21,$FF,$20,$FF,$20
-                    .db $5D,$1C,$00,$07,$FC,$20,$8F,$A1
-                    .db $FF,$20,$FF,$20,$5D,$2E,$00,$0B
+                    .db $59,$1C,$00,$07,$FC,$20,$8F,$A1
+                    .db $FF,$20,$FF,$20,$59,$2E,$00,$0B
                     .db $9E,$21,$FF,$20,$FF,$20,$FF,$20
-                    .db $FF,$60,$9E,$61,$5D,$4E,$00,$0B
+                    .db $FF,$60,$9E,$61,$59,$4E,$00,$0B
                     .db $9E,$A1,$FF,$20,$FF,$20,$FF,$20
-                    .db $FF,$60,$9E,$E1,$5D,$38,$00,$01
-                    .db $9E,$21,$5D,$39,$40,$0C,$FF,$20
-                    .db $5D,$58,$00,$01,$9E,$A1,$5D,$59
-                    .db $40,$0C,$FF,$20,$5D,$A4,$00,$01
-                    .db $9E,$21,$5D,$A5,$40,$0E,$FF,$20
-                    .db $5D,$AD,$00,$05,$FF,$60,$FF,$60
-                    .db $9E,$61,$5D,$C4,$00,$01,$9E,$A1
-                    .db $5D,$C5,$40,$0E,$FF,$20,$5D,$CD
+                    .db $FF,$60,$9E,$E1,$59,$38,$00,$01
+                    .db $9E,$21,$59,$39,$40,$0C,$FF,$20
+                    .db $59,$58,$00,$01,$9E,$A1,$59,$59
+                    .db $40,$0C,$FF,$20,$59,$A4,$00,$01
+                    .db $9E,$21,$59,$A5,$40,$0E,$FF,$20
+                    .db $59,$AD,$00,$05,$FF,$60,$FF,$60
+                    .db $9E,$61,$59,$C4,$00,$01,$9E,$A1
+                    .db $59,$C5,$40,$0E,$FF,$20,$59,$CD
                     .db $00,$05,$FF,$60,$FF,$60,$9E,$E1
-                    .db $5D,$E0,$00,$03,$FF,$60,$9E,$61
-                    .db $5E,$00,$00,$03,$FF,$60,$9E,$E1
-                    .db $5D,$E8,$00,$01,$9E,$21,$5D,$E9
-                    .db $40,$12,$FF,$20,$5D,$F3,$00,$05
-                    .db $FF,$60,$FF,$60,$9E,$61,$5E,$08
-                    .db $00,$01,$9E,$A1,$5E,$09,$40,$12
-                    .db $FF,$20,$5E,$13,$00,$05,$FF,$60
-                    .db $FF,$60,$9E,$E1,$5D,$FC,$00,$07
+                    .db $59,$E0,$00,$03,$FF,$60,$9E,$61
+                    .db $5A,$00,$00,$03,$FF,$60,$9E,$E1
+                    .db $59,$E8,$00,$01,$9E,$21,$59,$E9
+                    .db $40,$12,$FF,$20,$59,$F3,$00,$05
+                    .db $FF,$60,$FF,$60,$9E,$61,$5A,$08
+                    .db $00,$01,$9E,$A1,$5A,$09,$40,$12
+                    .db $FF,$20,$5A,$13,$00,$05,$FF,$60
+                    .db $FF,$60,$9E,$E1,$59,$FC,$00,$07
                     .db $9E,$21,$FF,$20,$FF,$20,$FF,$20
-                    .db $5E,$1C,$00,$07,$9E,$A1,$FF,$20
-                    .db $FF,$20,$FF,$20,$5E,$2E,$00,$03
-                    .db $FC,$20,$8F,$21,$5E,$30,$40,$0C
-                    .db $FF,$20,$5E,$37,$00,$05,$FF,$60
-                    .db $FF,$60,$9E,$61,$5E,$4E,$00,$03
-                    .db $FC,$20,$8F,$A1,$5E,$50,$40,$0C
-                    .db $FF,$20,$5E,$57,$00,$05,$FF,$60
-                    .db $FF,$60,$9E,$E1,$5E,$6C,$00,$0B
+                    .db $5A,$1C,$00,$07,$9E,$A1,$FF,$20
+                    .db $FF,$20,$FF,$20,$5A,$2E,$00,$03
+                    .db $FC,$20,$8F,$21,$5A,$30,$40,$0C
+                    .db $FF,$20,$5A,$37,$00,$05,$FF,$60
+                    .db $FF,$60,$9E,$61,$5A,$4E,$00,$03
+                    .db $FC,$20,$8F,$A1,$5A,$50,$40,$0C
+                    .db $FF,$20,$5A,$57,$00,$05,$FF,$60
+                    .db $FF,$60,$9E,$E1,$5A,$6C,$00,$0B
                     .db $9E,$21,$FF,$20,$FF,$20,$FF,$20
-                    .db $FF,$60,$9E,$61,$5E,$8C,$00,$0B
+                    .db $FF,$60,$9E,$61,$5A,$8C,$00,$0B
                     .db $9E,$A1,$FF,$20,$FF,$20,$FF,$20
-                    .db $FF,$60,$9E,$E1,$FF,$51,$67,$00
-                    .db $01,$9F,$39,$51,$93,$00,$01,$9F
-                    .db $29,$51,$D1,$00,$01,$9F,$39,$52
-                    .db $5A,$00,$01,$9F,$39,$52,$77,$00
-                    .db $01,$9F,$29,$52,$79,$80,$03,$9F
-                    .db $29,$9F,$39,$52,$8C,$00,$01,$9F
-                    .db $29,$53,$3D,$00,$01,$9F,$39,$55
-                    .db $67,$00,$01,$9F,$39,$55,$93,$00
-                    .db $01,$9F,$29,$55,$D1,$00,$01,$9F
-                    .db $39,$56,$5A,$00,$01,$9F,$39,$56
-                    .db $77,$00,$01,$9F,$29,$56,$79,$80
-                    .db $03,$9F,$29,$9F,$39,$56,$8C,$00
-                    .db $01,$9F,$29,$57,$3D,$00,$01,$9F
-                    .db $39,$58,$07,$00,$01,$9F,$39,$58
-                    .db $33,$00,$01,$9F,$29,$58,$71,$00
-                    .db $01,$9F,$39,$58,$FA,$00,$01,$9F
-                    .db $39,$59,$17,$00,$01,$9F,$29,$59
-                    .db $19,$80,$03,$9F,$29,$9F,$39,$59
-                    .db $2C,$00,$01,$9F,$29,$59,$DD,$00
-                    .db $01,$9F,$39,$5C,$07,$00,$01,$9F
-                    .db $39,$5C,$33,$00,$01,$9F,$29,$5C
-                    .db $71,$00,$01,$9F,$39,$5C,$FA,$00
-                    .db $01,$9F,$39,$5D,$17,$00,$01,$9F
-                    .db $29,$5D,$19,$80,$03,$9F,$29,$9F
-                    .db $39,$5D,$2C,$00,$01,$9F,$29,$5D
-                    .db $DD,$00,$01,$9F,$39,$FF,$58,$03
-                    .db $00,$03,$80,$01,$81,$01,$58,$07
-                    .db $00,$03,$80,$01,$81,$01,$58,$0F
-                    .db $00,$07,$80,$01,$81,$01,$80,$01
-                    .db $81,$01,$58,$15,$00,$0B,$80,$01
-                    .db $81,$01,$80,$01,$81,$01,$80,$01
-                    .db $81,$01,$58,$20,$00,$0F,$80,$01
-                    .db $81,$01,$86,$15,$87,$15,$82,$15
-                    .db $83,$15,$80,$01,$81,$01,$58,$22
-                    .db $80,$05,$86,$15,$96,$15,$90,$15
-                    .db $58,$23,$80,$05,$87,$15,$97,$15
-                    .db $91,$15,$58,$2C,$80,$05,$86,$15
-                    .db $96,$15,$90,$15,$58,$2D,$80,$05
-                    .db $87,$15,$97,$15,$91,$15,$58,$2F
-                    .db $80,$05,$86,$15,$96,$15,$90,$15
-                    .db $58,$30,$80,$05,$87,$15,$97,$15
-                    .db $91,$15,$58,$32,$80,$05,$86,$15
-                    .db $96,$15,$90,$15,$58,$33,$80,$05
-                    .db $87,$15,$97,$15,$91,$15,$58,$36
-                    .db $00,$03,$80,$01,$81,$01,$58,$3A
-                    .db $00,$03,$80,$01,$81,$01,$58,$3C
-                    .db $80,$05,$86,$15,$96,$15,$90,$15
-                    .db $58,$3D,$80,$05,$87,$15,$97,$15
-                    .db $91,$15,$58,$45,$00,$03,$82,$15
-                    .db $83,$15,$58,$8D,$00,$03,$80,$01
-                    .db $81,$01,$58,$9E,$00,$03,$80,$01
-                    .db $81,$01,$58,$BD,$00,$03,$80,$01
-                    .db $81,$01,$58,$C7,$00,$03,$80,$01
-                    .db $81,$01,$58,$D9,$00,$01,$81,$01
-                    .db $58,$DC,$00,$07,$80,$01,$81,$01
-                    .db $82,$15,$83,$15,$58,$E4,$00,$03
-                    .db $80,$01,$81,$01,$58,$E8,$00,$07
+                    .db $FF,$60,$9E,$E1,$57,$A0,$00,$03
+                    .db $FF,$60,$9E,$61,$57,$B8,$00,$01
+                    .db $9E,$21,$57,$B9,$40,$0C,$FF,$20
+                    .db $57,$C0,$00,$03,$FF,$60,$9E,$E1
+                    .db $57,$D8,$00,$01,$9E,$A1,$57,$D9
+                    .db $40,$0C,$FF,$20,$57,$E0,$40,$08
+                    .db $FF,$60,$57,$E5,$00,$01,$9E,$61
+                    .db $57,$EA,$00,$0B,$9E,$21,$FF,$20
+                    .db $FF,$20,$FF,$20,$FF,$20,$9E,$61
+                    .db $57,$FB,$00,$01,$9E,$21,$57,$FC
+                    .db $40,$06,$FF,$20,$5C,$00,$40,$08
+                    .db $FF,$60,$5C,$05,$00,$01,$9E,$E1
+                    .db $5C,$0A,$00,$0B,$9E,$A1,$FF,$20
+                    .db $FF,$20,$FF,$20,$FF,$60,$9E,$E1
+                    .db $5C,$1B,$00,$01,$9E,$A1,$5C,$1C
+                    .db $40,$06,$FF,$20,$5C,$60,$80,$0F
+                    .db $FF,$20,$FF,$20,$8F,$61,$8F,$E1
+                    .db $FF,$20,$FF,$20,$FF,$60,$FF,$60
+                    .db $5C,$61,$80,$0F,$FF,$20,$FF,$20
+                    .db $FC,$60,$FC,$60,$FF,$20,$FF,$20
+                    .db $9E,$61,$9E,$E1,$5C,$62,$00,$03
+                    .db $FF,$60,$9E,$61,$5C,$82,$00,$03
+                    .db $FF,$60,$9E,$E1,$5C,$E2,$40,$06
+                    .db $FF,$20,$5C,$E6,$00,$03,$FF,$60
+                    .db $9E,$61,$5D,$02,$40,$06,$FF,$20
+                    .db $5D,$06,$00,$03,$FF,$60,$9E,$E1
+                    .db $5C,$6C,$00,$01,$9E,$21,$5C,$6D
+                    .db $40,$24,$FF,$20,$5C,$8C,$00,$01
+                    .db $9E,$A1,$5C,$8D,$40,$24,$FF,$20
+                    .db $5C,$B2,$00,$01,$9E,$21,$5C,$B3
+                    .db $40,$18,$FF,$20,$5C,$D2,$00,$01
+                    .db $9E,$A1,$5C,$D3,$40,$18,$FF,$20
+                    .db $5C,$FC,$00,$07,$FC,$20,$8F,$21
+                    .db $FF,$20,$FF,$20,$5D,$1C,$00,$07
+                    .db $FC,$20,$8F,$A1,$FF,$20,$FF,$20
+                    .db $5D,$2E,$00,$0B,$9E,$21,$FF,$20
+                    .db $FF,$20,$FF,$20,$FF,$60,$9E,$61
+                    .db $5D,$4E,$00,$0B,$9E,$A1,$FF,$20
+                    .db $FF,$20,$FF,$20,$FF,$60,$9E,$E1
+                    .db $5D,$38,$00,$01,$9E,$21,$5D,$39
+                    .db $40,$0C,$FF,$20,$5D,$58,$00,$01
+                    .db $9E,$A1,$5D,$59,$40,$0C,$FF,$20
+                    .db $5D,$A4,$00,$01,$9E,$21,$5D,$A5
+                    .db $40,$0E,$FF,$20,$5D,$AD,$00,$05
+                    .db $FF,$60,$FF,$60,$9E,$61,$5D,$C4
+                    .db $00,$01,$9E,$A1,$5D,$C5,$40,$0E
+                    .db $FF,$20,$5D,$CD,$00,$05,$FF,$60
+                    .db $FF,$60,$9E,$E1,$5D,$E0,$00,$03
+                    .db $FF,$60,$9E,$61,$5E,$00,$00,$03
+                    .db $FF,$60,$9E,$E1,$5D,$E8,$00,$01
+                    .db $9E,$21,$5D,$E9,$40,$12,$FF,$20
+                    .db $5D,$F3,$00,$05,$FF,$60,$FF,$60
+                    .db $9E,$61,$5E,$08,$00,$01,$9E,$A1
+                    .db $5E,$09,$40,$12,$FF,$20,$5E,$13
+                    .db $00,$05,$FF,$60,$FF,$60,$9E,$E1
+                    .db $5D,$FC,$00,$07,$9E,$21,$FF,$20
+                    .db $FF,$20,$FF,$20,$5E,$1C,$00,$07
+                    .db $9E,$A1,$FF,$20,$FF,$20,$FF,$20
+                    .db $5E,$2E,$00,$03,$FC,$20,$8F,$21
+                    .db $5E,$30,$40,$0C,$FF,$20,$5E,$37
+                    .db $00,$05,$FF,$60,$FF,$60,$9E,$61
+                    .db $5E,$4E,$00,$03,$FC,$20,$8F,$A1
+                    .db $5E,$50,$40,$0C,$FF,$20,$5E,$57
+                    .db $00,$05,$FF,$60,$FF,$60,$9E,$E1
+                    .db $5E,$6C,$00,$0B,$9E,$21,$FF,$20
+                    .db $FF,$20,$FF,$20,$FF,$60,$9E,$61
+                    .db $5E,$8C,$00,$0B,$9E,$A1,$FF,$20
+                    .db $FF,$20,$FF,$20,$FF,$60,$9E,$E1
+                    .db $FF
+
+DATA_059A17:        .db $51,$67,$00,$01,$9F,$39,$51,$93
+                    .db $00,$01,$9F,$29,$51,$D1,$00,$01
+                    .db $9F,$39,$52,$5A,$00,$01,$9F,$39
+                    .db $52,$77,$00,$01,$9F,$29,$52,$79
+                    .db $80,$03,$9F,$29,$9F,$39,$52,$8C
+                    .db $00,$01,$9F,$29,$53,$3D,$00,$01
+                    .db $9F,$39,$55,$67,$00,$01,$9F,$39
+                    .db $55,$93,$00,$01,$9F,$29,$55,$D1
+                    .db $00,$01,$9F,$39,$56,$5A,$00,$01
+                    .db $9F,$39,$56,$77,$00,$01,$9F,$29
+                    .db $56,$79,$80,$03,$9F,$29,$9F,$39
+                    .db $56,$8C,$00,$01,$9F,$29,$57,$3D
+                    .db $00,$01,$9F,$39,$58,$07,$00,$01
+                    .db $9F,$39,$58,$33,$00,$01,$9F,$29
+                    .db $58,$71,$00,$01,$9F,$39,$58,$FA
+                    .db $00,$01,$9F,$39,$59,$17,$00,$01
+                    .db $9F,$29,$59,$19,$80,$03,$9F,$29
+                    .db $9F,$39,$59,$2C,$00,$01,$9F,$29
+                    .db $59,$DD,$00,$01,$9F,$39,$5C,$07
+                    .db $00,$01,$9F,$39,$5C,$33,$00,$01
+                    .db $9F,$29,$5C,$71,$00,$01,$9F,$39
+                    .db $5C,$FA,$00,$01,$9F,$39,$5D,$17
+                    .db $00,$01,$9F,$29,$5D,$19,$80,$03
+                    .db $9F,$29,$9F,$39,$5D,$2C,$00,$01
+                    .db $9F,$29,$5D,$DD,$00,$01,$9F,$39
+                    .db $FF
+
+DATA_059AE0:        .db $58,$03,$00,$03,$80,$01,$81,$01
+                    .db $58,$07,$00,$03,$80,$01,$81,$01
+                    .db $58,$0F,$00,$07,$80,$01,$81,$01
+                    .db $80,$01,$81,$01,$58,$15,$00,$0B
                     .db $80,$01,$81,$01,$80,$01,$81,$01
-                    .db $58,$F9,$00,$0D,$80,$01,$81,$01
+                    .db $80,$01,$81,$01,$58,$20,$00,$0F
+                    .db $80,$01,$81,$01,$86,$15,$87,$15
+                    .db $82,$15,$83,$15,$80,$01,$81,$01
+                    .db $58,$22,$80,$05,$86,$15,$96,$15
+                    .db $90,$15,$58,$23,$80,$05,$87,$15
+                    .db $97,$15,$91,$15,$58,$2C,$80,$05
+                    .db $86,$15,$96,$15,$90,$15,$58,$2D
+                    .db $80,$05,$87,$15,$97,$15,$91,$15
+                    .db $58,$2F,$80,$05,$86,$15,$96,$15
+                    .db $90,$15,$58,$30,$80,$05,$87,$15
+                    .db $97,$15,$91,$15,$58,$32,$80,$05
+                    .db $86,$15,$96,$15,$90,$15,$58,$33
+                    .db $80,$05,$87,$15,$97,$15,$91,$15
+                    .db $58,$36,$00,$03,$80,$01,$81,$01
+                    .db $58,$3A,$00,$03,$80,$01,$81,$01
+                    .db $58,$3C,$80,$05,$86,$15,$96,$15
+                    .db $90,$15,$58,$3D,$80,$05,$87,$15
+                    .db $97,$15,$91,$15,$58,$45,$00,$03
+                    .db $82,$15,$83,$15,$58,$8D,$00,$03
+                    .db $80,$01,$81,$01,$58,$9E,$00,$03
+                    .db $80,$01,$81,$01,$58,$BD,$00,$03
+                    .db $80,$01,$81,$01,$58,$C7,$00,$03
+                    .db $80,$01,$81,$01,$58,$D9,$00,$01
+                    .db $81,$01,$58,$DC,$00,$07,$80,$01
+                    .db $81,$01,$82,$15,$83,$15,$58,$E4
+                    .db $00,$03,$80,$01,$81,$01,$58,$E8
+                    .db $00,$07,$80,$01,$81,$01,$80,$01
+                    .db $81,$01,$58,$F9,$00,$0D,$80,$01
+                    .db $81,$01,$80,$01,$81,$01,$82,$15
+                    .db $83,$15,$82,$15,$59,$02,$80,$05
+                    .db $86,$15,$96,$15,$90,$15,$59,$03
+                    .db $80,$05,$87,$15,$97,$15,$91,$15
+                    .db $59,$05,$00,$0B,$80,$01,$81,$01
+                    .db $82,$15,$83,$15,$80,$01,$81,$01
+                    .db $59,$0C,$80,$05,$86,$15,$96,$15
+                    .db $90,$15,$59,$0D,$80,$05,$87,$15
+                    .db $97,$15,$91,$15,$59,$0F,$80,$05
+                    .db $86,$15,$96,$15,$90,$15,$59,$10
+                    .db $80,$05,$87,$15,$97,$15,$91,$15
+                    .db $59,$12,$80,$05,$86,$15,$96,$15
+                    .db $90,$15,$59,$13,$80,$05,$87,$15
+                    .db $97,$15,$91,$15,$59,$1A,$00,$0B
+                    .db $80,$01,$81,$01,$86,$15,$87,$15
+                    .db $82,$15,$83,$15,$59,$1C,$80,$05
+                    .db $86,$15,$96,$15,$90,$15,$59,$1D
+                    .db $80,$05,$87,$15,$97,$15,$91,$15
+                    .db $59,$24,$00,$0F,$80,$01,$81,$01
+                    .db $82,$15,$83,$15,$82,$15,$83,$15
+                    .db $80,$01,$81,$01,$59,$39,$00,$03
+                    .db $80,$01,$81,$01,$59,$47,$00,$07
                     .db $80,$01,$81,$01,$82,$15,$83,$15
-                    .db $82,$15,$59,$02,$80,$05,$86,$15
-                    .db $96,$15,$90,$15,$59,$03,$80,$05
-                    .db $87,$15,$97,$15,$91,$15,$59,$05
-                    .db $00,$0B,$80,$01,$81,$01,$82,$15
-                    .db $83,$15,$80,$01,$81,$01,$59,$0C
-                    .db $80,$05,$86,$15,$96,$15,$90,$15
-                    .db $59,$0D,$80,$05,$87,$15,$97,$15
-                    .db $91,$15,$59,$0F,$80,$05,$86,$15
-                    .db $96,$15,$90,$15,$59,$10,$80,$05
-                    .db $87,$15,$97,$15,$91,$15,$59,$12
-                    .db $80,$05,$86,$15,$96,$15,$90,$15
-                    .db $59,$13,$80,$05,$87,$15,$97,$15
-                    .db $91,$15,$59,$1A,$00,$0B,$80,$01
-                    .db $81,$01,$86,$15,$87,$15,$82,$15
-                    .db $83,$15,$59,$1C,$80,$05,$86,$15
-                    .db $96,$15,$90,$15,$59,$1D,$80,$05
-                    .db $87,$15,$97,$15,$91,$15,$59,$24
-                    .db $00,$0F,$80,$01,$81,$01,$82,$15
-                    .db $83,$15,$82,$15,$83,$15,$80,$01
-                    .db $81,$01,$59,$39,$00,$03,$80,$01
-                    .db $81,$01,$59,$47,$00,$07,$80,$01
-                    .db $81,$01,$82,$15,$83,$15,$59,$5A
-                    .db $00,$0B,$80,$01,$81,$01,$90,$15
-                    .db $91,$15,$80,$01,$81,$01,$59,$64
-                    .db $00,$17,$80,$01,$81,$01,$82,$15
-                    .db $83,$15,$80,$01,$81,$01,$80,$01
-                    .db $81,$01,$80,$01,$81,$01,$80,$01
-                    .db $81,$01,$59,$87,$00,$03,$80,$01
-                    .db $81,$01,$59,$8B,$00,$07,$80,$01
-                    .db $81,$01,$80,$01,$81,$01,$59,$98
-                    .db $00,$03,$80,$01,$81,$01,$59,$A8
-                    .db $00,$07,$80,$01,$81,$01,$82,$15
-                    .db $83,$15,$59,$B9,$00,$03,$80,$01
-                    .db $81,$01,$59,$C5,$00,$03,$80,$01
-                    .db $81,$01,$59,$C9,$00,$07,$80,$01
-                    .db $81,$01,$80,$01,$81,$01,$59,$D6
-                    .db $00,$0F,$80,$01,$81,$01,$82,$15
-                    .db $83,$15,$80,$01,$81,$01,$80,$01
-                    .db $81,$01,$59,$E2,$80,$05,$86,$15
-                    .db $96,$15,$90,$15,$59,$E3,$80,$05
-                    .db $87,$15,$97,$15,$91,$15,$59,$EA
-                    .db $00,$0B,$80,$01,$81,$01,$86,$15
-                    .db $87,$15,$82,$15,$83,$15,$59,$EC
-                    .db $80,$05,$86,$15,$96,$15,$90,$15
-                    .db $59,$ED,$80,$05,$87,$15,$97,$15
-                    .db $91,$15,$59,$EF,$80,$05,$86,$15
-                    .db $96,$15,$90,$15,$59,$F0,$80,$05
-                    .db $87,$15,$97,$15,$91,$15,$59,$F2
-                    .db $80,$05,$86,$15,$96,$15,$90,$15
-                    .db $59,$F3,$80,$05,$87,$15,$97,$15
-                    .db $91,$15,$59,$F7,$00,$07,$82,$15
-                    .db $83,$15,$82,$15,$83,$15,$59,$FC
-                    .db $80,$05,$86,$15,$96,$15,$90,$15
-                    .db $59,$FD,$80,$05,$87,$15,$97,$15
-                    .db $91,$15,$5A,$14,$00,$0F,$80,$01
-                    .db $81,$01,$82,$15,$83,$15,$80,$01
-                    .db $81,$01,$82,$15,$83,$15,$5A,$20
-                    .db $00,$01,$81,$01,$5A,$27,$00,$03
-                    .db $80,$01,$81,$01,$5A,$35,$00,$0B
+                    .db $59,$5A,$00,$0B,$80,$01,$81,$01
+                    .db $90,$15,$91,$15,$80,$01,$81,$01
+                    .db $59,$64,$00,$17,$80,$01,$81,$01
+                    .db $82,$15,$83,$15,$80,$01,$81,$01
                     .db $80,$01,$81,$01,$80,$01,$81,$01
-                    .db $82,$15,$83,$15,$5A,$40,$00,$07
+                    .db $80,$01,$81,$01,$59,$87,$00,$03
+                    .db $80,$01,$81,$01,$59,$8B,$00,$07
                     .db $80,$01,$81,$01,$80,$01,$81,$01
-                    .db $5A,$56,$00,$03,$80,$01,$81,$01
-                    .db $5A,$5A,$00,$03,$80,$01,$81,$01
-                    .db $5A,$60,$00,$09,$81,$01,$82,$15
-                    .db $83,$15,$80,$01,$81,$01,$5A,$67
-                    .db $00,$03,$80,$01,$81,$01,$5A,$79
-                    .db $00,$07,$80,$01,$81,$01,$80,$01
-                    .db $81,$01,$5A,$80,$00,$0B,$82,$15
-                    .db $83,$15,$80,$01,$81,$01,$80,$01
-                    .db $81,$01,$5A,$98,$00,$03,$80,$01
-                    .db $81,$01,$5A,$9C,$00,$03,$80,$01
-                    .db $81,$01,$5A,$A0,$00,$05,$83,$15
-                    .db $80,$01,$81,$01,$5A,$A5,$00,$07
+                    .db $59,$98,$00,$03,$80,$01,$81,$01
+                    .db $59,$A8,$00,$07,$80,$01,$81,$01
+                    .db $82,$15,$83,$15,$59,$B9,$00,$03
+                    .db $80,$01,$81,$01,$59,$C5,$00,$03
+                    .db $80,$01,$81,$01,$59,$C9,$00,$07
                     .db $80,$01,$81,$01,$80,$01,$81,$01
-                    .db $5A,$C0,$00,$07,$82,$15,$83,$15
-                    .db $82,$15,$83,$15,$5A,$C6,$00,$03
-                    .db $80,$01,$81,$01,$5A,$CA,$00,$03
-                    .db $80,$01,$81,$01,$5A,$E0,$00,$0D
-                    .db $83,$15,$82,$15,$83,$15,$82,$15
-                    .db $83,$15,$80,$01,$81,$01,$5A,$E9
-                    .db $00,$03,$80,$01,$81,$01,$5C,$03
-                    .db $00,$03,$80,$01,$81,$01,$5C,$07
-                    .db $00,$03,$80,$01,$81,$01,$5C,$0F
-                    .db $00,$07,$80,$01,$81,$01,$80,$01
-                    .db $81,$01,$5C,$15,$00,$0B,$80,$01
-                    .db $81,$01,$80,$01,$81,$01,$80,$01
-                    .db $81,$01,$5C,$20,$00,$0F,$80,$01
-                    .db $81,$01,$86,$15,$87,$15,$82,$15
-                    .db $83,$15,$80,$01,$81,$01,$5C,$22
-                    .db $80,$05,$86,$15,$96,$15,$90,$15
-                    .db $5C,$23,$80,$05,$87,$15,$97,$15
-                    .db $91,$15,$5C,$2C,$80,$05,$86,$15
-                    .db $96,$15,$90,$15,$5C,$2D,$80,$05
-                    .db $87,$15,$97,$15,$91,$15,$5C,$2F
-                    .db $80,$05,$86,$15,$96,$15,$90,$15
-                    .db $5C,$30,$80,$05,$87,$15,$97,$15
-                    .db $91,$15,$5C,$32,$80,$05,$86,$15
-                    .db $96,$15,$90,$15,$5C,$33,$80,$05
-                    .db $87,$15,$97,$15,$91,$15,$5C,$36
-                    .db $00,$03,$80,$01,$81,$01,$5C,$3A
-                    .db $00,$03,$80,$01,$81,$01,$5C,$3C
-                    .db $80,$05,$86,$15,$96,$15,$90,$15
-                    .db $5C,$3D,$80,$05,$87,$15,$97,$15
-                    .db $91,$15,$5C,$45,$00,$03,$82,$15
-                    .db $83,$15,$5C,$8D,$00,$03,$80,$01
-                    .db $81,$01,$5C,$9E,$00,$03,$80,$01
-                    .db $81,$01,$5C,$BD,$00,$03,$80,$01
-                    .db $81,$01,$5C,$C7,$00,$03,$80,$01
-                    .db $81,$01,$5C,$D9,$00,$01,$81,$01
-                    .db $5C,$DC,$00,$07,$80,$01,$81,$01
-                    .db $82,$15,$83,$15,$5C,$E4,$00,$03
-                    .db $80,$01,$81,$01,$5C,$E8,$00,$07
-                    .db $80,$01,$81,$01,$80,$01,$81,$01
-                    .db $5C,$F9,$00,$0D,$80,$01,$81,$01
+                    .db $59,$D6,$00,$0F,$80,$01,$81,$01
+                    .db $82,$15,$83,$15,$80,$01,$81,$01
+                    .db $80,$01,$81,$01,$59,$E2,$80,$05
+                    .db $86,$15,$96,$15,$90,$15,$59,$E3
+                    .db $80,$05,$87,$15,$97,$15,$91,$15
+                    .db $59,$EA,$00,$0B,$80,$01,$81,$01
+                    .db $86,$15,$87,$15,$82,$15,$83,$15
+                    .db $59,$EC,$80,$05,$86,$15,$96,$15
+                    .db $90,$15,$59,$ED,$80,$05,$87,$15
+                    .db $97,$15,$91,$15,$59,$EF,$80,$05
+                    .db $86,$15,$96,$15,$90,$15,$59,$F0
+                    .db $80,$05,$87,$15,$97,$15,$91,$15
+                    .db $59,$F2,$80,$05,$86,$15,$96,$15
+                    .db $90,$15,$59,$F3,$80,$05,$87,$15
+                    .db $97,$15,$91,$15,$59,$F7,$00,$07
+                    .db $82,$15,$83,$15,$82,$15,$83,$15
+                    .db $59,$FC,$80,$05,$86,$15,$96,$15
+                    .db $90,$15,$59,$FD,$80,$05,$87,$15
+                    .db $97,$15,$91,$15,$5A,$14,$00,$0F
                     .db $80,$01,$81,$01,$82,$15,$83,$15
-                    .db $82,$15,$5D,$02,$80,$05,$86,$15
-                    .db $96,$15,$90,$15,$5D,$03,$80,$05
-                    .db $87,$15,$97,$15,$91,$15,$5D,$05
-                    .db $00,$0B,$80,$01,$81,$01,$82,$15
-                    .db $83,$15,$80,$01,$81,$01,$5D,$0C
-                    .db $80,$05,$86,$15,$96,$15,$90,$15
-                    .db $5D,$0D,$80,$05,$87,$15,$97,$15
-                    .db $91,$15,$5D,$0F,$80,$05,$86,$15
-                    .db $96,$15,$90,$15,$5D,$10,$80,$05
-                    .db $87,$15,$97,$15,$91,$15,$5D,$12
-                    .db $80,$05,$86,$15,$96,$15,$90,$15
-                    .db $5D,$13,$80,$05,$87,$15,$97,$15
-                    .db $91,$15,$5D,$1A,$00,$0B,$80,$01
-                    .db $81,$01,$86,$15,$87,$15,$82,$15
-                    .db $83,$15,$5D,$1C,$80,$05,$86,$15
-                    .db $96,$15,$90,$15,$5D,$1D,$80,$05
-                    .db $87,$15,$97,$15,$91,$15,$5D,$24
-                    .db $00,$0F,$80,$01,$81,$01,$82,$15
-                    .db $83,$15,$82,$15,$83,$15,$80,$01
-                    .db $81,$01,$5D,$39,$00,$03,$80,$01
-                    .db $81,$01,$5D,$47,$00,$07,$80,$01
-                    .db $81,$01,$82,$15,$83,$15,$5D,$5A
-                    .db $00,$0B,$80,$01,$81,$01,$90,$15
-                    .db $91,$15,$80,$01,$81,$01,$5D,$64
-                    .db $00,$17,$80,$01,$81,$01,$82,$15
-                    .db $83,$15,$80,$01,$81,$01,$80,$01
-                    .db $81,$01,$80,$01,$81,$01,$80,$01
-                    .db $81,$01,$5D,$87,$00,$03,$80,$01
-                    .db $81,$01,$5D,$8B,$00,$07,$80,$01
-                    .db $81,$01,$80,$01,$81,$01,$5D,$98
-                    .db $00,$03,$80,$01,$81,$01,$5D,$A8
-                    .db $00,$07,$80,$01,$81,$01,$82,$15
-                    .db $83,$15,$5D,$B9,$00,$03,$80,$01
-                    .db $81,$01,$5D,$C5,$00,$03,$80,$01
-                    .db $81,$01,$5D,$C9,$00,$07,$80,$01
-                    .db $81,$01,$80,$01,$81,$01,$5D,$D6
-                    .db $00,$0F,$80,$01,$81,$01,$82,$15
-                    .db $83,$15,$80,$01,$81,$01,$80,$01
-                    .db $81,$01,$5D,$E2,$80,$05,$86,$15
-                    .db $96,$15,$90,$15,$5D,$E3,$80,$05
-                    .db $87,$15,$97,$15,$91,$15,$5D,$EA
-                    .db $00,$0B,$80,$01,$81,$01,$86,$15
-                    .db $87,$15,$82,$15,$83,$15,$5D,$EC
-                    .db $80,$05,$86,$15,$96,$15,$90,$15
-                    .db $5D,$ED,$80,$05,$87,$15,$97,$15
-                    .db $91,$15,$5D,$EF,$80,$05,$86,$15
-                    .db $96,$15,$90,$15,$5D,$F0,$80,$05
-                    .db $87,$15,$97,$15,$91,$15,$5D,$F2
-                    .db $80,$05,$86,$15,$96,$15,$90,$15
-                    .db $5D,$F3,$80,$05,$87,$15,$97,$15
-                    .db $91,$15,$5D,$F7,$00,$07,$82,$15
-                    .db $83,$15,$82,$15,$83,$15,$5D,$FC
-                    .db $80,$05,$86,$15,$96,$15,$90,$15
-                    .db $5D,$FD,$80,$05,$87,$15,$97,$15
-                    .db $91,$15,$5E,$14,$00,$0F,$80,$01
-                    .db $81,$01,$82,$15,$83,$15,$80,$01
-                    .db $81,$01,$82,$15,$83,$15,$5E,$20
-                    .db $00,$01,$81,$01,$5E,$27,$00,$03
-                    .db $80,$01,$81,$01,$5E,$35,$00,$0B
-                    .db $80,$01,$81,$01,$80,$01,$81,$01
-                    .db $82,$15,$83,$15,$5E,$40,$00,$07
-                    .db $80,$01,$81,$01,$80,$01,$81,$01
-                    .db $5E,$56,$00,$03,$80,$01,$81,$01
-                    .db $5E,$5A,$00,$03,$80,$01,$81,$01
-                    .db $5E,$60,$00,$09,$81,$01,$82,$15
-                    .db $83,$15,$80,$01,$81,$01,$5E,$67
-                    .db $00,$03,$80,$01,$81,$01,$5E,$79
+                    .db $80,$01,$81,$01,$82,$15,$83,$15
+                    .db $5A,$20,$00,$01,$81,$01,$5A,$27
+                    .db $00,$03,$80,$01,$81,$01,$5A,$35
+                    .db $00,$0B,$80,$01,$81,$01,$80,$01
+                    .db $81,$01,$82,$15,$83,$15,$5A,$40
                     .db $00,$07,$80,$01,$81,$01,$80,$01
-                    .db $81,$01,$5E,$80,$00,$0B,$82,$15
-                    .db $83,$15,$80,$01,$81,$01,$80,$01
-                    .db $81,$01,$5E,$98,$00,$03,$80,$01
-                    .db $81,$01,$5E,$9C,$00,$03,$80,$01
-                    .db $81,$01,$5E,$A0,$00,$05,$83,$15
-                    .db $80,$01,$81,$01,$5E,$A5,$00,$07
+                    .db $81,$01,$5A,$56,$00,$03,$80,$01
+                    .db $81,$01,$5A,$5A,$00,$03,$80,$01
+                    .db $81,$01,$5A,$60,$00,$09,$81,$01
+                    .db $82,$15,$83,$15,$80,$01,$81,$01
+                    .db $5A,$67,$00,$03,$80,$01,$81,$01
+                    .db $5A,$79,$00,$07,$80,$01,$81,$01
+                    .db $80,$01,$81,$01,$5A,$80,$00,$0B
+                    .db $82,$15,$83,$15,$80,$01,$81,$01
+                    .db $80,$01,$81,$01,$5A,$98,$00,$03
+                    .db $80,$01,$81,$01,$5A,$9C,$00,$03
+                    .db $80,$01,$81,$01,$5A,$A0,$00,$05
+                    .db $83,$15,$80,$01,$81,$01,$5A,$A5
+                    .db $00,$07,$80,$01,$81,$01,$80,$01
+                    .db $81,$01,$5A,$C0,$00,$07,$82,$15
+                    .db $83,$15,$82,$15,$83,$15,$5A,$C6
+                    .db $00,$03,$80,$01,$81,$01,$5A,$CA
+                    .db $00,$03,$80,$01,$81,$01,$5A,$E0
+                    .db $00,$0D,$83,$15,$82,$15,$83,$15
+                    .db $82,$15,$83,$15,$80,$01,$81,$01
+                    .db $5A,$E9,$00,$03,$80,$01,$81,$01
+                    .db $5C,$03,$00,$03,$80,$01,$81,$01
+                    .db $5C,$07,$00,$03,$80,$01,$81,$01
+                    .db $5C,$0F,$00,$07,$80,$01,$81,$01
+                    .db $80,$01,$81,$01,$5C,$15,$00,$0B
                     .db $80,$01,$81,$01,$80,$01,$81,$01
-                    .db $5E,$C0,$00,$07,$82,$15,$83,$15
-                    .db $82,$15,$83,$15,$5E,$C6,$00,$03
-                    .db $80,$01,$81,$01,$5E,$CA,$00,$03
-                    .db $80,$01,$81,$01,$5E,$E0,$00,$0D
-                    .db $83,$15,$82,$15,$83,$15,$82,$15
-                    .db $83,$15,$80,$01,$81,$01,$5E,$E9
-                    .db $00,$03,$80,$01,$81,$01,$FF,$53
-                    .db $DA,$00,$05,$F9,$11,$FA,$11,$FB
-                    .db $11,$53,$FA,$00,$05,$FC,$11,$FD
-                    .db $11,$FE,$11,$58,$3C,$00,$01,$DA
-                    .db $11,$58,$6D,$00,$05,$F9,$11,$FA
-                    .db $11,$FB,$11,$58,$8D,$00,$05,$FC
-                    .db $11,$FD,$11,$FE,$11,$58,$E5,$00
-                    .db $07,$92,$11,$95,$11,$98,$11,$AD
-                    .db $11,$59,$05,$00,$07,$B1,$11,$B5
-                    .db $11,$C4,$51,$B9,$11,$59,$25,$00
-                    .db $07,$BD,$11,$C4,$11,$C4,$51,$D8
-                    .db $11,$59,$45,$00,$0D,$D6,$11,$D8
-                    .db $11,$C9,$11,$CA,$11,$F9,$15,$FA
-                    .db $15,$FB,$15,$59,$65,$00,$0D,$C9
-                    .db $11,$CA,$11,$CB,$11,$DA,$11,$FC
-                    .db $15,$FD,$15,$FE,$15,$59,$85,$00
-                    .db $0D,$CB,$11,$DA,$11,$CB,$11,$92
-                    .db $11,$95,$11,$98,$11,$AD,$11,$59
-                    .db $A4,$00,$0F,$F3,$11,$F4,$11,$F5
-                    .db $11,$FC,$38,$B1,$11,$B5,$11,$C4
-                    .db $51,$B9,$11,$59,$C4,$00,$0F,$F6
-                    .db $11,$F7,$11,$F8,$11,$DA,$05,$BD
-                    .db $11,$C4,$11,$C4,$51,$D8,$11,$59
-                    .db $CF,$00,$05,$F9,$15,$FA,$15,$FB
-                    .db $15,$59,$E3,$00,$1D,$CB,$15,$FC
-                    .db $11,$FD,$11,$FE,$11,$FC,$38,$D6
-                    .db $11,$D8,$11,$C9,$11,$CA,$11,$F3
-                    .db $15,$F4,$15,$F5,$15,$FC,$15,$FD
-                    .db $15,$FE,$15,$5A,$08,$00,$17,$C9
-                    .db $11,$CA,$11,$CB,$11,$DA,$11,$F6
-                    .db $15,$F7,$15,$F8,$15,$F9,$55,$FC
-                    .db $0D,$F3,$15,$F4,$15,$F5,$15,$5A
-                    .db $28,$00,$19,$CB,$11,$DA,$11,$CB
-                    .db $11,$DA,$11,$FD,$15,$FD,$15,$FE
-                    .db $15,$DA,$55,$F9,$15,$F6,$15,$F7
-                    .db $15,$F8,$15,$FB,$15,$5A,$49,$00
-                    .db $17,$DA,$15,$F9,$05,$FA,$05,$FB
-                    .db $05,$FC,$38,$FC,$38,$DA,$15,$FE
-                    .db $15,$FC,$15,$FD,$15,$FE,$15,$DA
-                    .db $55,$5A,$6A,$00,$09,$FC,$05,$FD
-                    .db $05,$FE,$05,$FC,$38,$DA,$05,$58
-                    .db $F6,$00,$05,$F9,$11,$FA,$11,$FB
-                    .db $11,$59,$13,$00,$0B,$F9,$11,$FA
-                    .db $11,$FB,$11,$FC,$11,$FD,$11,$FE
-                    .db $11,$59,$31,$00,$09,$F9,$15,$FA
-                    .db $15,$FB,$15,$FD,$11,$FE,$11,$59
-                    .db $51,$00,$11,$FC,$15,$FD,$15,$FE
-                    .db $15,$F3,$11,$F4,$11,$F5,$11,$FC
-                    .db $11,$FD,$11,$FE,$11,$59,$72,$00
-                    .db $0B,$FC,$15,$F9,$15,$F6,$11,$F7
-                    .db $11,$F8,$11,$DA,$51,$59,$92,$00
-                    .db $0D,$DA,$15,$FE,$15,$FC,$11,$FD
-                    .db $11,$FE,$11,$FC,$11,$DA,$55,$57
-                    .db $DA,$00,$05,$F9,$11,$FA,$11,$FB
-                    .db $11,$57,$FA,$00,$05,$FC,$11,$FD
-                    .db $11,$FE,$11,$5C,$3C,$00,$01,$DA
-                    .db $11,$5C,$6D,$00,$05,$F9,$11,$FA
-                    .db $11,$FB,$11,$5C,$8D,$00,$05,$FC
-                    .db $11,$FD,$11,$FE,$11,$5C,$E5,$00
-                    .db $07,$92,$11,$95,$11,$98,$11,$AD
-                    .db $11,$5D,$05,$00,$07,$B1,$11,$B5
-                    .db $11,$C4,$51,$B9,$11,$5D,$25,$00
-                    .db $07,$BD,$11,$C4,$11,$C4,$51,$D8
-                    .db $11,$5D,$45,$00,$0D,$D6,$11,$D8
-                    .db $11,$C9,$11,$CA,$11,$F9,$51,$FA
-                    .db $51,$FB,$51,$5D,$65,$00,$0D,$C9
-                    .db $11,$CA,$11,$CB,$11,$DA,$11,$FC
-                    .db $51,$FD,$51,$FE,$51,$5D,$85,$00
-                    .db $0D,$CB,$11,$DA,$11,$CB,$11,$92
-                    .db $11,$95,$11,$98,$11,$AD,$11,$5D
-                    .db $A4,$00,$0F,$F3,$11,$F4,$11,$F5
-                    .db $11,$FC,$38,$B1,$11,$B5,$11,$C4
-                    .db $51,$B9,$11,$5D,$C4,$00,$0F,$F6
-                    .db $11,$F7,$11,$F8,$11,$DA,$05,$BD
-                    .db $11,$C4,$11,$C4,$51,$D8,$11,$5D
-                    .db $CF,$00,$05,$F9,$15,$FA,$15,$FB
-                    .db $15,$5D,$E3,$00,$1D,$CB,$15,$FC
-                    .db $11,$FD,$11,$FE,$11,$FC,$38,$D6
-                    .db $11,$D8,$11,$C9,$11,$CA,$11,$F3
-                    .db $15,$F4,$15,$F5,$15,$FC,$15,$FD
-                    .db $15,$FE,$15,$5E,$08,$00,$17,$C9
-                    .db $11,$CA,$11,$CB,$11,$DA,$11,$F6
-                    .db $15,$F7,$15,$F8,$15,$F9,$55,$FC
-                    .db $0D,$F3,$15,$F4,$15,$F5,$15,$5E
-                    .db $28,$00,$19,$CB,$11,$DA,$11,$CB
-                    .db $11,$DA,$11,$FD,$15,$FD,$15,$FE
-                    .db $15,$DA,$55,$F9,$15,$F6,$15,$F7
-                    .db $15,$F8,$15,$FB,$15,$5E,$49,$00
-                    .db $17,$DA,$15,$F9,$05,$FA,$05,$FB
-                    .db $05,$FC,$38,$FC,$38,$DA,$15,$FE
-                    .db $15,$FC,$15,$FD,$15,$FE,$15,$DA
-                    .db $55,$5E,$6A,$00,$09,$FC,$05,$FD
-                    .db $05,$FE,$05,$FC,$38,$DA,$05,$5C
-                    .db $F6,$00,$05,$F9,$11,$FA,$11,$FB
-                    .db $11,$5D,$13,$00,$0B,$F9,$11,$FA
-                    .db $11,$FB,$11,$FC,$11,$FD,$11,$FE
-                    .db $11,$5D,$31,$00,$09,$F9,$15,$FA
-                    .db $15,$FB,$15,$FD,$11,$FE,$11,$5D
-                    .db $51,$00,$11,$FC,$15,$FD,$15,$FE
-                    .db $15,$F3,$11,$F4,$11,$F5,$11,$FC
-                    .db $11,$FD,$11,$FE,$11,$5D,$72,$00
-                    .db $0B,$FC,$15,$F9,$15,$F6,$11,$F7
-                    .db $11,$F8,$11,$DA,$51,$5D,$92,$00
-                    .db $0D,$DA,$15,$FE,$15,$FC,$11,$FD
-                    .db $11,$FE,$11,$FC,$11,$DA,$55,$FF
+                    .db $80,$01,$81,$01,$5C,$20,$00,$0F
+                    .db $80,$01,$81,$01,$86,$15,$87,$15
+                    .db $82,$15,$83,$15,$80,$01,$81,$01
+                    .db $5C,$22,$80,$05,$86,$15,$96,$15
+                    .db $90,$15,$5C,$23,$80,$05,$87,$15
+                    .db $97,$15,$91,$15,$5C,$2C,$80,$05
+                    .db $86,$15,$96,$15,$90,$15,$5C,$2D
+                    .db $80,$05,$87,$15,$97,$15,$91,$15
+                    .db $5C,$2F,$80,$05,$86,$15,$96,$15
+                    .db $90,$15,$5C,$30,$80,$05,$87,$15
+                    .db $97,$15,$91,$15,$5C,$32,$80,$05
+                    .db $86,$15,$96,$15,$90,$15,$5C,$33
+                    .db $80,$05,$87,$15,$97,$15,$91,$15
+                    .db $5C,$36,$00,$03,$80,$01,$81,$01
+                    .db $5C,$3A,$00,$03,$80,$01,$81,$01
+                    .db $5C,$3C,$80,$05,$86,$15,$96,$15
+                    .db $90,$15,$5C,$3D,$80,$05,$87,$15
+                    .db $97,$15,$91,$15,$5C,$45,$00,$03
+                    .db $82,$15,$83,$15,$5C,$8D,$00,$03
+                    .db $80,$01,$81,$01,$5C,$9E,$00,$03
+                    .db $80,$01,$81,$01,$5C,$BD,$00,$03
+                    .db $80,$01,$81,$01,$5C,$C7,$00,$03
+                    .db $80,$01,$81,$01,$5C,$D9,$00,$01
+                    .db $81,$01,$5C,$DC,$00,$07,$80,$01
+                    .db $81,$01,$82,$15,$83,$15,$5C,$E4
+                    .db $00,$03,$80,$01,$81,$01,$5C,$E8
+                    .db $00,$07,$80,$01,$81,$01,$80,$01
+                    .db $81,$01,$5C,$F9,$00,$0D,$80,$01
+                    .db $81,$01,$80,$01,$81,$01,$82,$15
+                    .db $83,$15,$82,$15,$5D,$02,$80,$05
+                    .db $86,$15,$96,$15,$90,$15,$5D,$03
+                    .db $80,$05,$87,$15,$97,$15,$91,$15
+                    .db $5D,$05,$00,$0B,$80,$01,$81,$01
+                    .db $82,$15,$83,$15,$80,$01,$81,$01
+                    .db $5D,$0C,$80,$05,$86,$15,$96,$15
+                    .db $90,$15,$5D,$0D,$80,$05,$87,$15
+                    .db $97,$15,$91,$15,$5D,$0F,$80,$05
+                    .db $86,$15,$96,$15,$90,$15,$5D,$10
+                    .db $80,$05,$87,$15,$97,$15,$91,$15
+                    .db $5D,$12,$80,$05,$86,$15,$96,$15
+                    .db $90,$15,$5D,$13,$80,$05,$87,$15
+                    .db $97,$15,$91,$15,$5D,$1A,$00,$0B
+                    .db $80,$01,$81,$01,$86,$15,$87,$15
+                    .db $82,$15,$83,$15,$5D,$1C,$80,$05
+                    .db $86,$15,$96,$15,$90,$15,$5D,$1D
+                    .db $80,$05,$87,$15,$97,$15,$91,$15
+                    .db $5D,$24,$00,$0F,$80,$01,$81,$01
+                    .db $82,$15,$83,$15,$82,$15,$83,$15
+                    .db $80,$01,$81,$01,$5D,$39,$00,$03
+                    .db $80,$01,$81,$01,$5D,$47,$00,$07
+                    .db $80,$01,$81,$01,$82,$15,$83,$15
+                    .db $5D,$5A,$00,$0B,$80,$01,$81,$01
+                    .db $90,$15,$91,$15,$80,$01,$81,$01
+                    .db $5D,$64,$00,$17,$80,$01,$81,$01
+                    .db $82,$15,$83,$15,$80,$01,$81,$01
+                    .db $80,$01,$81,$01,$80,$01,$81,$01
+                    .db $80,$01,$81,$01,$5D,$87,$00,$03
+                    .db $80,$01,$81,$01,$5D,$8B,$00,$07
+                    .db $80,$01,$81,$01,$80,$01,$81,$01
+                    .db $5D,$98,$00,$03,$80,$01,$81,$01
+                    .db $5D,$A8,$00,$07,$80,$01,$81,$01
+                    .db $82,$15,$83,$15,$5D,$B9,$00,$03
+                    .db $80,$01,$81,$01,$5D,$C5,$00,$03
+                    .db $80,$01,$81,$01,$5D,$C9,$00,$07
+                    .db $80,$01,$81,$01,$80,$01,$81,$01
+                    .db $5D,$D6,$00,$0F,$80,$01,$81,$01
+                    .db $82,$15,$83,$15,$80,$01,$81,$01
+                    .db $80,$01,$81,$01,$5D,$E2,$80,$05
+                    .db $86,$15,$96,$15,$90,$15,$5D,$E3
+                    .db $80,$05,$87,$15,$97,$15,$91,$15
+                    .db $5D,$EA,$00,$0B,$80,$01,$81,$01
+                    .db $86,$15,$87,$15,$82,$15,$83,$15
+                    .db $5D,$EC,$80,$05,$86,$15,$96,$15
+                    .db $90,$15,$5D,$ED,$80,$05,$87,$15
+                    .db $97,$15,$91,$15,$5D,$EF,$80,$05
+                    .db $86,$15,$96,$15,$90,$15,$5D,$F0
+                    .db $80,$05,$87,$15,$97,$15,$91,$15
+                    .db $5D,$F2,$80,$05,$86,$15,$96,$15
+                    .db $90,$15,$5D,$F3,$80,$05,$87,$15
+                    .db $97,$15,$91,$15,$5D,$F7,$00,$07
+                    .db $82,$15,$83,$15,$82,$15,$83,$15
+                    .db $5D,$FC,$80,$05,$86,$15,$96,$15
+                    .db $90,$15,$5D,$FD,$80,$05,$87,$15
+                    .db $97,$15,$91,$15,$5E,$14,$00,$0F
+                    .db $80,$01,$81,$01,$82,$15,$83,$15
+                    .db $80,$01,$81,$01,$82,$15,$83,$15
+                    .db $5E,$20,$00,$01,$81,$01,$5E,$27
+                    .db $00,$03,$80,$01,$81,$01,$5E,$35
+                    .db $00,$0B,$80,$01,$81,$01,$80,$01
+                    .db $81,$01,$82,$15,$83,$15,$5E,$40
+                    .db $00,$07,$80,$01,$81,$01,$80,$01
+                    .db $81,$01,$5E,$56,$00,$03,$80,$01
+                    .db $81,$01,$5E,$5A,$00,$03,$80,$01
+                    .db $81,$01,$5E,$60,$00,$09,$81,$01
+                    .db $82,$15,$83,$15,$80,$01,$81,$01
+                    .db $5E,$67,$00,$03,$80,$01,$81,$01
+                    .db $5E,$79,$00,$07,$80,$01,$81,$01
+                    .db $80,$01,$81,$01,$5E,$80,$00,$0B
+                    .db $82,$15,$83,$15,$80,$01,$81,$01
+                    .db $80,$01,$81,$01,$5E,$98,$00,$03
+                    .db $80,$01,$81,$01,$5E,$9C,$00,$03
+                    .db $80,$01,$81,$01,$5E,$A0,$00,$05
+                    .db $83,$15,$80,$01,$81,$01,$5E,$A5
+                    .db $00,$07,$80,$01,$81,$01,$80,$01
+                    .db $81,$01,$5E,$C0,$00,$07,$82,$15
+                    .db $83,$15,$82,$15,$83,$15,$5E,$C6
+                    .db $00,$03,$80,$01,$81,$01,$5E,$CA
+                    .db $00,$03,$80,$01,$81,$01,$5E,$E0
+                    .db $00,$0D,$83,$15,$82,$15,$83,$15
+                    .db $82,$15,$83,$15,$80,$01,$81,$01
+                    .db $5E,$E9,$00,$03,$80,$01,$81,$01
+                    .db $FF
+
+DATA_05A221:        .db $53,$DA,$00,$05,$F9,$11,$FA,$11
+                    .db $FB,$11,$53,$FA,$00,$05,$FC,$11
+                    .db $FD,$11,$FE,$11,$58,$3C,$00,$01
+                    .db $DA,$11,$58,$6D,$00,$05,$F9,$11
+                    .db $FA,$11,$FB,$11,$58,$8D,$00,$05
+                    .db $FC,$11,$FD,$11,$FE,$11,$58,$E5
+                    .db $00,$07,$92,$11,$95,$11,$98,$11
+                    .db $AD,$11,$59,$05,$00,$07,$B1,$11
+                    .db $B5,$11,$C4,$51,$B9,$11,$59,$25
+                    .db $00,$07,$BD,$11,$C4,$11,$C4,$51
+                    .db $D8,$11,$59,$45,$00,$0D,$D6,$11
+                    .db $D8,$11,$C9,$11,$CA,$11,$F9,$15
+                    .db $FA,$15,$FB,$15,$59,$65,$00,$0D
+                    .db $C9,$11,$CA,$11,$CB,$11,$DA,$11
+                    .db $FC,$15,$FD,$15,$FE,$15,$59,$85
+                    .db $00,$0D,$CB,$11,$DA,$11,$CB,$11
+                    .db $92,$11,$95,$11,$98,$11,$AD,$11
+                    .db $59,$A4,$00,$0F,$F3,$11,$F4,$11
+                    .db $F5,$11,$FC,$38,$B1,$11,$B5,$11
+                    .db $C4,$51,$B9,$11,$59,$C4,$00,$0F
+                    .db $F6,$11,$F7,$11,$F8,$11,$DA,$05
+                    .db $BD,$11,$C4,$11,$C4,$51,$D8,$11
+                    .db $59,$CF,$00,$05,$F9,$15,$FA,$15
+                    .db $FB,$15,$59,$E3,$00,$1D,$CB,$15
+                    .db $FC,$11,$FD,$11,$FE,$11,$FC,$38
+                    .db $D6,$11,$D8,$11,$C9,$11,$CA,$11
+                    .db $F3,$15,$F4,$15,$F5,$15,$FC,$15
+                    .db $FD,$15,$FE,$15,$5A,$08,$00,$17
+                    .db $C9,$11,$CA,$11,$CB,$11,$DA,$11
+                    .db $F6,$15,$F7,$15,$F8,$15,$F9,$55
+                    .db $FC,$0D,$F3,$15,$F4,$15,$F5,$15
+                    .db $5A,$28,$00,$19,$CB,$11,$DA,$11
+                    .db $CB,$11,$DA,$11,$FD,$15,$FD,$15
+                    .db $FE,$15,$DA,$55,$F9,$15,$F6,$15
+                    .db $F7,$15,$F8,$15,$FB,$15,$5A,$49
+                    .db $00,$17,$DA,$15,$F9,$05,$FA,$05
+                    .db $FB,$05,$FC,$38,$FC,$38,$DA,$15
+                    .db $FE,$15,$FC,$15,$FD,$15,$FE,$15
+                    .db $DA,$55,$5A,$6A,$00,$09,$FC,$05
+                    .db $FD,$05,$FE,$05,$FC,$38,$DA,$05
+                    .db $58,$F6,$00,$05,$F9,$11,$FA,$11
+                    .db $FB,$11,$59,$13,$00,$0B,$F9,$11
+                    .db $FA,$11,$FB,$11,$FC,$11,$FD,$11
+                    .db $FE,$11,$59,$31,$00,$09,$F9,$15
+                    .db $FA,$15,$FB,$15,$FD,$11,$FE,$11
+                    .db $59,$51,$00,$11,$FC,$15,$FD,$15
+                    .db $FE,$15,$F3,$11,$F4,$11,$F5,$11
+                    .db $FC,$11,$FD,$11,$FE,$11,$59,$72
+                    .db $00,$0B,$FC,$15,$F9,$15,$F6,$11
+                    .db $F7,$11,$F8,$11,$DA,$51,$59,$92
+                    .db $00,$0D,$DA,$15,$FE,$15,$FC,$11
+                    .db $FD,$11,$FE,$11,$FC,$11,$DA,$55
+                    .db $57,$DA,$00,$05,$F9,$11,$FA,$11
+                    .db $FB,$11,$57,$FA,$00,$05,$FC,$11
+                    .db $FD,$11,$FE,$11,$5C,$3C,$00,$01
+                    .db $DA,$11,$5C,$6D,$00,$05,$F9,$11
+                    .db $FA,$11,$FB,$11,$5C,$8D,$00,$05
+                    .db $FC,$11,$FD,$11,$FE,$11,$5C,$E5
+                    .db $00,$07,$92,$11,$95,$11,$98,$11
+                    .db $AD,$11,$5D,$05,$00,$07,$B1,$11
+                    .db $B5,$11,$C4,$51,$B9,$11,$5D,$25
+                    .db $00,$07,$BD,$11,$C4,$11,$C4,$51
+                    .db $D8,$11,$5D,$45,$00,$0D,$D6,$11
+                    .db $D8,$11,$C9,$11,$CA,$11,$F9,$51
+                    .db $FA,$51,$FB,$51,$5D,$65,$00,$0D
+                    .db $C9,$11,$CA,$11,$CB,$11,$DA,$11
+                    .db $FC,$51,$FD,$51,$FE,$51,$5D,$85
+                    .db $00,$0D,$CB,$11,$DA,$11,$CB,$11
+                    .db $92,$11,$95,$11,$98,$11,$AD,$11
+                    .db $5D,$A4,$00,$0F,$F3,$11,$F4,$11
+                    .db $F5,$11,$FC,$38,$B1,$11,$B5,$11
+                    .db $C4,$51,$B9,$11,$5D,$C4,$00,$0F
+                    .db $F6,$11,$F7,$11,$F8,$11,$DA,$05
+                    .db $BD,$11,$C4,$11,$C4,$51,$D8,$11
+                    .db $5D,$CF,$00,$05,$F9,$15,$FA,$15
+                    .db $FB,$15,$5D,$E3,$00,$1D,$CB,$15
+                    .db $FC,$11,$FD,$11,$FE,$11,$FC,$38
+                    .db $D6,$11,$D8,$11,$C9,$11,$CA,$11
+                    .db $F3,$15,$F4,$15,$F5,$15,$FC,$15
+                    .db $FD,$15,$FE,$15,$5E,$08,$00,$17
+                    .db $C9,$11,$CA,$11,$CB,$11,$DA,$11
+                    .db $F6,$15,$F7,$15,$F8,$15,$F9,$55
+                    .db $FC,$0D,$F3,$15,$F4,$15,$F5,$15
+                    .db $5E,$28,$00,$19,$CB,$11,$DA,$11
+                    .db $CB,$11,$DA,$11,$FD,$15,$FD,$15
+                    .db $FE,$15,$DA,$55,$F9,$15,$F6,$15
+                    .db $F7,$15,$F8,$15,$FB,$15,$5E,$49
+                    .db $00,$17,$DA,$15,$F9,$05,$FA,$05
+                    .db $FB,$05,$FC,$38,$FC,$38,$DA,$15
+                    .db $FE,$15,$FC,$15,$FD,$15,$FE,$15
+                    .db $DA,$55,$5E,$6A,$00,$09,$FC,$05
+                    .db $FD,$05,$FE,$05,$FC,$38,$DA,$05
+                    .db $5C,$F6,$00,$05,$F9,$11,$FA,$11
+                    .db $FB,$11,$5D,$13,$00,$0B,$F9,$11
+                    .db $FA,$11,$FB,$11,$FC,$11,$FD,$11
+                    .db $FE,$11,$5D,$31,$00,$09,$F9,$15
+                    .db $FA,$15,$FB,$15,$FD,$11,$FE,$11
+                    .db $5D,$51,$00,$11,$FC,$15,$FD,$15
+                    .db $FE,$15,$F3,$11,$F4,$11,$F5,$11
+                    .db $FC,$11,$FD,$11,$FE,$11,$5D,$72
+                    .db $00,$0B,$FC,$15,$F9,$15,$F6,$11
+                    .db $F7,$11,$F8,$11,$DA,$51,$5D,$92
+                    .db $00,$0D,$DA,$15,$FE,$15,$FC,$11
+                    .db $FD,$11,$FE,$11,$FC,$11,$DA,$55
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-                    .db $FF,$FF,$FF,$FF,$FF,$FF
+                    .db $FF,$FF,$FF,$FF,$FF,$FF,$FF
 
 DATA_05A580:        .db $51,$A7,$51,$87,$51,$67,$51,$47
                     .db $51,$27,$51,$07,$50,$E7,$50,$C7
@@ -2736,8 +2949,9 @@ DATA_05A5D9:        .db $16,$44,$4B,$42,$4E,$4C,$44,$1A
                     .db $1F,$C0,$52,$53,$51,$40,$4D,$46
                     .db $44,$1F,$4D,$44,$56,$1F,$56,$4E
                     .db $51,$4B,$43,$9B,$06,$0E,$0E,$03
-                    .db $1F,$0B,$14,$02,$0A,$9A,$50,$C7
-                    .db $41,$E2,$FC,$38,$FF
+                    .db $1F,$0B,$14,$02,$0A,$9A
+
+DATA_05B0FF:        .db $50,$C7,$41,$E2,$FC,$38,$FF
 
 DATA_05B106:        .db $4C,$50
 
@@ -2745,7 +2959,7 @@ DATA_05B108:        .db $50,$00
 
 DATA_05B10A:        .db $04,$FC
 
-ADDR_05B10C:        PHB                       ; Accum (8 bit) 
+ExtSub05B10C:       PHB                       ; Accum (8 bit) 
                     PHK                       
                     PLB                       
                     LDX.W $1B88               
@@ -2763,6 +2977,7 @@ ADDR_05B10C:        PHB                       ; Accum (8 bit)
                     LDA.B #$02                
                     STA $44                   
                     BRA ADDR_05B18E           
+
 ADDR_05B132:        LDA.W $0109               
                     ORA.W $13D2               
                     BEQ ADDR_05B16E           
@@ -2780,6 +2995,7 @@ ADDR_05B132:        LDA.W $0109
                     LDA.B #$01                
                     STA.W $13CE               
                     BRA ADDR_05B165           
+
 ADDR_05B15A:        PLB                       
                     LDA.B #$8E                
                     STA.W $1F19               
@@ -2788,7 +3004,7 @@ SubSideExit:        STZ.W $0109
 ADDR_05B165:        STA.W $0DD5               
                     LDA.B #$0B                
                     STA.W $0100               
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_05B16E:        LDA $15                   ; Index (8 bit) 
                     AND.B #$F0                
@@ -2806,6 +3022,7 @@ ADDR_05B186:        LDA.W $0109
                     BNE ADDR_05B15A           
                     INC.W $1B88               
 ADDR_05B18E:        JMP.W ADDR_05B299         
+
 ADDR_05B191:        CMP.W DATA_05B106,X       
                     BNE ADDR_05B1A0           
                     TXA                       
@@ -2814,6 +3031,7 @@ ADDR_05B191:        CMP.W DATA_05B106,X
                     LDA.B #$09                
                     STA $12                   
 ADDR_05B1A0:        JMP.W ADDR_05B250         
+
 ADDR_05B1A3:        LDX.B #$16                
 ADDR_05B1A5:        LDY.B #$01                
                     LDA.W DATA_05A590,X       
@@ -2932,8 +3150,7 @@ ADDR_05B28E:        STA $43
                     LDA.B #$80                
                     STA.W $0D9F               
 ADDR_05B299:        PLB                       
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 DATA_05B29B:        .db $AD,$35,$AD,$75,$AD,$B5,$AD,$F5
                     .db $A7,$35,$A7,$75,$B7,$35,$B7,$75
@@ -2975,7 +3192,7 @@ ADDR_05B2F8:        LDA.W DATA_05B29B,X
                     STZ.W $0400               
                     SEP #$20                  ; Accum (8 bit) 
                     PLX                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_05B31B:        LDY.B #$1C                
                     LDA.B #$F0                
@@ -2985,36 +3202,36 @@ ADDR_05B31F:        STA.W $0201,Y
                     DEY                       
                     DEY                       
                     BPL ADDR_05B31F           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_05B329:        PHA                       
+ExtSub05B329:       PHA                       
                     LDA.B #$01                
-                    STA.W $1DFC               ; / Play sound effect 
+                    STA.W $1DFC               ; / Play sound effect
                     PLA                       
-ADDR_05B330:        STA $00                   
+ExtSub05B330:       STA $00                   
                     CLC                       
                     ADC.W $13CC               
                     STA.W $13CC               
                     LDA.W $0DC0               
-                    BEQ ADDR_05B35A           
+                    BEQ Return05B35A          
                     SEC                       
                     SBC $00                   
                     BPL ADDR_05B345           
                     LDA.B #$00                
 ADDR_05B345:        STA.W $0DC0               
-                    BRA ADDR_05B35A           
-ADDR_05B34A:        INC.W $13CC               
-                    LDA.B #$01                
-                    STA.W $1DFC               ; / Play sound effect 
-                    LDA.W $0DC0               
-                    BEQ ADDR_05B35A           
-                    DEC.W $0DC0               
-ADDR_05B35A:        RTL                       ; Return 
+                    BRA Return05B35A          
 
+ExtSub05B34A:       INC.W $13CC               
+                    LDA.B #$01                
+                    STA.W $1DFC               ; / Play sound effect
+                    LDA.W $0DC0               
+                    BEQ Return05B35A          
+                    DEC.W $0DC0               
+Return05B35A:       RTL                       ; Return
 
 DATA_05B35B:        .db $80,$40,$20,$10,$08,$04,$02,$01
 
-                    TYA                       
+                    TYA                       ; \ Unreachable
                     AND.B #$07                
                     PHA                       
                     TYA                       
@@ -3025,8 +3242,7 @@ DATA_05B35B:        .db $80,$40,$20,$10,$08,$04,$02,$01
                     LDA.W $1F02,X             
                     PLX                       
                     AND.L DATA_05B35B,X       
-                    RTL                       ; Return 
-
+                    RTL                       ; / Return
 
 DATA_05B375:        .db $50,$00,$00,$7F,$58,$2C,$59,$2C
                     .db $55,$2C,$56,$2C,$66,$EC,$65,$EC
@@ -3140,8 +3356,9 @@ DATA_05B375:        .db $50,$00,$00,$7F,$58,$2C,$59,$2C
                     .db $37,$38,$37,$38,$54,$38,$20,$39
                     .db $36,$38,$37,$38,$37,$38,$36,$38
                     .db $FC,$28,$46,$38,$47,$38,$AE,$39
-                    .db $AF,$39,$C5,$39,$C6,$39,$BF,$39
-                    .db $FF
+                    .db $AF,$39,$C5
+
+B5L3TMAP1:          .db $39,$C6,$39,$BF,$39,$FF
 
 DATA_05B6FE:        .db $51,$E5,$40,$2E,$FC,$38,$52,$08
                     .db $40,$1C,$FC,$38,$52,$25,$40,$2E
@@ -3189,32 +3406,36 @@ DATA_05B6FE:        .db $51,$E5,$40,$2E,$FC,$38,$52,$08
                     .db $31,$72,$31,$52,$AA,$00,$13,$73
                     .db $31,$74,$31,$71,$31,$31,$31,$73
                     .db $31,$FC,$38,$7C,$30,$71,$31,$2F
-                    .db $31,$71,$31,$FF,$51,$E5,$40,$2F
-                    .db $FC,$38,$52,$25,$40,$2F,$FC,$38
-                    .db $52,$65,$40,$2F,$FC,$38,$52,$A5
-                    .db $40,$1C,$FC,$38,$52,$0A,$00,$19
-                    .db $6D,$31,$FC,$38,$6F,$31,$70,$31
-                    .db $71,$31,$72,$31,$73,$31,$74,$31
-                    .db $FC,$38,$75,$31,$71,$31,$76,$31
-                    .db $73,$31,$52,$4A,$00,$19,$6E,$31
-                    .db $FC,$38,$6F,$31,$70,$31,$71,$31
-                    .db $72,$31,$73,$31,$74,$31,$FC,$38
-                    .db $75,$31,$71,$31,$76,$31,$73,$31
-                    .db $FF,$51,$C6,$00,$21,$2D,$39,$7A
-                    .db $38,$79,$38,$2F,$39,$82,$38,$79
-                    .db $38,$7B,$38,$73,$39,$FC,$38,$71
-                    .db $39,$79,$38,$7C,$38,$FC,$38,$31
-                    .db $39,$71,$39,$80,$38,$73,$39,$52
-                    .db $06,$00,$29,$2D,$39,$7A,$38,$79
-                    .db $38,$2F,$39,$82,$38,$79,$38,$7B
-                    .db $38,$73,$39,$FC,$38,$81,$38,$82
-                    .db $38,$2F,$39,$84,$38,$7A,$38,$7B
-                    .db $38,$2F,$39,$FC,$38,$31,$39,$71
-                    .db $39,$80,$38,$73,$39,$FF,$51,$CD
-                    .db $00,$0F,$2D,$39,$7A,$38,$79,$38
+                    .db $31,$71,$31,$FF
+
+DATA_05B872:        .db $51,$E5,$40,$2F,$FC,$38,$52,$25
+                    .db $40,$2F,$FC,$38,$52,$65,$40,$2F
+                    .db $FC,$38,$52,$A5,$40,$1C,$FC,$38
+                    .db $52,$0A,$00,$19,$6D,$31,$FC,$38
+                    .db $6F,$31,$70,$31,$71,$31,$72,$31
+                    .db $73,$31,$74,$31,$FC,$38,$75,$31
+                    .db $71,$31,$76,$31,$73,$31,$52,$4A
+                    .db $00,$19,$6E,$31,$FC,$38,$6F,$31
+                    .db $70,$31,$71,$31,$72,$31,$73,$31
+                    .db $74,$31,$FC,$38,$75,$31,$71,$31
+                    .db $76,$31,$73,$31,$FF
+
+DATA_05B8C7:        .db $51,$C6,$00,$21,$2D,$39,$7A,$38
+                    .db $79,$38,$2F,$39,$82,$38,$79,$38
+                    .db $7B,$38,$73,$39,$FC,$38,$71,$39
+                    .db $79,$38,$7C,$38,$FC,$38,$31,$39
+                    .db $71,$39,$80,$38,$73,$39,$52,$06
+                    .db $00,$29,$2D,$39,$7A,$38,$79,$38
                     .db $2F,$39,$82,$38,$79,$38,$7B,$38
-                    .db $73,$39,$52,$0D,$00,$05,$73,$39
-                    .db $79,$38,$7C,$38,$FF
+                    .db $73,$39,$FC,$38,$81,$38,$82,$38
+                    .db $2F,$39,$84,$38,$7A,$38,$7B,$38
+                    .db $2F,$39,$FC,$38,$31,$39,$71,$39
+                    .db $80,$38,$73,$39,$FF
+
+DATA_05B91C:        .db $51,$CD,$00,$0F,$2D,$39,$7A,$38
+                    .db $79,$38,$2F,$39,$82,$38,$79,$38
+                    .db $7B,$38,$73,$39,$52,$0D,$00,$05
+                    .db $73,$39,$79,$38,$7C,$38,$FF
 
 DATA_05B93B:        .db $00,$06
 
@@ -3237,7 +3458,7 @@ DATA_05B97D:        .db $02,$00,$00,$00,$00,$00,$00,$00
 DATA_05B98B:        .db $00,$05,$0A,$0F,$14,$14,$19,$14
                     .db $0A,$14,$00,$05,$00,$14
 
-DATA_05B999:        .db $00,$95,$00,$97,$00,$99,$00,$9B
+AnimatedTileData:   .db $00,$95,$00,$97,$00,$99,$00,$9B
                     .db $80,$95,$80,$97,$80,$99,$80,$9B
                     .db $00,$96,$00,$96,$00,$96,$00,$96
                     .db $80,$9D,$80,$9F,$80,$A1,$80,$A3
@@ -3290,7 +3511,7 @@ DATA_05BA39:        .db $80,$8E,$80,$90,$80,$92,$80,$94
                     .db $00,$93,$00,$93,$00,$93,$00,$93
                     .db $80,$93,$80,$93,$80,$93,$80,$93
 
-ADDR_05BB39:        PHB                       
+ExtSub05BB39:       PHB                       
                     PHK                       
                     PLB                       
                     LDA $14                   
@@ -3328,6 +3549,7 @@ ADDR_05BB67:        PHY
                     CLC                       
                     ADC.B #$26                
                     BRA ADDR_05BB88           
+
 ADDR_05BB81:        LDY.W $1931               
                     CLC                       
                     ADC.W DATA_05B98B,Y       
@@ -3338,7 +3560,7 @@ ADDR_05BB88:        REP #$30                  ; Index (16 bit) Accum (16 bit)
                     ASL                       
                     ORA $00                   
                     TAY                       
-                    LDA.W DATA_05B999,Y       
+                    LDA.W AnimatedTileData,Y  
                     SEP #$10                  ; Index (8 bit) 
                     PLX                       
                     STA.W $0D76,X             
@@ -3349,8 +3571,7 @@ ADDR_05BB88:        REP #$30                  ; Index (16 bit) Accum (16 bit)
                     BPL ADDR_05BB67           
                     SEP #$20                  ; Accum (8 bit) 
                     PLB                       
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 DATA_05BBA6:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
@@ -3365,7 +3586,7 @@ DATA_05BBA6:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF
 
-ADDR_05BC00:        PHB                       
+ExtSub05BC00:       PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_05BC76         
@@ -3399,9 +3620,9 @@ ADDR_05BC33:        STA.W $17BF
                     BNE ADDR_05BC47           
                     JSR.W ADDR_05C40C         
 ADDR_05BC47:        PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_05BC49:        RTS                       ; Return 
+Return05BC49:       RTS                       ; Return
 
 ADDR_05BC4A:        REP #$20                  ; Accum (16 bit) 
                     LDY.W $1403               
@@ -3412,6 +3633,7 @@ ADDR_05BC4A:        REP #$20                  ; Accum (16 bit)
                     STA $26                   
                     LDA.W $1468               
                     BRA ADDR_05BC69           
+
 ADDR_05BC5F:        LDA $22                   
                     SEC                       
                     SBC.W $1462               
@@ -3421,40 +3643,40 @@ ADDR_05BC69:        SEC
                     SBC.W $1464               
                     STA $28                   
                     SEP #$20                  ; Accum (8 bit) 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_05BC72:        JSR.W ADDR_05BC4A         
-                    RTL                       ; Return 
+ExtSub05BC72:       JSR.W ADDR_05BC4A         
+                    RTL                       ; Return
 
 ADDR_05BC76:        STZ.W $1456               
                     LDA.W $009D               
-                    BNE ADDR_05BC49           
+                    BNE Return05BC49          
                     LDA.W $143E               
-                    BEQ ADDR_05BC49           
+                    BEQ Return05BC49          
                     JSL.L ExecutePtr          
 
-Ptrs05BC87:         .dw ADDR_05C04D           
-                    .dw ADDR_05C04D           
-                    .dw ADDR_05BC49           
-                    .dw ADDR_05BC49           
-                    .dw ADDR_05C283           
-                    .dw ADDR_05C69E           
-                    .dw ADDR_05BC49           
-                    .dw ADDR_05BFF5           
-                    .dw ADDR_05C51F           
-                    .dw ADDR_05BC49           
-                    .dw ADDR_05C32E           
-                    .dw ADDR_05C727           
-                    .dw ADDR_05C787           
-                    .dw ADDR_05BC49           
-                    .dw ADDR_05BC49           
+Ptrs05BC87:         .dw ADDR_05C04D           ;  00 - Auto-Scroll, Unused?
+                    .dw ADDR_05C04D           ;  01 - Auto-Scroll
+                    .dw Return05BC49          ;  02 - Layer 2 Smash
+                    .dw Return05BC49          ;  03 - Layer 2 Scroll
+                    .dw ADDR_05C283           ;  04 - Unused
+                    .dw ADDR_05C69E           ;  05 - Unused
+                    .dw Return05BC49          ;  06 - Layer 2 Falls
+                    .dw Return05BFF5          ;  07 - Unused
+                    .dw ADDR_05C51F           ;  08 - Layer 2 Scroll
+                    .dw Return05BC49          ;  09 - Unused
+                    .dw ADDR_05C32E           ;  0A - Unused
+                    .dw ADDR_05C727           ;  0B - Layer 2 On/Off Switch controlled
+                    .dw ADDR_05C787           ;  0C - Auto-Scroll level
+                    .dw Return05BC49          ;  0D - Fast BG scroll
+                    .dw Return05BC49          ;  0E - Layer 2 sink/rise
 
 ADDR_05BCA5:        LDA.B #$04                
                     STA.W $1456               
                     LDA.W $143F               
-                    BEQ ADDR_05BC49           
+                    BEQ Return05BC49          
                     LDY.W $009D               
-                    BNE ADDR_05BC49           
+                    BNE Return05BC49          
                     JSL.L ExecutePtr          
 
 Ptrs05BCB8:         .dw ADDR_05C04D           
@@ -3462,9 +3684,9 @@ Ptrs05BCB8:         .dw ADDR_05C04D
                     .dw ADDR_05C955           
                     .dw ADDR_05C5BB           
                     .dw ADDR_05C283           
-                    .dw ADDR_05BC49           
+                    .dw Return05BC49          
                     .dw ADDR_05C659           
-                    .dw ADDR_05BFF5           
+                    .dw Return05BFF5          
                     .dw ADDR_05C51F           
                     .dw ADDR_05C7C1           
                     .dw ADDR_05C32E           
@@ -3473,7 +3695,7 @@ Ptrs05BCB8:         .dw ADDR_05C04D
                     .dw ADDR_05C7BC           
                     .dw ADDR_05C81C           
 
-ADDR_05BCD6:        PHB                       
+ExtSub05BCD6:       PHB                       
                     PHK                       
                     PLB                       
                     STZ.W $1456               
@@ -3482,48 +3704,48 @@ ADDR_05BCD6:        PHB
                     STA.W $1456               
                     JSR.W ADDR_05BD0E         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_05BCE9:        LDA.W $143E               
                     JSL.L ExecutePtr          
 
-Ptrs05BCF0:         .dw ADDR_05BD36           
-                    .dw ADDR_05BD36           
-                    .dw ADDR_05BF6A           
-                    .dw ADDR_05BF0A           
-                    .dw ADDR_05BDDD           
-                    .dw ADDR_05BFBA           
-                    .dw ADDR_05BF97           
-                    .dw ADDR_05BD35           
-                    .dw ADDR_05BEA6           
-                    .dw ADDR_05BC49           
-                    .dw ADDR_05BE3A           
-                    .dw ADDR_05BFF6           
-                    .dw ADDR_05C005           
-                    .dw ADDR_05C01A           
-                    .dw ADDR_05C036           
+Ptrs05BCF0:         .dw ADDR_05BD36           ;  00 - Auto-Scroll, Unused?
+                    .dw ADDR_05BD36           ;  01 - Auto-Scroll
+                    .dw ADDR_05BF6A           ;  02 - Layer 2 Smash
+                    .dw ADDR_05BF0A           ;  03 - Layer 2 Scroll
+                    .dw ADDR_05BDDD           ;  04 - Unused
+                    .dw ADDR_05BFBA           ;  05 - Unused
+                    .dw ADDR_05BF97           ;  06 - Layer 2 Falls
+                    .dw Return05BD35          ;  07 - Unused
+                    .dw ADDR_05BEA6           ;  08 - Layer 2 Scroll
+                    .dw Return05BC49          ;  09 - Unused
+                    .dw ADDR_05BE3A           ;  0A - Unused
+                    .dw ADDR_05BFF6           ;  0B - Layer 2 On/Off Switch controlled
+                    .dw ADDR_05C005           ;  0C - Auto-Scroll level
+                    .dw ADDR_05C01A           ;  0D - Fast BG scroll
+                    .dw ADDR_05C036           ;  0E - Layer 2 sink/rise
 
 ADDR_05BD0E:        LDA.W $143F               
-                    BEQ ADDR_05BD35           
+                    BEQ Return05BD35          
                     JSL.L ExecutePtr          
 
 Ptrs05BD17:         .dw ADDR_05BD4C           
                     .dw ADDR_05BD4C           
-                    .dw ADDR_05BC49           
+                    .dw Return05BC49          
                     .dw ADDR_05BF20           
                     .dw ADDR_05BDF0           
-                    .dw ADDR_05BC49           
-                    .dw ADDR_05BC49           
-                    .dw ADDR_05BD35           
+                    .dw Return05BC49          
+                    .dw Return05BC49          
+                    .dw Return05BD35          
                     .dw ADDR_05BEC6           
                     .dw ADDR_05C022           
                     .dw ADDR_05BE4D           
-                    .dw ADDR_05BC49           
-                    .dw ADDR_05BC49           
-                    .dw ADDR_05BC49           
-                    .dw ADDR_05BC49           
+                    .dw Return05BC49          
+                    .dw Return05BC49          
+                    .dw Return05BC49          
+                    .dw Return05BC49          
 
-ADDR_05BD35:        RTS                       ; Return 
+Return05BD35:       RTS                       ; Return
 
 ADDR_05BD36:        STZ.W $1411               
                     LDA.W $1440               
@@ -3553,9 +3775,9 @@ ADDR_05BD6E:        LDA.W DATA_05CA61,Y
                     STA.W $1442,X             
                     LDA.W DATA_05CA68,Y       
                     STA.W $1444,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDA.W $1440               
+                    LDA.W $1440               ; \ Unreachable
                     ASL                       
                     TAY                       
                     REP #$20                  ; Accum (16 bit) 
@@ -3597,7 +3819,7 @@ ADDR_05BDCF:        SEP #$20                  ; Accum (8 bit)
                     TAX                       
                     LDA.B #$FF                
                     STA.W $1444,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_05BDDD:        LDA.W $1440               
                     ASL                       
@@ -3641,7 +3863,7 @@ ADDR_05BE27:        CLC
                     STZ.W $1448,X             
                     STZ.W $1450,X             
                     SEP #$20                  ; Accum (8 bit) 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_05BE3A:        LDA.W $1440               
                     ASL                       
@@ -3676,9 +3898,9 @@ ADDR_05BE7B:        STA.W $1450,X
                     STZ.W $1448,X             
                     STZ.W $144E,X             
                     SEP #$20                  ; Accum (8 bit) 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_05BE8A:        PHB                       
+ExtSub05BE8A:       PHB                       
                     PHK                       
                     PLB                       
                     REP #$20                  ; Accum (16 bit) 
@@ -3691,7 +3913,7 @@ ADDR_05BE8A:        PHB
                     STA $24                   
                     SEP #$20                  ; Accum (8 bit) 
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_05BEA6:        STZ.W $1411               
                     LDA.W $1440               
@@ -3736,6 +3958,7 @@ ADDR_05BEF7:        LDX.W $1456
                     STA.W $1450,X             
                     STZ.W $144E,X             
                     JMP.W ADDR_05BDC9         
+
 ADDR_05BF0A:        STZ.W $1414               
                     LDA.W $1440               
                     ASL                       
@@ -3777,6 +4000,7 @@ ADDR_05BF51:        LDX.W $1456
                     STZ.W $1448,X             
                     STZ.W $1448,X             
                     JMP.W ADDR_05BDCF         
+
 ADDR_05BF6A:        LDY.W $1440               ; Accum (8 bit) 
                     LDA.W DATA_05C94F,Y       
                     STA.W $1440               
@@ -3795,6 +4019,7 @@ ADDR_05BF6A:        LDY.W $1440               ; Accum (8 bit)
                     LDA.W $1468               
                     STA $20                   
                     JMP.W ADDR_05C32B         
+
 ADDR_05BF97:        STZ.W $1411               
                     REP #$20                  ; Accum (16 bit) 
                     STZ $1A                   
@@ -3808,7 +4033,7 @@ ADDR_05BF97:        STZ.W $1411
                     SEP #$20                  ; Accum (8 bit) 
                     LDA.B #$60                
                     STA.W $1441               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_05BFBA:        STZ.W $1411               
                     REP #$20                  ; Accum (16 bit) 
@@ -3831,7 +4056,7 @@ ADDR_05BFD5:        STZ.W $1442
                     STZ.W $1452               
                     STZ.W $1454               
                     SEP #$20                  ; Accum (8 bit) 
-ADDR_05BFF5:        RTS                       ; Return 
+Return05BFF5:       RTS                       ; Return
 
 ADDR_05BFF6:        REP #$20                  ; Accum (16 bit) 
                     LDA.W #$0B00              
@@ -3850,6 +4075,7 @@ ADDR_05C005:        STZ.W $1411
                     STA.W $1440               
                     LDA.W #$000C              
                     BRA ADDR_05BFD2           
+
 ADDR_05C01A:        REP #$20                  ; Accum (16 bit) 
                     LDA.W #$0D00              
                     JSR.W ADDR_05BFD2         
@@ -3860,7 +4086,7 @@ ADDR_05C022:        STZ.W $1413
                     STZ.W $1452               
                     STZ.W $1454               
                     SEP #$20                  ; Accum (8 bit) 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_05C036:        LDY.W $1440               
                     LDA.W DATA_05C808,Y       
@@ -3870,6 +4096,7 @@ ADDR_05C036:        LDY.W $1440
                     REP #$20                  ; Accum (16 bit) 
                     LDA.W #$0E00              
                     JMP.W ADDR_05BFD5         
+
 ADDR_05C04D:        LDA.W $1456               
                     LSR                       
                     LSR                       
@@ -3878,7 +4105,7 @@ ADDR_05C04D:        LDA.W $1456
                     BNE ADDR_05C05F           
                     LDX.W $1456               
                     STZ.W $1446,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_05C05F:        REP #$20                  ; Accum (16 bit) 
                     LDA.W $1442,X             
@@ -3904,6 +4131,7 @@ ADDR_05C05F:        REP #$20                  ; Accum (16 bit)
                     STZ $04                   
                     STX $08                   
                     BRA ADDR_05C0AD           
+
 ADDR_05C098:        ASL                       
                     ASL                       
                     ASL                       
@@ -3924,6 +4152,7 @@ ADDR_05C0AD:        LDX.B #$00
                     BNE ADDR_05C0BD           
                     STZ $06                   
                     BRA ADDR_05C0D0           
+
 ADDR_05C0BD:        ASL                       
                     ASL                       
                     ASL                       
@@ -3977,6 +4206,7 @@ ADDR_05C0F5:        LDA $0A
                     SEP #$20                  ; Accum (8 bit) 
                     DEC.W $1444,X             
                     JMP.W ADDR_05C04D         
+
 ADDR_05C123:        STA $0A                   ; Accum (16 bit) 
                     LDA $0C                   
                     ASL                       
@@ -4014,6 +4244,7 @@ ADDR_05C15D:        LDA $08
                     BMI ADDR_05C165           
                     LDA $0A                   
                     BRA ADDR_05C167           
+
 ADDR_05C165:        LDA $0E                   
 ADDR_05C167:        BIT $00,X                 
                     BPL ADDR_05C16F           
@@ -4041,7 +4272,7 @@ ADDR_05C18D:        JSR.W ADDR_05C4F9
                     DEX                       
                     BPL ADDR_05C15D           
                     SEP #$20                  ; Accum (8 bit) 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_05C198:        JSR.W ADDR_05C04D         
                     REP #$20                  ; Accum (16 bit) 
@@ -4052,9 +4283,9 @@ ADDR_05C198:        JSR.W ADDR_05C04D
                     ADC.W $1888               
                     STA $20                   
                     SEP #$20                  ; Accum (8 bit) 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDA.W $1456               
+                    LDA.W $1456               ; \ Unreachable
                     LSR                       
                     LSR                       
                     TAX                       
@@ -4070,6 +4301,7 @@ ADDR_05C198:        JSR.W ADDR_05C04D
                     EOR.W #$0001              
                     STA.W $1464,X             
 ADDR_05C1D1:        JMP.W ADDR_05C32B         
+
 ADDR_05C1D4:        REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     LDY.W $1456               
                     LDA.W $144E,Y             
@@ -4080,6 +4312,7 @@ ADDR_05C1D4:        REP #$30                  ; Index (16 bit) Accum (16 bit)
                     STA $04                   
                     STX $02                   
                     BRA ADDR_05C1EF           
+
 ADDR_05C1EB:        STA $02                   
                     STX $04                   
 ADDR_05C1EF:        SEP #$10                  ; Index (8 bit) 
@@ -4148,6 +4381,7 @@ ADDR_05C276:        LDA.W $1448,X
                     ADC.W DATA_05CB7B,Y       
                     STA.W $1448,X             
 ADDR_05C280:        JMP.W ADDR_05C31D         
+
 ADDR_05C283:        REP #$20                  ; Accum (16 bit) 
                     LDY.W $1456               
                     LDA.W $144E,Y             
@@ -4229,7 +4463,7 @@ ADDR_05C31D:        LDA.W $1456
                     TAX                       
 ADDR_05C328:        JSR.W ADDR_05C4F9         
 ADDR_05C32B:        SEP #$20                  ; Accum (8 bit) 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_05C32E:        REP #$20                  ; Accum (16 bit) 
                     LDY.W $1456               
@@ -4333,8 +4567,7 @@ ADDR_05C3F3:        LDA.W $1446,X
 ADDR_05C3FD:        LDX.W $1456               
                     JSR.W ADDR_05C4F9         
                     SEP #$20                  ; Accum (8 bit) 
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_05C406:        .db $FF,$01
 
@@ -4345,6 +4578,7 @@ DATA_05C40A:        .db $30,$A0
 ADDR_05C40C:        LDA.W $1403               
                     BEQ ADDR_05C414           
                     JMP.W ADDR_05C494         
+
 ADDR_05C414:        REP #$20                  ; Accum (16 bit) 
                     LDY.W $1931               
                     CPY.B #$01                
@@ -4355,6 +4589,7 @@ ADDR_05C421:        LDA $1A
                     LSR                       
                     STA $22                   
                     BRA ADDR_05C491           
+
 ADDR_05C428:        LDY.W $009D               
                     BNE ADDR_05C48D           
                     LDA.W $1460               
@@ -4404,7 +4639,7 @@ ADDR_05C484:        STA $00
 ADDR_05C48D:        LDA $1C                   
                     STA $24                   
 ADDR_05C491:        SEP #$20                  ; Accum (8 bit) 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_05C494:        DEC A                     
                     BNE ADDR_05C4EC           
@@ -4456,7 +4691,7 @@ ADDR_05C4EC:        LDA $22
                     STA $22                   
                     LDA.B #$01                
                     STA $23                   
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_05C4F9:        LDA.W $144E,X             ; Accum (16 bit) 
                     AND.W #$00FF              
@@ -4474,7 +4709,7 @@ ADDR_05C50E:        XBA
                     EOR.W #$FFFF              
                     INC A                     
                     STA $08                   
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_05C51F:        REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     LDY.W $1456               
@@ -4487,6 +4722,7 @@ ADDR_05C51F:        REP #$30                  ; Index (16 bit) Accum (16 bit)
                     STA $04                   
                     STX $02                   
                     BRA ADDR_05C53C           
+
 ADDR_05C538:        STA $02                   
                     STX $04                   
 ADDR_05C53C:        SEP #$10                  ; Index (8 bit) 
@@ -4546,6 +4782,7 @@ ADDR_05C5AE:        LDA.W $1446,X
                     ADC.W DATA_05CBC3,Y       
                     STA.W $1446,X             
 ADDR_05C5B8:        JMP.W ADDR_05C328         
+
 ADDR_05C5BB:        REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     LDY.W $1456               
                     REP #$30                  ; Index (16 bit) Accum (16 bit) 
@@ -4557,6 +4794,7 @@ ADDR_05C5BB:        REP #$30                  ; Index (16 bit) Accum (16 bit)
                     STA $04                   
                     STX $02                   
                     BRA ADDR_05C5D8           
+
 ADDR_05C5D4:        STA $02                   
                     STX $04                   
 ADDR_05C5D8:        SEP #$10                  ; Index (8 bit) 
@@ -4618,6 +4856,7 @@ ADDR_05C64A:        LDA.W $1448,X
 ADDR_05C654:        INX                       
                     INX                       
                     JMP.W ADDR_05C328         
+
 ADDR_05C659:        LDA.W $1441               
                     BEQ ADDR_05C674           
                     DEC.W $1441               
@@ -4628,7 +4867,7 @@ ADDR_05C659:        LDA.W $1441
                     LDA.W $1464               
                     EOR.W #$8D01              
                     STZ $14                   
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_05C674:        STZ $56                   
                     REP #$20                  ; Accum (16 bit) 
@@ -4647,6 +4886,7 @@ ADDR_05C68F:        BNE ADDR_05C696
 ADDR_05C696:        LDX.B #$06                
                     JSR.W ADDR_05C4F9         
                     JMP.W ADDR_05C32B         
+
 ADDR_05C69E:        LDA.W #$8502              
                     EOR $64,X                 
                     LSR $C2,X                 
@@ -4666,7 +4906,8 @@ ADDR_05C6B4:        STA.W $1446
                     LDA.W #$FCF0              
                     STA.W $1B97               
                     BRA ADDR_05C6EC           
-                    LDY.B #$16                
+
+                    LDY.B #$16                ; \ Unreachable
                     STY.W $212C               ; Background and Object Enable
                     LDA.W $144C               
                     CMP.W #$FF80              
@@ -4721,7 +4962,7 @@ ADDR_05C73B:        LDA.W $1468
                     STA.W $1468               
                     STZ.W $144C               
                     STZ.W $144D               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_05C74A:        LDA.B #$10                
                     STA.W $1445               
@@ -4732,12 +4973,13 @@ ADDR_05C74A:        LDA.B #$10
                     CPX.B #$00                
                     BNE ADDR_05C769           
                     LDA.W #$0009              
-                    STA.W $1DFC               ; / Play sound effect 
-                    LDA.W #$0020              
-                    STA.W $1887               
+                    STA.W $1DFC               ; / Play sound effect
+                    LDA.W #$0020              ;  \ Set ground shake timer
+                    STA.W $1887               ;  /
 ADDR_05C769:        LDX.B #$00                
                     STX.W $14AF               
                     BRA ADDR_05C784           
+
 ADDR_05C770:        LDA.W $144C               ; Accum (8 bit) 
                     CMP.W DATA_05C71F,X       
                     BEQ ADDR_05C77F           
@@ -4747,6 +4989,7 @@ ADDR_05C770:        LDA.W $144C               ; Accum (8 bit)
 ADDR_05C77F:        LDX.B #$06                
                     JSR.W ADDR_05C4F9         
 ADDR_05C784:        JMP.W ADDR_05C32B         
+
 ADDR_05C787:        LDA.B #$02                
                     STA $55                   
                     STA $56                   
@@ -4771,6 +5014,7 @@ ADDR_05C7A4:        STA.W $1446,X
                     STZ.W $1446,X             
 ADDR_05C7B6:        JSR.W ADDR_05C4F9         
                     JMP.W ADDR_05C32B         
+
 ADDR_05C7BC:        LDA.W $1B9A               ; Accum (8 bit) 
                     BEQ ADDR_05C7ED           
 ADDR_05C7C1:        LDA.B #$02                
@@ -4852,8 +5096,7 @@ ADDR_05C875:        STA.W $144C
                     LDX.B #$06                
                     JSR.W ADDR_05C4F9         
 ADDR_05C87D:        SEP #$20                  ; Accum (8 bit) 
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_05C880:        .db $00,$00,$C0,$01,$00,$03,$00,$08
                     .db $38,$08,$00,$0A,$00,$00,$80,$03
@@ -4915,7 +5158,7 @@ ADDR_05C97B:        INX
                     LDA.W $1444               
                     BEQ ADDR_05C98B           
                     DEC.W $1444               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_05C98B:        LDA.W $1442               
                     CLC                       
@@ -4931,6 +5174,7 @@ ADDR_05C98B:        LDA.W $1442
                     BPL ADDR_05C9A9           
                     LDA.W DATA_05C8FE,Y       
                     JMP.W ADDR_05C875         
+
 ADDR_05C9A9:        LDA.W DATA_05C8C8,Y       
                     STA.W $1468               
                     SEP #$20                  ; Accum (8 bit) 
@@ -4942,13 +5186,12 @@ ADDR_05C9A9:        LDA.W DATA_05C8C8,Y
                     CMP.B #$36                
                     BCC ADDR_05C9CD           
                     LDA.B #$09                
-                    STA.W $1DFC               ; / Play sound effect 
-                    LDA.B #$20                
-                    STA.W $1887               
+                    STA.W $1DFC               ; / Play sound effect
+                    LDA.B #$20                ;  \ Set ground shake timer 
+                    STA.W $1887               ;  / 
                     LDA.B #$00                
 ADDR_05C9CD:        STA.W $1443               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_05C9D1:        .db $01,$01,$01,$00,$01,$01,$01,$00
                     .db $01,$09
@@ -5071,13 +5314,12 @@ DATA_05CBF5:        .db $90
 DATA_05CBF6:        .db $72,$60,$42,$20,$10,$40,$22,$20
                     .db $10
 
-ADDR_05CBFF:        .db $8B
-
-                    PHK                       
+ExtSub05CBFF:       PHB                       
+                    PHK                       ; Wrapper
                     PLB                       
                     JSR.W ADDR_05CC07         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_05CC07:        LDA.W $13D9               
                     JSL.L ExecutePtr          
@@ -5085,7 +5327,7 @@ ADDR_05CC07:        LDA.W $13D9
 Ptrs05CC0E:         .dw ADDR_05CC66           
                     .dw ADDR_05CD76           
                     .dw ADDR_05CECA           
-                    .dw ADDR_05CFE9           
+                    .dw Return05CFE9          
 
 DATA_05CC16:        .db $51,$0D,$00,$09,$30,$28,$31,$28
                     .db $32,$28,$33,$28,$34,$28,$51,$49
@@ -5108,6 +5350,7 @@ ADDR_05CC6E:        CMP.B #$0A
                     SBC.B #$0A                
                     INY                       
                     BRA ADDR_05CC6E           
+
 ADDR_05CC77:        CPY.W $0F32               
                     BNE ADDR_05CC84           
                     CPY.W $0F33               
@@ -5196,8 +5439,7 @@ ADDR_05CD26:        SEP #$20                  ; Accum (8 bit)
                     INC A                     
                     STA.L $7F837B             
                     SEP #$30                  ; Index (8 bit) Accum (8 bit) 
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_05CD3F:        .db $52,$0A,$00,$15,$0B,$38,$18,$38
                     .db $17,$38,$1E,$38,$1C,$38,$28,$38
@@ -5214,7 +5456,7 @@ DATA_05CD63:        .db $C3,$B8,$B9,$BA,$BB,$BA,$BF,$BC
 ADDR_05CD76:        LDA.W $1900               
                     BEQ ADDR_05CDD5           
                     DEC.W $1424               
-                    BPL ADDR_05CDE8           
+                    BPL Return05CDE8          
                     LDY.B #$22                
                     TYA                       
                     CLC                       
@@ -5254,14 +5496,13 @@ ADDR_05CDC9:        LDA.B #$22
                     INC A                     
                     STA.L $7F837B             
 ADDR_05CDD5:        DEC.W $13D6               
-                    BPL ADDR_05CDE8           
+                    BPL Return05CDE8          
                     LDA.W $1900               
                     STA.W $1424               
                     INC.W $13D9               
                     LDA.B #$11                
-                    STA.W $1DFC               ; / Play sound effect 
-ADDR_05CDE8:        RTS                       ; Return 
-
+                    STA.W $1DFC               ; / Play sound effect
+Return05CDE8:       RTS                       ; Return
 
 DATA_05CDE9:        .db $00,$00
 
@@ -5291,6 +5532,7 @@ ADDR_05CE08:        PHX
                     INC A                     
                     STA.L $7F837B,X           
                     BRA ADDR_05CE08           
+
 ADDR_05CE2F:        INX                       
                     INX                       
                     INY                       
@@ -5299,8 +5541,7 @@ ADDR_05CE2F:        INX
                     INY                       
                     CPY.B #$14                
                     BNE ADDR_05CDFD           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_05CE3A:        .db $00,$00,$64,$00,$C8,$00,$2C,$01
 DATA_05CE42:        .db $00,$0A,$14,$1E,$28,$32,$3C,$46
@@ -5349,8 +5590,7 @@ ADDR_05CE4C:        REP #$20                  ; Accum (16 bit)
                     CLC                       
                     ADC $03                   
                     STA $03                   
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_05CEA3:        .db $51,$B1,$00,$09,$FC,$38,$FC,$38
                     .db $FC,$38,$FC,$38,$00,$38,$51,$F3
@@ -5417,7 +5657,7 @@ ADDR_05CF36:        LDA.W $0F40
                     STX.W $13D6               
                     INC.W $13D9               
                     LDX.B #$12                
-                    STX.W $1DFC               ; / Play sound effect 
+                    STX.W $1DFC               ; / Play sound effect
 ADDR_05CF4D:        LDY.B #$1E                
                     TYA                       
                     CLC                       
@@ -5487,8 +5727,7 @@ ADDR_05CFDC:        REP #$20                  ; Accum (16 bit)
                     STA.L $7F837B             
                     SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     PLB                       
-ADDR_05CFE9:        RTS                       ; Return 
-
+Return05CFE9:       RTS                       ; Return
 
 DATA_05CFEA:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
@@ -5738,24 +5977,37 @@ DATA_05D750:        .db $10,$80,$00,$E0,$10,$70,$00,$E0
 DATA_05D758:        .db $00,$00,$00,$00,$01,$01,$01,$01
 DATA_05D760:        .db $05,$01,$02,$06,$08,$01
 
-DATA_05D766:        .db $00
 
-DATA_05D767:        .db $80
+PtrsLong05D766:     .dw LevelData078000       
+                    .db :LevelData078000
+                    .dw DATA_07801E           
+                    .db :DATA_07801E
+                    .dw DATA_07804E           
+                    .db :DATA_07804E
+                    .dw DATA_07809F           
+                    .db :DATA_07809F
+                    .dw DATA_0780B1           
+                    .db :DATA_0780B1
+                    .dw DATA_078090           
+                    .db :DATA_078090
+PtrsLong05D778:     .dw DATA_078018           
+                    .db :DATA_078018
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CE684           
+                    .db $FF
+                    .dw DATA_0CDF59           
+                    .db $FF
+                    .dw DATA_0CE8EE           
+                    .db $FF
 
-DATA_05D768:        .db $07,$1E,$80,$07,$4E,$80,$07,$9F
-                    .db $80,$07,$B1,$80,$07,$90,$80,$07
-DATA_05D778:        .db $18
-
-DATA_05D779:        .db $80
-
-DATA_05D77A:        .db $07,$00,$D9,$FF,$00,$D9,$FF,$84
-                    .db $E6,$FF,$59,$DF,$FF,$EE,$E8,$FF
 DATA_05D78A:        .db $03,$00,$00,$00,$00,$00
 
 DATA_05D790:        .db $70,$70,$60,$70,$70,$70
 
-ADDR_05D796:        .db $8B
-
+ExtSub05D796:       PHB                       
                     PHK                       
                     PLB                       
                     SEP #$30                  ; Index (8 bit) Accum (8 bit) 
@@ -5768,6 +6020,7 @@ ADDR_05D7A8:        JSR.W ADDR_05DBAC
 ADDR_05D7AB:        LDA.W $141A               
                     BNE ADDR_05D7B3           
                     JMP.W ADDR_05D83E         
+
 ADDR_05D7B3:        LDX $95                   
                     LDA $5B                   
                     AND.B #$01                
@@ -5836,13 +6089,14 @@ ADDR_05D7D2:        STA $0F
                     AND.B #$07                
                     STA.W $192A               
 ADDR_05D83B:        JMP.W ADDR_05D8B7         
+
 ADDR_05D83E:        STZ $0F                   ; Index (8 bit) 
                     LDY.B #$00                
                     LDA.W $0109               
                     BNE ADDR_05D8A2           
-                    REP #$30                  ; Index (16 bit) Accum (16 bit) 
-                    STZ $1A                   
-                    STZ $1E                   
+                    REP #$30                  ; 16 bit A,X,Y ; Index (16 bit) Accum (16 bit) 
+                    STZ $1A                   ; Set "X position of screen boundary" to 0
+                    STZ $1E                   ; Set "Layer 2 X position" to 0
                     LDX.W $0DD6               
                     LDA.W $1F1F,X             
                     AND.W #$000F              
@@ -5872,70 +6126,70 @@ ADDR_05D83E:        STZ $0F                   ; Index (8 bit)
                     ORA $02                   
                     ORA $00                   
                     TAX                       
-                    LDA.W $0DD6               
-                    AND.W #$00FF              
-                    LSR                       
-                    LSR                       
-                    TAY                       
-                    LDA.W $1F11,Y             
-                    AND.W #$000F              
-                    BEQ ADDR_05D899           
-                    TXA                       
-                    CLC                       
-                    ADC.W #$0400              
-                    TAX                       
-ADDR_05D899:        SEP #$20                  ; Accum (8 bit) 
+                    LDA.W $0DD6               ; \
+                    AND.W #$00FF              ;  |
+                    LSR                       ;  |Set Y to current player
+                    LSR                       ;  |
+                    TAY                       ; /
+                    LDA.W $1F11,Y             ; \ Get current player's submap
+                    AND.W #$000F              ; /
+                    BEQ ADDR_05D899           ; \
+                    TXA                       ;  |
+                    CLC                       ;  |If on submap, increase X by x400
+                    ADC.W #$0400              ;  |
+                    TAX                       ;  |
+ADDR_05D899:        SEP #$20                  ; 8 bit A ; Accum (8 bit) 
                     LDA.L $7ED000,X           
-                    STA.W $13BF               
-ADDR_05D8A2:        CMP.B #$25                
-                    BCC ADDR_05D8A9           
-                    SEC                       
-                    SBC.B #$24                
+                    STA.W $13BF               ; Store overworld level number
+ADDR_05D8A2:        CMP.B #$25                ; \
+                    BCC ADDR_05D8A9           ;  |
+                    SEC                       ;  |If A>= x25,
+                    SBC.B #$24                ;  |subtract x24
 ADDR_05D8A9:        STA.W $17BB               
-                    STA $0E                   
-                    LDA.W $1F11,Y             
-                    BEQ ADDR_05D8B5           
-                    LDA.B #$01                
-ADDR_05D8B5:        STA $0F                   
-ADDR_05D8B7:        REP #$30                  ; Index (16 bit) Accum (16 bit) 
-                    LDA $0E                   
-                    ASL                       
-                    CLC                       
-                    ADC $0E                   
-                    TAY                       
-                    SEP #$20                  ; Accum (8 bit) 
-                    LDA.W DATA_05E000,Y       
-                    STA $65                   
-                    LDA.W DATA_05E001,Y       
-                    STA $66                   
-                    LDA.W DATA_05E002,Y       
-                    STA $67                   
-                    LDA.W DATA_05E600,Y       
-                    STA $68                   
-                    LDA.W DATA_05E601,Y       
-                    STA $69                   
-                    LDA.W DATA_05E602,Y       
-                    STA $6A                   
-                    REP #$20                  ; Accum (16 bit) 
-                    LDA $0E                   
-                    ASL                       
-                    TAY                       
+                    STA $0E                   ; Store A as lower level number byte
+                    LDA.W $1F11,Y             ; \
+                    BEQ ADDR_05D8B5           ;  |Set higher level number byte to:
+                    LDA.B #$01                ;  |0 if on overworld
+ADDR_05D8B5:        STA $0F                   ; /
+ADDR_05D8B7:        REP #$30                  ; 16 bit A,X,Y ; Index (16 bit) Accum (16 bit) 
+                    LDA $0E                   ; \
+                    ASL                       ;  |
+                    CLC                       ;  |Multiply level number by 3 and store in Y
+                    ADC $0E                   ;  |(Each L1/2 pointer table entry is 3 bytes long)
+                    TAY                       ; /
+                    SEP #$20                  ; 8 bit A ; Accum (8 bit) 
+                    LDA.W Layer1Ptrs,Y        ;  \ 
+                    STA $65                   ;  |
+                    LDA.W Layer1Ptrs+1,Y      ;   |Load Layer 1 pointer into $65-$67 
+                    STA $66                   ;  |
+                    LDA.W Layer1Ptrs+2,Y      ;   | 
+                    STA $67                   ; /
+                    LDA.W Layer2Ptrs,Y        ;  \ 
+                    STA $68                   ;  |
+                    LDA.W Layer2Ptrs+1,Y      ;   |Load Layer 2 pointer into $68-$6A 
+                    STA $69                   ;  |
+                    LDA.W Layer2Ptrs+2,Y      ;   | 
+                    STA $6A                   ; /
+                    REP #$20                  ; 16 bit A ; Accum (16 bit) 
+                    LDA $0E                   ; \
+                    ASL                       ;  |Multiply level number by 2 and store in Y
+                    TAY                       ; / (Each sprite pointer table entry is 2 bytes long)
                     LDA.W #$0000              
-                    SEP #$20                  ; Accum (8 bit) 
-                    LDA.W DATA_05EC00,Y       
-                    STA $CE                   
-                    LDA.W DATA_05EC01,Y       
-                    STA $CF                   
-                    LDA.B #$07                
-                    STA $D0                   
-                    LDA [$CE]                 
-                    AND.B #$3F                
-                    STA.W $1692               
-                    LDA [$CE]                 
-                    AND.B #$C0                
-                    STA.W $190E               
-                    REP #$10                  ; Index (16 bit) 
-                    SEP #$20                  ; Accum (8 bit) 
+                    SEP #$20                  ; 8 bit A ; Accum (8 bit) 
+                    LDA.W Ptrs05EC00,Y        ;  \ 
+                    STA $CE                   ;  |Store location of sprite level Y in $CE-$CF
+                    LDA.W Ptrs05EC00+1,Y      ;   | 
+                    STA $CF                   ; /
+                    LDA.B #$07                ; \ Set highest byte to x07
+                    STA $D0                   ; / (All sprite data is stored in bank 07)
+                    LDA [$CE]                 ; \ Get first byte of sprite data (header)
+                    AND.B #$3F                ;  |Get level's sprite memory
+                    STA.W $1692               ; / Store in $1692
+                    LDA [$CE]                 ; \ Get first byte of sprite data (header) again
+                    AND.B #$C0                ;  |Get level's sprite buoyancy settings
+                    STA.W $190E               ; / Store in $190E
+                    REP #$10                  ; 16 bit X,Y ; Index (16 bit) 
+                    SEP #$20                  ; 8 bit A ; Accum (8 bit) 
                     LDY $0E                   
                     LDA.W DATA_05F000,Y       
                     LSR                       
@@ -6043,6 +6297,7 @@ ADDR_05D9B8:        LDA.W $141A
                     LSR                       
                     STA $95                   
                     JMP.W ADDR_05DA17         
+
 ADDR_05D9EC:        REP #$10                  ; Index (16 bit) 
                     LDA $01                   
                     AND.B #$1F                
@@ -6053,6 +6308,7 @@ ADDR_05D9EC:        REP #$10                  ; Index (16 bit)
                     LDA $01                   
                     STA $95                   
                     JMP.W ADDR_05DA17         
+
 ADDR_05DA01:        LDA $01                   
                     STA $97                   
                     STA $1D                   
@@ -6069,6 +6325,7 @@ ADDR_05DA17:        SEP #$30                  ; Index (8 bit) Accum (8 bit)
                     BCC ADDR_05DA24           
                     LDX.B #$03                
                     BRA ADDR_05DA38           
+
 ADDR_05DA24:        LDX.B #$04                
                     LDY.B #$04                
                     LDA [$65],Y               
@@ -6078,6 +6335,7 @@ ADDR_05DA2C:        CMP.L DATA_05D760,X
                     DEX                       
                     BPL ADDR_05DA2C           
 ADDR_05DA35:        JMP.W ADDR_05DAD7         
+
 ADDR_05DA38:        LDA.W $141A               
                     BNE ADDR_05DA35           
                     LDA.W $141D               
@@ -6133,17 +6391,17 @@ ADDR_05DA60:        LDA.W $13CF
                     CLC                       
                     ADC $00                   
                     TAY                       
-                    LDA.W DATA_05D766,Y       
+                    LDA.W PtrsLong05D766,Y    
                     STA $65                   
-                    LDA.W DATA_05D767,Y       
+                    LDA.W PtrsLong05D766+1,Y  
                     STA $66                   
-                    LDA.W DATA_05D768,Y       
+                    LDA.W PtrsLong05D766+2,Y  
                     STA $67                   
-                    LDA.W DATA_05D778,Y       
+                    LDA.W PtrsLong05D778,Y    
                     STA $68                   
-                    LDA.W DATA_05D779,Y       
+                    LDA.W PtrsLong05D778+1,Y  
                     STA $69                   
-                    LDA.W DATA_05D77A,Y       
+                    LDA.W PtrsLong05D778+2,Y  
                     STA $6A                   
 ADDR_05DAD0:        LDA.L DATA_05D760,X       
                     STA.W $1931               
@@ -6157,7 +6415,7 @@ ADDR_05DAD7:        LDA.W $141A
                     JSR.W ADDR_05DAEF         
 ADDR_05DAEB:        PLB                       
                     SEP #$30                  ; Index (8 bit) Accum (8 bit) 
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_05DAEF:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     LDY.B #$04                
@@ -6169,32 +6427,53 @@ ADDR_05DAEF:        SEP #$30                  ; Index (8 bit) Accum (8 bit)
                     ROL                       
                     JSL.L ExecutePtrLong      
 
-PtrsLong05DAFF:     .db $3E,$DB,$05
-                    .db $6E,$DB,$05
-                    .db $82,$DB,$05
+PtrsLong05DAFF:     .dw ADDR_05DB3E           
+                    .db :ADDR_05DB3E
+                    .dw ADDR_05DB6E           
+                    .db :ADDR_05DB6E
+                    .dw ADDR_05DB82           
+                    .db :ADDR_05DB82
 
-DATA_05DB08:        .db $24,$EC,$7E,$EC,$7E,$EC,$85,$E9
-                    .db $FB,$E9,$B0,$EA,$0B,$EB,$72,$EB
-                    .db $BE,$EB
 
-DATA_05DB1A:        .db $99,$D8,$A1,$D8,$A1,$D8,$E5,$D7
-                    .db $EA,$D7,$25,$D8,$4B,$D8,$6E,$D8
-                    .db $88,$D8
+ChocIsld2Layer1:    .dw DATA_06EC24           
+                    .dw DATA_06EC7E           
+                    .dw DATA_06EC7E           
+                    .dw DATA_06E985           
+                    .dw DATA_06E9FB           
+                    .dw DATA_06EAB0           
+                    .dw DATA_06EB0B           
+                    .dw DATA_06EB72           
+                    .dw DATA_06EBBE           
+ChocIsld2Sprites:   .dw DATA_07D899           
+                    .dw DATA_07D8A1           
+                    .dw DATA_07D8A1           
+                    .dw DATA_07D7E5           
+                    .dw DATA_07D7EA           
+                    .dw DATA_07D825           
+                    .dw DATA_07D84B           
+                    .dw DATA_07D86E           
+                    .dw DATA_07D888           
+ChocIsld2Layer2:    .dw DATA_0CDF59           
+                    .dw DATA_0CDF59           
+                    .dw DATA_0CDF59           
+                    .dw DATA_0CDF59           
+                    .dw DATA_0CDF59           
+                    .dw DATA_0CDF59           
+                    .dw DATA_0CDF59           
+                    .dw DATA_0CDF59           
+                    .dw DATA_0CDF59           
 
-DATA_05DB2C:        .db $59,$DF,$59,$DF,$59,$DF,$59,$DF
-                    .db $59,$DF,$59,$DF,$59,$DF,$59,$DF
-                    .db $59,$DF,$A2,$00
-
+ADDR_05DB3E:        LDX.B #$00                
                     LDA.W $1422               
                     CMP.B #$04                
                     BEQ ADDR_05DB49           
                     LDX.B #$02                
 ADDR_05DB49:        REP #$20                  ; Accum (16 bit) 
-                    LDA.L DATA_05DB08,X       
+                    LDA.L ChocIsld2Layer1,X   
                     STA $65                   
-                    LDA.L DATA_05DB1A,X       
+                    LDA.L ChocIsld2Sprites,X  
                     STA $CE                   
-                    LDA.L DATA_05DB2C,X       
+                    LDA.L ChocIsld2Layer2,X   
                     STA $68                   
                     SEP #$20                  ; Accum (8 bit) 
                     LDA [$CE]                 
@@ -6203,9 +6482,9 @@ ADDR_05DB49:        REP #$20                  ; Accum (16 bit)
                     LDA [$CE]                 
                     AND.B #$80                
                     STA.W $190E               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDX.B #$0A                
+ADDR_05DB6E:        LDX.B #$0A                
                     LDA.W $0DC0               
                     CMP.B #$16                
                     BPL ADDR_05DB7F           
@@ -6214,7 +6493,8 @@ ADDR_05DB49:        REP #$20                  ; Accum (16 bit)
                     BPL ADDR_05DB7F           
                     LDX.B #$06                
 ADDR_05DB7F:        JMP.W ADDR_05DB49         
-                    LDX.B #$0C                
+
+ADDR_05DB82:        LDX.B #$0C                
                     LDA.W $0F31               
                     CMP.B #$02                
                     BMI ADDR_05DBA6           
@@ -6246,8 +6526,7 @@ ADDR_05DBB5:        LDX $95
 ADDR_05DBBF:        LDA.W DATA_05DBA9,Y       
                     STA.W $19B8,X             
                     INC.W $141A               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_05DBC9:        .db $50,$88,$00,$03,$FE,$38,$FE,$38
                     .db $FF,$B8,$3C,$B9,$3C,$BA,$3C,$BB
@@ -6256,7 +6535,7 @@ DATA_05DBC9:        .db $50,$88,$00,$03,$FE,$38,$FE,$38
                     .db $BC,$C1,$3C,$B9,$3C,$C2,$3C,$C2
                     .db $BC
 
-ADDR_05DBF2:        PHB                       
+ExtSub05DBF2:       PHB                       
                     PHK                       
                     PLB                       
                     LDX.B #$08                
@@ -6288,16 +6567,16 @@ ADDR_05DC23:        CLC
                     STA.L $7F837B             
                     SEP #$20                  ; Accum (8 bit) 
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_05DC3A:        LDX.B #$00                
 ADDR_05DC3C:        CMP.B #$0A                
-                    BCC ADDR_05DC45           
+                    BCC Return05DC45          
                     SBC.B #$0A                
                     INX                       
                     BRA ADDR_05DC3C           
-ADDR_05DC45:        RTS                       ; Return 
 
+Return05DC45:       RTS                       ; Return
 
 Empty05DC46:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
@@ -6420,530 +6699,2569 @@ Empty05DC46:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF
 
-DATA_05E000:        .db $54
 
-DATA_05E001:        .db $86
+Layer1Ptrs:         .dw DATA_068654           
+                    .db :DATA_068654
+                    .dw DATA_06BA69           
+                    .db :DATA_06BA69
+                    .dw DATA_06BC33           
+                    .db :DATA_06BC33
+                    .dw DATA_0688BF           
+                    .db :DATA_0688BF
+                    .dw DATA_069807           
+                    .db :DATA_069807
+                    .dw DATA_069961           
+                    .db :DATA_069961
+                    .dw DATA_069BB5           
+                    .db :DATA_069BB5
+                    .dw DATA_069DC0           
+                    .db :DATA_069DC0
+                    .dw DATA_06876E           
+                    .db :DATA_06876E
+                    .dw DATA_06962D           
+                    .db :DATA_06962D
+                    .dw DATA_06A134           
+                    .db :DATA_06A134
+                    .dw DATA_06BD0F           
+                    .db :DATA_06BD0F
+                    .dw DATA_06D000           
+                    .db :DATA_06D000
+                    .dw DATA_06D0F4           
+                    .db :DATA_06D0F4
+                    .dw DATA_06C3A3           
+                    .db :DATA_06C3A3
+                    .dw DATA_06BEAD           
+                    .db :DATA_06BEAD
+                    .dw DATA_06C1C4           
+                    .db :DATA_06C1C4
+                    .dw DATA_06C783           
+                    .db :DATA_06C783
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_06A2F2           
+                    .db :DATA_06A2F2
+                    .dw DATA_06868D           
+                    .db :DATA_06868D
+                    .dw DATA_0691E5           
+                    .db :DATA_0691E5
+                    .dw DATA_0691E5           
+                    .db :DATA_0691E5
+                    .dw DATA_0691E5           
+                    .db :DATA_0691E5
+                    .dw DATA_078C14           
+                    .db :DATA_078C14
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_0789CC           
+                    .db :DATA_0789CC
+                    .dw DATA_06EE36           
+                    .db :DATA_06EE36
+                    .dw DATA_0786E3           
+                    .db :DATA_0786E3
+                    .dw LevelData078100       
+                    .db :LevelData078100
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_06E20A           
+                    .db :DATA_06E20A
+                    .dw DATA_06D9D9           
+                    .db :DATA_06D9D9
+                    .dw DATA_06E7A2           
+                    .db :DATA_06E7A2
+                    .dw DATA_06E444           
+                    .db :DATA_06E444
+                    .dw DATA_06ECC9           
+                    .db :DATA_06ECC9
+                    .dw DATA_06E897           
+                    .db :DATA_06E897
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068561           
+                    .db :DATA_068561
+                    .dw DATA_06858B           
+                    .db :DATA_06858B
+                    .dw DATA_068258           
+                    .db :DATA_068258
+                    .dw DATA_06825E           
+                    .db :DATA_06825E
+                    .dw DATA_06825E           
+                    .db :DATA_06825E
+                    .dw DATA_068258           
+                    .db :DATA_068258
+                    .dw DATA_068258           
+                    .db :DATA_068258
+                    .dw DATA_068258           
+                    .db :DATA_068258
+                    .dw DATA_068252           
+                    .db :DATA_068252
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_078935           
+                    .db :DATA_078935
+                    .dw DATA_06E76E           
+                    .db :DATA_06E76E
+                    .dw DATA_06C199           
+                    .db :DATA_06C199
+                    .dw DATA_0788CB           
+                    .db :DATA_0788CB
+                    .dw DATA_06C375           
+                    .db :DATA_06C375
+                    .dw DATA_06A270           
+                    .db :DATA_06A270
+                    .dw DATA_069D83           
+                    .db :DATA_069D83
+                    .dw DATA_06994F           
+                    .db :DATA_06994F
+                    .dw DATA_068603           
+                    .db :DATA_068603
+                    .dw DATA_06C949           
+                    .db :DATA_06C949
+                    .dw DATA_0685B5           
+                    .db :DATA_0685B5
+                    .dw DATA_07977C           
+                    .db :DATA_07977C
+                    .dw DATA_06887D           
+                    .db :DATA_06887D
+                    .dw DATA_0687AE           
+                    .db :DATA_0687AE
+                    .dw DATA_06BCEE           
+                    .db :DATA_06BCEE
+                    .dw DATA_068636           
+                    .db :DATA_068636
+                    .dw DATA_06EC24           
+                    .db :DATA_06EC24
+                    .dw DATA_06EB0B           
+                    .db :DATA_06EB0B
+                    .dw DATA_06E985           
+                    .db :DATA_06E985
+                    .dw DATA_06E444           
+                    .db :DATA_06E444
+                    .dw DATA_06E444           
+                    .db :DATA_06E444
+                    .dw DATA_069D4C           
+                    .db :DATA_069D4C
+                    .dw DATA_078BEA           
+                    .db :DATA_078BEA
+                    .dw DATA_078B4A           
+                    .db :DATA_078B4A
+                    .dw DATA_068636           
+                    .db :DATA_068636
+                    .dw DATA_06E307           
+                    .db :DATA_06E307
+                    .dw DATA_06EDE7           
+                    .db :DATA_06EDE7
+                    .dw DATA_06BBC9           
+                    .db :DATA_06BBC9
+                    .dw DATA_068636           
+                    .db :DATA_068636
+                    .dw DATA_06C6EC           
+                    .db :DATA_06C6EC
+                    .dw DATA_06C559           
+                    .db :DATA_06C559
+                    .dw DATA_06C495           
+                    .db :DATA_06C495
+                    .dw DATA_06D1D6           
+                    .db :DATA_06D1D6
+                    .dw DATA_06989D           
+                    .db :DATA_06989D
+                    .dw DATA_068636           
+                    .db :DATA_068636
+                    .dw DATA_06BDB6           
+                    .db :DATA_06BDB6
+                    .dw DATA_06BDB6           
+                    .db :DATA_06BDB6
+                    .dw DATA_068636           
+                    .db :DATA_068636
+                    .dw DATA_069473           
+                    .db :DATA_069473
+                    .dw DATA_06A44F           
+                    .db :DATA_06A44F
+                    .dw DATA_068636           
+                    .db :DATA_068636
+                    .dw DATA_06A09D           
+                    .db :DATA_06A09D
+                    .dw DATA_069F64           
+                    .db :DATA_069F64
+                    .dw DATA_069E2E           
+                    .db :DATA_069E2E
+                    .dw DATA_06978E           
+                    .db :DATA_06978E
+                    .dw DATA_0785B4           
+                    .db :DATA_0785B4
+                    .dw DATA_068621           
+                    .db :DATA_068621
+                    .dw DATA_06A2F2           
+                    .db :DATA_06A2F2
+                    .dw DATA_06A374           
+                    .db :DATA_06A374
+                    .dw DATA_06A2F2           
+                    .db :DATA_06A2F2
+                    .dw DATA_06EEFD           
+                    .db :DATA_06EEFD
+                    .dw DATA_068621           
+                    .db :DATA_068621
+                    .dw DATA_06A420           
+                    .db :DATA_06A420
+                    .dw DATA_06A374           
+                    .db :DATA_06A374
+                    .dw DATA_06D0DC           
+                    .db :DATA_06D0DC
+                    .dw DATA_069B1E           
+                    .db :DATA_069B1E
+                    .dw DATA_06E5D0           
+                    .db :DATA_06E5D0
+                    .dw DATA_06E5D0           
+                    .db :DATA_06E5D0
+                    .dw DATA_078DAB           
+                    .db :DATA_078DAB
+                    .dw DATA_078CC6           
+                    .db :DATA_078CC6
+                    .dw DATA_06989D           
+                    .db :DATA_06989D
+                    .dw DATA_06987B           
+                    .db :DATA_06987B
+                    .dw DATA_068621           
+                    .db :DATA_068621
+                    .dw DATA_06E815           
+                    .db :DATA_06E815
+                    .dw DATA_0693DC           
+                    .db :DATA_0693DC
+                    .dw DATA_0698F0           
+                    .db :DATA_0698F0
+                    .dw DATA_06863C           
+                    .db :DATA_06863C
+                    .dw DATA_068654           
+                    .db :DATA_068654
+                    .dw DATA_068FFD           
+                    .db :DATA_068FFD
+                    .dw DATA_068EAD           
+                    .db :DATA_068EAD
+                    .dw DATA_068BDE           
+                    .db :DATA_068BDE
+                    .dw DATA_07802D           
+                    .db :DATA_07802D
+                    .dw DATA_0688DD           
+                    .db :DATA_0688DD
+                    .dw DATA_068A2F           
+                    .db :DATA_068A2F
+                    .dw DATA_06AD09           
+                    .db :DATA_06AD09
+                    .dw DATA_0780C3           
+                    .db :DATA_0780C3
+                    .dw DATA_06B817           
+                    .db :DATA_06B817
+                    .dw DATA_06AE7D           
+                    .db :DATA_06AE7D
+                    .dw DATA_06A461           
+                    .db :DATA_06A461
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw LevelDataSpr07A600    
+                    .db :LevelDataSpr07A600
+                    .dw DATA_07ABF9           
+                    .db :DATA_07ABF9
+                    .dw DATA_079B58           
+                    .db :DATA_079B58
+                    .dw DATA_079DE2           
+                    .db :DATA_079DE2
+                    .dw DATA_07A028           
+                    .db :DATA_07A028
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_0799D6           
+                    .db :DATA_0799D6
+                    .dw DATA_079803           
+                    .db :DATA_079803
+                    .dw DATA_0792CA           
+                    .db :DATA_0792CA
+                    .dw DATA_078EA4           
+                    .db :DATA_078EA4
+                    .dw DATA_06F05D           
+                    .db :DATA_06F05D
+                    .dw DATA_06A95F           
+                    .db :DATA_06A95F
+                    .dw DATA_06B2D1           
+                    .db :DATA_06B2D1
+                    .dw DATA_06A600           
+                    .db :DATA_06A600
+                    .dw DATA_0686D0           
+                    .db :DATA_0686D0
+                    .dw DATA_06B4E0           
+                    .db :DATA_06B4E0
+                    .dw DATA_06DABE           
+                    .db :DATA_06DABE
+                    .dw DATA_06D23A           
+                    .db :DATA_06D23A
+                    .dw DATA_06DF5B           
+                    .db :DATA_06DF5B
+                    .dw DATA_06D40B           
+                    .db :DATA_06D40B
+                    .dw DATA_06872B           
+                    .db :DATA_06872B
+                    .dw DATA_06E183           
+                    .db :DATA_06E183
+                    .dw DATA_06D6F3           
+                    .db :DATA_06D6F3
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_07BF65           
+                    .db :DATA_07BF65
+                    .dw DATA_07BDE5           
+                    .db :DATA_07BDE5
+                    .dw DATA_07BC11           
+                    .db :DATA_07BC11
+                    .dw DATA_07BABE           
+                    .db :DATA_07BABE
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_07B26B           
+                    .db :DATA_07B26B
+                    .dw DATA_07B46E           
+                    .db :DATA_07B46E
+                    .dw DATA_07B540           
+                    .db :DATA_07B540
+                    .dw DATA_07B908           
+                    .db :DATA_07B908
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_07AF25           
+                    .db :DATA_07AF25
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_07AFE3           
+                    .db :DATA_07AFE3
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_07AD35           
+                    .db :DATA_07AD35
+                    .dw DATA_07B031           
+                    .db :DATA_07B031
+                    .dw DATA_07B124           
+                    .db :DATA_07B124
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_06858B           
+                    .db :DATA_06858B
+                    .dw DATA_068561           
+                    .db :DATA_068561
+                    .dw DATA_068258           
+                    .db :DATA_068258
+                    .dw DATA_06825E           
+                    .db :DATA_06825E
+                    .dw DATA_06825E           
+                    .db :DATA_06825E
+                    .dw DATA_068258           
+                    .db :DATA_068258
+                    .dw DATA_068258           
+                    .db :DATA_068258
+                    .dw DATA_068258           
+                    .db :DATA_068258
+                    .dw DATA_068252           
+                    .db :DATA_068252
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_068000           
+                    .db :DATA_068000
+                    .dw DATA_079AC1           
+                    .db :DATA_079AC1
+                    .dw DATA_06D942           
+                    .db :DATA_06D942
+                    .dw DATA_07AAC9           
+                    .db :DATA_07AAC9
+                    .dw DATA_068FB1           
+                    .db :DATA_068FB1
+                    .dw DATA_079D84           
+                    .db :DATA_079D84
+                    .dw LevelData             
+                    .db :LevelData
+                    .dw DATA_06E128           
+                    .db :DATA_06E128
+                    .dw DATA_06B1B5           
+                    .db :DATA_06B1B5
+                    .dw DATA_06ACA8           
+                    .db :DATA_06ACA8
+                    .dw DATA_07B3C6           
+                    .db :DATA_07B3C6
+                    .dw DATA_07B3C6           
+                    .db :DATA_07B3C6
+                    .dw DATA_06A56D           
+                    .db :DATA_06A56D
+                    .dw DATA_07AD2F           
+                    .db :DATA_07AD2F
+                    .dw DATA_07B896           
+                    .db :DATA_07B896
+                    .dw DATA_07B87D           
+                    .db :DATA_07B87D
+                    .dw DATA_068BB3           
+                    .db :DATA_068BB3
+                    .dw DATA_0689F8           
+                    .db :DATA_0689F8
+                    .dw DATA_07AA77           
+                    .db :DATA_07AA77
+                    .dw DATA_07AA16           
+                    .db :DATA_07AA16
+                    .dw DATA_07A961           
+                    .db :DATA_07A961
+                    .dw DATA_07A8D9           
+                    .db :DATA_07A8D9
+                    .dw DATA_07A83F           
+                    .db :DATA_07A83F
+                    .dw DATA_07A802           
+                    .db :DATA_07A802
+                    .dw DATA_07A765           
+                    .db :DATA_07A765
+                    .dw DATA_07A707           
+                    .db :DATA_07A707
+                    .dw DATA_07A68E           
+                    .db :DATA_07A68E
+                    .dw DATA_07AFCE           
+                    .db :DATA_07AFCE
+                    .dw DATA_07AF16           
+                    .db :DATA_07AF16
+                    .dw DATA_068838           
+                    .db :DATA_068838
+                    .dw DATA_0687F3           
+                    .db :DATA_0687F3
+                    .dw DATA_079803           
+                    .db :DATA_079803
+                    .dw DATA_068621           
+                    .db :DATA_068621
+                    .dw DATA_079969           
+                    .db :DATA_079969
+                    .dw DATA_079969           
+                    .db :DATA_079969
+                    .dw DATA_079867           
+                    .db :DATA_079867
+                    .dw DATA_068636           
+                    .db :DATA_068636
+                    .dw DATA_06E104           
+                    .db :DATA_06E104
+                    .dw DATA_07BD8A           
+                    .db :DATA_07BD8A
+                    .dw DATA_07BD75           
+                    .db :DATA_07BD75
+                    .dw DATA_0795F0           
+                    .db :DATA_0795F0
+                    .dw DATA_0793E2           
+                    .db :DATA_0793E2
+                    .dw DATA_079233           
+                    .db :DATA_079233
+                    .dw DATA_079221           
+                    .db :DATA_079221
+                    .dw DATA_06DF46           
+                    .db :DATA_06DF46
+                    .dw DATA_068621           
+                    .db :DATA_068621
+                    .dw DATA_06DABE           
+                    .db :DATA_06DABE
+                    .dw DATA_06DABE           
+                    .db :DATA_06DABE
+                    .dw DATA_06AE18           
+                    .db :DATA_06AE18
+                    .dw DATA_068687           
+                    .db :DATA_068687
+                    .dw DATA_06F35D           
+                    .db :DATA_06F35D
+                    .dw DATA_06F164           
+                    .db :DATA_06F164
+                    .dw DATA_06F4FC           
+                    .db :DATA_06F4FC
+                    .dw DATA_06A8E9           
+                    .db :DATA_06A8E9
+                    .dw DATA_06BA33           
+                    .db :DATA_06BA33
+                    .dw DATA_06BA06           
+                    .db :DATA_06BA06
+                    .dw DATA_06B7ED           
+                    .db :DATA_06B7ED
+                    .dw DATA_06B666           
+                    .db :DATA_06B666
+                    .dw DATA_06B620           
+                    .db :DATA_06B620
+                    .dw DATA_06B422           
+                    .db :DATA_06B422
+                    .dw DATA_068687           
+                    .db :DATA_068687
+                    .dw DATA_06B23A           
+                    .db :DATA_06B23A
+                    .dw DATA_06D914           
+                    .db :DATA_06D914
+                    .dw DATA_068621           
+                    .db :DATA_068621
+                    .dw DATA_06DED2           
+                    .db :DATA_06DED2
+                    .dw DATA_06AD09           
+                    .db :DATA_06AD09
+                    .dw DATA_06916F           
+                    .db :DATA_06916F
+                    .dw DATA_068E6D           
+                    .db :DATA_068E6D
+                    .dw DATA_079F22           
+                    .db :DATA_079F22
+                    .dw DATA_068F93           
+                    .db :DATA_068F93
+Layer2Ptrs:         .dw DATA_0CE674           
+                    .db $FF
+                    .dw DATA_0CDD44           
+                    .db $FF
+                    .dw DATA_0CDD44           
+                    .db $FF
+                    .dw DATA_0CEC82           
+                    .db $FF
+                    .dw DATA_0CEF80           
+                    .db $FF
+                    .dw DATA_0CEC82           
+                    .db $FF
+                    .dw DATA_0CDE54           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CE674           
+                    .db $FF
+                    .dw DATA_06956D           
+                    .db :DATA_06956D
+                    .dw DATA_0CDAB9           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CDD44           
+                    .db $FF
+                    .dw DATA_0CDD44           
+                    .db $FF
+                    .dw DATA_06C46E           
+                    .db :DATA_06C46E
+                    .dw DATA_0CDD44           
+                    .db $FF
+                    .dw DATA_0CDD44           
+                    .db $FF
+                    .dw DATA_0CDAB9           
+                    .db $FF
+                    .dw DATA_0CDE54           
+                    .db $FF
+                    .dw DATA_0CEF80           
+                    .db $FF
+                    .dw DATA_0CE674           
+                    .db $FF
+                    .dw DATA_0CDE54           
+                    .db $FF
+                    .dw DATA_0CDE54           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CDAB9           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_078B1D           
+                    .db :DATA_078B1D
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CE7C0           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CE103           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CEF80           
+                    .db $FF
+                    .dw DATA_0CDE54           
+                    .db $FF
+                    .dw DATA_0CE7C0           
+                    .db $FF
+                    .dw DATA_0CDF59           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CE674           
+                    .db $FF
+                    .dw DATA_0CDF59           
+                    .db $FF
+                    .dw DATA_0CDD44           
+                    .db $FF
+                    .dw DATA_0CDF59           
+                    .db $FF
+                    .dw DATA_0CDF59           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CDE54           
+                    .db $FF
+                    .dw DATA_06861B           
+                    .db :DATA_06861B
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CE472           
+                    .db $FF
+                    .dw DATA_0CDF59           
+                    .db $FF
+                    .dw DATA_0CE684           
+                    .db $FF
+                    .dw DATA_0CE674           
+                    .db $FF
+                    .dw DATA_0CE674           
+                    .db $FF
+                    .dw DATA_0CDD44           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CDF59           
+                    .db $FF
+                    .dw DATA_0CDF59           
+                    .db $FF
+                    .dw DATA_0CDF59           
+                    .db $FF
+                    .dw DATA_0CDE54           
+                    .db $FF
+                    .dw DATA_0CDE54           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_078BB7           
+                    .db :DATA_078BB7
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CDD44           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CE674           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_06C514           
+                    .db :DATA_06C514
+                    .dw DATA_0CDD44           
+                    .db $FF
+                    .dw DATA_0CEF80           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CDE54           
+                    .db $FF
+                    .dw DATA_0CEF80           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CE674           
+                    .db $FF
+                    .dw DATA_069EBF           
+                    .db :DATA_069EBF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_06861B           
+                    .db :DATA_06861B
+                    .dw DATA_0CEF80           
+                    .db $FF
+                    .dw DATA_0CEF80           
+                    .db $FF
+                    .dw DATA_0CEF80           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_06861B           
+                    .db :DATA_06861B
+                    .dw DATA_0CEF80           
+                    .db $FF
+                    .dw DATA_0CEF80           
+                    .db $FF
+                    .dw DATA_0CDD44           
+                    .db $FF
+                    .dw DATA_0CE674           
+                    .db $FF
+                    .dw DATA_0CDE54           
+                    .db $FF
+                    .dw DATA_0CDE54           
+                    .db $FF
+                    .dw DATA_0CE8EE           
+                    .db $FF
+                    .dw DATA_0CF175           
+                    .db $FF
+                    .dw DATA_0CEF80           
+                    .db $FF
+                    .dw DATA_0CEF80           
+                    .db $FF
+                    .dw DATA_06861B           
+                    .db :DATA_06861B
+                    .dw DATA_0CEF80           
+                    .db $FF
+                    .dw DATA_0CE674           
+                    .db $FF
+                    .dw DATA_0CEF80           
+                    .db $FF
+                    .dw DATA_0CDE54           
+                    .db $FF
+                    .dw DATA_0CE674           
+                    .db $FF
+                    .dw DATA_0CE103           
+                    .db $FF
+                    .dw DATA_0CDF59           
+                    .db $FF
+                    .dw DATA_0CDF59           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CEC82           
+                    .db $FF
+                    .dw DATA_0CEF80           
+                    .db $FF
+                    .dw DATA_0CE7C0           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CE103           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_07A134           
+                    .db :DATA_07A134
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CEF80           
+                    .db $FF
+                    .dw DATA_07937C           
+                    .db :DATA_07937C
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CE684           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CE674           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_06DB8D           
+                    .db :DATA_06DB8D
+                    .dw DATA_0CEC82           
+                    .db $FF
+                    .dw DATA_0CEC82           
+                    .db $FF
+                    .dw DATA_0CDAB9           
+                    .db $FF
+                    .dw DATA_0CE674           
+                    .db $FF
+                    .dw DATA_0CEC82           
+                    .db $FF
+                    .dw DATA_0CEC82           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CDC71           
+                    .db $FF
+                    .dw DATA_0CEC82           
+                    .db $FF
+                    .dw DATA_0CE7C0           
+                    .db $FF
+                    .dw DATA_0CDF59           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CDD44           
+                    .db $FF
+                    .dw DATA_0CE472           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CDF59           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CDAB9           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CE684           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CE684           
+                    .db $FF
+                    .dw DATA_0CE684           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CE674           
+                    .db $FF
+                    .dw DATA_0CE674           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CDF59           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CDF59           
+                    .db $FF
+                    .dw DATA_0CDAB9           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CDD44           
+                    .db $FF
+                    .dw DATA_0CDD44           
+                    .db $FF
+                    .dw DATA_0CD900           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CDD44           
+                    .db $FF
+                    .dw DATA_0CDD44           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CE103           
+                    .db $FF
+                    .dw DATA_07A9E3           
+                    .db :DATA_07A9E3
+                    .dw DATA_07A934           
+                    .db :DATA_07A934
+                    .dw DATA_0CE103           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CE103           
+                    .db $FF
+                    .dw DATA_0CDD44           
+                    .db $FF
+                    .dw DATA_0CDD44           
+                    .db $FF
+                    .dw DATA_0CE674           
+                    .db $FF
+                    .dw DATA_0CE674           
+                    .db $FF
+                    .dw DATA_0CEF80           
+                    .db $FF
+                    .dw DATA_06861B           
+                    .db :DATA_06861B
+                    .dw DATA_0CEF80           
+                    .db $FF
+                    .dw DATA_0CEF80           
+                    .db $FF
+                    .dw DATA_0CEF80           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CDD44           
+                    .db $FF
+                    .dw DATA_0CE7C0           
+                    .db $FF
+                    .dw DATA_07975E           
+                    .db :DATA_07975E
+                    .dw DATA_0795A5           
+                    .db :DATA_0795A5
+                    .dw DATA_0CE674           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_06861B           
+                    .db :DATA_06861B
+                    .dw DATA_06861B           
+                    .db :DATA_06861B
+                    .dw DATA_06DB8D           
+                    .db :DATA_06DB8D
+                    .dw DATA_06DB8D           
+                    .db :DATA_06DB8D
+                    .dw DATA_0CEF80           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_06F42A           
+                    .db :DATA_06F42A
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw ExtSub06A93E          
+                    .db :ExtSub06A93E
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_06B74B           
+                    .db :DATA_06B74B
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CE674           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_06861B           
+                    .db :DATA_06861B
+                    .dw DATA_0CEF80           
+                    .db $FF
+                    .dw DATA_0CEF80           
+                    .db $FF
+                    .dw DATA_0CE103           
+                    .db $FF
+                    .dw DATA_0CE8FE           
+                    .db $FF
+                    .dw DATA_0CF45A           
+                    .db $FF
+                    .dw DATA_0CDF59           
+                    .db $FF
 
-DATA_05E002:        .db $06,$69,$BA,$06,$33,$BC,$06,$BF
-                    .db $88,$06,$07,$98,$06,$61,$99,$06
-                    .db $B5,$9B,$06,$C0,$9D,$06,$6E,$87
-                    .db $06,$2D,$96,$06,$34,$A1,$06,$0F
-                    .db $BD,$06,$00,$D0,$06,$F4,$D0,$06
-                    .db $A3,$C3,$06,$AD,$BE,$06,$C4,$C1
-                    .db $06,$83,$C7,$06,$00,$80,$06,$F2
-                    .db $A2,$06,$8D,$86,$06,$E5,$91,$06
-                    .db $E5,$91,$06,$E5,$91,$06,$14,$8C
-                    .db $07,$00,$80,$06,$CC,$89,$07,$36
-                    .db $EE,$06,$E3,$86,$07,$00,$81,$07
-                    .db $00,$80,$06,$0A,$E2,$06,$D9,$D9
-                    .db $06,$A2,$E7,$06,$44,$E4,$06,$C9
-                    .db $EC,$06,$97,$E8,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$61
-                    .db $85,$06,$8B,$85,$06,$58,$82,$06
-                    .db $5E,$82,$06,$5E,$82,$06,$58,$82
-                    .db $06,$58,$82,$06,$58,$82,$06,$52
-                    .db $82,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$35,$89,$07
-                    .db $6E,$E7,$06,$99,$C1,$06,$CB,$88
-                    .db $07,$75,$C3,$06,$70,$A2,$06,$83
-                    .db $9D,$06,$4F,$99,$06,$03,$86,$06
-                    .db $49,$C9,$06,$B5,$85,$06,$7C,$97
-                    .db $07,$7D,$88,$06,$AE,$87,$06,$EE
-                    .db $BC,$06,$36,$86,$06,$24,$EC,$06
-                    .db $0B,$EB,$06,$85,$E9,$06,$44,$E4
-                    .db $06,$44,$E4,$06,$4C,$9D,$06,$EA
-                    .db $8B,$07,$4A,$8B,$07,$36,$86,$06
-                    .db $07,$E3,$06,$E7,$ED,$06,$C9,$BB
-                    .db $06,$36,$86,$06,$EC,$C6,$06,$59
-                    .db $C5,$06,$95,$C4,$06,$D6,$D1,$06
-                    .db $9D,$98,$06,$36,$86,$06,$B6,$BD
-                    .db $06,$B6,$BD,$06,$36,$86,$06,$73
-                    .db $94,$06,$4F,$A4,$06,$36,$86,$06
-                    .db $9D,$A0,$06,$64,$9F,$06,$2E,$9E
-                    .db $06,$8E,$97,$06,$B4,$85,$07,$21
-                    .db $86,$06,$F2,$A2,$06,$74,$A3,$06
-                    .db $F2,$A2,$06,$FD,$EE,$06,$21,$86
-                    .db $06,$20,$A4,$06,$74,$A3,$06,$DC
-                    .db $D0,$06,$1E,$9B,$06,$D0,$E5,$06
-                    .db $D0,$E5,$06,$AB,$8D,$07,$C6,$8C
-                    .db $07,$9D,$98,$06,$7B,$98,$06,$21
-                    .db $86,$06,$15,$E8,$06,$DC,$93,$06
-                    .db $F0,$98,$06,$3C,$86,$06,$54,$86
-                    .db $06,$FD,$8F,$06,$AD,$8E,$06,$DE
-                    .db $8B,$06,$2D,$80,$07,$DD,$88,$06
-                    .db $2F,$8A,$06,$09,$AD,$06,$C3,$80
-                    .db $07,$17,$B8,$06,$7D,$AE,$06,$61
-                    .db $A4,$06,$00,$80,$06,$00,$A6,$07
-                    .db $F9,$AB,$07,$58,$9B,$07,$E2,$9D
-                    .db $07,$28,$A0,$07,$00,$80,$06,$D6
-                    .db $99,$07,$03,$98,$07,$CA,$92,$07
-                    .db $A4,$8E,$07,$5D,$F0,$06,$5F,$A9
-                    .db $06,$D1,$B2,$06,$00,$A6,$06,$D0
-                    .db $86,$06,$E0,$B4,$06,$BE,$DA,$06
-                    .db $3A,$D2,$06,$5B,$DF,$06,$0B,$D4
-                    .db $06,$2B,$87,$06,$83,$E1,$06,$F3
-                    .db $D6,$06,$00,$80,$06,$65,$BF,$07
-                    .db $E5,$BD,$07,$11,$BC,$07,$BE,$BA
-                    .db $07,$00,$80,$06,$6B,$B2,$07,$6E
-                    .db $B4,$07,$40,$B5,$07,$08,$B9,$07
-                    .db $00,$80,$06,$00,$80,$06,$25,$AF
-                    .db $07,$00,$80,$06,$E3,$AF,$07,$00
-                    .db $80,$06,$35,$AD,$07,$31,$B0,$07
-                    .db $24,$B1,$07,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$8B
-                    .db $85,$06,$61,$85,$06,$58,$82,$06
-                    .db $5E,$82,$06,$5E,$82,$06,$58,$82
-                    .db $06,$58,$82,$06,$58,$82,$06,$52
-                    .db $82,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$00
-                    .db $80,$06,$00,$80,$06,$00,$80,$06
-                    .db $00,$80,$06,$00,$80,$06,$00,$80
-                    .db $06,$00,$80,$06,$00,$80,$06,$C1
-                    .db $9A,$07,$42,$D9,$06,$C9,$AA,$07
-                    .db $B1,$8F,$06,$84,$9D,$07,$11,$F5
-                    .db $06,$28,$E1,$06,$B5,$B1,$06,$A8
-                    .db $AC,$06,$C6,$B3,$07,$C6,$B3,$07
-                    .db $6D,$A5,$06,$2F,$AD,$07,$96,$B8
-                    .db $07,$7D,$B8,$07,$B3,$8B,$06,$F8
-                    .db $89,$06,$77,$AA,$07,$16,$AA,$07
-                    .db $61,$A9,$07,$D9,$A8,$07,$3F,$A8
-                    .db $07,$02,$A8,$07,$65,$A7,$07,$07
-                    .db $A7,$07,$8E,$A6,$07,$CE,$AF,$07
-                    .db $16,$AF,$07,$38,$88,$06,$F3,$87
-                    .db $06,$03,$98,$07,$21,$86,$06,$69
-                    .db $99,$07,$69,$99,$07,$67,$98,$07
-                    .db $36,$86,$06,$04,$E1,$06,$8A,$BD
-                    .db $07,$75,$BD,$07,$F0,$95,$07,$E2
-                    .db $93,$07,$33,$92,$07,$21,$92,$07
-                    .db $46,$DF,$06,$21,$86,$06,$BE,$DA
-                    .db $06,$BE,$DA,$06,$18,$AE,$06,$87
-                    .db $86,$06,$5D,$F3,$06,$64,$F1,$06
-                    .db $FC,$F4,$06,$E9,$A8,$06,$33,$BA
-                    .db $06,$06,$BA,$06,$ED,$B7,$06,$66
-                    .db $B6,$06,$20,$B6,$06,$22,$B4,$06
-                    .db $87,$86,$06,$3A,$B2,$06,$14,$D9
-                    .db $06,$21,$86,$06,$D2,$DE,$06,$09
-                    .db $AD,$06,$6F,$91,$06,$6D,$8E,$06
-                    .db $22,$9F,$07,$93,$8F,$06
 
-DATA_05E600:        .db $74
-
-DATA_05E601:        .db $E6
-
-DATA_05E602:        .db $FF,$44,$DD,$FF,$44,$DD,$FF,$82
-                    .db $EC,$FF,$80,$EF,$FF,$82,$EC,$FF
-                    .db $54,$DE,$FF,$5A,$F4,$FF,$74,$E6
-                    .db $FF,$6D,$95,$06,$B9,$DA,$FF,$5A
-                    .db $F4,$FF,$44,$DD,$FF,$44,$DD,$FF
-                    .db $6E,$C4,$06,$44,$DD,$FF,$44,$DD
-                    .db $FF,$B9,$DA,$FF,$54,$DE,$FF,$80
-                    .db $EF,$FF,$74,$E6,$FF,$54,$DE,$FF
-                    .db $54,$DE,$FF,$00,$D9,$FF,$B9,$DA
-                    .db $FF,$00,$D9,$FF,$1D,$8B,$07,$5A
-                    .db $F4,$FF,$C0,$E7,$FF,$FE,$E8,$FF
-                    .db $00,$D9,$FF,$03,$E1,$FF,$5A,$F4
-                    .db $FF,$80,$EF,$FF,$54,$DE,$FF,$C0
-                    .db $E7,$FF,$59,$DF,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$5A
-                    .db $F4,$FF,$5A,$F4,$FF,$5A,$F4,$FF
-                    .db $5A,$F4,$FF,$5A,$F4,$FF,$5A,$F4
-                    .db $FF,$5A,$F4,$FF,$5A,$F4,$FF,$5A
-                    .db $F4,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$74,$E6,$FF
-                    .db $59,$DF,$FF,$44,$DD,$FF,$59,$DF
-                    .db $FF,$59,$DF,$FF,$FE,$E8,$FF,$54
-                    .db $DE,$FF,$1B,$86,$06,$00,$D9,$FF
-                    .db $72,$E4,$FF,$59,$DF,$FF,$84,$E6
-                    .db $FF,$74,$E6,$FF,$74,$E6,$FF,$44
-                    .db $DD,$FF,$5A,$F4,$FF,$59,$DF,$FF
-                    .db $59,$DF,$FF,$59,$DF,$FF,$54,$DE
-                    .db $FF,$54,$DE,$FF,$FE,$E8,$FF,$5A
-                    .db $F4,$FF,$B7,$8B,$07,$5A,$F4,$FF
-                    .db $5A,$F4,$FF,$44,$DD,$FF,$FE,$E8
-                    .db $FF,$5A,$F4,$FF,$74,$E6,$FF,$5A
-                    .db $F4,$FF,$14,$C5,$06,$44,$DD,$FF
-                    .db $80,$EF,$FF,$00,$D9,$FF,$5A,$F4
-                    .db $FF,$5A,$F4,$FF,$5A,$F4,$FF,$54
-                    .db $DE,$FF,$80,$EF,$FF,$5A,$F4,$FF
-                    .db $74,$E6,$FF,$BF,$9E,$06,$5A,$F4
-                    .db $FF,$FE,$E8,$FF,$FE,$E8,$FF,$1B
-                    .db $86,$06,$80,$EF,$FF,$80,$EF,$FF
-                    .db $80,$EF,$FF,$5A,$F4,$FF,$1B,$86
-                    .db $06,$80,$EF,$FF,$80,$EF,$FF,$44
-                    .db $DD,$FF,$74,$E6,$FF,$54,$DE,$FF
-                    .db $54,$DE,$FF,$EE,$E8,$FF,$75,$F1
-                    .db $FF,$80,$EF,$FF,$80,$EF,$FF,$1B
-                    .db $86,$06,$80,$EF,$FF,$74,$E6,$FF
-                    .db $80,$EF,$FF,$54,$DE,$FF,$74,$E6
-                    .db $FF,$03,$E1,$FF,$59,$DF,$FF,$59
-                    .db $DF,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $82,$EC,$FF,$80,$EF,$FF,$C0,$E7
-                    .db $FF,$FE,$E8,$FF,$FE,$E8,$FF,$FE
-                    .db $E8,$FF,$00,$D9,$FF,$03,$E1,$FF
-                    .db $5A,$F4,$FF,$FE,$E8,$FF,$5A,$F4
-                    .db $FF,$34,$A1,$07,$00,$D9,$FF,$FE
-                    .db $E8,$FF,$80,$EF,$FF,$7C,$93,$07
-                    .db $FE,$E8,$FF,$FE,$E8,$FF,$FE,$E8
-                    .db $FF,$84,$E6,$FF,$FE,$E8,$FF,$74
-                    .db $E6,$FF,$5A,$F4,$FF,$8D,$DB,$06
-                    .db $82,$EC,$FF,$82,$EC,$FF,$B9,$DA
-                    .db $FF,$74,$E6,$FF,$82,$EC,$FF,$82
-                    .db $EC,$FF,$00,$D9,$FF,$71,$DC,$FF
-                    .db $82,$EC,$FF,$C0,$E7,$FF,$59,$DF
-                    .db $FF,$00,$D9,$FF,$44,$DD,$FF,$72
-                    .db $E4,$FF,$00,$D9,$FF,$59,$DF,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$B9,$DA
-                    .db $FF,$00,$D9,$FF,$84,$E6,$FF,$00
-                    .db $D9,$FF,$FE,$E8,$FF,$84,$E6,$FF
-                    .db $84,$E6,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$5A
-                    .db $F4,$FF,$5A,$F4,$FF,$5A,$F4,$FF
-                    .db $5A,$F4,$FF,$5A,$F4,$FF,$5A,$F4
-                    .db $FF,$5A,$F4,$FF,$5A,$F4,$FF,$5A
-                    .db $F4,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$00
-                    .db $D9,$FF,$00,$D9,$FF,$00,$D9,$FF
-                    .db $00,$D9,$FF,$00,$D9,$FF,$00,$D9
-                    .db $FF,$00,$D9,$FF,$00,$D9,$FF,$74
-                    .db $E6,$FF,$74,$E6,$FF,$5A,$F4,$FF
-                    .db $59,$DF,$FF,$FE,$E8,$FF,$59,$DF
-                    .db $FF,$B9,$DA,$FF,$FE,$E8,$FF,$FE
-                    .db $E8,$FF,$44,$DD,$FF,$44,$DD,$FF
-                    .db $00,$D9,$FF,$5A,$F4,$FF,$44,$DD
-                    .db $FF,$44,$DD,$FF,$FE,$E8,$FF,$FE
-                    .db $E8,$FF,$5A,$F4,$FF,$03,$E1,$FF
-                    .db $E3,$A9,$07,$34,$A9,$07,$03,$E1
-                    .db $FF,$5A,$F4,$FF,$5A,$F4,$FF,$5A
-                    .db $F4,$FF,$03,$E1,$FF,$44,$DD,$FF
-                    .db $44,$DD,$FF,$74,$E6,$FF,$74,$E6
-                    .db $FF,$80,$EF,$FF,$1B,$86,$06,$80
-                    .db $EF,$FF,$80,$EF,$FF,$80,$EF,$FF
-                    .db $5A,$F4,$FF,$FE,$E8,$FF,$44,$DD
-                    .db $FF,$C0,$E7,$FF,$5E,$97,$07,$A5
-                    .db $95,$07,$74,$E6,$FF,$FE,$E8,$FF
-                    .db $1B,$86,$06,$1B,$86,$06,$8D,$DB
-                    .db $06,$8D,$DB,$06,$80,$EF,$FF,$5A
-                    .db $F4,$FF,$2A,$F4,$06,$FE,$E8,$FF
-                    .db $FE,$E8,$FF,$3E,$A9,$06,$FE,$E8
-                    .db $FF,$FE,$E8,$FF,$5A,$F4,$FF,$4B
-                    .db $B7,$06,$5A,$F4,$FF,$FE,$E8,$FF
-                    .db $5A,$F4,$FF,$74,$E6,$FF,$FE,$E8
-                    .db $FF,$1B,$86,$06,$80,$EF,$FF,$80
-                    .db $EF,$FF,$03,$E1,$FF,$FE,$E8,$FF
-                    .db $5A,$F4,$FF,$59,$DF,$FF
-
-DATA_05EC00:        .db $07
-
-DATA_05EC01:        .db $C4,$1C,$CE,$BF,$CE,$C5,$C4,$B5
-                    .db $C7,$D9,$C7,$44,$C8,$04,$C9,$9D
-                    .db $C4,$51,$C7,$48,$C9,$06,$CF,$F5
-                    .db $D1,$5A,$D2,$D7,$D0,$AF,$CF,$43
-                    .db $D0,$57,$D1,$6D,$E7,$CA,$C9,$46
-                    .db $C4,$D5,$C6,$D5,$C6,$D5,$C6,$2D
-                    .db $DC,$6D,$E7,$BB,$DB,$5E,$D9,$0F
-                    .db $DB,$93,$DA,$6D,$E7,$48,$D6,$CD
-                    .db $D4,$4C,$D7,$D9,$D6,$BE,$D8,$BF
-                    .db $D7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$DB,$C3,$E3
-                    .db $C3,$67,$C3,$59,$C3,$54,$C3,$4F
-                    .db $C3,$4A,$C3,$45,$C3,$40,$C3,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$EE,$C3,$41,$D7,$2F,$D0,$95
-                    .db $DB,$CF,$D0,$AA,$C9,$EA,$C8,$F5
-                    .db $C3,$41,$C4,$F0,$C3,$27,$C4,$CF
-                    .db $DD,$C0,$C4,$4B,$C4,$F0,$C3,$1D
-                    .db $D5,$99,$D8,$4B,$D8,$E5,$D7,$D9
-                    .db $D6,$D9,$D6,$CD,$C8,$22,$DC,$F9
-                    .db $DB,$14,$C4,$68,$D6,$56,$D9,$BA
-                    .db $CE,$52,$D1,$EE,$C3,$11,$D1,$F4
-                    .db $D0,$04,$D3,$BD,$C7,$14,$C4,$4D
-                    .db $CF,$4D,$CF,$14,$C4,$49,$C7,$0C
-                    .db $CA,$43,$C9,$EE,$C3,$26,$C9,$15
-                    .db $C9,$A7,$C7,$DD,$DA,$0C,$C4,$CA
-                    .db $C9,$DB,$C9,$CA,$C9,$B1,$D9,$F5
-                    .db $C3,$F2,$C9,$DB,$C9,$F0,$C3,$EE
-                    .db $C3,$D9,$D6,$D9,$D6,$61,$DC,$3B
-                    .db $DC,$BD,$C7,$EE,$C3,$F5,$C3,$99
-                    .db $D7,$EE,$C3,$CB,$C7,$F0,$C3,$07
-                    .db $C4,$6F,$C6,$F4,$C5,$93,$C5,$59
-                    .db $E7,$CA,$C4,$32,$C5,$DC,$CB,$6D
-                    .db $E7,$C8,$CD,$25,$CC,$17,$CA,$6D
-                    .db $E7,$22,$C4,$9D,$E1,$08,$DF,$B1
-                    .db $DF,$32,$E0,$6D,$E7,$4F,$DE,$01
-                    .db $DE,$7B,$DD,$14,$DD,$EF,$D9,$2A
-                    .db $CB,$D4,$CC,$87,$CA,$50,$C4,$68
-                    .db $CD,$22,$D5,$0C,$D3,$77,$D5,$80
-                    .db $D3,$78,$C4,$F5,$D5,$45,$D4,$6D
-                    .db $E7,$F4,$E6,$50,$E6,$DF,$E5,$74
-                    .db $E5,$6D,$E7,$DC,$E3,$28,$E4,$66
-                    .db $E4,$F1,$E4,$6D,$E7,$6D,$E7,$21
-                    .db $E2,$6D,$E7,$9E,$E2,$6D,$E7,$C5
-                    .db $E1,$AF,$E2,$35,$E3,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$E3,$C3,$DB
-                    .db $C3,$67,$C3,$59,$C3,$54,$C3,$4F
-                    .db $C3,$4A,$C3,$45,$C3,$40,$C3,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$6D,$E7,$6D
-                    .db $E7,$6D,$E7,$6D,$E7,$EE,$C3,$EE
-                    .db $C3,$9D,$E1,$61,$C6,$94,$DF,$7F
-                    .db $DA,$CF,$D5,$BA,$CC,$C5,$CB,$02
-                    .db $E4,$02,$E4,$6D,$CA,$C0,$E1,$EC
-                    .db $E4,$EE,$C3,$7F,$C5,$EE,$C3,$83
-                    .db $E1,$60,$E1,$31,$E1,$14,$E1,$22
-                    .db $C4,$E8,$E0,$C5,$E0,$8D,$E0,$67
-                    .db $E0,$F0,$C3,$F0,$C3,$98,$C4,$73
-                    .db $C4,$01,$DE,$F5,$C3,$3B,$DE,$3B
-                    .db $DE,$0F,$DE,$14,$C4,$C7,$D5,$EE
-                    .db $C3,$F0,$C3,$B8,$DD,$B3,$DD,$EE
-                    .db $C3,$76,$DD,$F5,$C3,$0C,$C4,$22
-                    .db $D5,$22,$D5,$11,$CC,$24,$E0,$44
-                    .db $DA,$12,$DA,$F0,$C3,$01,$CB,$14
-                    .db $CE,$0C,$CE,$C0,$CD,$94,$CD,$EE
-                    .db $C3,$63,$CD,$D0,$C6,$EE,$C3,$C5
-                    .db $D4,$F5,$C3,$6C,$D5,$DC,$CB,$BF
-                    .db $C6,$EF,$C5,$E0,$DF,$59,$C6
+Ptrs05EC00:         .dw DATA_07C407           
+                    .dw DATA_07CE1C           
+                    .dw DATA_07CEBF           
+                    .dw DATA_07C4C5           
+                    .dw DATA_07C7B5           
+                    .dw DATA_07C7D9           
+                    .dw DATA_07C844           
+                    .dw DATA_07C904           
+                    .dw DATA_07C49D           
+                    .dw DATA_07C751           
+                    .dw DATA_07C948           
+                    .dw DATA_07CF06           
+                    .dw DATA_07D1F5           
+                    .dw DATA_07D25A           
+                    .dw DATA_07D0D7           
+                    .dw DATA_07CFAF           
+                    .dw DATA_07D043           
+                    .dw DATA_07D157           
+                    .dw DATA_07E76D           
+                    .dw DATA_07C9CA           
+                    .dw DATA_07C446           
+                    .dw DATA_07C6D5           
+                    .dw DATA_07C6D5           
+                    .dw DATA_07C6D5           
+                    .dw DATA_07DC2D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07DBBB           
+                    .dw DATA_07D95E           
+                    .dw DATA_07DB0F           
+                    .dw DATA_07DA93           
+                    .dw DATA_07E76D           
+                    .dw DATA_07D648           
+                    .dw DATA_07D4CD           
+                    .dw DATA_07D74C           
+                    .dw DATA_07D6D9           
+                    .dw DATA_07D8BE           
+                    .dw DATA_07D7BF           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07C3DB           
+                    .dw DATA_07C3E3           
+                    .dw DATA_07C367           
+                    .dw DATA_07C359           
+                    .dw DATA_07C354           
+                    .dw DATA_07C34F           
+                    .dw DATA_07C34A           
+                    .dw DATA_07C345           
+                    .dw DATA_07C340           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07C3EE           
+                    .dw DATA_07D741           
+                    .dw DATA_07D02F           
+                    .dw DATA_07DB95           
+                    .dw DATA_07D0CF           
+                    .dw DATA_07C9AA           
+                    .dw DATA_07C8EA           
+                    .dw DATA_07C3F5           
+                    .dw DATA_07C441           
+                    .dw DATA_07C3F0           
+                    .dw DATA_07C427           
+                    .dw DATA_07DDCF           
+                    .dw DATA_07C4C0           
+                    .dw DATA_07C44B           
+                    .dw DATA_07C3F0           
+                    .dw DATA_07D51D           
+                    .dw DATA_07D899           
+                    .dw DATA_07D84B           
+                    .dw DATA_07D7E5           
+                    .dw DATA_07D6D9           
+                    .dw DATA_07D6D9           
+                    .dw DATA_07C8CD           
+                    .dw DATA_07DC22           
+                    .dw DATA_07DBF9           
+                    .dw DATA_07C414           
+                    .dw DATA_07D668           
+                    .dw DATA_07D956           
+                    .dw DATA_07CEBA           
+                    .dw DATA_07D152           
+                    .dw DATA_07C3EE           
+                    .dw DATA_07D111           
+                    .dw DATA_07D0F4           
+                    .dw DATA_07D304           
+                    .dw DATA_07C7BD           
+                    .dw DATA_07C414           
+                    .dw DATA_07CF4D           
+                    .dw DATA_07CF4D           
+                    .dw DATA_07C414           
+                    .dw DATA_07C749           
+                    .dw DATA_07CA0C           
+                    .dw DATA_07C943           
+                    .dw DATA_07C3EE           
+                    .dw DATA_07C926           
+                    .dw DATA_07C915           
+                    .dw DATA_07C7A7           
+                    .dw DATA_07DADD           
+                    .dw DATA_07C40C           
+                    .dw DATA_07C9CA           
+                    .dw DATA_07C9DB           
+                    .dw DATA_07C9CA           
+                    .dw DATA_07D9B1           
+                    .dw DATA_07C3F5           
+                    .dw DATA_07C9F2           
+                    .dw DATA_07C9DB           
+                    .dw DATA_07C3F0           
+                    .dw DATA_07C3EE           
+                    .dw DATA_07D6D9           
+                    .dw DATA_07D6D9           
+                    .dw DATA_07DC61           
+                    .dw DATA_07DC3B           
+                    .dw DATA_07C7BD           
+                    .dw DATA_07C3EE           
+                    .dw DATA_07C3F5           
+                    .dw DATA_07D799           
+                    .dw DATA_07C3EE           
+                    .dw DATA_07C7CB           
+                    .dw DATA_07C3F0           
+                    .dw DATA_07C407           
+                    .dw DATA_07C66F           
+                    .dw DATA_07C5F4           
+                    .dw DATA_07C593           
+                    .dw DATA_07E759           
+                    .dw DATA_07C4CA           
+                    .dw DATA_07C532           
+                    .dw DATA_07CBDC           
+                    .dw DATA_07E76D           
+                    .dw DATA_07CDC8           
+                    .dw DATA_07CC25           
+                    .dw DATA_07CA17           
+                    .dw DATA_07E76D           
+                    .dw DATA_07C422           
+                    .dw DATA_07E19D           
+                    .dw DATA_07DF08           
+                    .dw DATA_07DFB1           
+                    .dw DATA_07E032           
+                    .dw DATA_07E76D           
+                    .dw DATA_07DE4F           
+                    .dw DATA_07DE01           
+                    .dw DATA_07DD7B           
+                    .dw DATA_07DD14           
+                    .dw DATA_07D9EF           
+                    .dw DATA_07CB2A           
+                    .dw DATA_07CCD4           
+                    .dw DATA_07CA87           
+                    .dw DATA_07C450           
+                    .dw DATA_07CD68           
+                    .dw DATA_07D522           
+                    .dw DATA_07D30C           
+                    .dw DATA_07D577           
+                    .dw DATA_07D380           
+                    .dw DATA_07C478           
+                    .dw DATA_07D5F5           
+                    .dw DATA_07D445           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E6F4           
+                    .dw DATA_07E650           
+                    .dw DATA_07E5DF           
+                    .dw DATA_07E574           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E3DC           
+                    .dw DATA_07E428           
+                    .dw DATA_07E466           
+                    .dw DATA_07E4F1           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E221           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E29E           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E1C5           
+                    .dw DATA_07E2AF           
+                    .dw DATA_07E335           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07C3E3           
+                    .dw DATA_07C3DB           
+                    .dw DATA_07C367           
+                    .dw DATA_07C359           
+                    .dw DATA_07C354           
+                    .dw DATA_07C34F           
+                    .dw DATA_07C34A           
+                    .dw DATA_07C345           
+                    .dw DATA_07C340           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07E76D           
+                    .dw DATA_07C3EE           
+                    .dw DATA_07C3EE           
+                    .dw DATA_07E19D           
+                    .dw DATA_07C661           
+                    .dw DATA_07DF94           
+                    .dw DATA_07DA7F           
+                    .dw DATA_07D5CF           
+                    .dw DATA_07CCBA           
+                    .dw DATA_07CBC5           
+                    .dw DATA_07E402           
+                    .dw DATA_07E402           
+                    .dw DATA_07CA6D           
+                    .dw DATA_07E1C0           
+                    .dw DATA_07E4EC           
+                    .dw DATA_07C3EE           
+                    .dw DATA_07C57F           
+                    .dw DATA_07C3EE           
+                    .dw DATA_07E183           
+                    .dw DATA_07E160           
+                    .dw DATA_07E131           
+                    .dw DATA_07E114           
+                    .dw DATA_07C422           
+                    .dw DATA_07E0E8           
+                    .dw DATA_07E0C5           
+                    .dw DATA_07E08D           
+                    .dw DATA_07E067           
+                    .dw DATA_07C3F0           
+                    .dw DATA_07C3F0           
+                    .dw DATA_07C498           
+                    .dw DATA_07C473           
+                    .dw DATA_07DE01           
+                    .dw DATA_07C3F5           
+                    .dw DATA_07DE3B           
+                    .dw DATA_07DE3B           
+                    .dw DATA_07DE0F           
+                    .dw DATA_07C414           
+                    .dw DATA_07D5C7           
+                    .dw DATA_07C3EE           
+                    .dw DATA_07C3F0           
+                    .dw DATA_07DDB8           
+                    .dw DATA_07DDB3           
+                    .dw DATA_07C3EE           
+                    .dw DATA_07DD76           
+                    .dw DATA_07C3F5           
+                    .dw DATA_07C40C           
+                    .dw DATA_07D522           
+                    .dw DATA_07D522           
+                    .dw DATA_07CC11           
+                    .dw DATA_07E024           
+                    .dw DATA_07DA44           
+                    .dw DATA_07DA12           
+                    .dw DATA_07C3F0           
+                    .dw DATA_07CB01           
+                    .dw DATA_07CE14           
+                    .dw DATA_07CE0C           
+                    .dw DATA_07CDC0           
+                    .dw DATA_07CD94           
+                    .dw DATA_07C3EE           
+                    .dw DATA_07CD63           
+                    .dw DATA_07C6D0           
+                    .dw DATA_07C3EE           
+                    .dw DATA_07D4C5           
+                    .dw DATA_07C3F5           
+                    .dw DATA_07D56C           
+                    .dw DATA_07CBDC           
+                    .dw DATA_07C6BF           
+                    .dw DATA_07C5EF           
+                    .dw DATA_07DFE0           
+                    .dw DATA_07C659           
 
 DATA_05F000:        .db $07,$5B,$19,$2B,$1B,$5B,$5B,$5B
                     .db $27,$37,$18,$19,$59,$5B,$29,$1B
@@ -7457,4 +9775,5 @@ DATA_05FE00:        .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$02
                     .db $00,$00,$00,$00,$00,$03,$00,$02
                     .db $03,$00,$00,$00,$00,$03,$00,$00
+
 

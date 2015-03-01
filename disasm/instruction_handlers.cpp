@@ -399,16 +399,16 @@ namespace InstructionHandler
 
         string msg = context->get_label(k, address_16bit(i, j));
         if (msg.empty()){
-            output->setAddress("$%.6X", address_24bit(i, j, k));
+            output->setAddress("$%.6X & $FFFF", address_24bit(i, j, k));
             if (i == 0 && j == 0 && k == 0){
                 output->setAdditionalInstruction(".db $00");  //WLA cannot take bank of $000000
             }
             else{
-                output->setAdditionalInstruction(".db :$%.6X", address_24bit(i, j, k));
+                output->setAdditionalInstruction(".db $%.6X >> 16", address_24bit(i, j, k));
             }
         }
         else {
-            output->setAddress(".%s", msg.c_str());
+            output->setAddress("%s", msg.c_str());
             if (oldk == 0xFF){
                 output->setAdditionalInstruction(".db $%.2X", oldk);
             }

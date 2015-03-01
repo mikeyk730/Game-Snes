@@ -1,7 +1,5 @@
 .INCLUDE "snes.cfg"
 .BANK 13
-
-
 DATA_0D8000:        .db $70,$1C,$72,$1C,$71,$1C,$73,$1C
                     .db $C5,$09,$FB,$08,$C5,$09,$FB,$08
                     .db $FD,$1C,$FD,$1C,$FD,$1C,$FD,$1C
@@ -1059,367 +1057,701 @@ DATA_0D8000:        .db $70,$1C,$72,$1C,$71,$1C,$73,$1C
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 
-ADDR_0DA100:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
+ExtSub0DA100:       SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     JSR.W ADDR_0DA106         
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_0DA106:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     LDA $59                   
                     TAX                       
                     JSL.L ExecutePtrLong      
 
-PtrsLong0DA10F:     .db $12,$A5,$0D
-                    .db $3D,$A5,$0D
-                    .db $00,$00,$00
-                    .db $00,$00,$00
-                    .db $00,$00,$00
-                    .db $00,$00,$00
-                    .db $00,$00,$00
-                    .db $00,$00,$00
-                    .db $00,$00,$00
-                    .db $00,$00,$00
-                    .db $00,$00,$00
-                    .db $00,$00,$00
-                    .db $00,$00,$00
-                    .db $00,$00,$00
-                    .db $00,$00,$00
-                    .db $00,$00,$00
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $4D,$A6,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $7B,$A5,$0D
-                    .db $CA,$B2,$0D
-                    .db $56,$A6,$0D
-                    .db $56,$A6,$0D
-                    .db $73,$A6,$0D
-                    .db $73,$A6,$0D
-                    .db $8E,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $BF,$EA,$0D
-                    .db $C1,$A7,$0D
-                    .db $59,$C2,$0D
-                    .db $59,$C2,$0D
-                    .db $67,$CE,$0D
-                    .db $67,$CE,$0D
-                    .db $67,$CE,$0D
-                    .db $67,$CE,$0D
-                    .db $94,$CE,$0D
-                    .db $94,$CE,$0D
-                    .db $94,$CE,$0D
-                    .db $94,$CE,$0D
-                    .db $C0,$CE,$0D
-                    .db $DA,$CE,$0D
-                    .db $5F,$E9,$0D
-                    .db $5F,$E9,$0D
-                    .db $5F,$E9,$0D
-                    .db $5F,$E9,$0D
-                    .db $5F,$E9,$0D
-                    .db $5F,$E9,$0D
-                    .db $5F,$E9,$0D
-                    .db $5F,$E9,$0D
-                    .db $71,$E9,$0D
-                    .db $57,$DA,$0D
-                    .db $AA,$E9,$0D
-                    .db $AA,$E9,$0D
-                    .db $AA,$E9,$0D
-                    .db $ED,$E9,$0D
-                    .db $ED,$E9,$0D
-                    .db $3E,$EA,$0D
-                    .db $3E,$EA,$0D
-                    .db $71,$B5,$0D
-                    .db $71,$B5,$0D
-                    .db $71,$B5,$0D
-                    .db $71,$B5,$0D
-                    .db $71,$B5,$0D
-                    .db $71,$B5,$0D
-                    .db $71,$B5,$0D
-                    .db $71,$B5,$0D
-                    .db $A6,$CE,$0D
-                    .db $AE,$E0,$0D
-                    .db $AE,$E0,$0D
-                    .db $AE,$E0,$0D
-                    .db $AE,$E0,$0D
-                    .db $68,$DA,$0D
-                    .db $68,$DA,$0D
-                    .db $68,$DA,$0D
-                    .db $68,$DA,$0D
-                    .db $68,$DA,$0D
-                    .db $68,$DA,$0D
-                    .db $68,$DA,$0D
-                    .db $80,$DA,$0D
-                    .db $80,$DA,$0D
-                    .db $80,$DA,$0D
-                    .db $A2,$DA,$0D
-                    .db $6A,$EB,$0D
-                    .db $68,$EC,$0D
-                    .db $1B,$A7,$0D
-                    .db $60,$A7,$0D
-                    .db $E9,$C2,$0D
-                    .db $33,$EC,$0D
-                    .db $E7,$A7,$0D
-                    .db $8B,$B5,$0D
-                    .db $E3,$B6,$0D
-                    .db $E3,$B6,$0D
-                    .db $8E,$EC,$0D
-                    .db $8E,$EC,$0D
-                    .db $8E,$EC,$0D
-                    .db $8E,$EC,$0D
-                    .db $83,$B5,$0D
-                    .db $C1,$EC,$0D
-                    .db $1E,$C3,$0D
-                    .db $0D,$A8,$0D
-                    .db $0D,$A8,$0D
-                    .db $46,$A8,$0D
-                    .db $46,$A8,$0D
-                    .db $7D,$A8,$0D
-                    .db $7D,$A8,$0D
-                    .db $5C,$EC,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
-                    .db $D1,$A6,$0D
+PtrsLong0DA10F:     .dw ADDR_0DA512           
+                    .db :ADDR_0DA512
+                    .dw ADDR_0DA53D           
+                    .db :ADDR_0DA53D
+                    .dw $000000 & $FFFF       
+                    .db $00
+                    .dw $000000 & $FFFF       
+                    .db $00
+                    .dw $000000 & $FFFF       
+                    .db $00
+                    .dw $000000 & $FFFF       
+                    .db $00
+                    .dw $000000 & $FFFF       
+                    .db $00
+                    .dw $000000 & $FFFF       
+                    .db $00
+                    .dw $000000 & $FFFF       
+                    .db $00
+                    .dw $000000 & $FFFF       
+                    .db $00
+                    .dw $000000 & $FFFF       
+                    .db $00
+                    .dw $000000 & $FFFF       
+                    .db $00
+                    .dw $000000 & $FFFF       
+                    .db $00
+                    .dw $000000 & $FFFF       
+                    .db $00
+                    .dw $000000 & $FFFF       
+                    .db $00
+                    .dw $000000 & $FFFF       
+                    .db $00
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA64D           
+                    .db :ADDR_0DA64D
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DA57B           
+                    .db :ADDR_0DA57B
+                    .dw ADDR_0DB2CA           
+                    .db :ADDR_0DB2CA
+                    .dw ADDR_0DA656           
+                    .db :ADDR_0DA656
+                    .dw ADDR_0DA656           
+                    .db :ADDR_0DA656
+                    .dw ADDR_0DA673           
+                    .db :ADDR_0DA673
+                    .dw ADDR_0DA673           
+                    .db :ADDR_0DA673
+                    .dw ADDR_0DA68E           
+                    .db :ADDR_0DA68E
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DEABF           
+                    .db :ADDR_0DEABF
+                    .dw ADDR_0DA7C1           
+                    .db :ADDR_0DA7C1
+                    .dw ADDR_0DC259           
+                    .db :ADDR_0DC259
+                    .dw ADDR_0DC259           
+                    .db :ADDR_0DC259
+                    .dw ADDR_0DCE67           
+                    .db :ADDR_0DCE67
+                    .dw ADDR_0DCE67           
+                    .db :ADDR_0DCE67
+                    .dw ADDR_0DCE67           
+                    .db :ADDR_0DCE67
+                    .dw ADDR_0DCE67           
+                    .db :ADDR_0DCE67
+                    .dw ADDR_0DCE94           
+                    .db :ADDR_0DCE94
+                    .dw ADDR_0DCE94           
+                    .db :ADDR_0DCE94
+                    .dw ADDR_0DCE94           
+                    .db :ADDR_0DCE94
+                    .dw ADDR_0DCE94           
+                    .db :ADDR_0DCE94
+                    .dw ADDR_0DCEC0           
+                    .db :ADDR_0DCEC0
+                    .dw ADDR_0DCEDA           
+                    .db :ADDR_0DCEDA
+                    .dw ADDR_0DE95F           
+                    .db :ADDR_0DE95F
+                    .dw ADDR_0DE95F           
+                    .db :ADDR_0DE95F
+                    .dw ADDR_0DE95F           
+                    .db :ADDR_0DE95F
+                    .dw ADDR_0DE95F           
+                    .db :ADDR_0DE95F
+                    .dw ADDR_0DE95F           
+                    .db :ADDR_0DE95F
+                    .dw ADDR_0DE95F           
+                    .db :ADDR_0DE95F
+                    .dw ADDR_0DE95F           
+                    .db :ADDR_0DE95F
+                    .dw ADDR_0DE95F           
+                    .db :ADDR_0DE95F
+                    .dw ADDR_0DE971           
+                    .db :ADDR_0DE971
+                    .dw ADDR_0DDA57           
+                    .db :ADDR_0DDA57
+                    .dw ADDR_0DE9AA           
+                    .db :ADDR_0DE9AA
+                    .dw ADDR_0DE9AA           
+                    .db :ADDR_0DE9AA
+                    .dw ADDR_0DE9AA           
+                    .db :ADDR_0DE9AA
+                    .dw ADDR_0DE9ED           
+                    .db :ADDR_0DE9ED
+                    .dw ADDR_0DE9ED           
+                    .db :ADDR_0DE9ED
+                    .dw ADDR_0DEA3E           
+                    .db :ADDR_0DEA3E
+                    .dw ADDR_0DEA3E           
+                    .db :ADDR_0DEA3E
+                    .dw ADDR_0DB571           
+                    .db :ADDR_0DB571
+                    .dw ADDR_0DB571           
+                    .db :ADDR_0DB571
+                    .dw ADDR_0DB571           
+                    .db :ADDR_0DB571
+                    .dw ADDR_0DB571           
+                    .db :ADDR_0DB571
+                    .dw ADDR_0DB571           
+                    .db :ADDR_0DB571
+                    .dw ADDR_0DB571           
+                    .db :ADDR_0DB571
+                    .dw ADDR_0DB571           
+                    .db :ADDR_0DB571
+                    .dw ADDR_0DB571           
+                    .db :ADDR_0DB571
+                    .dw ADDR_0DCEA6           
+                    .db :ADDR_0DCEA6
+                    .dw ADDR_0DE0AE           
+                    .db :ADDR_0DE0AE
+                    .dw ADDR_0DE0AE           
+                    .db :ADDR_0DE0AE
+                    .dw ADDR_0DE0AE           
+                    .db :ADDR_0DE0AE
+                    .dw ADDR_0DE0AE           
+                    .db :ADDR_0DE0AE
+                    .dw ADDR_0DDA68           
+                    .db :ADDR_0DDA68
+                    .dw ADDR_0DDA68           
+                    .db :ADDR_0DDA68
+                    .dw ADDR_0DDA68           
+                    .db :ADDR_0DDA68
+                    .dw ADDR_0DDA68           
+                    .db :ADDR_0DDA68
+                    .dw ADDR_0DDA68           
+                    .db :ADDR_0DDA68
+                    .dw ADDR_0DDA68           
+                    .db :ADDR_0DDA68
+                    .dw ADDR_0DDA68           
+                    .db :ADDR_0DDA68
+                    .dw ADDR_0DDA80           
+                    .db :ADDR_0DDA80
+                    .dw ADDR_0DDA80           
+                    .db :ADDR_0DDA80
+                    .dw ADDR_0DDA80           
+                    .db :ADDR_0DDA80
+                    .dw ADDR_0DDAA2           
+                    .db :ADDR_0DDAA2
+                    .dw ADDR_0DEB6A           
+                    .db :ADDR_0DEB6A
+                    .dw ADDR_0DEC68           
+                    .db :ADDR_0DEC68
+                    .dw ADDR_0DA71B           
+                    .db :ADDR_0DA71B
+                    .dw ADDR_0DA760           
+                    .db :ADDR_0DA760
+                    .dw ADDR_0DC2E9           
+                    .db :ADDR_0DC2E9
+                    .dw ADDR_0DEC33           
+                    .db :ADDR_0DEC33
+                    .dw ADDR_0DA7E7           
+                    .db :ADDR_0DA7E7
+                    .dw ADDR_0DB58B           
+                    .db :ADDR_0DB58B
+                    .dw ADDR_0DB6E3           
+                    .db :ADDR_0DB6E3
+                    .dw ADDR_0DB6E3           
+                    .db :ADDR_0DB6E3
+                    .dw ADDR_0DEC8E           
+                    .db :ADDR_0DEC8E
+                    .dw ADDR_0DEC8E           
+                    .db :ADDR_0DEC8E
+                    .dw ADDR_0DEC8E           
+                    .db :ADDR_0DEC8E
+                    .dw ADDR_0DEC8E           
+                    .db :ADDR_0DEC8E
+                    .dw ADDR_0DB583           
+                    .db :ADDR_0DB583
+                    .dw ADDR_0DECC1           
+                    .db :ADDR_0DECC1
+                    .dw ADDR_0DC31E           
+                    .db :ADDR_0DC31E
+                    .dw ADDR_0DA80D           
+                    .db :ADDR_0DA80D
+                    .dw ADDR_0DA80D           
+                    .db :ADDR_0DA80D
+                    .dw ADDR_0DA846           
+                    .db :ADDR_0DA846
+                    .dw ADDR_0DA846           
+                    .db :ADDR_0DA846
+                    .dw ADDR_0DA87D           
+                    .db :ADDR_0DA87D
+                    .dw ADDR_0DA87D           
+                    .db :ADDR_0DA87D
+                    .dw ADDR_0DEC5C           
+                    .db :ADDR_0DEC5C
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
+                    .dw ADDR_0DA6D1           
+                    .db :ADDR_0DA6D1
 
-ADDR_0DA40F:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
+ExtSub0DA40F:       SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     JSR.W ADDR_0DA415         
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_0DA415:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     LDA.W $1931               
                     JSL.L ExecutePtrLong      
 
-PtrsLong0DA41E:     .db $4B,$A4,$0D
-                    .db $90,$C1,$0D
-                    .db $90,$CD,$0D
-                    .db $90,$D9,$0D
-                    .db $90,$E8,$0D
-                    .db $90,$E8,$0D
-                    .db $90,$CD,$0D
-                    .db $4B,$A4,$0D
-                    .db $90,$CD,$0D
-                    .db $90,$D9,$0D
-                    .db $90,$D9,$0D
-                    .db $90,$D9,$0D
-                    .db $4B,$A4,$0D
-                    .db $90,$E8,$0D
-                    .db $90,$D9,$0D
+PtrsLong0DA41E:     .dw ADDR_0DA44B           
+                    .db :ADDR_0DA44B
+                    .dw ADDR_0DC190           
+                    .db :ADDR_0DC190
+                    .dw ADDR_0DCD90           
+                    .db :ADDR_0DCD90
+                    .dw ADDR_0DD990           
+                    .db :ADDR_0DD990
+                    .dw ADDR_0DE890           
+                    .db :ADDR_0DE890
+                    .dw ADDR_0DE890           
+                    .db :ADDR_0DE890
+                    .dw ADDR_0DCD90           
+                    .db :ADDR_0DCD90
+                    .dw ADDR_0DA44B           
+                    .db :ADDR_0DA44B
+                    .dw ADDR_0DCD90           
+                    .db :ADDR_0DCD90
+                    .dw ADDR_0DD990           
+                    .db :ADDR_0DD990
+                    .dw ADDR_0DD990           
+                    .db :ADDR_0DD990
+                    .dw ADDR_0DD990           
+                    .db :ADDR_0DD990
+                    .dw ADDR_0DA44B           
+                    .db :ADDR_0DA44B
+                    .dw ADDR_0DE890           
+                    .db :ADDR_0DE890
+                    .dw ADDR_0DD990           
+                    .db :ADDR_0DD990
 
-                    SEP #$30                  ; Index (8 bit) Accum (8 bit) 
+ADDR_0DA44B:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     LDX $5A                   
                     DEX                       
                     TXA                       
                     JSL.L ExecutePtrLong      
 
-PtrsLong0DA455:     .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $26,$AA,$0D
-                    .db $B4,$AA,$0D
-                    .db $0D,$AB,$0D
-                    .db $3E,$AB,$0D
-                    .db $75,$B0,$0D
-                    .db $D4,$B1,$0D
-                    .db $24,$B2,$0D
-                    .db $36,$B3,$0D
-                    .db $BD,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $2D,$B4,$0D
-                    .db $61,$B4,$0D
-                    .db $9E,$B4,$0D
-                    .db $1F,$B5,$0D
-                    .db $47,$B5,$0D
-                    .db $C8,$B1,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $2C,$BB,$0D
-                    .db $63,$BB,$0D
-                    .db $16,$B9,$0D
-                    .db $DC,$BA,$0D
-                    .db $4C,$BA,$0D
-                    .db $0A,$BA,$0D
-                    .db $C0,$B9,$0D
-                    .db $66,$B9,$0D
-                    .db $1E,$B9,$0D
-                    .db $3F,$B7,$0D
-                    .db $AA,$B7,$0D
-                    .db $63,$B8,$0D
-                    .db $04,$B6,$0D
-                    .db $C3,$B6,$0D
-                    .db $05,$B7,$0D
-                    .db $B7,$B5,$0D
+PtrsLong0DA455:     .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DAA26           
+                    .db :ADDR_0DAA26
+                    .dw ADDR_0DAAB4           
+                    .db :ADDR_0DAAB4
+                    .dw ADDR_0DAB0D           
+                    .db :ADDR_0DAB0D
+                    .dw ADDR_0DAB3E           
+                    .db :ADDR_0DAB3E
+                    .dw ADDR_0DB075           
+                    .db :ADDR_0DB075
+                    .dw ADDR_0DB1D4           
+                    .db :ADDR_0DB1D4
+                    .dw ADDR_0DB224           
+                    .db :ADDR_0DB224
+                    .dw ADDR_0DB336           
+                    .db :ADDR_0DB336
+                    .dw ADDR_0DB3BD           
+                    .db :ADDR_0DB3BD
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB42D           
+                    .db :ADDR_0DB42D
+                    .dw ADDR_0DB461           
+                    .db :ADDR_0DB461
+                    .dw ADDR_0DB49E           
+                    .db :ADDR_0DB49E
+                    .dw ADDR_0DB51F           
+                    .db :ADDR_0DB51F
+                    .dw ADDR_0DB547           
+                    .db :ADDR_0DB547
+                    .dw ADDR_0DB1C8           
+                    .db :ADDR_0DB1C8
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DBB2C           
+                    .db :ADDR_0DBB2C
+                    .dw ADDR_0DBB63           
+                    .db :ADDR_0DBB63
+                    .dw ADDR_0DB916           
+                    .db :ADDR_0DB916
+                    .dw ADDR_0DBADC           
+                    .db :ADDR_0DBADC
+                    .dw ADDR_0DBA4C           
+                    .db :ADDR_0DBA4C
+                    .dw ADDR_0DBA0A           
+                    .db :ADDR_0DBA0A
+                    .dw ADDR_0DB9C0           
+                    .db :ADDR_0DB9C0
+                    .dw ADDR_0DB966           
+                    .db :ADDR_0DB966
+                    .dw ADDR_0DB91E           
+                    .db :ADDR_0DB91E
+                    .dw ADDR_0DB73F           
+                    .db :ADDR_0DB73F
+                    .dw ADDR_0DB7AA           
+                    .db :ADDR_0DB7AA
+                    .dw ADDR_0DB863           
+                    .db :ADDR_0DB863
+                    .dw ADDR_0DB604           
+                    .db :ADDR_0DB604
+                    .dw ADDR_0DB6C3           
+                    .db :ADDR_0DB6C3
+                    .dw ADDR_0DB705           
+                    .db :ADDR_0DB705
+                    .dw ADDR_0DB5B7           
+                    .db :ADDR_0DB5B7
 
-                    LDY.B #$00                
+ADDR_0DA512:        LDY.B #$00                
                     LDA [$65],Y               
                     STA $5A                   
                     INY                       
@@ -1441,14 +1773,13 @@ PtrsLong0DA455:     .db $C3,$A8,$0D
                     LDA $0B                   
                     LSR                       
                     STA.W $1B93               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDA $0A                   
+ADDR_0DA53D:        LDA $0A                   
                     AND.B #$1F                
                     STA.W $1928               
                     STA.W $1BA1               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DA548:        .db $1F,$22,$24,$42,$43,$27,$29,$25
                     .db $6E,$6F,$70,$71,$72,$45,$46,$47
@@ -1458,7 +1789,7 @@ DATA_0DA548:        .db $1F,$22,$24,$42,$43,$27,$29,$25
                     .db $28,$2A,$DE,$E0,$E2,$E4,$EC,$ED
                     .db $2C,$25,$2D
 
-                    TXA                       
+ADDR_0DA57B:        TXA                       
                     SEC                       
                     SBC.B #$10                
 ADDR_0DA57F:        STA $00                   
@@ -1480,18 +1811,19 @@ ADDR_0DA57F:        STA $00
                     LDA.W $1FEE,Y             
                     AND.L DATA_0DA8A6,X       
                     BEQ ADDR_0DA5B1           
-                    BRA ADDR_0DA5B0           
+                    BRA Return0DA5B0          
+
 ADDR_0DA5A7:        LDA.W $1F3C,Y             
                     AND.L DATA_0DA8A6,X       
                     BEQ ADDR_0DA5B1           
-ADDR_0DA5B0:        RTS                       ; Return 
+Return0DA5B0:       RTS                       ; Return
 
 ADDR_0DA5B1:        LDY $57                   
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDX $00                   
                     CPX.B #$13                
                     BMI ADDR_0DA5BF           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
 ADDR_0DA5BF:        LDA.L DATA_0DA548,X       
                     STA $0C                   
                     CPX.B #$01                
@@ -1558,72 +1890,71 @@ ADDR_0DA626:        LDA $57
                     LDA $0F                   
                     BEQ ADDR_0DA648           
                     CPX.B #$07                
-                    BEQ ADDR_0DA64C           
-                    JSR.W ADDR_0DAA08         
+                    BEQ Return0DA64C          
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$32                
                     STA $0C                   
 ADDR_0DA648:        LDA $0C                   
                     STA [$6B],Y               
-ADDR_0DA64C:        RTS                       ; Return 
+Return0DA64C:       RTS                       ; Return
 
-                    LDA.B #$32                
+ADDR_0DA64D:        LDA.B #$32                
                     JMP.W ADDR_0DA57F         
 
 DATA_0DA652:        .db $D8,$DB
 
 DATA_0DA654:        .db $DA,$DC
 
-                    LDY $57                   
+ADDR_0DA656:        LDY $57                   
                     TXA                       
                     SEC                       
                     SBC.B #$42                
                     TAX                       
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DA652,X       
                     JSR.W ADDR_0DA95B         
                     LDA.L DATA_0DA654,X       
                     STA [$6B],Y               
-                    JSR.W ADDR_0DAA08         
-                    RTS                       ; Return 
-
+                    JSR.W Sta1To6ePointer     
+                    RTS                       ; Return
 
 DATA_0DA671:        .db $B4,$B5
 
-                    LDY $57                   
+ADDR_0DA673:        LDY $57                   
                     TXA                       
                     SEC                       
                     SBC.B #$44                
                     TAX                       
                     LDA.L DATA_0DA671,X       
                     STA [$6B],Y               
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     JSR.W ADDR_0DA97D         
                     LDA.B #$EB                
                     STA [$6B],Y               
-                    JSR.W ADDR_0DAA08         
-                    RTS                       ; Return 
+                    JSR.W Sta1To6ePointer     
+                    RTS                       ; Return
 
-                    LDX.W $13BF               
+ADDR_0DA68E:        LDX.W $13BF               
                     LDA.L $001EA2,X           
                     AND.B #$40                
-                    BNE ADDR_0DA6B0           
+                    BNE Return0DA6B0          
                     LDA.W $13CE               
-                    BNE ADDR_0DA6B0           
+                    BNE Return0DA6B0          
                     LDY $57                   
                     DEY                       
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$35                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$38                
                     STA [$6B],Y               
-ADDR_0DA6B0:        RTS                       ; Return 
+Return0DA6B0:       RTS                       ; Return
 
 ADDR_0DA6B1:        LDA $6B                   
                     STA $04                   
                     LDA $6C                   
                     STA $05                   
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0DA6BA:        LDA $04                   
                     STA $6B                   
@@ -1633,27 +1964,25 @@ ADDR_0DA6BA:        LDA $04
                     STA $6F                   
                     LDA.W $1928               
                     STA.W $1BA1               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DA6CD:        .db $1F,$27
 
 DATA_0DA6CF:        .db $20,$28
 
-                    LDY $57                   
+ADDR_0DA6D1:        LDY $57                   
                     TXA                       
                     SEC                       
                     SBC.B #$47                
                     TAX                       
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DA6CD,X       
                     STA [$6B],Y               
                     JSR.W ADDR_0DA97D         
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DA6CF,X       
                     STA [$6B],Y               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DA6EE:        .db $25,$25,$25,$4B,$4D,$4E,$25,$25
                     .db $25,$25,$25,$54,$49,$49,$5F,$63
@@ -1662,7 +1991,7 @@ DATA_0DA6EE:        .db $25,$25,$25,$4B,$4D,$4E,$25,$25
                     .db $51,$4A,$60,$25,$5A,$49,$49,$49
                     .db $53,$4A,$4A,$4A,$63
 
-                    LDY $57                   
+ADDR_0DA71B:        LDY $57                   
                     LDA.B #$08                
                     STA $00                   
                     LDA.B #$04                
@@ -1671,7 +2000,7 @@ DATA_0DA6EE:        .db $25,$25,$25,$4B,$4D,$4E,$25,$25
                     JSR.W ADDR_0DA6B1         
 ADDR_0DA72A:        LDA $00                   
                     STA $02                   
-ADDR_0DA72E:        JSR.W ADDR_0DAA0D         
+ADDR_0DA72E:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DA6EE,X       
                     JSR.W ADDR_0DA78D         
                     INX                       
@@ -1681,14 +2010,13 @@ ADDR_0DA72E:        JSR.W ADDR_0DAA0D
                     JSR.W ADDR_0DA97D         
                     DEC $01                   
                     BPL ADDR_0DA72A           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DA748:        .db $25,$25,$4B,$4C,$25,$25,$25,$54
                     .db $49,$5F,$63,$25,$25,$57,$49,$52
                     .db $4A,$5D,$5A,$49,$49,$49,$4F,$60
 
-                    LDY $57                   
+ADDR_0DA760:        LDY $57                   
                     LDA.B #$05                
                     STA $00                   
                     LDA.B #$03                
@@ -1697,7 +2025,7 @@ DATA_0DA748:        .db $25,$25,$4B,$4C,$25,$25,$25,$54
                     JSR.W ADDR_0DA6B1         
 ADDR_0DA76F:        LDA $00                   
                     STA $02                   
-ADDR_0DA773:        JSR.W ADDR_0DAA0D         
+ADDR_0DA773:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DA748,X       
                     JSR.W ADDR_0DA78D         
                     INX                       
@@ -1707,12 +2035,13 @@ ADDR_0DA773:        JSR.W ADDR_0DAA0D
                     JSR.W ADDR_0DA97D         
                     DEC $01                   
                     BPL ADDR_0DA76F           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0DA78D:        STA $0F                   
                     CMP.B #$25                
                     BNE ADDR_0DA796           
                     JMP.W ADDR_0DA95D         
+
 ADDR_0DA796:        CMP.B #$49                
                     BCC ADDR_0DA7AC           
                     CMP.B #$54                
@@ -1730,7 +2059,7 @@ ADDR_0DA7AC:        LDA $0F
 DATA_0DA7B1:        .db $10,$11,$11,$12,$13,$0B,$0B,$15
                     .db $13,$0B,$0B,$15,$16,$17,$17,$18
 
-                    LDY $57                   
+ADDR_0DA7C1:        LDY $57                   
                     LDX.B #$00                
                     JSR.W ADDR_0DA6B1         
 ADDR_0DA7C8:        LDA.B #$03                
@@ -1744,15 +2073,14 @@ ADDR_0DA7CC:        LDA.L DATA_0DA7B1,X
                     JSR.W ADDR_0DA97D         
                     CPX.B #$10                
                     BNE ADDR_0DA7C8           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DA7E3:        .db $66,$67,$68,$69
 
-                    LDY $57                   
+ADDR_0DA7E7:        LDY $57                   
                     LDX.B #$00                
                     JSR.W ADDR_0DA6B1         
-ADDR_0DA7EE:        JSR.W ADDR_0DAA0D         
+ADDR_0DA7EE:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DA7E3,X       
                     JSR.W ADDR_0DA95B         
                     INX                       
@@ -1763,40 +2091,38 @@ ADDR_0DA7EE:        JSR.W ADDR_0DAA0D
                     JSR.W ADDR_0DA97D         
                     CPX.B #$04                
                     BNE ADDR_0DA7EE           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DA809:        .db $AA,$AF
 
 DATA_0DA80B:        .db $E2,$E4
 
-                    LDY $57                   
+ADDR_0DA80D:        LDY $57                   
                     TXA                       
                     SEC                       
                     SBC.B #$91                
                     TAX                       
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DA809,X       
                     STA [$6B],Y               
                     JSR.W ADDR_0DA82A         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DA80B,X       
                     STA [$6B],Y               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0DA82A:        LDA $57                   
                     CLC                       
                     ADC.B #$10                
                     STA $57                   
                     TAY                       
-                    BCC ADDR_0DA83D           
+                    BCC Return0DA83D          
                     LDA $6C                   
                     CLC                       
                     ADC.B #$02                
                     STA $6C                   
                     STA $6F                   
-ADDR_0DA83D:        RTS                       ; Return 
-
+Return0DA83D:       RTS                       ; Return
 
 DATA_0DA83E:        .db $96,$A0
 
@@ -1806,26 +2132,25 @@ DATA_0DA842:        .db $DE,$E6
 
 DATA_0DA844:        .db $E6,$E0
 
-                    LDY $57                   
+ADDR_0DA846:        LDY $57                   
                     TXA                       
                     SEC                       
                     SBC.B #$93                
                     TAX                       
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DA83E,X       
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DA840,X       
                     STA [$6B],Y               
                     JSR.W ADDR_0DA82A         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DA842,X       
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DA844,X       
                     STA [$6B],Y               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DA877:        .db $CA,$CC
 
@@ -1833,24 +2158,23 @@ DATA_0DA879:        .db $CB,$CD
 
 DATA_0DA87B:        .db $F1,$F2
 
-                    LDY $57                   
+ADDR_0DA87D:        LDY $57                   
                     TXA                       
                     SEC                       
                     SBC.B #$95                
                     TAX                       
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DA877,X       
                     STA [$6B],Y               
                     JSR.W ADDR_0DA82A         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DA879,X       
                     STA [$6B],Y               
                     JSR.W ADDR_0DA82A         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DA87B,X       
                     STA [$6B],Y               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DA8A6:        .db $80,$40,$20,$10,$08,$04,$02,$01
 DATA_0DA8AE:        .db $00,$80,$00
@@ -1917,12 +2241,13 @@ ADDR_0DA912:        TYA
                     BEQ ADDR_0DA92E           
                     JSR.W ADDR_0DA95D         
                     JMP.W ADDR_0DA943         
+
 ADDR_0DA92E:        LDA.L DATA_0DA8B4,X       
                     STA $0C                   
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     CPX.B #$07                
                     BMI ADDR_0DA93E           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
 ADDR_0DA93E:        LDA $0C                   
                     JSR.W ADDR_0DA95B         
 ADDR_0DA943:        DEC $02                   
@@ -1933,15 +2258,16 @@ ADDR_0DA943:        DEC $02
                     LDA $00                   
                     STA $02                   
                     DEC $01                   
-                    BMI ADDR_0DA95A           
+                    BMI Return0DA95A          
                     JMP.W ADDR_0DA8D8         
-ADDR_0DA95A:        RTS                       ; Return 
+
+Return0DA95A:       RTS                       ; Return
 
 ADDR_0DA95B:        STA [$6B],Y               
 ADDR_0DA95D:        INY                       
                     TYA                       
                     AND.B #$0F                
-                    BNE ADDR_0DA97C           
+                    BNE Return0DA97C          
                     LDA $6B                   
                     CLC                       
                     ADC.B #$B0                
@@ -1955,20 +2281,20 @@ ADDR_0DA95D:        INY
                     LDA $57                   
                     AND.B #$F0                
                     TAY                       
-ADDR_0DA97C:        RTS                       ; Return 
+Return0DA97C:       RTS                       ; Return
 
 ADDR_0DA97D:        LDA $57                   
                     CLC                       
                     ADC.B #$10                
                     STA $57                   
                     TAY                       
-                    BCC ADDR_0DA991           
+                    BCC Return0DA991          
 ADDR_0DA987:        LDA $6C                   
                     ADC.B #$00                
                     STA $6C                   
                     STA $6F                   
                     STA $05                   
-ADDR_0DA991:        RTS                       ; Return 
+Return0DA991:       RTS                       ; Return
 
 ADDR_0DA992:        LDA $57                   
                     CLC                       
@@ -1988,7 +2314,7 @@ ADDR_0DA99D:        TYA
                     JSR.W ADDR_0DA987         
 ADDR_0DA9AE:        JSR.W ADDR_0DA9D6         
 ADDR_0DA9B1:        STY $57                   
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0DA9B4:        LDA $57                   
                     CLC                       
@@ -2008,7 +2334,7 @@ ADDR_0DA9BF:        TYA
                     JSR.W ADDR_0DA987         
 ADDR_0DA9D0:        JSR.W ADDR_0DA9EF         
 ADDR_0DA9D3:        STY $57                   
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0DA9D6:        LDA $6B                   
                     SEC                       
@@ -2022,7 +2348,7 @@ ADDR_0DA9D6:        LDA $6B
                     STA $6F                   
                     STA $05                   
                     DEC.W $1BA1               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0DA9EF:        LDA $6B                   
                     CLC                       
@@ -2036,16 +2362,15 @@ ADDR_0DA9EF:        LDA $6B
                     STA $6F                   
                     STA $05                   
                     INC.W $1BA1               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_0DAA08:        LDA.B #$01                
+Sta1To6ePointer:    LDA.B #$01                
                     STA [$6E],Y               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_0DAA0D:        LDA.B #$00                
+StzTo6ePointer:     LDA.B #$00                
                     STA [$6E],Y               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DAA12:        .db $33,$37,$39,$00,$00
 
@@ -2055,7 +2380,7 @@ DATA_0DAA1C:        .db $00,$00,$39,$33,$37
 
 DATA_0DAA21:        .db $00,$00,$3A,$34,$38
 
-                    LDY $57                   
+ADDR_0DAA26:        LDY $57                   
                     LDA $59                   
                     LSR                       
                     LSR                       
@@ -2068,26 +2393,28 @@ DATA_0DAA21:        .db $00,$00,$3A,$34,$38
                     JSR.W ADDR_0DA6B1         
                     CPX.B #$03                
                     BPL ADDR_0DAA52           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DAA12,X       
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DAA17,X       
                     STA [$6B],Y               
                     JMP.W ADDR_0DAA77         
+
 ADDR_0DAA52:        CPX.B #$05                
                     BNE ADDR_0DAA68           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$68                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$69                
                     STA [$6B],Y               
                     JMP.W ADDR_0DAA77         
-ADDR_0DAA68:        JSR.W ADDR_0DAA08         
+
+ADDR_0DAA68:        JSR.W Sta1To6ePointer     
                     LDA.B #$35                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$36                
                     STA [$6B],Y               
 ADDR_0DAA77:        JSR.W ADDR_0DA6BA         
@@ -2098,22 +2425,22 @@ ADDR_0DAA77:        JSR.W ADDR_0DA6BA
                     BPL ADDR_0DAA8C           
 ADDR_0DAA85:        DEC $00                   
                     BPL ADDR_0DAA52           
-                    JMP.W ADDR_0DAAA3         
+                    JMP.W Return0DAAA3        
+
 ADDR_0DAA8C:        DEC $00                   
                     BNE ADDR_0DAA68           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DAA1C,X       
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DAA21,X       
                     STA [$6B],Y               
-ADDR_0DAAA3:        RTS                       ; Return 
-
+Return0DAAA3:       RTS                       ; Return
 
 DATA_0DAAA4:        .db $3B,$3C,$3B,$3F,$3B,$3C,$3B,$3F
 DATA_0DAAAC:        .db $3D,$3E,$3D,$3E,$3D,$3E,$3D,$3E
 
-                    LDY $57                   
+ADDR_0DAAB4:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -2127,11 +2454,12 @@ DATA_0DAAAC:        .db $3D,$3E,$3D,$3E,$3D,$3E,$3D,$3E
                     JSR.W ADDR_0DA6B1         
 ADDR_0DAAC9:        CPX.B #$04                
                     BPL ADDR_0DAADA           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DAAA4,X       
                     JSR.W ADDR_0DA95B         
                     JMP.W ADDR_0DAAE4         
-ADDR_0DAADA:        JSR.W ADDR_0DAA08         
+
+ADDR_0DAADA:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DAAAC,X       
                     JSR.W ADDR_0DA95B         
 ADDR_0DAAE4:        CPX.B #$04                
@@ -2139,9 +2467,10 @@ ADDR_0DAAE4:        CPX.B #$04
                     DEC $01                   
                     BPL ADDR_0DAADA           
                     JMP.W ADDR_0DAAFC         
+
 ADDR_0DAAEF:        DEC $01                   
                     BNE ADDR_0DAAC9           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DAAA4,X       
                     STA [$6B],Y               
 ADDR_0DAAFC:        LDA $00                   
@@ -2152,56 +2481,67 @@ ADDR_0DAAFC:        LDA $00
                     TXA                       
                     AND.B #$01                
                     BNE ADDR_0DAAC9           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DAB0D:        LDY $57                   
                     LDA $59                   
                     LSR                       
                     LSR                       
                     LSR                       
                     LSR                       
                     TAX                       
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$41                
                     STA [$6B],Y               
                     JSR.W ADDR_0DA97D         
                     DEX                       
-                    BMI ADDR_0DAB3D           
-                    JSR.W ADDR_0DAA08         
+                    BMI Return0DAB3D          
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$42                
                     STA [$6B],Y               
                     JSR.W ADDR_0DA97D         
                     DEX                       
-                    BMI ADDR_0DAB3D           
-ADDR_0DAB30:        JSR.W ADDR_0DAA08         
+                    BMI Return0DAB3D          
+ADDR_0DAB30:        JSR.W Sta1To6ePointer     
                     LDA.B #$43                
                     STA [$6B],Y               
                     JSR.W ADDR_0DA97D         
                     DEX                       
                     BPL ADDR_0DAB30           
-ADDR_0DAB3D:        RTS                       ; Return 
+Return0DAB3D:       RTS                       ; Return
 
-                    LDA $59                   
+ADDR_0DAB3E:        LDA $59                   
                     AND.B #$0F                
 ADDR_0DAB42:        CMP.B #$0A                
                     BMI ADDR_0DAB4C           
                     SEC                       
                     SBC.B #$0A                
                     JMP.W ADDR_0DAB42         
+
 ADDR_0DAB4C:        JSL.L ExecutePtrLong      
 
-PtrsLong0DAB50:     .db $6E,$AB,$0D
-                    .db $21,$AC,$0D
-                    .db $92,$AC,$0D
-                    .db $44,$AD,$0D
-                    .db $A3,$AD,$0D
-                    .db $EB,$AD,$0D
-                    .db $6D,$AE,$0D
-                    .db $FC,$AE,$0D
-                    .db $61,$AF,$0D
-                    .db $EA,$AF,$0D
+PtrsLong0DAB50:     .dw ADDR_0DAB6E           
+                    .db :ADDR_0DAB6E
+                    .dw ADDR_0DAC21           
+                    .db :ADDR_0DAC21
+                    .dw ADDR_0DAC92           
+                    .db :ADDR_0DAC92
+                    .dw ADDR_0DAD44           
+                    .db :ADDR_0DAD44
+                    .dw ADDR_0DADA3           
+                    .db :ADDR_0DADA3
+                    .dw ADDR_0DADEB           
+                    .db :ADDR_0DADEB
+                    .dw ADDR_0DAE6D           
+                    .db :ADDR_0DAE6D
+                    .dw ADDR_0DAEFC           
+                    .db :ADDR_0DAEFC
+                    .dw ADDR_0DAF61           
+                    .db :ADDR_0DAF61
+                    .dw ADDR_0DAFEA           
+                    .db :ADDR_0DAFEA
 
-                    LDY $57                   
+ADDR_0DAB6E:        LDY $57                   
                     LDA.B #$01                
                     STA $02                   
                     STA $00                   
@@ -2214,24 +2554,25 @@ PtrsLong0DAB50:     .db $6E,$AB,$0D
                     STA $00                   
                     INC $00                   
 ADDR_0DAB83:        LDX $02                   
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$96                
                     JSR.W ADDR_0DABFD         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$9B                
                     JSR.W ADDR_0DABFD         
                     DEX                       
                     DEX                       
                     BMI ADDR_0DABB8           
-ADDR_0DAB99:        JSR.W ADDR_0DAA08         
+ADDR_0DAB99:        JSR.W Sta1To6ePointer     
                     LDA.B #$DE                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$E6                
                     JSR.W ADDR_0DA95B         
                     DEX                       
                     JMP.W ADDR_0DABB5         
-ADDR_0DABAD:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DABAD:        JSR.W StzTo6ePointer      
                     LDA.B #$3F                
                     JSR.W ADDR_0DA95B         
 ADDR_0DABB5:        DEX                       
@@ -2242,7 +2583,8 @@ ADDR_0DABB8:        JSR.W ADDR_0DA6BA
                     DEC $00                   
                     BEQ ADDR_0DABEC           
                     BPL ADDR_0DABC8           
-                    JMP.W ADDR_0DABF6         
+                    JMP.W Return0DABF6        
+
 ADDR_0DABC8:        LDA $57                   
                     CLC                       
                     ADC.B #$0E                
@@ -2262,13 +2604,14 @@ ADDR_0DABD3:        TYA
 ADDR_0DABE4:        JSR.W ADDR_0DA9D6         
 ADDR_0DABE7:        STY $57                   
                     JMP.W ADDR_0DAB83         
+
 ADDR_0DABEC:        LDX $02                   
                     DEX                       
                     DEX                       
                     JSR.W ADDR_0DA97D         
                     JMP.W ADDR_0DAB99         
-ADDR_0DABF6:        RTS                       ; Return 
 
+Return0DABF6:       RTS                       ; Return
 
 DATA_0DABF7:        .db $3F,$01,$03
 
@@ -2284,6 +2627,7 @@ ADDR_0DAC05:        CMP.L DATA_0DABF7,X
                     DEX                       
                     BPL ADDR_0DAC05           
                     JMP.W ADDR_0DAC1A         
+
 ADDR_0DAC11:        LDA $0C                   
                     CLC                       
                     ADC.L DATA_0DABFA,X       
@@ -2292,7 +2636,8 @@ ADDR_0DAC1A:        PLA
                     TAX                       
                     LDA $0C                   
                     JMP.W ADDR_0DA95B         
-                    LDY $57                   
+
+ADDR_0DAC21:        LDY $57                   
                     LDA $59                   
                     LSR                       
                     LSR                       
@@ -2304,16 +2649,17 @@ ADDR_0DAC1A:        PLA
                     STA $02                   
                     JSR.W ADDR_0DA6B1         
 ADDR_0DAC34:        LDX $02                   
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$AA                
                     JSR.W ADDR_0DABFD         
 ADDR_0DAC3E:        DEX                       
                     BMI ADDR_0DAC57           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$E2                
                     JSR.W ADDR_0DA95B         
                     JMP.W ADDR_0DAC54         
-ADDR_0DAC4C:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DAC4C:        JSR.W StzTo6ePointer      
                     LDA.B #$3F                
                     JSR.W ADDR_0DA95B         
 ADDR_0DAC54:        DEX                       
@@ -2323,7 +2669,8 @@ ADDR_0DAC57:        JSR.W ADDR_0DA6BA
                     DEC $00                   
                     BEQ ADDR_0DAC89           
                     BPL ADDR_0DAC65           
-                    JMP.W ADDR_0DAC91         
+                    JMP.W Return0DAC91        
+
 ADDR_0DAC65:        LDA $57                   
                     CLC                       
                     ADC.B #$0F                
@@ -2343,12 +2690,14 @@ ADDR_0DAC70:        TYA
 ADDR_0DAC81:        JSR.W ADDR_0DA9D6         
 ADDR_0DAC84:        STY $57                   
                     JMP.W ADDR_0DAC34         
+
 ADDR_0DAC89:        LDX $02                   
                     JSR.W ADDR_0DA97D         
                     JMP.W ADDR_0DAC3E         
-ADDR_0DAC91:        RTS                       ; Return 
 
-                    LDY $57                   
+Return0DAC91:       RTS                       ; Return
+
+ADDR_0DAC92:        LDY $57                   
                     LDA.B #$03                
                     STA $02                   
                     STA $00                   
@@ -2361,16 +2710,16 @@ ADDR_0DAC91:        RTS                       ; Return
                     STA $00                   
                     INC $00                   
 ADDR_0DACA7:        LDX $02                   
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$6E                
                     JSR.W ADDR_0DABFD         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$73                
                     JSR.W ADDR_0DABFD         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$78                
                     JSR.W ADDR_0DABFD         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$7D                
                     JSR.W ADDR_0DABFD         
                     DEX                       
@@ -2378,23 +2727,24 @@ ADDR_0DACA7:        LDX $02
                     DEX                       
                     DEX                       
                     BMI ADDR_0DAD00           
-ADDR_0DACCF:        JSR.W ADDR_0DAA08         
+ADDR_0DACCF:        JSR.W Sta1To6ePointer     
                     LDA.B #$D8                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$DA                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$E6                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$E6                
                     JSR.W ADDR_0DA95B         
                     DEX                       
                     DEX                       
                     DEX                       
                     JMP.W ADDR_0DACFD         
-ADDR_0DACF5:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DACF5:        JSR.W StzTo6ePointer      
                     LDA.B #$3F                
                     JSR.W ADDR_0DA95B         
 ADDR_0DACFD:        DEX                       
@@ -2407,7 +2757,8 @@ ADDR_0DAD00:        JSR.W ADDR_0DA6BA
                     DEC $00                   
                     BEQ ADDR_0DAD37           
                     BPL ADDR_0DAD13           
-                    JMP.W ADDR_0DAD43         
+                    JMP.W Return0DAD43        
+
 ADDR_0DAD13:        LDA $57                   
                     CLC                       
                     ADC.B #$0C                
@@ -2427,6 +2778,7 @@ ADDR_0DAD1E:        TYA
 ADDR_0DAD2F:        JSR.W ADDR_0DA9D6         
 ADDR_0DAD32:        STY $57                   
                     JMP.W ADDR_0DACA7         
+
 ADDR_0DAD37:        LDX $02                   
                     DEX                       
                     DEX                       
@@ -2434,9 +2786,10 @@ ADDR_0DAD37:        LDX $02
                     DEX                       
                     JSR.W ADDR_0DA97D         
                     JMP.W ADDR_0DACCF         
-ADDR_0DAD43:        RTS                       ; Return 
 
-                    LDY $57                   
+Return0DAD43:       RTS                       ; Return
+
+ADDR_0DAD44:        LDY $57                   
                     LDX.B #$01                
                     STX $02                   
                     STX $00                   
@@ -2449,26 +2802,27 @@ ADDR_0DAD43:        RTS                       ; Return
                     STA $00                   
                     INC $00                   
                     JMP.W ADDR_0DAD7F         
-ADDR_0DAD5C:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DAD5C:        JSR.W StzTo6ePointer      
                     LDA.B #$3F                
                     JSR.W ADDR_0DA95B         
                     DEX                       
 ADDR_0DAD65:        CPX.B #$03                
                     BNE ADDR_0DAD5C           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$E6                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$E0                
                     JSR.W ADDR_0DA95B         
                     DEX                       
                     DEX                       
                     LDA $00                   
-                    BEQ ADDR_0DAD9F           
-ADDR_0DAD7F:        JSR.W ADDR_0DAA08         
+                    BEQ Return0DAD9F          
+ADDR_0DAD7F:        JSR.W Sta1To6ePointer     
                     LDA.B #$A0                
                     JSR.W ADDR_0DABFD         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$A5                
                     JSR.W ADDR_0DABFD         
                     JSR.W ADDR_0DA6BA         
@@ -2478,10 +2832,11 @@ ADDR_0DAD7F:        JSR.W ADDR_0DAA08
                     LDX $02                   
                     DEC $00                   
                     BPL ADDR_0DADA0           
-ADDR_0DAD9F:        RTS                       ; Return 
+Return0DAD9F:       RTS                       ; Return
 
 ADDR_0DADA0:        JMP.W ADDR_0DAD65         
-                    LDY $57                   
+
+ADDR_0DADA3:        LDY $57                   
                     LDX.B #$00                
                     STX $02                   
                     STX $00                   
@@ -2494,18 +2849,19 @@ ADDR_0DADA0:        JMP.W ADDR_0DAD65
                     STA $00                   
                     INC $00                   
                     JMP.W ADDR_0DADD0         
-ADDR_0DADBB:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DADBB:        JSR.W StzTo6ePointer      
                     LDA.B #$3F                
                     JSR.W ADDR_0DA95B         
                     DEX                       
 ADDR_0DADC4:        CPX.B #$01                
                     BNE ADDR_0DADBB           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$E4                
                     JSR.W ADDR_0DA95B         
 ADDR_0DADD0:        LDA $00                   
-                    BEQ ADDR_0DADEA           
-                    JSR.W ADDR_0DAA08         
+                    BEQ Return0DADEA          
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$AF                
                     JSR.W ADDR_0DABFD         
                     JSR.W ADDR_0DA6BA         
@@ -2514,9 +2870,9 @@ ADDR_0DADD0:        LDA $00
                     LDX $02                   
                     DEC $00                   
                     BPL ADDR_0DADC4           
-ADDR_0DADEA:        RTS                       ; Return 
+Return0DADEA:       RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DADEB:        LDY $57                   
                     LDX.B #$03                
                     STX $02                   
                     JSR.W ADDR_0DA6B1         
@@ -2534,16 +2890,16 @@ DATA_0DAE01:        .db $20,$0D,$AA,$A9,$3F,$20,$5B,$A9
 
 ADDR_0DAE0A:        CPX.B #$07                
                     BNE DATA_0DAE01           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$E6                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$E6                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$DB                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$DC                
                     JSR.W ADDR_0DA95B         
                     DEX                       
@@ -2551,17 +2907,17 @@ ADDR_0DAE0A:        CPX.B #$07
                     DEX                       
                     DEX                       
                     LDA $00                   
-                    BEQ ADDR_0DAE69           
-ADDR_0DAE36:        JSR.W ADDR_0DAA08         
+                    BEQ Return0DAE69          
+ADDR_0DAE36:        JSR.W Sta1To6ePointer     
                     LDA.B #$82                
                     JSR.W ADDR_0DABFD         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$87                
                     JSR.W ADDR_0DABFD         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$8C                
                     JSR.W ADDR_0DABFD         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$91                
                     JSR.W ADDR_0DABFD         
                     JSR.W ADDR_0DA6BA         
@@ -2573,10 +2929,11 @@ ADDR_0DAE36:        JSR.W ADDR_0DAA08
                     LDX $02                   
                     DEC $00                   
                     BPL ADDR_0DAE6A           
-ADDR_0DAE69:        RTS                       ; Return 
+Return0DAE69:       RTS                       ; Return
 
 ADDR_0DAE6A:        JMP.W ADDR_0DAE0A         
-                    LDY $57                   
+
+ADDR_0DAE6D:        LDY $57                   
                     LDA $59                   
                     LSR                       
                     LSR                       
@@ -2591,25 +2948,27 @@ ADDR_0DAE6A:        JMP.W ADDR_0DAE0A
                     LDX $02                   
                     JSR.W ADDR_0DA6B1         
                     JMP.W ADDR_0DAE9E         
+
 ADDR_0DAE88:        LDX $02                   
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$C6                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$C7                
                     JSR.W ADDR_0DA95B         
                     DEX                       
                     DEX                       
                     BMI ADDR_0DAEBD           
-ADDR_0DAE9E:        JSR.W ADDR_0DAA08         
+ADDR_0DAE9E:        JSR.W Sta1To6ePointer     
                     LDA.B #$EE                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$F0                
                     JSR.W ADDR_0DA95B         
                     DEX                       
                     JMP.W ADDR_0DAEBA         
-ADDR_0DAEB2:        JSR.W ADDR_0DAA08         
+
+ADDR_0DAEB2:        JSR.W Sta1To6ePointer     
                     LDA.B #$65                
                     JSR.W ADDR_0DA95B         
 ADDR_0DAEBA:        DEX                       
@@ -2620,6 +2979,7 @@ ADDR_0DAEBD:        JSR.W ADDR_0DA6BA
                     INC $01                   
                     JSR.W ADDR_0DA97D         
                     JMP.W ADDR_0DAEF2         
+
 ADDR_0DAECC:        LDA $02                   
                     SEC                       
                     SBC.B #$02                
@@ -2643,11 +3003,12 @@ ADDR_0DAEDE:        TYA
 ADDR_0DAEEF:        JSR.W ADDR_0DA9EF         
 ADDR_0DAEF2:        STY $57                   
                     DEC $00                   
-                    BMI ADDR_0DAEFB           
+                    BMI Return0DAEFB          
                     JMP.W ADDR_0DAE88         
-ADDR_0DAEFB:        RTS                       ; Return 
 
-                    LDY $57                   
+Return0DAEFB:       RTS                       ; Return
+
+ADDR_0DAEFC:        LDY $57                   
                     LDA $59                   
                     LSR                       
                     LSR                       
@@ -2662,7 +3023,8 @@ ADDR_0DAEFB:        RTS                       ; Return
                     JSR.W ADDR_0DA6B1         
                     LDX $02                   
                     JMP.W ADDR_0DAF20         
-ADDR_0DAF17:        JSR.W ADDR_0DAA08         
+
+ADDR_0DAF17:        JSR.W Sta1To6ePointer     
                     LDA.B #$65                
                     JSR.W ADDR_0DA95B         
                     DEX                       
@@ -2670,18 +3032,18 @@ ADDR_0DAF20:        CPX.B #$04
                     BPL ADDR_0DAF17           
                     CPX.B #$02                
                     BMI ADDR_0DAF3C           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$F0                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$EF                
                     JSR.W ADDR_0DA95B         
                     LDA $01                   
                     BEQ ADDR_0DAF4C           
-ADDR_0DAF3C:        JSR.W ADDR_0DAA08         
+ADDR_0DAF3C:        JSR.W Sta1To6ePointer     
                     LDA.B #$C8                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$C9                
                     JSR.W ADDR_0DA95B         
 ADDR_0DAF4C:        JSR.W ADDR_0DA6BA         
@@ -2694,9 +3056,9 @@ ADDR_0DAF4C:        JSR.W ADDR_0DA6BA
                     JSR.W ADDR_0DA97D         
                     DEC $00                   
                     BPL ADDR_0DAF20           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DAF61:        LDY $57                   
                     LDA $59                   
                     LSR                       
                     LSR                       
@@ -2710,17 +3072,19 @@ ADDR_0DAF4C:        JSR.W ADDR_0DA6BA
                     LDX $02                   
                     JSR.W ADDR_0DA6B1         
                     JMP.W ADDR_0DAF88         
+
 ADDR_0DAF7B:        LDX $02                   
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$C4                
                     JSR.W ADDR_0DA95B         
                     DEX                       
                     BMI ADDR_0DAF9E           
-ADDR_0DAF88:        JSR.W ADDR_0DAA08         
+ADDR_0DAF88:        JSR.W Sta1To6ePointer     
                     LDA.B #$EC                
                     JSR.W ADDR_0DA95B         
                     JMP.W ADDR_0DAF9B         
-ADDR_0DAF93:        JSR.W ADDR_0DAA08         
+
+ADDR_0DAF93:        JSR.W Sta1To6ePointer     
                     LDA.B #$65                
                     JSR.W ADDR_0DA95B         
 ADDR_0DAF9B:        DEX                       
@@ -2732,6 +3096,7 @@ ADDR_0DAF9E:        JSR.W ADDR_0DA6BA
                     LDX $02                   
                     JSR.W ADDR_0DA97D         
                     JMP.W ADDR_0DAFD5         
+
 ADDR_0DAFAF:        LDA $02                   
                     SEC                       
                     SBC.B #$01                
@@ -2755,18 +3120,19 @@ ADDR_0DAFC1:        TYA
 ADDR_0DAFD2:        JSR.W ADDR_0DA9EF         
 ADDR_0DAFD5:        STY $57                   
                     DEC $00                   
-                    BMI ADDR_0DAFDE           
+                    BMI Return0DAFDE          
                     JMP.W ADDR_0DAF7B         
-ADDR_0DAFDE:        RTS                       ; Return 
+
+Return0DAFDE:       RTS                       ; Return
 
 ADDR_0DAFDF:        LDA $6C                   
                     SBC.B #$00                
                     STA $6C                   
                     STA $6F                   
                     STA $05                   
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DAFEA:        LDY $57                   
                     LDA $59                   
                     LSR                       
                     LSR                       
@@ -2779,7 +3145,8 @@ ADDR_0DAFDF:        LDA $6C
                     JSR.W ADDR_0DA6B1         
                     LDX $02                   
                     JMP.W ADDR_0DB00B         
-ADDR_0DB002:        JSR.W ADDR_0DAA08         
+
+ADDR_0DB002:        JSR.W Sta1To6ePointer     
                     LDA.B #$65                
                     JSR.W ADDR_0DA95B         
                     DEX                       
@@ -2787,12 +3154,12 @@ ADDR_0DB00B:        CPX.B #$02
                     BPL ADDR_0DB002           
                     CPX.B #$01                
                     BMI ADDR_0DB01F           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$ED                
                     JSR.W ADDR_0DA95B         
                     LDA $01                   
                     BEQ ADDR_0DB027           
-ADDR_0DB01F:        JSR.W ADDR_0DAA08         
+ADDR_0DB01F:        JSR.W Sta1To6ePointer     
                     LDA.B #$C5                
                     JSR.W ADDR_0DA95B         
 ADDR_0DB027:        JSR.W ADDR_0DA6BA         
@@ -2803,8 +3170,7 @@ ADDR_0DB027:        JSR.W ADDR_0DA6BA
                     JSR.W ADDR_0DA97D         
                     DEC $00                   
                     BPL ADDR_0DB00B           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DB039:        .db $40,$41,$06,$45,$4B,$48,$4C,$01
                     .db $03,$B6,$B7,$45,$4B,$48,$4C
@@ -2818,7 +3184,7 @@ DATA_0DB057:        .db $40,$41,$06,$4B,$4B,$4C,$4C,$40
 DATA_0DB066:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$E2,$E2,$E4,$E4
 
-                    LDY $57                   
+ADDR_0DB075:        LDY $57                   
                     LDA $59                   
                     LSR                       
                     LSR                       
@@ -2828,38 +3194,38 @@ DATA_0DB066:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     LDA $59                   
                     AND.B #$0F                
                     TAX                       
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     CPX.B #$03                
                     BMI ADDR_0DB08E           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
 ADDR_0DB08E:        LDA.L DATA_0DB039,X       
                     JSR.W ADDR_0DB114         
                     STA [$6B],Y               
                     JSR.W ADDR_0DA97D         
                     DEC $00                   
                     BMI ADDR_0DB0E2           
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     CPX.B #$09                
                     BPL ADDR_0DB0AD           
                     CPX.B #$07                
                     BPL ADDR_0DB0B0           
                     CPX.B #$03                
                     BMI ADDR_0DB0B0           
-ADDR_0DB0AD:        JSR.W ADDR_0DAA08         
+ADDR_0DB0AD:        JSR.W Sta1To6ePointer     
 ADDR_0DB0B0:        LDA.L DATA_0DB048,X       
                     JSR.W ADDR_0DB198         
                     STA [$6B],Y               
                     JSR.W ADDR_0DA97D         
                     DEC $00                   
                     BMI ADDR_0DB0E2           
-ADDR_0DB0C0:        JSR.W ADDR_0DAA0D         
+ADDR_0DB0C0:        JSR.W StzTo6ePointer      
                     CPX.B #$09                
                     BPL ADDR_0DB0CF           
                     CPX.B #$07                
                     BPL ADDR_0DB0D2           
                     CPX.B #$03                
                     BMI ADDR_0DB0D2           
-ADDR_0DB0CF:        JSR.W ADDR_0DAA08         
+ADDR_0DB0CF:        JSR.W Sta1To6ePointer     
 ADDR_0DB0D2:        LDA.L DATA_0DB057,X       
                     JSR.W ADDR_0DB198         
                     STA [$6B],Y               
@@ -2867,12 +3233,11 @@ ADDR_0DB0D2:        LDA.L DATA_0DB057,X
                     DEC $00                   
                     BPL ADDR_0DB0C0           
 ADDR_0DB0E2:        CPX.B #$0B                
-                    BMI ADDR_0DB0EF           
-                    JSR.W ADDR_0DAA08         
+                    BMI Return0DB0EF          
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DB066,X       
                     STA [$6B],Y               
-ADDR_0DB0EF:        RTS                       ; Return 
-
+Return0DB0EF:       RTS                       ; Return
 
 DATA_0DB0F0:        .db $7D,$7E,$82,$83,$9B,$9C,$A0,$A1
                     .db $AA,$AB,$AF,$B0,$D8,$DC,$DE,$E0
@@ -2887,9 +3252,9 @@ ADDR_0DB114:        CPX.B #$03
                     CPX.B #$09                
                     BMI ADDR_0DB120           
                     CPX.B #$0B                
-                    BMI ADDR_0DB15B           
+                    BMI Return0DB15B          
 ADDR_0DB120:        CPX.B #$02                
-                    BEQ ADDR_0DB15B           
+                    BEQ Return0DB15B          
                     STX $0B                   
                     STA $0C                   
                     LDX.B #$11                
@@ -2912,11 +3277,11 @@ ADDR_0DB12C:        CMP.L DATA_0DB0F0,X
 ADDR_0DB14B:        INC $0C                   
 ADDR_0DB14D:        LDA $0C                   
                     JMP.W ADDR_0DB159         
-ADDR_0DB152:        JSR.W ADDR_0DAA08         
+
+ADDR_0DB152:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DB102,X       
 ADDR_0DB159:        LDX $0B                   
-ADDR_0DB15B:        RTS                       ; Return 
-
+Return0DB15B:       RTS                       ; Return
 
 DATA_0DB15C:        .db $6E,$6F,$73,$74,$78,$79,$7D,$7E
                     .db $82,$83,$87,$88,$8C,$8D,$91,$92
@@ -2931,11 +3296,11 @@ DATA_0DB17A:        .db $70,$70,$75,$75,$7A,$7A,$7F,$7F
 ADDR_0DB198:        CPX.B #$03                
                     BMI ADDR_0DB1A4           
                     CPX.B #$07                
-                    BMI ADDR_0DB1C7           
+                    BMI Return0DB1C7          
                     CPX.B #$09                
-                    BPL ADDR_0DB1C7           
+                    BPL Return0DB1C7          
 ADDR_0DB1A4:        CPX.B #$02                
-                    BEQ ADDR_0DB1C7           
+                    BEQ Return0DB1C7          
                     STX $0B                   
                     STA $0C                   
                     LDX.B #$1D                
@@ -2946,18 +3311,20 @@ ADDR_0DB1B0:        CMP.L DATA_0DB15C,X
                     BPL ADDR_0DB1B0           
                     LDA $0C                   
                     JMP.W ADDR_0DB1C5         
-ADDR_0DB1BE:        JSR.W ADDR_0DAA08         
+
+ADDR_0DB1BE:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DB17A,X       
 ADDR_0DB1C5:        LDX $0B                   
-ADDR_0DB1C7:        RTS                       ; Return 
+Return0DB1C7:       RTS                       ; Return
 
-                    LDA $59                   
+ADDR_0DB1C8:        LDA $59                   
                     STA $00                   
                     TAX                       
                     LDA.B #$02                
                     STA $02                   
                     JMP.W ADDR_0DB1E3         
-                    LDA $59                   
+
+ADDR_0DB1D4:        LDA $59                   
                     AND.B #$0F                
                     STA $00                   
                     TAX                       
@@ -2969,14 +3336,15 @@ ADDR_0DB1C7:        RTS                       ; Return
                     STA $02                   
 ADDR_0DB1E3:        JSR.W ADDR_0DA6B1         
                     LDY $57                   
-ADDR_0DB1E8:        JSR.W ADDR_0DAA08         
+ADDR_0DB1E8:        JSR.W Sta1To6ePointer     
                     LDA.B #$00                
                     JSR.W ADDR_0DA95B         
                     DEX                       
                     CPX.B #$FF                
                     BNE ADDR_0DB1E8           
                     JMP.W ADDR_0DB205         
-ADDR_0DB1F8:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DB1F8:        JSR.W StzTo6ePointer      
                     LDA.B #$3F                
                     JSR.W ADDR_0DA95B         
                     DEX                       
@@ -2987,8 +3355,7 @@ ADDR_0DB205:        JSR.W ADDR_0DA6BA
                     LDX $00                   
                     DEC $02                   
                     BPL ADDR_0DB1F8           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DB212:        .db $2F,$25,$32
 
@@ -3002,7 +3369,7 @@ DATA_0DB21E:        .db $3A,$25,$3D
 
 DATA_0DB221:        .db $3B,$25,$3E
 
-                    LDY $57                   
+ADDR_0DB224:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $02                   
@@ -3021,7 +3388,7 @@ ADDR_0DB23B:        LDA.L DATA_0DB212,X
                     BEQ ADDR_0DB24B           
                     LDA.L DATA_0DB21B,X       
                     STA $03                   
-ADDR_0DB24B:        JSR.W ADDR_0DAA0D         
+ADDR_0DB24B:        JSR.W StzTo6ePointer      
                     LDA $03                   
                     STA [$6B],Y               
                     TYA                       
@@ -3041,7 +3408,7 @@ ADDR_0DB265:        LDA.L DATA_0DB215,X
                     BEQ ADDR_0DB275           
                     LDA.L DATA_0DB21E,X       
                     STA $03                   
-ADDR_0DB275:        JSR.W ADDR_0DAA0D         
+ADDR_0DB275:        JSR.W StzTo6ePointer      
                     LDA $03                   
                     STA [$6B],Y               
                     TYA                       
@@ -3061,7 +3428,7 @@ ADDR_0DB28F:        LDA.L DATA_0DB218,X
                     BEQ ADDR_0DB29F           
                     LDA.L DATA_0DB221,X       
                     STA $03                   
-ADDR_0DB29F:        JSR.W ADDR_0DAA0D         
+ADDR_0DB29F:        JSR.W StzTo6ePointer      
                     LDA $03                   
                     STA [$6B],Y               
                     JSR.W ADDR_0DA6BA         
@@ -3080,11 +3447,12 @@ ADDR_0DB2BB:        STY $57
                     STA $01                   
                     INX                       
                     CPX.B #$03                
-                    BEQ ADDR_0DB2C9           
+                    BEQ Return0DB2C9          
                     JMP.W ADDR_0DB23B         
-ADDR_0DB2C9:        RTS                       ; Return 
 
-                    LDA.W $13BF               
+Return0DB2C9:       RTS                       ; Return
+
+ADDR_0DB2CA:        LDA.W $13BF               
                     LSR                       
                     LSR                       
                     LSR                       
@@ -3094,7 +3462,7 @@ ADDR_0DB2C9:        RTS                       ; Return
                     TAX                       
                     LDA.W $1F2F,Y             
                     AND.L DATA_0DA8A6,X       
-                    BNE ADDR_0DB2C9           
+                    BNE Return0DB2C9          
                     LDX.W $13BE               
                     LDA.B #$F8                
                     CLC                       
@@ -3126,18 +3494,18 @@ ADDR_0DB314:        TYA
                     LDY $0E                   
                     LDA ($08),Y               
                     AND.L DATA_0DA8A6,X       
-                    BNE ADDR_0DB335           
+                    BNE Return0DB335          
                     LDY $57                   
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$2D                
                     STA [$6B],Y               
                     JSR.W ADDR_0DA97D         
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$2E                
                     STA [$6B],Y               
-ADDR_0DB335:        RTS                       ; Return 
+Return0DB335:       RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DB336:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -3188,13 +3556,14 @@ ADDR_0DB380:        TYA
                     TAX                       
                     PLA                       
                     TAY                       
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$2C                
                     STA $0C                   
                     LDA $0F                   
                     BEQ ADDR_0DB3A3           
                     JSR.W ADDR_0DA987         
                     JMP.W ADDR_0DB3A8         
+
 ADDR_0DB3A3:        LDA $0C                   
                     JSR.W ADDR_0DA95B         
 ADDR_0DB3A8:        DEX                       
@@ -3203,14 +3572,14 @@ ADDR_0DB3A8:        DEX
                     JSR.W ADDR_0DA97D         
                     LDX $00                   
                     DEC $01                   
-                    BMI ADDR_0DB3BA           
+                    BMI Return0DB3BA          
                     JMP.W ADDR_0DB34A         
-ADDR_0DB3BA:        RTS                       ; Return 
 
+Return0DB3BA:       RTS                       ; Return
 
 DATA_0DB3BB:        .db $05,$06
 
-                    LDY $57                   
+ADDR_0DB3BD:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -3220,19 +3589,18 @@ DATA_0DB3BB:        .db $05,$06
                     LSR                       
                     LSR                       
                     TAX                       
-ADDR_0DB3CC:        JSR.W ADDR_0DAA08         
+ADDR_0DB3CC:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DB3BB,X       
                     JSR.W ADDR_0DA95B         
                     DEC $00                   
                     BPL ADDR_0DB3CC           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DB3DB:        .db $00,$01,$04,$08
 
 DATA_0DB3DF:        .db $02,$03,$05,$0B
 
-                    LDY $57                   
+ADDR_0DB3E3:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -3248,13 +3616,14 @@ DATA_0DB3DF:        .db $02,$03,$05,$0B
                     SBC.B #$17                
                     TAX                       
                     JSR.W ADDR_0DA6B1         
-ADDR_0DB3FD:        JSR.W ADDR_0DAA0D         
+ADDR_0DB3FD:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DB3DB,X       
                     JSR.W ADDR_0DA95B         
                     DEC $02                   
                     BPL ADDR_0DB3FD           
                     JMP.W ADDR_0DB41C         
-ADDR_0DB40E:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DB40E:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DB3DF,X       
                     JSR.W ADDR_0DA95B         
                     DEC $02                   
@@ -3265,22 +3634,21 @@ ADDR_0DB41C:        JSR.W ADDR_0DA6BA
                     STA $02                   
                     DEC $01                   
                     BPL ADDR_0DB40E           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DB42B:        .db $26,$44
 
-                    LDY $57                   
+ADDR_0DB42D:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
                     STA $01                   
                     JSR.W ADDR_0DA6B1         
                     LDX.B #$00                
-ADDR_0DB43C:        JSR.W ADDR_0DAA0D         
+ADDR_0DB43C:        JSR.W StzTo6ePointer      
                     CPX.B #$00                
                     BEQ ADDR_0DB446           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
 ADDR_0DB446:        LDA.L DATA_0DB42B,X       
                     JSR.W ADDR_0DA95B         
                     DEC $01                   
@@ -3292,9 +3660,9 @@ ADDR_0DB446:        LDA.L DATA_0DB42B,X
                     INX                       
                     CPX.B #$02                
                     BNE ADDR_0DB43C           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DB461:        LDY $57                   
                     LDA $59                   
                     LSR                       
                     LSR                       
@@ -3308,7 +3676,7 @@ ADDR_0DB446:        LDA.L DATA_0DB42B,X
                     JSR.W ADDR_0DA6B1         
                     LDA $00                   
                     BEQ ADDR_0DB490           
-ADDR_0DB479:        JSR.W ADDR_0DAA0D         
+ADDR_0DB479:        JSR.W StzTo6ePointer      
                     LDA.B #$0B                
                     JSR.W ADDR_0DA95B         
                     DEX                       
@@ -3318,17 +3686,16 @@ ADDR_0DB479:        JSR.W ADDR_0DAA0D
                     LDX $01                   
                     DEC $00                   
                     BNE ADDR_0DB479           
-ADDR_0DB490:        JSR.W ADDR_0DAA0D         
+ADDR_0DB490:        JSR.W StzTo6ePointer      
                     LDA.B #$0E                
                     JSR.W ADDR_0DA95B         
                     DEX                       
                     BPL ADDR_0DB490           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DB49C:        .db $0A,$0C
 
-                    LDY $57                   
+ADDR_0DB49E:        LDY $57                   
                     LDA $59                   
                     LSR                       
                     LSR                       
@@ -3341,7 +3708,8 @@ DATA_0DB49C:        .db $0A,$0C
                     LDA.L DATA_0DB49C,X       
                     JSR.W ADDR_0DB4D9         
                     JMP.W ADDR_0DB4C0         
-ADDR_0DB4B7:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DB4B7:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DB49C,X       
                     STA [$6B],Y               
 ADDR_0DB4C0:        TYA                       
@@ -3365,15 +3733,15 @@ ADDR_0DB4D9:        STA $0C
                     BNE ADDR_0DB4E8           
                     LDA.L DATA_0DB4D5,X       
                     JMP.W ADDR_0DB4F0         
+
 ADDR_0DB4E8:        CMP.B #$0E                
                     BNE ADDR_0DB4F2           
                     LDA.L DATA_0DB4D7,X       
 ADDR_0DB4F0:        STA $0C                   
-ADDR_0DB4F2:        JSR.W ADDR_0DAA0D         
+ADDR_0DB4F2:        JSR.W StzTo6ePointer      
                     LDA $0C                   
                     STA [$6B],Y               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DB4FA:        .db $0D,$0F
 
@@ -3385,16 +3753,17 @@ ADDR_0DB4FE:        STA $0C
                     BNE ADDR_0DB50D           
                     LDA.L DATA_0DB4FA,X       
                     JMP.W ADDR_0DB515         
+
 ADDR_0DB50D:        CMP.B #$08                
                     BNE ADDR_0DB517           
                     LDA.L DATA_0DB4FC,X       
 ADDR_0DB515:        STA $0C                   
-ADDR_0DB517:        JSR.W ADDR_0DAA0D         
+ADDR_0DB517:        JSR.W StzTo6ePointer      
                     LDA $0C                   
                     STA [$6B],Y               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DB51F:        LDY $57                   
                     LDA $59                   
                     AND.B #$F0                
                     LSR                       
@@ -3402,71 +3771,70 @@ ADDR_0DB517:        JSR.W ADDR_0DAA0D
                     LSR                       
                     LSR                       
                     TAX                       
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$53                
                     JMP.W ADDR_0DB537         
-ADDR_0DB532:        JSR.W ADDR_0DAA08         
+
+ADDR_0DB532:        JSR.W Sta1To6ePointer     
                     LDA.B #$54                
 ADDR_0DB537:        STA [$6B],Y               
                     JSR.W ADDR_0DA97D         
                     DEX                       
                     BNE ADDR_0DB532           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$55                
                     STA [$6B],Y               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DB547:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     TAX                       
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$56                
                     JMP.W ADDR_0DB55B         
-ADDR_0DB556:        JSR.W ADDR_0DAA08         
+
+ADDR_0DB556:        JSR.W Sta1To6ePointer     
                     LDA.B #$57                
 ADDR_0DB55B:        JSR.W ADDR_0DA95B         
                     DEX                       
                     BNE ADDR_0DB556           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$58                
                     STA [$6B],Y               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DB569:        .db $91,$92,$96,$97,$9A,$9B,$9F,$A0
 
-                    LDY $57                   
+ADDR_0DB571:        LDY $57                   
                     LDA $59                   
                     SEC                       
                     SBC.B #$68                
                     TAX                       
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DB569,X       
                     STA [$6B],Y               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDX.B #$01                
+ADDR_0DB583:        LDX.B #$01                
                     BNE ADDR_0DB58D           
-
 DATA_0DB587:        .db $6A,$6B
 
 DATA_0DB589:        .db $6A,$6B
 
-                    LDX.B #$00                
+ADDR_0DB58B:        LDX.B #$00                
 ADDR_0DB58D:        LDY $57                   
                     LDA.W $1F27,X             
                     BNE ADDR_0DB59E           
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DB589,X       
                     STA [$6B],Y               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_0DB59E:        JSR.W ADDR_0DAA08         
+ADDR_0DB59E:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DB587,X       
                     STA [$6B],Y               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DB5A8:        .db $73,$7A,$85,$88,$C3
 
@@ -3474,7 +3842,7 @@ DATA_0DB5AD:        .db $74,$7B,$86,$89,$C3
 
 DATA_0DB5B2:        .db $79,$80,$87,$8E,$C3
 
-                    LDY $57                   
+ADDR_0DB5B7:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -3484,19 +3852,19 @@ DATA_0DB5B2:        .db $79,$80,$87,$8E,$C3
                     LSR                       
                     LSR                       
                     TAX                       
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DB5A8,X       
                     JMP.W ADDR_0DB5D7         
-ADDR_0DB5D0:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DB5D0:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DB5AD,X       
 ADDR_0DB5D7:        JSR.W ADDR_0DA95B         
                     DEC $00                   
                     BNE ADDR_0DB5D0           
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DB5B2,X       
                     STA [$6B],Y               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DB5E8:        .db $07
 
@@ -3507,7 +3875,7 @@ DATA_0DB5EA:        .db $0A,$08,$0A,$0A,$09,$81,$82,$83
                     .db $25,$84,$81,$81,$25,$84,$81,$25
                     .db $84,$81
 
-                    LDA $59                   
+ADDR_0DB604:        LDA $59                   
                     AND.B #$0F                
                     STA $00                   
                     LDA.B #$03                
@@ -3519,7 +3887,7 @@ DATA_0DB5EA:        .db $0A,$08,$0A,$0A,$09,$81,$82,$83
                     STA $02                   
                     LDA.B #$02                
                     STA $01                   
-ADDR_0DB61D:        JSR.W ADDR_0DAA08         
+ADDR_0DB61D:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DB5E8,X       
                     JSR.W ADDR_0DA95B         
                     INX                       
@@ -3527,13 +3895,13 @@ ADDR_0DB61D:        JSR.W ADDR_0DAA08
                     BPL ADDR_0DB61D           
                     DEC $02                   
                     BEQ ADDR_0DB652           
-ADDR_0DB630:        JSR.W ADDR_0DAA08         
+ADDR_0DB630:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DB5E8,X       
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DB5E9,X       
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DB5EA,X       
                     JSR.W ADDR_0DA95B         
                     DEC $02                   
@@ -3542,16 +3910,17 @@ ADDR_0DB652:        TXA
                     CLC                       
                     ADC.B #$03                
                     TAX                       
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DB5E8,X       
                     JSR.W ADDR_0DA95B         
                     JMP.W ADDR_0DB6B2         
+
 ADDR_0DB664:        LDY $57                   
                     LDA $00                   
                     STA $02                   
                     LDA.B #$02                
                     STA $01                   
-ADDR_0DB66E:        JSR.W ADDR_0DAA0D         
+ADDR_0DB66E:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DB5E8,X       
                     JSR.W ADDR_0DA95B         
                     INX                       
@@ -3559,13 +3928,13 @@ ADDR_0DB66E:        JSR.W ADDR_0DAA0D
                     BPL ADDR_0DB66E           
                     DEC $02                   
                     BEQ ADDR_0DB6A3           
-ADDR_0DB681:        JSR.W ADDR_0DAA0D         
+ADDR_0DB681:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DB5E8,X       
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DB5E9,X       
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DB5EA,X       
                     JSR.W ADDR_0DA95B         
                     DEC $02                   
@@ -3574,21 +3943,21 @@ ADDR_0DB6A3:        TXA
                     CLC                       
                     ADC.B #$03                
                     TAX                       
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DB5E8,X       
                     JSR.W ADDR_0DA95B         
 ADDR_0DB6B2:        INX                       
                     JSR.W ADDR_0DA6BA         
                     JSR.W ADDR_0DA97D         
                     DEC $03                   
-                    BMI ADDR_0DB6C0           
+                    BMI Return0DB6C0          
                     JMP.W ADDR_0DB664         
-ADDR_0DB6C0:        RTS                       ; Return 
 
+Return0DB6C0:       RTS                       ; Return
 
 DATA_0DB6C1:        .db $93,$9C
 
-                    LDY $57                   
+ADDR_0DB6C3:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -3598,31 +3967,29 @@ DATA_0DB6C1:        .db $93,$9C
                     LSR                       
                     LSR                       
                     TAX                       
-ADDR_0DB6D2:        JSR.W ADDR_0DAA0D         
+ADDR_0DB6D2:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DB6C1,X       
                     JSR.W ADDR_0DA95B         
                     DEC $00                   
                     BPL ADDR_0DB6D2           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DB6E1:        .db $C1,$C2
 
-                    LDY $57                   
+ADDR_0DB6E3:        LDY $57                   
                     LDA $59                   
                     SEC                       
                     SBC.B #$88                
                     TAX                       
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DB6E1,X       
                     STA [$6B],Y               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DB6F5:        .db $94,$8F,$9D,$98,$95,$90,$9E,$99
 DATA_0DB6FD:        .db $8F,$8F,$98,$98,$90,$90,$99,$99
 
-                    LDY $57                   
+ADDR_0DB705:        LDY $57                   
                     LDA $59                   
                     LSR                       
                     LSR                       
@@ -3632,22 +3999,22 @@ DATA_0DB6FD:        .db $8F,$8F,$98,$98,$90,$90,$99,$99
                     LDA $59                   
                     AND.B #$0F                
                     TAX                       
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DB6F5,X       
                     JMP.W ADDR_0DB725         
-ADDR_0DB71E:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DB71E:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DB6FD,X       
 ADDR_0DB725:        STA [$6B],Y               
                     JSR.W ADDR_0DA97D         
                     DEC $00                   
                     BPL ADDR_0DB71E           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DB72F:        .db $C4,$C5,$C7,$EC,$ED,$C6,$C7,$EE
                     .db $59,$5A,$EF,$C7,$EE,$59,$5B,$5C
 
-                    LDY $57                   
+ADDR_0DB73F:        LDY $57                   
                     LDA $59                   
                     LSR                       
                     LSR                       
@@ -3660,7 +4027,7 @@ DATA_0DB72F:        .db $C4,$C5,$C7,$EC,$ED,$C6,$C7,$EE
                     JSR.W ADDR_0DA6B1         
 ADDR_0DB752:        LDA $01                   
                     STA $02                   
-ADDR_0DB756:        JSR.W ADDR_0DAA08         
+ADDR_0DB756:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DB72F,X       
                     JSR.W ADDR_0DA95B         
                     INX                       
@@ -3677,7 +4044,7 @@ ADDR_0DB756:        JSR.W ADDR_0DAA08
                     DEC $01                   
 ADDR_0DB779:        LDA $01                   
                     STA $02                   
-ADDR_0DB77D:        JSR.W ADDR_0DAA08         
+ADDR_0DB77D:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DB72F,X       
                     JSR.W ADDR_0DA95B         
                     INX                       
@@ -3694,12 +4061,12 @@ ADDR_0DB77D:        JSR.W ADDR_0DAA08
 ADDR_0DB79B:        DEC $00                   
                     BPL ADDR_0DB779           
 ADDR_0DB79F:        JSR.W ADDR_0DA95D         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$EB                
                     STA [$6B],Y               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DB7AA:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -3713,27 +4080,29 @@ ADDR_0DB79F:        JSR.W ADDR_0DA95D
                     LDX.B #$01                
                     STX $01                   
                     JSR.W ADDR_0DA6B1         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$AA                
                     JSR.W ADDR_0DABFD         
-                    LDA.W ADDR_0DAA0D         
+                    LDA.W StzTo6ePointer      
                     LDA.B #$A1                
                     JSR.W ADDR_0DB84E         
                     JMP.W ADDR_0DB7FD         
-ADDR_0DB7D6:        JSR.W ADDR_0DAA08         
+
+ADDR_0DB7D6:        JSR.W Sta1To6ePointer     
                     LDA.B #$AA                
                     JSR.W ADDR_0DABFD         
                     DEX                       
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$E2                
                     JSR.W ADDR_0DA95B         
                     JMP.W ADDR_0DB7F2         
-ADDR_0DB7EA:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DB7EA:        JSR.W StzTo6ePointer      
                     LDA.B #$3F                
                     JSR.W ADDR_0DA95B         
 ADDR_0DB7F2:        DEX                       
                     BNE ADDR_0DB7EA           
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$A6                
                     JSR.W ADDR_0DB84E         
 ADDR_0DB7FD:        JSR.W ADDR_0DA6BA         
@@ -3748,20 +4117,22 @@ ADDR_0DB7FD:        JSR.W ADDR_0DA6BA
                     JSR.W ADDR_0DA6B1         
                     DEX                       
                     STX $01                   
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$F7                
                     JSR.W ADDR_0DABFD         
                     JMP.W ADDR_0DB836         
-ADDR_0DB823:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DB823:        JSR.W StzTo6ePointer      
                     LDA.B #$A3                
                     JSR.W ADDR_0DB84E         
                     JMP.W ADDR_0DB836         
-ADDR_0DB82E:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DB82E:        JSR.W StzTo6ePointer      
                     LDA.B #$3F                
                     JSR.W ADDR_0DA95B         
 ADDR_0DB836:        DEX                       
                     BNE ADDR_0DB82E           
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$A6                
                     JSR.W ADDR_0DB84E         
                     JSR.W ADDR_0DA6BA         
@@ -3769,7 +4140,7 @@ ADDR_0DB836:        DEX
                     LDX $01                   
                     DEC $03                   
                     BPL ADDR_0DB823           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0DB84E:        STA $0F                   
                     LDA [$6B],Y               
@@ -3781,7 +4152,8 @@ ADDR_0DB84E:        STA $0F
 ADDR_0DB85C:        INC $0F                   
 ADDR_0DB85E:        LDA $0F                   
                     JMP.W ADDR_0DA95B         
-                    LDY $57                   
+
+ADDR_0DB863:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -3795,27 +4167,29 @@ ADDR_0DB85E:        LDA $0F
                     LDX.B #$01                
                     STX $01                   
                     JSR.W ADDR_0DA6B1         
-                    LDA.W ADDR_0DAA0D         
+                    LDA.W StzTo6ePointer      
                     LDA.B #$AF                
                     JSR.W ADDR_0DB84E         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$AF                
                     JSR.W ADDR_0DABFD         
                     JMP.W ADDR_0DB8B7         
-ADDR_0DB88F:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DB88F:        JSR.W StzTo6ePointer      
                     LDA.B #$A9                
                     JSR.W ADDR_0DB84E         
                     JMP.W ADDR_0DB8A2         
-ADDR_0DB89A:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DB89A:        JSR.W StzTo6ePointer      
                     LDA.B #$3F                
                     JSR.W ADDR_0DA95B         
 ADDR_0DB8A2:        DEX                       
                     CPX.B #$01                
                     BNE ADDR_0DB89A           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$E4                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$AF                
                     JSR.W ADDR_0DABFD         
 ADDR_0DB8B7:        JSR.W ADDR_0DA6BA         
@@ -3827,29 +4201,32 @@ ADDR_0DB8B7:        JSR.W ADDR_0DA6BA
                     BPL ADDR_0DB88F           
                     DEX                       
                     STX $01                   
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$A9                
                     JSR.W ADDR_0DB84E         
                     JMP.W ADDR_0DB8DD         
-ADDR_0DB8D5:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DB8D5:        JSR.W StzTo6ePointer      
                     LDA.B #$3F                
                     JSR.W ADDR_0DA95B         
 ADDR_0DB8DD:        DEX                       
                     BNE ADDR_0DB8D5           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$F9                
                     JSR.W ADDR_0DB84E         
                     JMP.W ADDR_0DB909         
-ADDR_0DB8EB:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DB8EB:        JSR.W StzTo6ePointer      
                     LDA.B #$A9                
                     JSR.W ADDR_0DB84E         
                     JMP.W ADDR_0DB8FE         
-ADDR_0DB8F6:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DB8F6:        JSR.W StzTo6ePointer      
                     LDA.B #$3F                
                     JSR.W ADDR_0DA95B         
 ADDR_0DB8FE:        DEX                       
                     BNE ADDR_0DB8F6           
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$AC                
                     JSR.W ADDR_0DB84E         
 ADDR_0DB909:        JSR.W ADDR_0DA6BA         
@@ -3857,16 +4234,15 @@ ADDR_0DB909:        JSR.W ADDR_0DA6BA
                     LDX $01                   
                     DEC $03                   
                     BPL ADDR_0DB8EB           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDX.B #$00                
+ADDR_0DB916:        LDX.B #$00                
                     BEQ ADDR_0DB920           
-
 DATA_0DB91A:        .db $6C,$6D
 
 DATA_0DB91C:        .db $6C,$6D
 
-                    LDX.B #$01                
+ADDR_0DB91E:        LDX.B #$01                
 ADDR_0DB920:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
@@ -3880,12 +4256,12 @@ ADDR_0DB920:        LDY $57
 ADDR_0DB930:        LDA $00                   
                     STA $02                   
                     JSR.W ADDR_0DA6B1         
-ADDR_0DB937:        JSR.W ADDR_0DAA0D         
+ADDR_0DB937:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DB91A,X       
                     STA $0F                   
                     LDA.W $1F29,X             
                     BEQ ADDR_0DB94E           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DB91C,X       
                     STA $0F                   
 ADDR_0DB94E:        LDA $0F                   
@@ -3896,14 +4272,13 @@ ADDR_0DB94E:        LDA $0F
                     JSR.W ADDR_0DA97D         
                     DEC $01                   
                     BPL ADDR_0DB930           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DB962:        .db $BD,$BF
 
 DATA_0DB964:        .db $BE,$C0
 
-                    LDY $57                   
+ADDR_0DB966:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     TAX                       
@@ -3913,19 +4288,19 @@ DATA_0DB964:        .db $BE,$C0
                     LSR                       
                     LSR                       
                     STA $00                   
-ADDR_0DB975:        JSR.W ADDR_0DAA0D         
+ADDR_0DB975:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DB962,X       
                     JSR.W ADDR_0DB997         
                     JSR.W ADDR_0DA97D         
                     DEC $00                   
-                    BMI ADDR_0DB996           
-                    JSR.W ADDR_0DAA0D         
+                    BMI Return0DB996          
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DB964,X       
                     STA [$6B],Y               
                     JSR.W ADDR_0DA97D         
                     DEC $00                   
                     BPL ADDR_0DB975           
-ADDR_0DB996:        RTS                       ; Return 
+Return0DB996:       RTS                       ; Return
 
 ADDR_0DB997:        STA $0F                   
                     CPX.B #$01                
@@ -3938,17 +4313,18 @@ ADDR_0DB997:        STA $0F
 ADDR_0DB9A7:        STA $0F                   
                     INC $0F                   
                     JMP.W ADDR_0DB9BB         
+
 ADDR_0DB9AE:        LDA [$6B],Y               
                     CMP.B #$0E                
                     BNE ADDR_0DB9BB           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$0D                
                     STA $0F                   
 ADDR_0DB9BB:        LDA $0F                   
                     STA [$6B],Y               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DB9C0:        LDY $57                   
                     LDA $59                   
                     LSR                       
                     LSR                       
@@ -3961,32 +4337,32 @@ ADDR_0DB9CA:        JSR.W ADDR_0DA6B1
                     JSR.W ADDR_0DA6BA         
                     JSR.W ADDR_0DA97D         
                     DEC $00                   
-                    BMI ADDR_0DB9F5           
-                    JSR.W ADDR_0DAA0D         
+                    BMI Return0DB9F5          
+                    JSR.W StzTo6ePointer      
                     LDA.B #$BB                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$BC                
                     STA [$6B],Y               
                     JSR.W ADDR_0DA6BA         
                     JSR.W ADDR_0DA97D         
                     DEC $00                   
                     BPL ADDR_0DB9CA           
-ADDR_0DB9F5:        RTS                       ; Return 
+Return0DB9F5:       RTS                       ; Return
 
 ADDR_0DB9F6:        LDA [$6B],Y               
                     CMP.B #$0E                
                     BNE ADDR_0DBA01           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDX.B #$0B                
 ADDR_0DBA01:        TXA                       
                     JSR.W ADDR_0DA95B         
                     INX                       
                     TXA                       
                     STA [$6B],Y               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DBA0A:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -3998,13 +4374,14 @@ ADDR_0DBA01:        TXA
                     LSR                       
                     STA $01                   
                     JSR.W ADDR_0DA6B1         
-ADDR_0DBA1E:        JSR.W ADDR_0DAA08         
+ADDR_0DBA1E:        JSR.W Sta1To6ePointer     
                     LDA.B #$0E                
                     JSR.W ADDR_0DA95B         
                     DEX                       
                     BPL ADDR_0DBA1E           
                     JMP.W ADDR_0DBA37         
-ADDR_0DBA2C:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DBA2C:        JSR.W StzTo6ePointer      
                     LDA.B #$B8                
                     JSR.W ADDR_0DA95B         
                     DEX                       
@@ -4014,14 +4391,13 @@ ADDR_0DBA37:        JSR.W ADDR_0DA6BA
                     LDX $00                   
                     DEC $01                   
                     BPL ADDR_0DBA2C           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DBA44:        .db $5F,$5E,$10,$0F
 
 DATA_0DBA48:        .db $60,$5D,$C5,$C4
 
-                    LDY $57                   
+ADDR_0DBA4C:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     TAX                       
@@ -4031,20 +4407,20 @@ DATA_0DBA48:        .db $60,$5D,$C5,$C4
                     LSR                       
                     LSR                       
                     STA $00                   
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DBA44,X       
                     STA [$6B],Y               
                     JMP.W ADDR_0DBA74         
+
 ADDR_0DBA67:        CPX.B #$02                
                     BPL ADDR_0DBA6E           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
 ADDR_0DBA6E:        LDA.L DATA_0DBA48,X       
                     STA [$6B],Y               
 ADDR_0DBA74:        JSR.W ADDR_0DA97D         
                     DEC $00                   
                     BPL ADDR_0DBA67           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DBA7C:        .db $B4,$B4,$B4,$B4,$B4,$B4,$B4,$B4
                     .db $B4,$B4,$B4,$B4,$B4,$B4,$B4,$B4
@@ -4059,7 +4435,7 @@ DATA_0DBA7C:        .db $B4,$B4,$B4,$B4,$B4,$B4,$B4,$B4
                     .db $25,$B1,$B6,$25,$25,$B1,$B6,$B1
                     .db $B6,$25,$25,$25,$25,$25,$25,$25
 
-                    LDA $59                   
+ADDR_0DBADC:        LDA $59                   
                     STA $0F                   
 ADDR_0DBAE0:        LDA $57                   
                     STA $0E                   
@@ -4098,9 +4474,9 @@ ADDR_0DBB12:        DEC $01
                     STA $6F                   
                     DEC $0F                   
                     BPL ADDR_0DBAE0           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DBB2C:        LDY $57                   
                     LDA $59                   
                     LSR                       
                     LSR                       
@@ -4108,26 +4484,27 @@ ADDR_0DBB12:        DEC $01
                     LSR                       
                     TAX                       
                     JSR.W ADDR_0DA6B1         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$61                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$62                
                     STA [$6B],Y               
                     JMP.W ADDR_0DBB59         
-ADDR_0DBB4A:        JSR.W ADDR_0DAA08         
+
+ADDR_0DBB4A:        JSR.W Sta1To6ePointer     
                     LDA.B #$63                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$64                
                     STA [$6B],Y               
 ADDR_0DBB59:        JSR.W ADDR_0DA6BA         
                     JSR.W ADDR_0DA97D         
                     DEX                       
                     BPL ADDR_0DBB4A           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDX.B #$0E                
+ADDR_0DBB63:        LDX.B #$0E                
                     JMP.W ADDR_0DA8C3         
 
 DATA_0DBB68:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
@@ -4328,88 +4705,150 @@ DATA_0DBB68:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $26,$1C,$36,$1C,$26,$5C,$36,$5C
                     .db $27,$1C,$37,$1C,$27,$5C,$37,$5C
 
-                    SEP #$30                  ; Index (8 bit) Accum (8 bit) 
+ADDR_0DC190:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     LDX $5A                   
                     DEX                       
                     TXA                       
                     JSL.L ExecutePtrLong      
 
-PtrsLong0DC19A:     .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $26,$AA,$0D
-                    .db $B4,$AA,$0D
-                    .db $0D,$AB,$0D
-                    .db $3E,$AB,$0D
-                    .db $75,$B0,$0D
-                    .db $D4,$B1,$0D
-                    .db $24,$B2,$0D
-                    .db $36,$B3,$0D
-                    .db $BD,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $2D,$B4,$0D
-                    .db $61,$B4,$0D
-                    .db $9E,$B4,$0D
-                    .db $1F,$B5,$0D
-                    .db $47,$B5,$0D
-                    .db $C8,$B1,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $D8,$C5,$0D
-                    .db $8A,$C5,$0D
-                    .db $EF,$C4,$0D
-                    .db $12,$CF,$0D
-                    .db $33,$CF,$0D
-                    .db $16,$B9,$0D
-                    .db $1E,$B9,$0D
-                    .db $C9,$C4,$0D
-                    .db $78,$C4,$0D
-                    .db $41,$C3,$0D
-                    .db $2E,$C4,$0D
-                    .db $4F,$C4,$0D
+PtrsLong0DC19A:     .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DAA26           
+                    .db :ADDR_0DAA26
+                    .dw ADDR_0DAAB4           
+                    .db :ADDR_0DAAB4
+                    .dw ADDR_0DAB0D           
+                    .db :ADDR_0DAB0D
+                    .dw ADDR_0DAB3E           
+                    .db :ADDR_0DAB3E
+                    .dw ADDR_0DB075           
+                    .db :ADDR_0DB075
+                    .dw ADDR_0DB1D4           
+                    .db :ADDR_0DB1D4
+                    .dw ADDR_0DB224           
+                    .db :ADDR_0DB224
+                    .dw ADDR_0DB336           
+                    .db :ADDR_0DB336
+                    .dw ADDR_0DB3BD           
+                    .db :ADDR_0DB3BD
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB42D           
+                    .db :ADDR_0DB42D
+                    .dw ADDR_0DB461           
+                    .db :ADDR_0DB461
+                    .dw ADDR_0DB49E           
+                    .db :ADDR_0DB49E
+                    .dw ADDR_0DB51F           
+                    .db :ADDR_0DB51F
+                    .dw ADDR_0DB547           
+                    .db :ADDR_0DB547
+                    .dw ADDR_0DB1C8           
+                    .db :ADDR_0DB1C8
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DC5D8           
+                    .db :ADDR_0DC5D8
+                    .dw ADDR_0DC58A           
+                    .db :ADDR_0DC58A
+                    .dw ADDR_0DC4EF           
+                    .db :ADDR_0DC4EF
+                    .dw ADDR_0DCF12           
+                    .db :ADDR_0DCF12
+                    .dw ADDR_0DCF33           
+                    .db :ADDR_0DCF33
+                    .dw ADDR_0DB916           
+                    .db :ADDR_0DB916
+                    .dw ADDR_0DB91E           
+                    .db :ADDR_0DB91E
+                    .dw ADDR_0DC4C9           
+                    .db :ADDR_0DC4C9
+                    .dw ADDR_0DC478           
+                    .db :ADDR_0DC478
+                    .dw ADDR_0DC341           
+                    .db :ADDR_0DC341
+                    .dw ADDR_0DC42E           
+                    .db :ADDR_0DC42E
+                    .dw ADDR_0DC44F           
+                    .db :ADDR_0DC44F
 
 DATA_0DC257:        .db $07,$08
 
-                    LDY $57                   
+ADDR_0DC259:        LDY $57                   
                     LDA $59                   
                     SEC                       
                     SBC.B #$4B                
                     TAX                       
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DC257,X       
                     STA [$6B],Y               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DC26B:        .db $73,$74,$75,$73,$74,$74,$7B,$79
                     .db $7A,$79,$7A,$7B,$79,$7A,$7B,$73
@@ -4428,11 +4867,11 @@ DATA_0DC26B:        .db $73,$74,$75,$73,$74,$74,$7B,$79
                     .db $83,$84,$84,$85,$7E,$25,$79,$7A
                     .db $7B,$83,$84,$84,$85,$80
 
-                    LDY $57                   
+ADDR_0DC2E9:        LDY $57                   
                     LDX.B #$00                
 ADDR_0DC2ED:        LDA.B #$08                
                     STA $00                   
-ADDR_0DC2F1:        JSR.W ADDR_0DAA0D         
+ADDR_0DC2F1:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DC26B,X       
                     CMP.B #$25                
                     BEQ ADDR_0DC2FE           
@@ -4441,25 +4880,24 @@ ADDR_0DC2FE:        JSR.W ADDR_0DA95D
                     INX                       
                     DEC $00                   
                     BNE ADDR_0DC2F1           
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DC26B,X       
                     STA [$6B],Y               
                     INX                       
                     JSR.W ADDR_0DA97D         
                     CPX.B #$7E                
                     BNE ADDR_0DC2ED           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DC318:        .db $98,$99,$9A,$9B,$9C,$9C
 
-                    LDY $57                   
+ADDR_0DC31E:        LDY $57                   
                     LDX.B #$00                
                     LDA.B #$01                
                     STA $00                   
 ADDR_0DC326:        LDA $00                   
                     STA $01                   
-ADDR_0DC32A:        JSR.W ADDR_0DAA0D         
+ADDR_0DC32A:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DC318,X       
                     JSR.W ADDR_0DA95B         
                     INX                       
@@ -4468,21 +4906,23 @@ ADDR_0DC32A:        JSR.W ADDR_0DAA0D
                     JSR.W ADDR_0DA97D         
                     CPX.B #$06                
                     BNE ADDR_0DC326           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDA $59                   
+ADDR_0DC341:        LDA $59                   
                     AND.B #$02                
                     LSR                       
                     JSL.L ExecutePtrLong      
 
-PtrsLong0DC34A:     .db $58,$C3,$0D
-                    .db $D8,$C3,$0D
+PtrsLong0DC34A:     .dw ADDR_0DC358           
+                    .db :ADDR_0DC358
+                    .dw ADDR_0DC3D8           
+                    .db :ADDR_0DC3D8
 
 DATA_0DC350:        .db $CE,$D1,$CF,$D0
 
 DATA_0DC354:        .db $F3,$F6,$F4,$F5
 
-                    LDY $57                   
+ADDR_0DC358:        LDY $57                   
                     LDA.B #$00                
                     STA $02                   
                     LDA $59                   
@@ -4498,16 +4938,17 @@ DATA_0DC354:        .db $F3,$F6,$F4,$F5
                     INC $00                   
 ADDR_0DC370:        LDA $02                   
                     STA $03                   
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DC350,X       
                     JSR.W ADDR_0DA95B         
 ADDR_0DC37E:        DEC $03                   
                     BMI ADDR_0DC39B           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DC354,X       
                     JSR.W ADDR_0DA95B         
                     JMP.W ADDR_0DC397         
-ADDR_0DC38F:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DC38F:        JSR.W StzTo6ePointer      
                     LDA.B #$3F                
                     JSR.W ADDR_0DA95B         
 ADDR_0DC397:        DEC $03                   
@@ -4517,7 +4958,8 @@ ADDR_0DC39B:        JSR.W ADDR_0DA6BA
                     DEC $00                   
                     BEQ ADDR_0DC3CD           
                     BPL ADDR_0DC3A9           
-                    JMP.W ADDR_0DC3D7         
+                    JMP.W Return0DC3D7        
+
 ADDR_0DC3A9:        LDA $57                   
                     CLC                       
                     ADC.B #$0F                
@@ -4537,13 +4979,15 @@ ADDR_0DC3B4:        TYA
 ADDR_0DC3C5:        JSR.W ADDR_0DA9D6         
 ADDR_0DC3C8:        STY $57                   
                     JMP.W ADDR_0DC370         
+
 ADDR_0DC3CD:        LDA $02                   
                     STA $03                   
                     JSR.W ADDR_0DA97D         
                     JMP.W ADDR_0DC37E         
-ADDR_0DC3D7:        RTS                       ; Return 
 
-                    LDY $57                   
+Return0DC3D7:       RTS                       ; Return
+
+ADDR_0DC3D8:        LDY $57                   
                     LDA.B #$00                
                     STA $02                   
                     LDA $59                   
@@ -4558,19 +5002,20 @@ ADDR_0DC3D7:        RTS                       ; Return
                     STA $00                   
                     INC $00                   
                     JMP.W ADDR_0DC40D         
-ADDR_0DC3F3:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DC3F3:        JSR.W StzTo6ePointer      
                     LDA.B #$3F                
                     JSR.W ADDR_0DA95B         
                     DEC $03                   
 ADDR_0DC3FD:        LDA $03                   
                     CMP.B #$01                
                     BNE ADDR_0DC3F3           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DC354,X       
                     JSR.W ADDR_0DA95B         
 ADDR_0DC40D:        LDA $00                   
-                    BEQ ADDR_0DC42B           
-                    JSR.W ADDR_0DAA08         
+                    BEQ Return0DC42B          
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DC350,X       
                     JSR.W ADDR_0DA95B         
                     JSR.W ADDR_0DA6BA         
@@ -4580,12 +5025,11 @@ ADDR_0DC40D:        LDA $00
                     STA $03                   
                     DEC $00                   
                     BPL ADDR_0DC3FD           
-ADDR_0DC42B:        RTS                       ; Return 
-
+Return0DC42B:       RTS                       ; Return
 
 DATA_0DC42C:        .db $5A,$59
 
-                    LDY $57                   
+ADDR_0DC42E:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -4595,17 +5039,16 @@ DATA_0DC42C:        .db $5A,$59
                     LSR                       
                     LSR                       
                     TAX                       
-ADDR_0DC43D:        JSR.W ADDR_0DAA08         
+ADDR_0DC43D:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DC42C,X       
                     JSR.W ADDR_0DA95B         
                     DEC $00                   
                     BPL ADDR_0DC43D           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DC44C:        .db $5B,$5C,$53
 
-                    LDY $57                   
+ADDR_0DC44F:        LDY $57                   
                     LDA $59                   
                     LSR                       
                     LSR                       
@@ -4615,14 +5058,13 @@ DATA_0DC44C:        .db $5B,$5C,$53
                     LDA $59                   
                     AND.B #$0F                
                     TAX                       
-ADDR_0DC45E:        JSR.W ADDR_0DAA08         
+ADDR_0DC45E:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DC44C,X       
                     STA [$6B],Y               
                     JSR.W ADDR_0DA97D         
                     DEC $00                   
                     BPL ADDR_0DC45E           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DC46F:        .db $5D,$60,$63
 
@@ -4630,7 +5072,7 @@ DATA_0DC472:        .db $5E,$61,$64
 
 DATA_0DC475:        .db $5F,$62,$65
 
-                    LDY $57                   
+ADDR_0DC478:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -4644,48 +5086,50 @@ DATA_0DC475:        .db $5F,$62,$65
                     LDX.B #$00                
 ADDR_0DC48D:        LDA $00                   
                     STA $02                   
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DC46F,X       
                     JSR.W ADDR_0DA95B         
                     JMP.W ADDR_0DC4A8         
-ADDR_0DC49E:        JSR.W ADDR_0DAA08         
+
+ADDR_0DC49E:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DC472,X       
                     JSR.W ADDR_0DA95B         
 ADDR_0DC4A8:        DEC $02                   
                     BNE ADDR_0DC49E           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DC475,X       
                     STA [$6B],Y               
                     JSR.W ADDR_0DA6BA         
                     JSR.W ADDR_0DA97D         
                     LDX.B #$01                
                     DEC $01                   
-                    BMI ADDR_0DC4C8           
+                    BMI Return0DC4C8          
                     BNE ADDR_0DC4C5           
                     LDX.B #$02                
 ADDR_0DC4C5:        JMP.W ADDR_0DC48D         
-ADDR_0DC4C8:        RTS                       ; Return 
 
-                    LDY $57                   
+Return0DC4C8:       RTS                       ; Return
+
+ADDR_0DC4C9:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
                     LDX $00                   
-ADDR_0DC4D3:        JSR.W ADDR_0DAA08         
+ADDR_0DC4D3:        JSR.W Sta1To6ePointer     
                     LDA.B #$09                
                     JSR.W ADDR_0DA95B         
                     DEX                       
                     BPL ADDR_0DC4D3           
                     JSR.W ADDR_0DA97D         
                     LDX $00                   
-ADDR_0DC4E3:        JSR.W ADDR_0DAA0D         
+ADDR_0DC4E3:        JSR.W StzTo6ePointer      
                     LDA.B #$86                
                     JSR.W ADDR_0DA95B         
                     DEX                       
                     BPL ADDR_0DC4E3           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DC4EF:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     TAX                       
@@ -4699,40 +5143,40 @@ ADDR_0DC4E3:        JSR.W ADDR_0DAA0D
                     CPX.B #$00                
                     BEQ ADDR_0DC51E           
                     JSR.W ADDR_0DA95D         
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$87                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$88                
                     JSR.W ADDR_0DA95B         
                     JSR.W ADDR_0DA6BA         
                     JSR.W ADDR_0DA97D         
-ADDR_0DC51E:        JSR.W ADDR_0DAA0D         
+ADDR_0DC51E:        JSR.W StzTo6ePointer      
                     LDA.B #$89                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$66                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$67                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$8A                
                     JSR.W ADDR_0DA95B         
                     JSR.W ADDR_0DA6BA         
                     JSR.W ADDR_0DA97D         
                     DEC $00                   
                     BMI ADDR_0DC572           
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$8B                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$68                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$69                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$8C                
                     JSR.W ADDR_0DA95B         
                     JSR.W ADDR_0DA6BA         
@@ -4740,17 +5184,17 @@ ADDR_0DC51E:        JSR.W ADDR_0DAA0D
                     DEC $00                   
                     BPL ADDR_0DC51E           
 ADDR_0DC572:        CPX.B #$00                
-                    BNE ADDR_0DC589           
+                    BNE Return0DC589          
                     JSR.W ADDR_0DA95D         
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$8D                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$8E                
                     JSR.W ADDR_0DA95B         
-ADDR_0DC589:        RTS                       ; Return 
+Return0DC589:       RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DC58A:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -4762,10 +5206,10 @@ ADDR_0DC589:        RTS                       ; Return
                     STA $01                   
                     JSR.W ADDR_0DA6B1         
 ADDR_0DC59D:        LDX $00                   
-ADDR_0DC59F:        JSR.W ADDR_0DAA0D         
+ADDR_0DC59F:        JSR.W StzTo6ePointer      
                     LDA.B #$94                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$95                
                     JSR.W ADDR_0DA95B         
                     DEX                       
@@ -4773,10 +5217,10 @@ ADDR_0DC59F:        JSR.W ADDR_0DAA0D
                     JSR.W ADDR_0DA6BA         
                     JSR.W ADDR_0DA97D         
                     LDX $00                   
-ADDR_0DC5BA:        JSR.W ADDR_0DAA0D         
+ADDR_0DC5BA:        JSR.W StzTo6ePointer      
                     LDA.B #$96                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$97                
                     JSR.W ADDR_0DA95B         
                     DEX                       
@@ -4785,9 +5229,9 @@ ADDR_0DC5BA:        JSR.W ADDR_0DAA0D
                     JSR.W ADDR_0DA97D         
                     DEC $01                   
                     BPL ADDR_0DC59D           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DC5D8:        LDY $57                   
                     LDA $59                   
                     LSR                       
                     LSR                       
@@ -4795,31 +5239,31 @@ ADDR_0DC5BA:        JSR.W ADDR_0DAA0D
                     LSR                       
                     STA $00                   
                     JSR.W ADDR_0DA6B1         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$33                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$34                
                     STA [$6B],Y               
                     JMP.W ADDR_0DC606         
-ADDR_0DC5F7:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DC5F7:        JSR.W StzTo6ePointer      
                     LDA.B #$9D                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$9E                
                     STA [$6B],Y               
 ADDR_0DC606:        JSR.W ADDR_0DA6BA         
                     JSR.W ADDR_0DA97D         
                     DEC $00                   
                     BNE ADDR_0DC5F7           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$33                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$34                
                     STA [$6B],Y               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DC620:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
@@ -5060,80 +5504,143 @@ DATA_0DC620:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $26,$1C,$36,$1C,$26,$5C,$36,$5C
                     .db $27,$1C,$37,$1C,$27,$5C,$37,$5C
 
-                    SEP #$30                  ; Index (8 bit) Accum (8 bit) 
+ADDR_0DCD90:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     LDX $5A                   
                     DEX                       
                     TXA                       
                     JSL.L ExecutePtrLong      
 
-PtrsLong0DCD9A:     .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $26,$AA,$0D
-                    .db $B4,$AA,$0D
-                    .db $0D,$AB,$0D
-                    .db $3E,$AB,$0D
-                    .db $75,$B0,$0D
-                    .db $D4,$B1,$0D
-                    .db $24,$B2,$0D
-                    .db $36,$B3,$0D
-                    .db $BD,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $2D,$B4,$0D
-                    .db $61,$B4,$0D
-                    .db $9E,$B4,$0D
-                    .db $1F,$B5,$0D
-                    .db $47,$B5,$0D
-                    .db $C8,$B1,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $4E,$D2,$0D
-                    .db $16,$B9,$0D
-                    .db $1E,$B9,$0D
-                    .db $D9,$D1,$0D
-                    .db $F2,$CE,$0D
-                    .db $41,$C3,$0D
-                    .db $12,$CF,$0D
-                    .db $33,$CF,$0D
-                    .db $53,$CF,$0D
-                    .db $70,$D0,$0D
-                    .db $03,$D1,$0D
-                    .db $45,$D1,$0D
-                    .db $82,$D1,$0D
-                    .db $A5,$D1,$0D
+PtrsLong0DCD9A:     .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DAA26           
+                    .db :ADDR_0DAA26
+                    .dw ADDR_0DAAB4           
+                    .db :ADDR_0DAAB4
+                    .dw ADDR_0DAB0D           
+                    .db :ADDR_0DAB0D
+                    .dw ADDR_0DAB3E           
+                    .db :ADDR_0DAB3E
+                    .dw ADDR_0DB075           
+                    .db :ADDR_0DB075
+                    .dw ADDR_0DB1D4           
+                    .db :ADDR_0DB1D4
+                    .dw ADDR_0DB224           
+                    .db :ADDR_0DB224
+                    .dw ADDR_0DB336           
+                    .db :ADDR_0DB336
+                    .dw ADDR_0DB3BD           
+                    .db :ADDR_0DB3BD
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB42D           
+                    .db :ADDR_0DB42D
+                    .dw ADDR_0DB461           
+                    .db :ADDR_0DB461
+                    .dw ADDR_0DB49E           
+                    .db :ADDR_0DB49E
+                    .dw ADDR_0DB51F           
+                    .db :ADDR_0DB51F
+                    .dw ADDR_0DB547           
+                    .db :ADDR_0DB547
+                    .dw ADDR_0DB1C8           
+                    .db :ADDR_0DB1C8
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DD24E           
+                    .db :ADDR_0DD24E
+                    .dw ADDR_0DB916           
+                    .db :ADDR_0DB916
+                    .dw ADDR_0DB91E           
+                    .db :ADDR_0DB91E
+                    .dw ADDR_0DD1D9           
+                    .db :ADDR_0DD1D9
+                    .dw ADDR_0DCEF2           
+                    .db :ADDR_0DCEF2
+                    .dw ADDR_0DC341           
+                    .db :ADDR_0DC341
+                    .dw ADDR_0DCF12           
+                    .db :ADDR_0DCF12
+                    .dw ADDR_0DCF33           
+                    .db :ADDR_0DCF33
+                    .dw ADDR_0DCF53           
+                    .db :ADDR_0DCF53
+                    .dw ADDR_0DD070           
+                    .db :ADDR_0DD070
+                    .dw ADDR_0DD103           
+                    .db :ADDR_0DD103
+                    .dw ADDR_0DD145           
+                    .db :ADDR_0DD145
+                    .dw ADDR_0DD182           
+                    .db :ADDR_0DD182
+                    .dw ADDR_0DD1A5           
+                    .db :ADDR_0DD1A5
 
 DATA_0DCE57:        .db $7A,$7B,$7C,$25,$7E,$7F,$25,$7D
                     .db $82,$25,$80,$81,$25,$83,$84,$85
 
-                    LDY $57                   
+ADDR_0DCE67:        LDY $57                   
                     LDA $59                   
                     SEC                       
                     SBC.B #$4D                
@@ -5141,7 +5648,7 @@ DATA_0DCE57:        .db $7A,$7B,$7C,$25,$7E,$7F,$25,$7D
                     ASL                       
                     TAX                       
                     JSR.W ADDR_0DA6B1         
-ADDR_0DCE74:        JSR.W ADDR_0DAA0D         
+ADDR_0DCE74:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DCE57,X       
                     JSR.W ADDR_0DA95B         
                     INX                       
@@ -5153,67 +5660,63 @@ ADDR_0DCE74:        JSR.W ADDR_0DAA0D
                     TXA                       
                     AND.B #$03                
                     BNE ADDR_0DCE74           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DCE90:        .db $76,$77,$78,$79
 
-                    LDY $57                   
+ADDR_0DCE94:        LDY $57                   
                     LDA $59                   
                     SEC                       
                     SBC.B #$51                
                     TAX                       
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DCE90,X       
                     STA [$6B],Y               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DCEA6:        LDY $57                   
                     LDA $59                   
                     SEC                       
                     SBC.B #$51                
                     TAX                       
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$84                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$85                
                     STA [$6B],Y               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DCEBE:        .db $96,$97
 
-                    LDY $57                   
+ADDR_0DCEC0:        LDY $57                   
                     LDA $59                   
                     LDX.B #$00                
-ADDR_0DCEC6:        JSR.W ADDR_0DAA0D         
+ADDR_0DCEC6:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DCEBE,X       
                     STA [$6B],Y               
                     JSR.W ADDR_0DA97D         
                     INX                       
                     CPX.B #$02                
                     BNE ADDR_0DCEC6           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DCED8:        .db $98,$99
 
-                    LDY $57                   
+ADDR_0DCEDA:        LDY $57                   
                     LDA $59                   
                     LDX.B #$00                
-ADDR_0DCEE0:        JSR.W ADDR_0DAA0D         
+ADDR_0DCEE0:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DCED8,X       
                     JSR.W ADDR_0DA95B         
                     INX                       
                     CPX.B #$02                
                     BNE ADDR_0DCEE0           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DCEF0:        .db $0C,$0D
 
-                    LDY $57                   
+ADDR_0DCEF2:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -5223,17 +5726,16 @@ DATA_0DCEF0:        .db $0C,$0D
                     LSR                       
                     LSR                       
                     TAX                       
-ADDR_0DCF01:        JSR.W ADDR_0DAA08         
+ADDR_0DCF01:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DCEF0,X       
                     JSR.W ADDR_0DA95B         
                     DEC $00                   
                     BPL ADDR_0DCF01           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DCF10:        .db $92,$93
 
-                    LDY $57                   
+ADDR_0DCF12:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -5243,17 +5745,16 @@ DATA_0DCF10:        .db $92,$93
                     LSR                       
                     LSR                       
                     TAX                       
-ADDR_0DCF21:        JSR.W ADDR_0DAA0D         
+ADDR_0DCF21:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DCF10,X       
                     JSR.W ADDR_0DA95B         
                     DEC $00                   
                     BPL ADDR_0DCF21           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DCF30:        .db $90,$91,$A2
 
-                    LDY $57                   
+ADDR_0DCF33:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     TAX                       
@@ -5263,27 +5764,33 @@ DATA_0DCF30:        .db $90,$91,$A2
                     LSR                       
                     LSR                       
                     STA $00                   
-ADDR_0DCF42:        JSR.W ADDR_0DAA0D         
+ADDR_0DCF42:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DCF30,X       
                     STA [$6B],Y               
                     JSR.W ADDR_0DA97D         
                     DEC $00                   
                     BPL ADDR_0DCF42           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDA $59                   
+ADDR_0DCF53:        LDA $59                   
                     AND.B #$0F                
                     TAX                       
                     JSL.L ExecutePtrLong      
 
-PtrsLong0DCF5C:     .db $6E,$CF,$0D
-                    .db $B1,$CF,$0D
-                    .db $F0,$CF,$0D
-                    .db $34,$D0,$0D
-                    .db $B1,$CF,$0D
-                    .db $34,$D0,$0D
+PtrsLong0DCF5C:     .dw ADDR_0DCF6E           
+                    .db :ADDR_0DCF6E
+                    .dw ADDR_0DCFB1           
+                    .db :ADDR_0DCFB1
+                    .dw ADDR_0DCFF0           
+                    .db :ADDR_0DCFF0
+                    .dw ADDR_0DD034           
+                    .db :ADDR_0DD034
+                    .dw ADDR_0DCFB1           
+                    .db :ADDR_0DCFB1
+                    .dw ADDR_0DD034           
+                    .db :ADDR_0DD034
 
-                    LDY $57                   
+ADDR_0DCF6E:        LDY $57                   
                     LDA $59                   
                     LSR                       
                     LSR                       
@@ -5291,10 +5798,10 @@ PtrsLong0DCF5C:     .db $6E,$CF,$0D
                     LSR                       
                     TAX                       
                     JSR.W ADDR_0DA6B1         
-ADDR_0DCF7A:        JSR.W ADDR_0DAA0D         
+ADDR_0DCF7A:        JSR.W StzTo6ePointer      
                     LDA.B #$8C                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$8D                
                     STA [$6B],Y               
                     JSR.W ADDR_0DA6BA         
@@ -5318,9 +5825,9 @@ ADDR_0DCFA8:        JSR.W ADDR_0DA9D6
 ADDR_0DCFAB:        STY $57                   
                     DEX                       
                     BPL ADDR_0DCF7A           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDA.B #$86                
+ADDR_0DCFB1:        LDA.B #$86                
                     CPX.B #$04                
                     BNE ADDR_0DCFB9           
                     LDA.B #$94                
@@ -5332,7 +5839,7 @@ ADDR_0DCFB9:        STA $00
                     LSR                       
                     LSR                       
                     TAX                       
-ADDR_0DCFC4:        JSR.W ADDR_0DAA0D         
+ADDR_0DCFC4:        JSR.W StzTo6ePointer      
                     LDA $00                   
                     STA [$6B],Y               
                     LDA $57                   
@@ -5355,9 +5862,9 @@ ADDR_0DCFE7:        JSR.W ADDR_0DA9D6
 ADDR_0DCFEA:        STY $57                   
                     DEX                       
                     BPL ADDR_0DCFC4           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DCFF0:        LDY $57                   
                     LDA $59                   
                     LSR                       
                     LSR                       
@@ -5365,10 +5872,10 @@ ADDR_0DCFEA:        STY $57
                     LSR                       
                     TAX                       
                     JSR.W ADDR_0DA6B1         
-ADDR_0DCFFC:        JSR.W ADDR_0DAA0D         
+ADDR_0DCFFC:        JSR.W StzTo6ePointer      
                     LDA.B #$8E                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$8F                
                     STA [$6B],Y               
                     JSR.W ADDR_0DA6BA         
@@ -5394,9 +5901,9 @@ ADDR_0DD019:        TYA
 ADDR_0DD02E:        STY $57                   
                     DEX                       
                     BPL ADDR_0DCFFC           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDA.B #$87                
+ADDR_0DD034:        LDA.B #$87                
                     CPX.B #$05                
                     BNE ADDR_0DD03C           
                     LDA.B #$95                
@@ -5408,7 +5915,7 @@ ADDR_0DD03C:        STA $00
                     LSR                       
                     LSR                       
                     TAX                       
-ADDR_0DD047:        JSR.W ADDR_0DAA0D         
+ADDR_0DD047:        JSR.W StzTo6ePointer      
                     LDA $00                   
                     STA [$6B],Y               
                     LDA $57                   
@@ -5431,23 +5938,25 @@ ADDR_0DD059:        TYA
 ADDR_0DD06A:        STY $57                   
                     DEX                       
                     BPL ADDR_0DD047           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDA $59                   
+ADDR_0DD070:        LDA $59                   
                     LSR                       
                     LSR                       
                     LSR                       
                     LSR                       
                     JSL.L ExecutePtrLong      
 
-PtrsLong0DD07A:     .db $80,$D0,$0D
-                    .db $C3,$D0,$0D
+PtrsLong0DD07A:     .dw ADDR_0DD080           
+                    .db :ADDR_0DD080
+                    .dw ADDR_0DD0C3           
+                    .db :ADDR_0DD0C3
 
-                    LDY $57                   
+ADDR_0DD080:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     TAX                       
-ADDR_0DD087:        JSR.W ADDR_0DAA0D         
+ADDR_0DD087:        JSR.W StzTo6ePointer      
                     LDA.B #$88                
                     STA [$6B],Y               
                     TYA                       
@@ -5456,7 +5965,7 @@ ADDR_0DD087:        JSR.W ADDR_0DAA0D
                     TAY                       
                     BCC ADDR_0DD098           
                     JSR.W ADDR_0DA987         
-ADDR_0DD098:        JSR.W ADDR_0DAA0D         
+ADDR_0DD098:        JSR.W StzTo6ePointer      
                     LDA.B #$8A                
                     STA [$6B],Y               
                     TYA                       
@@ -5479,13 +5988,13 @@ ADDR_0DD0BA:        JSR.W ADDR_0DA9D6
 ADDR_0DD0BD:        STY $57                   
                     DEX                       
                     BPL ADDR_0DD087           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DD0C3:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     TAX                       
-ADDR_0DD0CA:        JSR.W ADDR_0DAA0D         
+ADDR_0DD0CA:        JSR.W StzTo6ePointer      
                     LDA.B #$89                
                     STA [$6B],Y               
                     TYA                       
@@ -5494,7 +6003,7 @@ ADDR_0DD0CA:        JSR.W ADDR_0DAA0D
                     TAY                       
                     BCC ADDR_0DD0DB           
                     JSR.W ADDR_0DA987         
-ADDR_0DD0DB:        JSR.W ADDR_0DAA0D         
+ADDR_0DD0DB:        JSR.W StzTo6ePointer      
                     LDA.B #$8B                
                     STA [$6B],Y               
                     TYA                       
@@ -5517,13 +6026,13 @@ ADDR_0DD0EC:        TYA
 ADDR_0DD0FD:        STY $57                   
                     DEX                       
                     BPL ADDR_0DD0CA           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DD103:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDX.B #$07                
                     LDA [$6B],Y               
                     CMP.B #$73                
@@ -5534,12 +6043,13 @@ ADDR_0DD0FD:        STY $57
 ADDR_0DD11C:        TXA                       
                     JSR.W ADDR_0DA95B         
                     JMP.W ADDR_0DD12B         
-ADDR_0DD123:        JSR.W ADDR_0DAA08         
+
+ADDR_0DD123:        JSR.W Sta1To6ePointer     
                     LDA.B #$08                
                     JSR.W ADDR_0DA95B         
 ADDR_0DD12B:        DEC $00                   
                     BNE ADDR_0DD123           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDX.B #$09                
                     LDA [$6B],Y               
                     CMP.B #$73                
@@ -5549,9 +6059,9 @@ ADDR_0DD12B:        DEC $00
                     LDX.B #$0B                
 ADDR_0DD140:        TXA                       
                     JSR.W ADDR_0DA95B         
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DD145:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -5563,15 +6073,16 @@ ADDR_0DD140:        TXA
                     STA $01                   
                     JSR.W ADDR_0DA6B1         
 ADDR_0DD158:        LDX $00                   
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$73                
                     JMP.W ADDR_0DD167         
-ADDR_0DD162:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DD162:        JSR.W StzTo6ePointer      
                     LDA.B #$74                
 ADDR_0DD167:        JSR.W ADDR_0DA95B         
                     DEX                       
                     BNE ADDR_0DD162           
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$75                
                     JSR.W ADDR_0DA95B         
                     JSR.W ADDR_0DA6BA         
@@ -5579,46 +6090,47 @@ ADDR_0DD167:        JSR.W ADDR_0DA95B
                     JSR.W ADDR_0DA97D         
                     DEC $01                   
                     BPL ADDR_0DD158           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DD182:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     TAX                       
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$59                
                     JMP.W ADDR_0DD196         
-ADDR_0DD191:        JSR.W ADDR_0DAA08         
+
+ADDR_0DD191:        JSR.W Sta1To6ePointer     
                     LDA.B #$5A                
 ADDR_0DD196:        JSR.W ADDR_0DA95B         
                     DEX                       
                     BNE ADDR_0DD191           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$5B                
                     JSR.W ADDR_0DA95B         
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DD1A5:        LDY $57                   
                     LDA $59                   
                     LSR                       
                     LSR                       
                     LSR                       
                     LSR                       
                     TAX                       
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$5C                
                     JMP.W ADDR_0DD1BB         
-ADDR_0DD1B6:        JSR.W ADDR_0DAA08         
+
+ADDR_0DD1B6:        JSR.W Sta1To6ePointer     
                     LDA.B #$5D                
 ADDR_0DD1BB:        STA [$6B],Y               
                     JSR.W ADDR_0DA97D         
                     DEX                       
                     BNE ADDR_0DD1B6           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$5E                
                     STA [$6B],Y               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DD1CB:        .db $9A,$9C,$9E,$A0
 
@@ -5626,7 +6138,7 @@ DATA_0DD1CF:        .db $9B,$9D,$9F,$A1
 
 DATA_0DD1D3:        .db $61,$62,$63,$64,$65,$66
 
-                    LDY $57                   
+ADDR_0DD1D9:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     TAX                       
@@ -5637,33 +6149,34 @@ DATA_0DD1D3:        .db $61,$62,$63,$64,$65,$66
                     LSR                       
                     STA $00                   
                     JSR.W ADDR_0DA6B1         
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DD1CB,X       
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DD1CF,X       
                     STA [$6B],Y               
                     DEC $00                   
                     BPL ADDR_0DD205           
-                    JMP.W ADDR_0DD24B         
+                    JMP.W Return0DD24B        
+
 ADDR_0DD205:        JSR.W ADDR_0DA6BA         
                     JSR.W ADDR_0DA97D         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$5F                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$60                
                     STA [$6B],Y               
                     DEC $00                   
-                    BMI ADDR_0DD24B           
+                    BMI Return0DD24B          
                     JSR.W ADDR_0DA6BA         
                     JSR.W ADDR_0DA97D         
                     LDX.B #$00                
-ADDR_0DD226:        JSR.W ADDR_0DAA08         
+ADDR_0DD226:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DD1D3,X       
                     JSR.W ADDR_0DA95B         
                     INX                       
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DD1D3,X       
                     STA [$6B],Y               
                     INX                       
@@ -5674,22 +6187,21 @@ ADDR_0DD226:        JSR.W ADDR_0DAA08
                     LDX.B #$00                
 ADDR_0DD247:        DEC $00                   
                     BPL ADDR_0DD226           
-ADDR_0DD24B:        RTS                       ; Return 
-
+Return0DD24B:       RTS                       ; Return
 
 DATA_0DD24C:        .db $A3,$0E
 
-                    LDY $57                   
+ADDR_0DD24E:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
                     STA $01                   
                     JSR.W ADDR_0DA6B1         
                     LDX.B #$00                
-ADDR_0DD25D:        JSR.W ADDR_0DAA0D         
+ADDR_0DD25D:        JSR.W StzTo6ePointer      
                     CPX.B #$00                
                     BEQ ADDR_0DD267           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
 ADDR_0DD267:        LDA.L DATA_0DD24C,X       
                     JSR.W ADDR_0DA95B         
                     DEC $01                   
@@ -5701,8 +6213,7 @@ ADDR_0DD267:        LDA.L DATA_0DD24C,X
                     INX                       
                     CPX.B #$02                
                     BNE ADDR_0DD25D           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DD282:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
@@ -5931,121 +6442,181 @@ DATA_0DD282:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $36,$1C,$26,$5C,$36,$5C,$27,$1C
                     .db $37,$1C,$27,$5C,$37,$5C
 
-                    SEP #$30                  ; Index (8 bit) Accum (8 bit) 
+ADDR_0DD990:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     LDX $5A                   
                     DEX                       
                     TXA                       
                     JSL.L ExecutePtrLong      
 
-PtrsLong0DD99A:     .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $26,$AA,$0D
-                    .db $B4,$AA,$0D
-                    .db $0D,$AB,$0D
-                    .db $3E,$AB,$0D
-                    .db $75,$B0,$0D
-                    .db $D4,$B1,$0D
-                    .db $24,$B2,$0D
-                    .db $36,$B3,$0D
-                    .db $BD,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $2D,$B4,$0D
-                    .db $61,$B4,$0D
-                    .db $9E,$B4,$0D
-                    .db $1F,$B5,$0D
-                    .db $47,$B5,$0D
-                    .db $C8,$B1,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $16,$B9,$0D
-                    .db $1E,$B9,$0D
-                    .db $35,$E1,$0D
-                    .db $3A,$DF,$0D
-                    .db $C8,$DA,$0D
-                    .db $F2,$DA,$0D
-                    .db $A9,$DC,$0D
-                    .db $A9,$DC,$0D
-                    .db $87,$DD,$0D
-                    .db $EA,$DC,$0D
-                    .db $2E,$DD,$0D
-                    .db $5C,$DD,$0D
+PtrsLong0DD99A:     .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DAA26           
+                    .db :ADDR_0DAA26
+                    .dw ADDR_0DAAB4           
+                    .db :ADDR_0DAAB4
+                    .dw ADDR_0DAB0D           
+                    .db :ADDR_0DAB0D
+                    .dw ADDR_0DAB3E           
+                    .db :ADDR_0DAB3E
+                    .dw ADDR_0DB075           
+                    .db :ADDR_0DB075
+                    .dw ADDR_0DB1D4           
+                    .db :ADDR_0DB1D4
+                    .dw ADDR_0DB224           
+                    .db :ADDR_0DB224
+                    .dw ADDR_0DB336           
+                    .db :ADDR_0DB336
+                    .dw ADDR_0DB3BD           
+                    .db :ADDR_0DB3BD
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB42D           
+                    .db :ADDR_0DB42D
+                    .dw ADDR_0DB461           
+                    .db :ADDR_0DB461
+                    .dw ADDR_0DB49E           
+                    .db :ADDR_0DB49E
+                    .dw ADDR_0DB51F           
+                    .db :ADDR_0DB51F
+                    .dw ADDR_0DB547           
+                    .db :ADDR_0DB547
+                    .dw ADDR_0DB1C8           
+                    .db :ADDR_0DB1C8
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB916           
+                    .db :ADDR_0DB916
+                    .dw ADDR_0DB91E           
+                    .db :ADDR_0DB91E
+                    .dw ADDR_0DE135           
+                    .db :ADDR_0DE135
+                    .dw ADDR_0DDF3A           
+                    .db :ADDR_0DDF3A
+                    .dw ADDR_0DDAC8           
+                    .db :ADDR_0DDAC8
+                    .dw ADDR_0DDAF2           
+                    .db :ADDR_0DDAF2
+                    .dw ADDR_0DDCA9           
+                    .db :ADDR_0DDCA9
+                    .dw ADDR_0DDCA9           
+                    .db :ADDR_0DDCA9
+                    .dw ADDR_0DDD87           
+                    .db :ADDR_0DDD87
+                    .dw ADDR_0DDCEA           
+                    .db :ADDR_0DDCEA
+                    .dw ADDR_0DDD2E           
+                    .db :ADDR_0DDD2E
+                    .dw ADDR_0DDD5C           
+                    .db :ADDR_0DDD5C
 
-                    LDY $57                   
-                    JSR.W ADDR_0DAA08         
+ADDR_0DDA57:        LDY $57                   
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$FE                
                     STA [$6B],Y               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DDA61:        .db $7D,$7E,$7F,$80,$81,$82,$83
 
-                    LDY $57                   
+ADDR_0DDA68:        LDY $57                   
                     LDA $59                   
                     SEC                       
                     SBC.B #$75                
                     TAX                       
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DDA61,X       
                     STA [$6B],Y               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DDA7A:        .db $81,$82,$83
 
 DATA_0DDA7D:        .db $84,$85,$86
 
-                    LDY $57                   
+ADDR_0DDA80:        LDY $57                   
                     LDA $59                   
                     SEC                       
                     SBC.B #$7C                
                     TAX                       
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DDA7A,X       
                     STA [$6B],Y               
                     JSR.W ADDR_0DA97D         
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DDA7D,X       
                     STA [$6B],Y               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DDA9E:        .db $66,$67,$68,$69
 
-                    LDY $57                   
+ADDR_0DDAA2:        LDY $57                   
                     LDX.B #$00                
                     JSR.W ADDR_0DA6B1         
-ADDR_0DDAA9:        JSR.W ADDR_0DAA08         
+ADDR_0DDAA9:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DDA9E,X       
                     JSR.W ADDR_0DA95B         
                     INX                       
@@ -6056,14 +6627,13 @@ ADDR_0DDAA9:        JSR.W ADDR_0DAA08
                     JSR.W ADDR_0DA97D         
                     CPX.B #$04                
                     BNE ADDR_0DDAA9           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DDAC4:        .db $5A,$5B
 
 DATA_0DDAC6:        .db $5B,$5B
 
-                    LDY $57                   
+ADDR_0DDAC8:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     TAX                       
@@ -6073,27 +6643,32 @@ DATA_0DDAC6:        .db $5B,$5B
                     LSR                       
                     LSR                       
                     STA $00                   
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DDAC4,X       
                     JMP.W ADDR_0DDAE8         
-ADDR_0DDAE1:        JSR.W ADDR_0DAA08         
+
+ADDR_0DDAE1:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DDAC6,X       
 ADDR_0DDAE8:        STA [$6B],Y               
                     JSR.W ADDR_0DA97D         
                     DEC $00                   
                     BPL ADDR_0DDAE1           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDA $59                   
+ADDR_0DDAF2:        LDA $59                   
                     AND.B #$03                
                     JSL.L ExecutePtrLong      
 
-PtrsLong0DDAFA:     .db $06,$DB,$0D
-                    .db $8F,$DB,$0D
-                    .db $02,$DC,$0D
-                    .db $61,$DC,$0D
+PtrsLong0DDAFA:     .dw ADDR_0DDB06           
+                    .db :ADDR_0DDB06
+                    .dw ADDR_0DDB8F           
+                    .db :ADDR_0DDB8F
+                    .dw ADDR_0DDC02           
+                    .db :ADDR_0DDC02
+                    .dw ADDR_0DDC61           
+                    .db :ADDR_0DDC61
 
-                    LDY $57                   
+ADDR_0DDB06:        LDY $57                   
                     LDA.B #$01                
                     STA $02                   
                     STA $00                   
@@ -6106,24 +6681,25 @@ PtrsLong0DDAFA:     .db $06,$DB,$0D
                     STA $00                   
                     INC $00                   
 ADDR_0DDB1B:        LDX $02                   
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$D2                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$D3                
                     JSR.W ADDR_0DA95B         
                     DEX                       
                     DEX                       
                     BMI ADDR_0DDB50           
-ADDR_0DDB31:        JSR.W ADDR_0DAA08         
+ADDR_0DDB31:        JSR.W Sta1To6ePointer     
                     LDA.B #$FB                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$FF                
                     JSR.W ADDR_0DA95B         
                     DEX                       
                     JMP.W ADDR_0DDB4D         
-ADDR_0DDB45:        JSR.W ADDR_0DAA08         
+
+ADDR_0DDB45:        JSR.W Sta1To6ePointer     
                     LDA.B #$FF                
                     JSR.W ADDR_0DA95B         
 ADDR_0DDB4D:        DEX                       
@@ -6134,7 +6710,8 @@ ADDR_0DDB50:        JSR.W ADDR_0DA6BA
                     DEC $00                   
                     BEQ ADDR_0DDB84           
                     BPL ADDR_0DDB60           
-                    JMP.W ADDR_0DDB8E         
+                    JMP.W Return0DDB8E        
+
 ADDR_0DDB60:        LDA $57                   
                     CLC                       
                     ADC.B #$0E                
@@ -6154,14 +6731,16 @@ ADDR_0DDB6B:        TYA
 ADDR_0DDB7C:        JSR.W ADDR_0DA9D6         
 ADDR_0DDB7F:        STY $57                   
                     JMP.W ADDR_0DDB1B         
+
 ADDR_0DDB84:        LDX $02                   
                     DEX                       
                     DEX                       
                     JSR.W ADDR_0DA97D         
                     JMP.W ADDR_0DDB31         
-ADDR_0DDB8E:        RTS                       ; Return 
 
-                    LDY $57                   
+Return0DDB8E:       RTS                       ; Return
+
+ADDR_0DDB8F:        LDY $57                   
                     LDA.B #$00                
                     STA $02                   
                     STA $00                   
@@ -6174,16 +6753,17 @@ ADDR_0DDB8E:        RTS                       ; Return
                     STA $00                   
                     INC $00                   
 ADDR_0DDBA4:        LDX $02                   
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$D6                
                     JSR.W ADDR_0DA95B         
 ADDR_0DDBAE:        DEX                       
                     BMI ADDR_0DDBC7           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$FD                
                     JSR.W ADDR_0DA95B         
                     JMP.W ADDR_0DDBC4         
-ADDR_0DDBBC:        JSR.W ADDR_0DAA08         
+
+ADDR_0DDBBC:        JSR.W Sta1To6ePointer     
                     LDA.B #$FF                
                     JSR.W ADDR_0DA95B         
 ADDR_0DDBC4:        DEX                       
@@ -6193,7 +6773,8 @@ ADDR_0DDBC7:        JSR.W ADDR_0DA6BA
                     DEC $00                   
                     BEQ ADDR_0DDBF9           
                     BPL ADDR_0DDBD5           
-                    JMP.W ADDR_0DDC01         
+                    JMP.W Return0DDC01        
+
 ADDR_0DDBD5:        LDA $57                   
                     CLC                       
                     ADC.B #$0F                
@@ -6213,12 +6794,14 @@ ADDR_0DDBE0:        TYA
 ADDR_0DDBF1:        JSR.W ADDR_0DA9D6         
 ADDR_0DDBF4:        STY $57                   
                     JMP.W ADDR_0DDBA4         
+
 ADDR_0DDBF9:        LDX $02                   
                     JSR.W ADDR_0DA97D         
                     JMP.W ADDR_0DDBAE         
-ADDR_0DDC01:        RTS                       ; Return 
 
-                    LDY $57                   
+Return0DDC01:       RTS                       ; Return
+
+ADDR_0DDC02:        LDY $57                   
                     LDX.B #$01                
                     STX $02                   
                     STX $00                   
@@ -6231,26 +6814,27 @@ ADDR_0DDC01:        RTS                       ; Return
                     STA $00                   
                     INC $00                   
                     JMP.W ADDR_0DDC3D         
-ADDR_0DDC1A:        JSR.W ADDR_0DAA08         
+
+ADDR_0DDC1A:        JSR.W Sta1To6ePointer     
                     LDA.B #$FF                
                     JSR.W ADDR_0DA95B         
                     DEX                       
 ADDR_0DDC23:        CPX.B #$03                
                     BNE ADDR_0DDC1A           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$FF                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$FC                
                     JSR.W ADDR_0DA95B         
                     DEX                       
                     DEX                       
                     LDA $00                   
-                    BEQ ADDR_0DDC5D           
-ADDR_0DDC3D:        JSR.W ADDR_0DAA08         
+                    BEQ Return0DDC5D          
+ADDR_0DDC3D:        JSR.W Sta1To6ePointer     
                     LDA.B #$D4                
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$D5                
                     JSR.W ADDR_0DA95B         
                     JSR.W ADDR_0DA6BA         
@@ -6260,10 +6844,11 @@ ADDR_0DDC3D:        JSR.W ADDR_0DAA08
                     LDX $02                   
                     DEC $00                   
                     BPL ADDR_0DDC5E           
-ADDR_0DDC5D:        RTS                       ; Return 
+Return0DDC5D:       RTS                       ; Return
 
 ADDR_0DDC5E:        JMP.W ADDR_0DDC23         
-                    LDY $57                   
+
+ADDR_0DDC61:        LDY $57                   
                     LDX.B #$00                
                     STX $02                   
                     STX $00                   
@@ -6276,18 +6861,19 @@ ADDR_0DDC5E:        JMP.W ADDR_0DDC23
                     STA $00                   
                     INC $00                   
                     JMP.W ADDR_0DDC8E         
-ADDR_0DDC79:        JSR.W ADDR_0DAA08         
+
+ADDR_0DDC79:        JSR.W Sta1To6ePointer     
                     LDA.B #$FF                
                     JSR.W ADDR_0DA95B         
                     DEX                       
 ADDR_0DDC82:        CPX.B #$01                
                     BNE ADDR_0DDC79           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$FE                
                     JSR.W ADDR_0DA95B         
 ADDR_0DDC8E:        LDA $00                   
-                    BEQ ADDR_0DDCA8           
-                    JSR.W ADDR_0DAA08         
+                    BEQ Return0DDCA8          
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$D7                
                     JSR.W ADDR_0DA95B         
                     JSR.W ADDR_0DA6BA         
@@ -6296,9 +6882,9 @@ ADDR_0DDC8E:        LDA $00
                     LDX $02                   
                     DEC $00                   
                     BPL ADDR_0DDC82           
-ADDR_0DDCA8:        RTS                       ; Return 
+Return0DDCA8:       RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DDCA9:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -6314,13 +6900,14 @@ ADDR_0DDCA8:        RTS                       ; Return
                     SEC                       
                     SBC.B #$39                
                     BNE ADDR_0DDCD2           
-ADDR_0DDCC4:        JSR.W ADDR_0DAA08         
+ADDR_0DDCC4:        JSR.W Sta1To6ePointer     
                     LDA.B #$59                
                     JSR.W ADDR_0DA95B         
                     DEX                       
                     BPL ADDR_0DDCC4           
                     JMP.W ADDR_0DDCDD         
-ADDR_0DDCD2:        JSR.W ADDR_0DAA08         
+
+ADDR_0DDCD2:        JSR.W Sta1To6ePointer     
                     LDA.B #$FF                
                     JSR.W ADDR_0DA95B         
                     DEX                       
@@ -6330,9 +6917,9 @@ ADDR_0DDCDD:        JSR.W ADDR_0DA6BA
                     LDX $00                   
                     DEC $01                   
                     BPL ADDR_0DDCD2           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DDCEA:        LDY $57                   
                     LDA $59                   
                     LSR                       
                     LSR                       
@@ -6346,7 +6933,7 @@ ADDR_0DDCDD:        JSR.W ADDR_0DA6BA
                     LDA $00                   
                     BEQ ADDR_0DDD18           
 ADDR_0DDD01:        LDX $01                   
-ADDR_0DDD03:        JSR.W ADDR_0DAA08         
+ADDR_0DDD03:        JSR.W Sta1To6ePointer     
                     LDA.B #$65                
                     JSR.W ADDR_0DA95B         
                     DEX                       
@@ -6356,19 +6943,18 @@ ADDR_0DDD03:        JSR.W ADDR_0DAA08
                     DEC $00                   
                     BNE ADDR_0DDD01           
 ADDR_0DDD18:        LDX $01                   
-ADDR_0DDD1A:        JSR.W ADDR_0DAA08         
+ADDR_0DDD1A:        JSR.W Sta1To6ePointer     
                     LDA.B #$4E                
                     JSR.W ADDR_0DA95B         
                     DEX                       
                     BPL ADDR_0DDD1A           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DDD26:        .db $50,$50,$51,$51
 
 DATA_0DDD2A:        .db $4D,$50,$4F,$51
 
-                    LDY $57                   
+ADDR_0DDD2E:        LDY $57                   
                     LDA $59                   
                     LSR                       
                     LSR                       
@@ -6380,18 +6966,18 @@ DATA_0DDD2A:        .db $4D,$50,$4F,$51
                     TAX                       
                     LDA $00                   
                     BEQ ADDR_0DDD51           
-ADDR_0DDD41:        JSR.W ADDR_0DAA08         
+ADDR_0DDD41:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DDD26,X       
                     STA [$6B],Y               
                     JSR.W ADDR_0DA97D         
                     DEC $00                   
                     BNE ADDR_0DDD41           
-ADDR_0DDD51:        JSR.W ADDR_0DAA08         
+ADDR_0DDD51:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DDD2A,X       
                     JSR.W ADDR_0DA95B         
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DDD5C:        LDY $57                   
                     LDA $59                   
                     LSR                       
                     LSR                       
@@ -6403,7 +6989,7 @@ ADDR_0DDD51:        JSR.W ADDR_0DAA08
                     STA $01                   
                     JSR.W ADDR_0DA6B1         
 ADDR_0DDD6F:        LDX $01                   
-ADDR_0DDD71:        JSR.W ADDR_0DAA08         
+ADDR_0DDD71:        JSR.W Sta1To6ePointer     
                     LDA.B #$65                
                     JSR.W ADDR_0DA95B         
                     DEX                       
@@ -6412,9 +6998,9 @@ ADDR_0DDD71:        JSR.W ADDR_0DAA08
                     JSR.W ADDR_0DA97D         
                     DEC $00                   
                     BPL ADDR_0DDD6F           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDA $59                   
+ADDR_0DDD87:        LDA $59                   
                     LSR                       
                     LSR                       
                     LSR                       
@@ -6422,10 +7008,12 @@ ADDR_0DDD71:        JSR.W ADDR_0DAA08
                     AND.B #$01                
                     JSL.L ExecutePtrLong      
 
-PtrsLong0DDD93:     .db $99,$DD,$0D
-                    .db $3C,$DE,$0D
+PtrsLong0DDD93:     .dw ADDR_0DDD99           
+                    .db :ADDR_0DDD99
+                    .dw ADDR_0DDE3C           
+                    .db :ADDR_0DDE3C
 
-                    LDY $57                   
+ADDR_0DDD99:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -6435,7 +7023,7 @@ PtrsLong0DDD93:     .db $99,$DD,$0D
                     STA $01                   
 ADDR_0DDDA7:        JSR.W ADDR_0DA6B1         
                     LDX $01                   
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$CA                
                     STA [$6B],Y               
                     TYA                       
@@ -6447,7 +7035,7 @@ ADDR_0DDDA7:        JSR.W ADDR_0DA6B1
                     ADC.B #$00                
                     STA $6C                   
                     STA $6F                   
-ADDR_0DDDC2:        JSR.W ADDR_0DAA08         
+ADDR_0DDDC2:        JSR.W Sta1To6ePointer     
                     LDA.B #$CB                
                     STA [$6B],Y               
                     TYA                       
@@ -6459,7 +7047,7 @@ ADDR_0DDDC2:        JSR.W ADDR_0DAA08
                     ADC.B #$00                
                     STA $6C                   
                     STA $6F                   
-ADDR_0DDDD8:        JSR.W ADDR_0DAA08         
+ADDR_0DDDD8:        JSR.W Sta1To6ePointer     
                     LDA.B #$F1                
                     STA [$6B],Y               
                     TYA                       
@@ -6474,7 +7062,8 @@ ADDR_0DDDD8:        JSR.W ADDR_0DAA08
 ADDR_0DDDEE:        DEX                       
                     DEX                       
                     JMP.W ADDR_0DDE09         
-ADDR_0DDDF3:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DDDF3:        JSR.W StzTo6ePointer      
                     LDA.B #$3F                
                     STA [$6B],Y               
                     TYA                       
@@ -6510,11 +7099,12 @@ ADDR_0DDE2E:        STY $57
                     DEC $01                   
                     DEC $01                   
                     DEC $00                   
-                    BMI ADDR_0DDE3B           
+                    BMI Return0DDE3B          
                     JMP.W ADDR_0DDDA7         
-ADDR_0DDE3B:        RTS                       ; Return 
 
-                    LDY $57                   
+Return0DDE3B:       RTS                       ; Return
+
+ADDR_0DDE3C:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -6524,7 +7114,7 @@ ADDR_0DDE3B:        RTS                       ; Return
                     STA $01                   
 ADDR_0DDE4A:        JSR.W ADDR_0DA6B1         
                     LDX $01                   
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$CC                
                     STA [$6B],Y               
                     TYA                       
@@ -6536,7 +7126,7 @@ ADDR_0DDE4A:        JSR.W ADDR_0DA6B1
                     ADC.B #$00                
                     STA $6C                   
                     STA $6F                   
-ADDR_0DDE65:        JSR.W ADDR_0DAA08         
+ADDR_0DDE65:        JSR.W Sta1To6ePointer     
                     LDA.B #$CD                
                     STA [$6B],Y               
                     TYA                       
@@ -6548,7 +7138,7 @@ ADDR_0DDE65:        JSR.W ADDR_0DAA08
                     ADC.B #$00                
                     STA $6C                   
                     STA $6F                   
-ADDR_0DDE7B:        JSR.W ADDR_0DAA08         
+ADDR_0DDE7B:        JSR.W Sta1To6ePointer     
                     LDA.B #$F2                
                     STA [$6B],Y               
                     TYA                       
@@ -6563,7 +7153,8 @@ ADDR_0DDE7B:        JSR.W ADDR_0DAA08
 ADDR_0DDE91:        DEX                       
                     DEX                       
                     JMP.W ADDR_0DDEAC         
-ADDR_0DDE96:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DDE96:        JSR.W StzTo6ePointer      
                     LDA.B #$3F                
                     STA [$6B],Y               
                     TYA                       
@@ -6599,10 +7190,10 @@ ADDR_0DDECE:        STY $57
                     DEC $01                   
                     DEC $01                   
                     DEC $00                   
-                    BMI ADDR_0DDEDB           
+                    BMI Return0DDEDB          
                     JMP.W ADDR_0DDE4A         
-ADDR_0DDEDB:        RTS                       ; Return 
 
+Return0DDEDB:       RTS                       ; Return
 
 DATA_0DDEDC:        .db $5C
 
@@ -6622,7 +7213,7 @@ DATA_0DDF1A:        .db $00,$C8,$B0,$C9,$60,$CB,$10,$CD
                     .db $80,$D5,$30,$D7,$E0,$D8,$90,$DA
                     .db $40,$DC,$F0,$DD,$A0,$DF,$50,$E1
 
-                    LDA $59                   
+ADDR_0DDF3A:        LDA $59                   
                     AND.B #$0F                
                     STA $59                   
                     JSR.W ADDR_0DA6B1         
@@ -6633,7 +7224,7 @@ DATA_0DDF1A:        .db $00,$C8,$B0,$C9,$60,$CB,$10,$CD
                     LDA.B #$04                
                     STA $01                   
 ADDR_0DDF4F:        LDX $00                   
-ADDR_0DDF51:        JSR.W ADDR_0DAA08         
+ADDR_0DDF51:        JSR.W Sta1To6ePointer     
                     LDA.B #$61                
                     JSR.W ADDR_0DA95B         
                     DEX                       
@@ -6669,7 +7260,7 @@ ADDR_0DDF80:        LDA.B #$02
                     LDA.B #$03                
                     STA $02                   
                     LDX.B #$00                
-ADDR_0DDF9D:        JSR.W ADDR_0DAA08         
+ADDR_0DDF9D:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DDEDC,X       
                     JSR.W ADDR_0DA95B         
                     INX                       
@@ -6677,13 +7268,13 @@ ADDR_0DDF9D:        JSR.W ADDR_0DAA08
                     BPL ADDR_0DDF9D           
                     JSR.W ADDR_0DA6BA         
                     JSR.W ADDR_0DA97D         
-ADDR_0DDFB2:        JSR.W ADDR_0DAA0D         
+ADDR_0DDFB2:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DDEDC,X       
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DDEDD,X       
                     JSR.W ADDR_0DA95B         
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DDEDE,X       
                     STA [$6B],Y               
                     JSR.W ADDR_0DA97D         
@@ -6694,7 +7285,7 @@ ADDR_0DDFB2:        JSR.W ADDR_0DAA0D
                     INX                       
                     LDA.B #$03                
                     STA $02                   
-ADDR_0DDFDD:        JSR.W ADDR_0DAA08         
+ADDR_0DDFDD:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DDEDC,X       
                     JSR.W ADDR_0DA95B         
                     INX                       
@@ -6704,7 +7295,7 @@ ADDR_0DDFDD:        JSR.W ADDR_0DAA08
                     LDA.B #$02                
                     STA $02                   
                     JSR.W ADDR_0DA97D         
-ADDR_0DDFF6:        JSR.W ADDR_0DAA0D         
+ADDR_0DDFF6:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DDEDC,X       
                     JSR.W ADDR_0DA95B         
                     INX                       
@@ -6714,6 +7305,7 @@ ADDR_0DDFF6:        JSR.W ADDR_0DAA0D
                     BMI ADDR_0DE00E           
                     INC $00                   
                     JMP.W ADDR_0DDF80         
+
 ADDR_0DE00E:        LDA.B #$01                
                     STA $08                   
                     LDA.B #$00                
@@ -6748,11 +7340,11 @@ ADDR_0DE016:        REP #$30                  ; Index (16 bit) Accum (16 bit)
                     PLB                       
                     SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     DEC $59                   
-                    BEQ ADDR_0DE05D           
+                    BEQ Return0DE05D          
                     INC $08                   
                     JMP.W ADDR_0DE016         
-ADDR_0DE05D:        RTS                       ; Return 
 
+Return0DE05D:       RTS                       ; Return
 
 DATA_0DE05E:        .db $5C,$5D,$5E,$60,$73,$74,$75,$73
                     .db $74,$75,$73,$74,$75,$73,$74,$75
@@ -6767,7 +7359,7 @@ DATA_0DE05E:        .db $5C,$5D,$5E,$60,$73,$74,$75,$73
 
 DATA_0DE0AA:        .db $00,$13,$26,$39
 
-                    LDY $57                   
+ADDR_0DE0AE:        LDY $57                   
                     LDA $59                   
                     SEC                       
                     SBC.B #$71                
@@ -6779,7 +7371,7 @@ DATA_0DE0AA:        .db $00,$13,$26,$39
                     STA $01                   
                     LDA.B #$03                
                     STA $02                   
-ADDR_0DE0C6:        JSR.W ADDR_0DAA08         
+ADDR_0DE0C6:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DE05E,X       
                     JSR.W ADDR_0DA95B         
                     INX                       
@@ -6789,7 +7381,7 @@ ADDR_0DE0C6:        JSR.W ADDR_0DAA08
                     JSR.W ADDR_0DA97D         
 ADDR_0DE0DB:        LDA.B #$02                
                     STA $02                   
-ADDR_0DE0DF:        JSR.W ADDR_0DAA0D         
+ADDR_0DE0DF:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DE05E,X       
                     JSR.W ADDR_0DA95B         
                     INX                       
@@ -6801,27 +7393,26 @@ ADDR_0DE0DF:        JSR.W ADDR_0DAA0D
                     BPL ADDR_0DE0DB           
                     LDA.B #$02                
                     STA $02                   
-ADDR_0DE0FC:        JSR.W ADDR_0DAA0D         
+ADDR_0DE0FC:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DE05E,X       
                     JSR.W ADDR_0DA95B         
                     INX                       
                     DEC $02                   
                     BPL ADDR_0DE0FC           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$5F                
                     STA [$6B],Y               
                     JSR.W ADDR_0DA6BA         
                     LDA.B #$02                
                     STA $02                   
                     JSR.W ADDR_0DA97D         
-ADDR_0DE11C:        JSR.W ADDR_0DAA0D         
+ADDR_0DE11C:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DE05E,X       
                     JSR.W ADDR_0DA95B         
                     INX                       
                     DEC $02                   
                     BPL ADDR_0DE11C           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DE12C:        .db $45,$50,$4D
 
@@ -6829,7 +7420,7 @@ DATA_0DE12F:        .db $00,$F0,$4E
 
 DATA_0DE132:        .db $48,$51,$4F
 
-                    LDY $57                   
+ADDR_0DE135:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -6843,28 +7434,29 @@ DATA_0DE132:        .db $48,$51,$4F
                     LDX.B #$00                
 ADDR_0DE14A:        LDA $00                   
                     STA $02                   
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DE12C,X       
                     JSR.W ADDR_0DA95B         
                     JMP.W ADDR_0DE165         
-ADDR_0DE15B:        JSR.W ADDR_0DAA08         
+
+ADDR_0DE15B:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DE12F,X       
                     JSR.W ADDR_0DA95B         
 ADDR_0DE165:        DEC $02                   
                     BNE ADDR_0DE15B           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DE132,X       
                     STA [$6B],Y               
                     JSR.W ADDR_0DA6BA         
                     JSR.W ADDR_0DA97D         
                     LDX.B #$01                
                     DEC $01                   
-                    BMI ADDR_0DE185           
+                    BMI Return0DE185          
                     BNE ADDR_0DE182           
                     LDX.B #$02                
 ADDR_0DE182:        JMP.W ADDR_0DE14A         
-ADDR_0DE185:        RTS                       ; Return 
 
+Return0DE185:       RTS                       ; Return
 
 DATA_0DE186:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
@@ -7093,92 +7685,155 @@ DATA_0DE186:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $D1,$09,$F0,$09,$D1,$09,$BA,$09
                     .db $B5,$09
 
-                    SEP #$30                  ; Index (8 bit) Accum (8 bit) 
+ADDR_0DE890:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     LDX $5A                   
                     DEX                       
                     TXA                       
                     JSL.L ExecutePtrLong      
 
-PtrsLong0DE89A:     .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $C3,$A8,$0D
-                    .db $26,$AA,$0D
-                    .db $B4,$AA,$0D
-                    .db $0D,$AB,$0D
-                    .db $3E,$AB,$0D
-                    .db $75,$B0,$0D
-                    .db $D4,$B1,$0D
-                    .db $24,$B2,$0D
-                    .db $36,$B3,$0D
-                    .db $BD,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $2D,$B4,$0D
-                    .db $61,$B4,$0D
-                    .db $9E,$B4,$0D
-                    .db $1F,$B5,$0D
-                    .db $47,$B5,$0D
-                    .db $C8,$B1,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $E3,$B3,$0D
-                    .db $6C,$F0,$0D
-                    .db $66,$F0,$0D
-                    .db $2B,$F0,$0D
-                    .db $A8,$EF,$0D
-                    .db $67,$EF,$0D
-                    .db $45,$EF,$0D
-                    .db $C0,$EE,$0D
-                    .db $C9,$EC,$0D
-                    .db $C9,$EC,$0D
-                    .db $12,$ED,$0D
-                    .db $43,$ED,$0D
-                    .db $6B,$ED,$0D
-                    .db $99,$ED,$0D
-                    .db $B9,$ED,$0D
-                    .db $DB,$ED,$0D
-                    .db $17,$EE,$0D
-                    .db $52,$EE,$0D
-                    .db $89,$EE,$0D
+PtrsLong0DE89A:     .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DA8C3           
+                    .db :ADDR_0DA8C3
+                    .dw ADDR_0DAA26           
+                    .db :ADDR_0DAA26
+                    .dw ADDR_0DAAB4           
+                    .db :ADDR_0DAAB4
+                    .dw ADDR_0DAB0D           
+                    .db :ADDR_0DAB0D
+                    .dw ADDR_0DAB3E           
+                    .db :ADDR_0DAB3E
+                    .dw ADDR_0DB075           
+                    .db :ADDR_0DB075
+                    .dw ADDR_0DB1D4           
+                    .db :ADDR_0DB1D4
+                    .dw ADDR_0DB224           
+                    .db :ADDR_0DB224
+                    .dw ADDR_0DB336           
+                    .db :ADDR_0DB336
+                    .dw ADDR_0DB3BD           
+                    .db :ADDR_0DB3BD
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB42D           
+                    .db :ADDR_0DB42D
+                    .dw ADDR_0DB461           
+                    .db :ADDR_0DB461
+                    .dw ADDR_0DB49E           
+                    .db :ADDR_0DB49E
+                    .dw ADDR_0DB51F           
+                    .db :ADDR_0DB51F
+                    .dw ADDR_0DB547           
+                    .db :ADDR_0DB547
+                    .dw ADDR_0DB1C8           
+                    .db :ADDR_0DB1C8
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DB3E3           
+                    .db :ADDR_0DB3E3
+                    .dw ADDR_0DF06C           
+                    .db :ADDR_0DF06C
+                    .dw ADDR_0DF066           
+                    .db :ADDR_0DF066
+                    .dw ADDR_0DF02B           
+                    .db :ADDR_0DF02B
+                    .dw ADDR_0DEFA8           
+                    .db :ADDR_0DEFA8
+                    .dw ADDR_0DEF67           
+                    .db :ADDR_0DEF67
+                    .dw ADDR_0DEF45           
+                    .db :ADDR_0DEF45
+                    .dw ADDR_0DEEC0           
+                    .db :ADDR_0DEEC0
+                    .dw ADDR_0DECC9           
+                    .db :ADDR_0DECC9
+                    .dw ADDR_0DECC9           
+                    .db :ADDR_0DECC9
+                    .dw ADDR_0DED12           
+                    .db :ADDR_0DED12
+                    .dw ADDR_0DED43           
+                    .db :ADDR_0DED43
+                    .dw ADDR_0DED6B           
+                    .db :ADDR_0DED6B
+                    .dw ADDR_0DED99           
+                    .db :ADDR_0DED99
+                    .dw ADDR_0DEDB9           
+                    .db :ADDR_0DEDB9
+                    .dw ADDR_0DEDDB           
+                    .db :ADDR_0DEDDB
+                    .dw ADDR_0DEE17           
+                    .db :ADDR_0DEE17
+                    .dw ADDR_0DEE52           
+                    .db :ADDR_0DEE52
+                    .dw ADDR_0DEE89           
+                    .db :ADDR_0DEE89
 
 DATA_0DE957:        .db $73,$74,$75,$76,$93,$94,$95,$96
 
-                    LDY $57                   
+ADDR_0DE95F:        LDY $57                   
                     LDA $59                   
                     SEC                       
                     SBC.B #$57                
                     TAX                       
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DE957,X       
                     STA [$6B],Y               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDA.B #$03                
+ADDR_0DE971:        LDA.B #$03                
                     STA $00                   
                     LDY.B #$00                
-ADDR_0DE977:        JSR.W ADDR_0DAA0D         
+ADDR_0DE977:        JSR.W StzTo6ePointer      
                     LDA.B #$77                
                     STA [$6B],Y               
                     INY                       
@@ -7190,15 +7845,14 @@ ADDR_0DE977:        JSR.W ADDR_0DAA0D
                     STA $6F                   
                     DEC $00                   
                     BPL ADDR_0DE977           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DE98F:        .db $97,$98,$99,$9A,$9B,$9C,$9D,$9E
                     .db $9F,$86,$87,$25,$25,$86,$87,$25
                     .db $25,$86,$25,$84,$85,$84,$85,$25
                     .db $85,$25,$25
 
-                    LDY $57                   
+ADDR_0DE9AA:        LDY $57                   
                     LDA $59                   
                     SEC                       
                     SBC.B #$61                
@@ -7213,7 +7867,7 @@ DATA_0DE98F:        .db $97,$98,$99,$9A,$9B,$9C,$9D,$9E
                     STA $00                   
                     STA $01                   
                     JSR.W ADDR_0DA6B1         
-ADDR_0DE9C3:        JSR.W ADDR_0DAA0D         
+ADDR_0DE9C3:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DE98F,X       
                     JSR.W ADDR_0DA95B         
                     INX                       
@@ -7225,13 +7879,12 @@ ADDR_0DE9C3:        JSR.W ADDR_0DAA0D
                     STA $00                   
                     DEC $01                   
                     BPL ADDR_0DE9C3           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DE9E1:        .db $8C,$8D,$25,$8E,$90,$91,$8F,$25
                     .db $FC,$FD,$FE,$FF
 
-                    LDA $59                   
+ADDR_0DE9ED:        LDA $59                   
                     SEC                       
                     SBC.B #$64                
                     ASL                       
@@ -7242,7 +7895,7 @@ ADDR_0DE9F5:        LDY $57
                     STA $00                   
                     STA $01                   
                     JSR.W ADDR_0DA6B1         
-ADDR_0DEA00:        JSR.W ADDR_0DAA0D         
+ADDR_0DEA00:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DE9E1,X       
                     JSR.W ADDR_0DA95B         
                     INX                       
@@ -7254,15 +7907,14 @@ ADDR_0DEA00:        JSR.W ADDR_0DAA0D
                     STA $00                   
                     DEC $01                   
                     BPL ADDR_0DEA00           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DEA1E:        .db $25,$25,$7A,$7B,$25,$7C,$7D,$25
                     .db $7C,$7D,$25,$25,$7D,$25,$25,$25
                     .db $7E,$7F,$25,$25,$25,$80,$81,$25
                     .db $25,$25,$80,$81,$25,$25,$25,$80
 
-                    LDY $57                   
+ADDR_0DEA3E:        LDY $57                   
                     LDA $59                   
                     SEC                       
                     SBC.B #$66                
@@ -7275,7 +7927,7 @@ DATA_0DEA1E:        .db $25,$25,$7A,$7B,$25,$7C,$7D,$25
                     STA $00                   
                     STA $01                   
                     JSR.W ADDR_0DA6B1         
-ADDR_0DEA53:        JSR.W ADDR_0DAA0D         
+ADDR_0DEA53:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DEA1E,X       
                     JSR.W ADDR_0DA95B         
                     INX                       
@@ -7287,8 +7939,7 @@ ADDR_0DEA53:        JSR.W ADDR_0DAA0D
                     STA $00                   
                     DEC $01                   
                     BPL ADDR_0DEA53           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DEA71:        .db $A5,$A5,$A4,$A5,$A5,$A4,$A7,$A8
                     .db $A4,$A7,$A8,$A4,$AC,$AD,$A4,$AC
@@ -7301,11 +7952,11 @@ DATA_0DEA71:        .db $A5,$A5,$A4,$A5,$A5,$A4,$A7,$A8
                     .db $B4,$A4,$C1,$C2,$C6,$A5,$A5,$A4
                     .db $C1,$C2,$C6,$A7,$A8,$A4
 
-                    LDY $57                   
+ADDR_0DEABF:        LDY $57                   
                     LDX.B #$00                
 ADDR_0DEAC3:        LDA.B #$05                
                     STA $00                   
-ADDR_0DEAC7:        JSR.W ADDR_0DAA0D         
+ADDR_0DEAC7:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DEA71,X       
                     JSR.W ADDR_0DA95B         
                     INX                       
@@ -7314,8 +7965,7 @@ ADDR_0DEAC7:        JSR.W ADDR_0DAA0D
                     JSR.W ADDR_0DA97D         
                     CPX.B #$4E                
                     BNE ADDR_0DEAC3           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DEADE:        .db $A4,$A6,$A9,$A9,$A9,$A9,$A9,$A9
                     .db $A9,$A9,$A4,$A5,$A5,$A5,$A5,$A5
@@ -7336,25 +7986,24 @@ DATA_0DEADE:        .db $A4,$A6,$A9,$A9,$A9,$A9,$A9,$A9
                     .db $C4,$C4,$A4,$B4,$B4,$B4,$B4,$C1
                     .db $C2,$C3,$C5,$C5
 
-                    LDY $57                   
+ADDR_0DEB6A:        LDY $57                   
                     LDX.B #$00                
 ADDR_0DEB6E:        LDA.B #$09                
                     STA $00                   
-ADDR_0DEB72:        JSR.W ADDR_0DAA0D         
+ADDR_0DEB72:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DEADE,X       
                     JSR.W ADDR_0DA95B         
                     INX                       
                     DEC $00                   
                     BNE ADDR_0DEB72           
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DEADE,X       
                     STA [$6B],Y               
                     INX                       
                     JSR.W ADDR_0DA97D         
                     CPX.B #$8C                
                     BNE ADDR_0DEB6E           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DEB93:        .db $25,$25,$25,$25,$25,$25,$25,$25
                     .db $25,$25,$25,$CB,$CC,$25,$25,$25
@@ -7377,54 +8026,53 @@ DATA_0DEB93:        .db $25,$25,$25,$25,$25,$25,$25,$25
                     .db $E5,$E5,$E6,$DD,$E5,$E5,$DD,$E5
                     .db $E5,$DD,$E5,$E7,$E8,$E9,$E5,$E5
 
-                    LDY $57                   
+ADDR_0DEC33:        LDY $57                   
                     LDX.B #$00                
 ADDR_0DEC37:        LDA.B #$0F                
                     STA $00                   
-ADDR_0DEC3B:        JSR.W ADDR_0DAA0D         
+ADDR_0DEC3B:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DEB93,X       
                     JSR.W ADDR_0DA95B         
                     INX                       
                     DEC $00                   
                     BNE ADDR_0DEC3B           
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DEB93,X       
                     STA [$6B],Y               
                     INX                       
                     JSR.W ADDR_0DA97D         
                     CPX.B #$A0                
                     BNE ADDR_0DEC37           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
-                    JSR.W ADDR_0DAA08         
+ADDR_0DEC5C:        LDY $57                   
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$10                
                     STA [$6B],Y               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-ADDR_0DEC66:        CMP.B #$CA                
-                    LDY $57                   
+                    CMP.B #$CA                
+ADDR_0DEC68:        LDY $57                   
                     LDX.B #$00                
-ADDR_0DEC6C:        JSR.W ADDR_0DAA0D         
-                    LDA.L ADDR_0DEC66,X       
+ADDR_0DEC6C:        JSR.W StzTo6ePointer      
+                    LDA.L DATA_0DEC7E-24,X    
                     STA [$6B],Y               
                     JSR.W ADDR_0DA97D         
                     INX                       
                     CPX.B #$02                
                     BNE ADDR_0DEC6C           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DEC7E:        .db $EC,$ED,$EE,$EF,$F0,$F1,$F2,$F3
                     .db $F4,$F5,$F6,$F7,$F8,$F9,$FA,$FB
 
-                    LDY $57                   
+ADDR_0DEC8E:        LDY $57                   
                     LDA $59                   
                     SEC                       
                     SBC.B #$8A                
                     TAX                       
                     LDA.L $001F27,X           
-                    BNE ADDR_0DECC0           
+                    BNE Return0DECC0          
                     TXA                       
                     ASL                       
                     ASL                       
@@ -7434,7 +8082,7 @@ DATA_0DEC7E:        .db $EC,$ED,$EE,$EF,$F0,$F1,$F2,$F3
                     STA $01                   
 ADDR_0DECA6:        LDA $00                   
                     STA $02                   
-ADDR_0DECAA:        JSR.W ADDR_0DAA0D         
+ADDR_0DECAA:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DEC7E,X       
                     JSR.W ADDR_0DA95B         
                     INX                       
@@ -7443,14 +8091,14 @@ ADDR_0DECAA:        JSR.W ADDR_0DAA0D
                     JSR.W ADDR_0DA97D         
                     DEC $01                   
                     BPL ADDR_0DECA6           
-ADDR_0DECC0:        RTS                       ; Return 
+Return0DECC0:       RTS                       ; Return
 
-                    LDX.B #$08                
+ADDR_0DECC1:        LDX.B #$08                
                     JMP.W ADDR_0DE9F5         
 
 DATA_0DECC6:        .db $92,$5E,$82
 
-                    TXA                       
+ADDR_0DECC9:        TXA                       
                     SEC                       
                     SBC.B #$34                
                     TAX                       
@@ -7466,10 +8114,10 @@ ADDR_0DECCE:        LDY $57
                     LSR                       
                     STA $01                   
                     JSR.W ADDR_0DA6B1         
-ADDR_0DECE3:        JSR.W ADDR_0DAA0D         
+ADDR_0DECE3:        JSR.W StzTo6ePointer      
                     CPX.B #$01                
                     BNE ADDR_0DECED           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
 ADDR_0DECED:        LDA.L DATA_0DECC6,X       
                     JSR.W ADDR_0DA95B         
                     DEC $02                   
@@ -7481,8 +8129,7 @@ ADDR_0DECED:        LDA.L DATA_0DECC6,X
                     STA $02                   
                     DEC $01                   
                     BPL ADDR_0DECE3           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DED09:        .db $82,$89,$88
 
@@ -7490,7 +8137,7 @@ DATA_0DED0C:        .db $82,$8A,$88
 
 DATA_0DED0F:        .db $82,$8B,$88
 
-                    LDY $57                   
+ADDR_0DED12:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -7500,42 +8147,43 @@ DATA_0DED0F:        .db $82,$8B,$88
                     LSR                       
                     LSR                       
                     TAX                       
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DED09,X       
                     JMP.W ADDR_0DED32         
-ADDR_0DED2B:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DED2B:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DED0C,X       
 ADDR_0DED32:        JSR.W ADDR_0DA95B         
                     DEC $00                   
                     BNE ADDR_0DED2B           
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DED0F,X       
                     STA [$6B],Y               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DED43:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     TAX                       
-ADDR_0DED4A:        JSR.W ADDR_0DAA08         
+ADDR_0DED4A:        JSR.W Sta1To6ePointer     
                     LDA.B #$0A                
                     JMP.W ADDR_0DED57         
-ADDR_0DED52:        JSR.W ADDR_0DAA08         
+
+ADDR_0DED52:        JSR.W Sta1To6ePointer     
                     LDA.B #$0B                
 ADDR_0DED57:        JSR.W ADDR_0DA95B         
                     DEX                       
                     BNE ADDR_0DED52           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$0C                
                     STA [$6B],Y               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DED65:        .db $83,$78,$79
 
 DATA_0DED68:        .db $83,$79,$79
 
-                    LDY $57                   
+ADDR_0DED6B:        LDY $57                   
                     LDA $59                   
                     LSR                       
                     LSR                       
@@ -7545,21 +8193,21 @@ DATA_0DED68:        .db $83,$79,$79
                     LDA $59                   
                     AND.B #$0F                
                     TAX                       
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.L DATA_0DED65,X       
                     JMP.W ADDR_0DED8B         
-ADDR_0DED84:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DED84:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DED68,X       
 ADDR_0DED8B:        STA [$6B],Y               
                     JSR.W ADDR_0DA97D         
                     DEC $00                   
                     BPL ADDR_0DED84           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DED95:        .db $5F,$60,$5A,$5B
 
-                    LDA $59                   
+ADDR_0DED99:        LDA $59                   
                     AND.B #$0F                
                     TAX                       
                     LDY $57                   
@@ -7569,32 +8217,33 @@ DATA_0DED95:        .db $5F,$60,$5A,$5B
                     LSR                       
                     LSR                       
                     STA $00                   
-ADDR_0DEDA8:        JSR.W ADDR_0DAA08         
+ADDR_0DEDA8:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DED95,X       
                     STA [$6B],Y               
                     JSR.W ADDR_0DA97D         
                     DEC $00                   
                     BPL ADDR_0DEDA8           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DEDB9:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     TAX                       
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$07                
                     JMP.W ADDR_0DEDCD         
-ADDR_0DEDC8:        JSR.W ADDR_0DAA08         
+
+ADDR_0DEDC8:        JSR.W Sta1To6ePointer     
                     LDA.B #$08                
 ADDR_0DEDCD:        JSR.W ADDR_0DA95B         
                     DEX                       
                     BNE ADDR_0DEDC8           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$09                
                     STA [$6B],Y               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DEDDB:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -7608,7 +8257,7 @@ ADDR_0DEDCD:        JSR.W ADDR_0DA95B
                     LDX $00                   
                     LDA $01                   
                     BEQ ADDR_0DEE0B           
-ADDR_0DEDF4:        JSR.W ADDR_0DAA08         
+ADDR_0DEDF4:        JSR.W Sta1To6ePointer     
                     LDA.B #$53                
                     JSR.W ADDR_0DA95B         
                     DEX                       
@@ -7618,14 +8267,14 @@ ADDR_0DEDF4:        JSR.W ADDR_0DAA08
                     LDX $00                   
                     DEC $01                   
                     BNE ADDR_0DEDF4           
-ADDR_0DEE0B:        JSR.W ADDR_0DAA08         
+ADDR_0DEE0B:        JSR.W Sta1To6ePointer     
                     LDA.B #$54                
                     JSR.W ADDR_0DA95B         
                     DEX                       
                     BPL ADDR_0DEE0B           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DEE17:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -7637,13 +8286,14 @@ ADDR_0DEE0B:        JSR.W ADDR_0DAA08
                     STA $01                   
                     JSR.W ADDR_0DA6B1         
                     LDX $00                   
-ADDR_0DEE2C:        JSR.W ADDR_0DAA08         
+ADDR_0DEE2C:        JSR.W Sta1To6ePointer     
                     LDA.B #$5D                
                     JSR.W ADDR_0DA95B         
                     DEX                       
                     BPL ADDR_0DEE2C           
                     JMP.W ADDR_0DEE45         
-ADDR_0DEE3A:        JSR.W ADDR_0DAA08         
+
+ADDR_0DEE3A:        JSR.W Sta1To6ePointer     
                     LDA.B #$53                
                     JSR.W ADDR_0DA95B         
                     DEX                       
@@ -7653,9 +8303,9 @@ ADDR_0DEE45:        JSR.W ADDR_0DA6BA
                     LDX $00                   
                     DEC $01                   
                     BPL ADDR_0DEE3A           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DEE52:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -7668,12 +8318,12 @@ ADDR_0DEE45:        JSR.W ADDR_0DA6BA
                     JSR.W ADDR_0DA6B1         
 ADDR_0DEE65:        LDX $00                   
                     BEQ ADDR_0DEE74           
-ADDR_0DEE69:        JSR.W ADDR_0DAA08         
+ADDR_0DEE69:        JSR.W Sta1To6ePointer     
                     LDA.B #$53                
                     JSR.W ADDR_0DA95B         
                     DEX                       
                     BNE ADDR_0DEE69           
-ADDR_0DEE74:        JSR.W ADDR_0DAA08         
+ADDR_0DEE74:        JSR.W Sta1To6ePointer     
                     LDA.B #$55                
                     JSR.W ADDR_0DA95B         
                     JSR.W ADDR_0DA6BA         
@@ -7681,9 +8331,9 @@ ADDR_0DEE74:        JSR.W ADDR_0DAA08
                     LDX $00                   
                     DEC $01                   
                     BPL ADDR_0DEE65           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DEE89:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -7694,12 +8344,12 @@ ADDR_0DEE74:        JSR.W ADDR_0DAA08
                     LSR                       
                     STA $01                   
                     JSR.W ADDR_0DA6B1         
-ADDR_0DEE9C:        JSR.W ADDR_0DAA08         
+ADDR_0DEE9C:        JSR.W Sta1To6ePointer     
                     LDA.B #$5C                
                     JSR.W ADDR_0DA95B         
                     LDX $00                   
                     BEQ ADDR_0DEEB3           
-ADDR_0DEEA8:        JSR.W ADDR_0DAA08         
+ADDR_0DEEA8:        JSR.W Sta1To6ePointer     
                     LDA.B #$53                
                     JSR.W ADDR_0DA95B         
                     DEX                       
@@ -7709,9 +8359,9 @@ ADDR_0DEEB3:        JSR.W ADDR_0DA6BA
                     LDX $00                   
                     DEC $01                   
                     BPL ADDR_0DEE9C           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DEEC0:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -7748,10 +8398,11 @@ ADDR_0DEEF1:        TYA
                     JSR.W ADDR_0DA987         
 ADDR_0DEEFD:        JSR.W ADDR_0DA6BA         
                     LDX $01                   
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$78                
                     JMP.W ADDR_0DEF0F         
-ADDR_0DEF0A:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DEF0A:        JSR.W StzTo6ePointer      
                     LDA.B #$79                
 ADDR_0DEF0F:        STA [$6B],Y               
                     TYA                       
@@ -7781,28 +8432,30 @@ ADDR_0DEF21:        DEX
                     JSR.W ADDR_0DA9EF         
 ADDR_0DEF3B:        STY $57                   
                     DEC $00                   
-                    BMI ADDR_0DEF44           
+                    BMI Return0DEF44          
                     JMP.W ADDR_0DEEFD         
-ADDR_0DEF44:        RTS                       ; Return 
 
-                    LDY $57                   
+Return0DEF44:       RTS                       ; Return
+
+ADDR_0DEF45:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     TAX                       
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$A0                
                     JMP.W ADDR_0DEF59         
-ADDR_0DEF54:        JSR.W ADDR_0DAA0D         
+
+ADDR_0DEF54:        JSR.W StzTo6ePointer      
                     LDA.B #$A1                
 ADDR_0DEF59:        JSR.W ADDR_0DA95B         
                     DEX                       
                     BNE ADDR_0DEF54           
-                    JSR.W ADDR_0DAA0D         
+                    JSR.W StzTo6ePointer      
                     LDA.B #$A2                
                     STA [$6B],Y               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DEF67:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -7814,24 +8467,24 @@ ADDR_0DEF59:        JSR.W ADDR_0DA95B
                     STA $01                   
                     LDX $00                   
                     JSR.W ADDR_0DA6B1         
-ADDR_0DEF7C:        JSR.W ADDR_0DAA08         
+ADDR_0DEF7C:        JSR.W Sta1To6ePointer     
                     LDA.B #$0E                
                     JSR.W ADDR_0DA95B         
                     DEX                       
                     BPL ADDR_0DEF7C           
 ADDR_0DEF87:        DEC $01                   
-                    BMI ADDR_0DEFA1           
+                    BMI Return0DEFA1          
                     JSR.W ADDR_0DA6BA         
                     JSR.W ADDR_0DA97D         
                     LDX $00                   
-ADDR_0DEF93:        JSR.W ADDR_0DAA0D         
+ADDR_0DEF93:        JSR.W StzTo6ePointer      
                     LDA.B #$A3                
                     JSR.W ADDR_0DA95B         
                     DEX                       
                     BPL ADDR_0DEF93           
                     JMP.W ADDR_0DEF87         
-ADDR_0DEFA1:        RTS                       ; Return 
 
+Return0DEFA1:       RTS                       ; Return
 
 DATA_0DEFA2:        .db $63,$65
 
@@ -7839,7 +8492,7 @@ DATA_0DEFA4:        .db $C7,$C8
 
 DATA_0DEFA6:        .db $64,$6A
 
-                    LDY $57                   
+ADDR_0DEFA8:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -7852,28 +8505,29 @@ DATA_0DEFA6:        .db $64,$6A
                     JSR.W ADDR_0DA6B1         
                     LDA $00                   
                     STA $02                   
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$61                
                     BNE ADDR_0DEFCB           
-ADDR_0DEFC6:        JSR.W ADDR_0DAA08         
+ADDR_0DEFC6:        JSR.W Sta1To6ePointer     
                     LDA.B #$0D                
 ADDR_0DEFCB:        JSR.W ADDR_0DA95B         
                     DEC $02                   
                     BNE ADDR_0DEFC6           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$62                
                     STA [$6B],Y               
                     LDX.B #$01                
                     JMP.W ADDR_0DEFFE         
-ADDR_0DEFDE:        JSR.W ADDR_0DAA08         
+
+ADDR_0DEFDE:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DEFA2,X       
                     BNE ADDR_0DEFEE           
-ADDR_0DEFE7:        JSR.W ADDR_0DAA0D         
+ADDR_0DEFE7:        JSR.W StzTo6ePointer      
                     LDA.L DATA_0DEFA4,X       
 ADDR_0DEFEE:        JSR.W ADDR_0DA95B         
                     DEC $02                   
                     BNE ADDR_0DEFE7           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DEFA6,X       
                     STA [$6B],Y               
 ADDR_0DEFFE:        JSR.W ADDR_0DA6BA         
@@ -7885,20 +8539,20 @@ ADDR_0DEFFE:        JSR.W ADDR_0DA6BA
                     JSR.W ADDR_0DA97D         
                     DEC $01                   
                     BNE ADDR_0DEFDE           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$6B                
                     BNE ADDR_0DF01C           
-ADDR_0DF017:        JSR.W ADDR_0DAA08         
+ADDR_0DF017:        JSR.W Sta1To6ePointer     
                     LDA.B #$6C                
 ADDR_0DF01C:        JSR.W ADDR_0DA95B         
                     DEC $00                   
                     BNE ADDR_0DF017           
-                    JSR.W ADDR_0DAA08         
+                    JSR.W Sta1To6ePointer     
                     LDA.B #$6D                
                     STA [$6B],Y               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDY $57                   
+ADDR_0DF02B:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -7910,14 +8564,15 @@ ADDR_0DF01C:        JSR.W ADDR_0DA95B
                     STA $01                   
                     JSR.W ADDR_0DA6B1         
                     LDX $00                   
-ADDR_0DF040:        JSR.W ADDR_0DAA08         
+ADDR_0DF040:        JSR.W Sta1To6ePointer     
                     LDA.B #$0F                
                     JSR.W ADDR_0DA95B         
                     DEX                       
                     BPL ADDR_0DF040           
                     JMP.W ADDR_0DF05B         
+
 ADDR_0DF04E:        LDX $00                   
-ADDR_0DF050:        JSR.W ADDR_0DAA0D         
+ADDR_0DF050:        JSR.W StzTo6ePointer      
                     LDA.B #$EA                
                     JSR.W ADDR_0DA95B         
                     DEX                       
@@ -7926,14 +8581,14 @@ ADDR_0DF05B:        JSR.W ADDR_0DA6BA
                     JSR.W ADDR_0DA97D         
                     DEC $01                   
                     BPL ADDR_0DF04E           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    LDX.B #$02                
+ADDR_0DF066:        LDX.B #$02                
                     JMP.W ADDR_0DECCE         
 
 DATA_0DF06B:        .db $59
 
-                    LDY $57                   
+ADDR_0DF06C:        LDY $57                   
                     LDA $59                   
                     AND.B #$0F                
                     STA $00                   
@@ -7943,13 +8598,12 @@ DATA_0DF06B:        .db $59
                     LSR                       
                     LSR                       
                     TAX                       
-ADDR_0DF07B:        JSR.W ADDR_0DAA08         
+ADDR_0DF07B:        JSR.W Sta1To6ePointer     
                     LDA.L DATA_0DF06B,X       
                     JSR.W ADDR_0DA95B         
                     DEC $00                   
                     BPL ADDR_0DF07B           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0DF08A:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
@@ -8029,86 +8683,90 @@ DATA_0DF08A:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-                    .db $FF,$FF,$FF,$FF,$FF,$FF,$20,$00
-                    .db $40,$A4,$FA,$34,$20,$60,$C0,$2C
-                    .db $FA,$34,$20,$61,$C0,$2C,$FA,$34
-                    .db $20,$62,$C0,$2C,$FA,$34,$21,$C3
-                    .db $C0,$22,$FA,$34,$21,$C4,$C0,$22
-                    .db $FA,$34,$21,$C5,$C0,$22,$FA,$34
-                    .db $20,$6F,$C0,$14,$FA,$34,$20,$70
-                    .db $C0,$14,$FA,$34,$20,$71,$C0,$14
-                    .db $FA,$34,$20,$72,$C0,$14,$FA,$34
-                    .db $21,$C3,$40,$1E,$FA,$34,$21,$E0
-                    .db $40,$7E,$FA,$34,$20,$5C,$C0,$2E
-                    .db $FA,$34,$20,$5D,$C0,$2E,$FA,$34
-                    .db $20,$5E,$C0,$2E,$FA,$34,$20,$5F
-                    .db $C0,$2E,$FA,$34,$22,$3A,$C0,$10
-                    .db $FA,$34,$22,$3B,$C0,$10,$FA,$34
-                    .db $22,$40,$C0,$10,$FA,$34,$22,$41
-                    .db $C0,$10,$FA,$34,$22,$42,$C0,$10
-                    .db $FA,$34,$22,$43,$C0,$10,$FA,$34
-                    .db $22,$44,$C0,$10,$FA,$34,$22,$45
-                    .db $C0,$10,$FA,$34,$23,$40,$49,$3E
-                    .db $FA,$34,$50,$72,$00,$19,$0F,$38
-                    .db $12,$38,$1C,$38,$11,$38,$12,$38
-                    .db $17,$38,$85,$38,$15,$38,$0A,$38
-                    .db $14,$38,$12,$38,$1D,$38,$1E,$38
-                    .db $50,$82,$00,$11,$19,$38,$0A,$38
-                    .db $1B,$38,$0A,$38,$27,$38,$0B,$38
-                    .db $18,$38,$16,$38,$0B,$38,$51,$67
-                    .db $00,$15,$19,$38,$0A,$38,$1B,$38
-                    .db $0A,$38,$27,$38,$10,$38,$18,$38
-                    .db $18,$38,$16,$38,$0B,$38,$0A,$38
-                    .db $51,$B2,$00,$0B,$15,$38,$0A,$38
-                    .db $14,$38,$12,$38,$1D,$38,$1E,$38
-                    .db $52,$28,$00,$09,$1C,$38,$19,$38
-                    .db $12,$38,$17,$38,$22,$38,$52,$B7
-                    .db $00,$0D,$20,$38,$12,$38,$10,$38
-                    .db $10,$38,$15,$38,$0E,$38,$1B,$38
-                    .db $53,$2E,$00,$0D,$0B,$38,$18,$38
-                    .db $0B,$38,$27,$38,$18,$38,$16,$38
-                    .db $0B,$38,$FF,$20,$00,$40,$DE,$FA
-                    .db $34,$20,$80,$40,$1E,$FA,$34,$20
-                    .db $A0,$40,$1E,$FA,$34,$20,$C0,$C0
-                    .db $28,$FA,$34,$20,$C1,$C0,$28,$FA
-                    .db $34,$20,$C2,$C0,$28,$FA,$34,$20
-                    .db $CD,$C0,$0C,$FA,$34,$20,$CE,$C0
-                    .db $0C,$FA,$34,$20,$CF,$C0,$0C,$FA
-                    .db $34,$21,$A3,$40,$18,$FA,$34,$21
-                    .db $C3,$40,$18,$FA,$34,$21,$E3,$40
-                    .db $30,$FA,$34,$22,$03,$40,$30,$FA
-                    .db $34,$22,$2D,$C0,$12,$FA,$34,$22
-                    .db $2E,$C0,$12,$FA,$34,$20,$7C,$C0
-                    .db $1A,$FA,$34,$20,$7D,$C0,$2E,$FA
-                    .db $34,$20,$7E,$C0,$2E,$FA,$34,$20
-                    .db $7F,$C0,$2E,$FA,$34,$23,$60,$49
-                    .db $3E,$FA,$34,$50,$81,$00,$1B,$0A
-                    .db $38,$16,$38,$0A,$38,$23,$38,$12
-                    .db $38,$17,$38,$10,$38,$FC,$00,$0F
-                    .db $38,$15,$38,$22,$38,$12,$38,$17
-                    .db $38,$85,$38,$50,$A1,$00,$1B,$11
-                    .db $38,$0A,$38,$16,$38,$16,$38,$0E
-                    .db $38,$1B,$38,$FC,$00,$0B,$38,$1B
-                    .db $38,$18,$38,$1D,$38,$11,$38,$0E
-                    .db $38,$1B,$38,$50,$F2,$00,$15,$1C
-                    .db $38,$1E,$38,$19,$38,$0E,$38,$1B
-                    .db $38,$FC,$00,$14,$38,$18,$38,$18
-                    .db $38,$19,$38,$0A,$38,$52,$57,$00
-                    .db $0F,$0C,$38,$11,$38,$0A,$38,$1B
-                    .db $38,$10,$38,$12,$38,$17,$38,$85
-                    .db $38,$52,$78,$00,$09,$0C,$38,$11
-                    .db $38,$1E,$38,$0C,$38,$14,$38,$52
-                    .db $A4,$00,$0D,$13,$38,$1E,$38,$16
-                    .db $38,$19,$38,$12,$38,$17,$38,$10
-                    .db $38,$52,$C1,$00,$19,$19,$38,$12
-                    .db $38,$1B,$38,$11,$38,$0A,$38,$17
-                    .db $38,$0A,$38,$FC,$00,$19,$38,$15
-                    .db $38,$0A,$38,$17,$38,$1D,$38,$53
-                    .db $30,$00,$0D,$1F,$38,$18,$38,$15
-                    .db $38,$0C,$38,$0A,$38,$17,$38,$18
-                    .db $38,$53,$51,$00,$09,$15,$38,$18
-                    .db $38,$1D,$38,$1E,$38,$1C,$38,$FF
-                    .db $20,$00,$40,$BE,$FA,$34,$20,$6B
+                    .db $FF,$FF,$FF,$FF,$FF,$FF
+
+DATA_0DF300:        .db $20,$00,$40,$A4,$FA,$34,$20,$60
+                    .db $C0,$2C,$FA,$34,$20,$61,$C0,$2C
+                    .db $FA,$34,$20,$62,$C0,$2C,$FA,$34
+                    .db $21,$C3,$C0,$22,$FA,$34,$21,$C4
+                    .db $C0,$22,$FA,$34,$21,$C5,$C0,$22
+                    .db $FA,$34,$20,$6F,$C0,$14,$FA,$34
+                    .db $20,$70,$C0,$14,$FA,$34,$20,$71
+                    .db $C0,$14,$FA,$34,$20,$72,$C0,$14
+                    .db $FA,$34,$21,$C3,$40,$1E,$FA,$34
+                    .db $21,$E0,$40,$7E,$FA,$34,$20,$5C
+                    .db $C0,$2E,$FA,$34,$20,$5D,$C0,$2E
+                    .db $FA,$34,$20,$5E,$C0,$2E,$FA,$34
+                    .db $20,$5F,$C0,$2E,$FA,$34,$22,$3A
+                    .db $C0,$10,$FA,$34,$22,$3B,$C0,$10
+                    .db $FA,$34,$22,$40,$C0,$10,$FA,$34
+                    .db $22,$41,$C0,$10,$FA,$34,$22,$42
+                    .db $C0,$10,$FA,$34,$22,$43,$C0,$10
+                    .db $FA,$34,$22,$44,$C0,$10,$FA,$34
+                    .db $22,$45,$C0,$10,$FA,$34,$23,$40
+                    .db $49,$3E,$FA,$34,$50,$72,$00,$19
+                    .db $0F,$38,$12,$38,$1C,$38,$11,$38
+                    .db $12,$38,$17,$38,$85,$38,$15,$38
+                    .db $0A,$38,$14,$38,$12,$38,$1D,$38
+                    .db $1E,$38,$50,$82,$00,$11,$19,$38
+                    .db $0A,$38,$1B,$38,$0A,$38,$27,$38
+                    .db $0B,$38,$18,$38,$16,$38,$0B,$38
+                    .db $51,$67,$00,$15,$19,$38,$0A,$38
+                    .db $1B,$38,$0A,$38,$27,$38,$10,$38
+                    .db $18,$38,$18,$38,$16,$38,$0B,$38
+                    .db $0A,$38,$51,$B2,$00,$0B,$15,$38
+                    .db $0A,$38,$14,$38,$12,$38,$1D,$38
+                    .db $1E,$38,$52,$28,$00,$09,$1C,$38
+                    .db $19,$38,$12,$38,$17,$38,$22,$38
+                    .db $52,$B7,$00,$0D,$20,$38,$12,$38
+                    .db $10,$38,$10,$38,$15,$38,$0E,$38
+                    .db $1B,$38,$53,$2E,$00,$0D,$0B,$38
+                    .db $18,$38,$0B,$38,$27,$38,$18,$38
+                    .db $16,$38,$0B,$38,$FF
+
+DATA_0DF42D:        .db $20,$00,$40,$DE,$FA,$34,$20,$80
+                    .db $40,$1E,$FA,$34,$20,$A0,$40,$1E
+                    .db $FA,$34,$20,$C0,$C0,$28,$FA,$34
+                    .db $20,$C1,$C0,$28,$FA,$34,$20,$C2
+                    .db $C0,$28,$FA,$34,$20,$CD,$C0,$0C
+                    .db $FA,$34,$20,$CE,$C0,$0C,$FA,$34
+                    .db $20,$CF,$C0,$0C,$FA,$34,$21,$A3
+                    .db $40,$18,$FA,$34,$21,$C3,$40,$18
+                    .db $FA,$34,$21,$E3,$40,$30,$FA,$34
+                    .db $22,$03,$40,$30,$FA,$34,$22,$2D
+                    .db $C0,$12,$FA,$34,$22,$2E,$C0,$12
+                    .db $FA,$34,$20,$7C,$C0,$1A,$FA,$34
+                    .db $20,$7D,$C0,$2E,$FA,$34,$20,$7E
+                    .db $C0,$2E,$FA,$34,$20,$7F,$C0,$2E
+                    .db $FA,$34,$23,$60,$49,$3E,$FA,$34
+                    .db $50,$81,$00,$1B,$0A,$38,$16,$38
+                    .db $0A,$38,$23,$38,$12,$38,$17,$38
+                    .db $10,$38,$FC,$00,$0F,$38,$15,$38
+                    .db $22,$38,$12,$38,$17,$38,$85,$38
+                    .db $50,$A1,$00,$1B,$11,$38,$0A,$38
+                    .db $16,$38,$16,$38,$0E,$38,$1B,$38
+                    .db $FC,$00,$0B,$38,$1B,$38,$18,$38
+                    .db $1D,$38,$11,$38,$0E,$38,$1B,$38
+                    .db $50,$F2,$00,$15,$1C,$38,$1E,$38
+                    .db $19,$38,$0E,$38,$1B,$38,$FC,$00
+                    .db $14,$38,$18,$38,$18,$38,$19,$38
+                    .db $0A,$38,$52,$57,$00,$0F,$0C,$38
+                    .db $11,$38,$0A,$38,$1B,$38,$10,$38
+                    .db $12,$38,$17,$38,$85,$38,$52,$78
+                    .db $00,$09,$0C,$38,$11,$38,$1E,$38
+                    .db $0C,$38,$14,$38,$52,$A4,$00,$0D
+                    .db $13,$38,$1E,$38,$16,$38,$19,$38
+                    .db $12,$38,$17,$38,$10,$38,$52,$C1
+                    .db $00,$19,$19,$38,$12,$38,$1B,$38
+                    .db $11,$38,$0A,$38,$17,$38,$0A,$38
+                    .db $FC,$00,$19,$38,$15,$38,$0A,$38
+                    .db $17,$38,$1D,$38,$53,$30,$00,$0D
+                    .db $1F,$38,$18,$38,$15,$38,$0C,$38
+                    .db $0A,$38,$17,$38,$18,$38,$53,$51
+                    .db $00,$09,$15,$38,$18,$38,$1D,$38
+                    .db $1E,$38,$1C,$38,$FF
+
+DATA_0DF572:        .db $20,$00,$40,$BE,$FA,$34,$20,$6B
                     .db $40,$28,$FA,$34,$20,$8B,$40,$28
                     .db $FA,$34,$20,$AB,$40,$28,$FA,$34
                     .db $20,$60,$C0,$1E,$FA,$34,$20,$61
@@ -8139,34 +8797,37 @@ DATA_0DF08A:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $00,$15,$0B,$38,$1E,$38,$15,$38
                     .db $15,$38,$0E,$38,$1D,$38,$FC,$00
                     .db $0B,$38,$12,$38,$15,$38,$15,$38
-                    .db $FF,$20,$00,$41,$12,$FA,$34,$20
-                    .db $80,$40,$12,$FA,$34,$20,$A0,$40
-                    .db $12,$FA,$34,$20,$C0,$40,$12,$FA
-                    .db $34,$20,$E0,$40,$12,$FA,$34,$21
-                    .db $00,$40,$12,$FA,$34,$21,$20,$40
-                    .db $12,$FA,$34,$21,$40,$40,$12,$FA
-                    .db $34,$21,$60,$40,$12,$FA,$34,$21
-                    .db $80,$40,$12,$FA,$34,$21,$A0,$40
-                    .db $12,$FA,$34,$21,$C0,$40,$12,$FA
-                    .db $34,$21,$E0,$40,$88,$FA,$34,$22
-                    .db $40,$C0,$0E,$FA,$34,$22,$41,$C0
-                    .db $0E,$FA,$34,$22,$42,$C0,$0E,$FA
-                    .db $34,$22,$43,$C0,$0E,$FA,$34,$22
-                    .db $44,$C0,$0E,$FA,$34,$22,$2C,$C0
-                    .db $10,$FA,$34,$22,$2D,$C0,$10,$FA
-                    .db $34,$23,$40,$40,$1A,$FA,$34,$20
-                    .db $9C,$C0,$2C,$FA,$34,$20,$9D,$C0
-                    .db $2C,$FA,$34,$20,$9E,$C0,$2C,$FA
-                    .db $34,$20,$9F,$C0,$2C,$FA,$34,$23
-                    .db $60,$49,$3E,$FA,$34,$51,$11,$00
-                    .db $05,$1B,$38,$0E,$38,$21,$38,$52
-                    .db $03,$00,$11,$16,$38,$0E,$38,$10
-                    .db $38,$0A,$38,$FC,$00,$16,$38,$18
-                    .db $38,$15,$38,$0E,$38,$53,$30,$00
-                    .db $15,$0B,$38,$0A,$38,$17,$38,$23
-                    .db $38,$0A,$38,$12,$38,$FC,$00,$0B
-                    .db $38,$12,$38,$15,$38,$15,$38,$FF
-                    .db $20,$00,$41,$06,$FA,$34,$20,$A0
+                    .db $FF
+
+DATA_0DF66B:        .db $20,$00,$41,$12,$FA,$34,$20,$80
+                    .db $40,$12,$FA,$34,$20,$A0,$40,$12
+                    .db $FA,$34,$20,$C0,$40,$12,$FA,$34
+                    .db $20,$E0,$40,$12,$FA,$34,$21,$00
+                    .db $40,$12,$FA,$34,$21,$20,$40,$12
+                    .db $FA,$34,$21,$40,$40,$12,$FA,$34
+                    .db $21,$60,$40,$12,$FA,$34,$21,$80
+                    .db $40,$12,$FA,$34,$21,$A0,$40,$12
+                    .db $FA,$34,$21,$C0,$40,$12,$FA,$34
+                    .db $21,$E0,$40,$88,$FA,$34,$22,$40
+                    .db $C0,$0E,$FA,$34,$22,$41,$C0,$0E
+                    .db $FA,$34,$22,$42,$C0,$0E,$FA,$34
+                    .db $22,$43,$C0,$0E,$FA,$34,$22,$44
+                    .db $C0,$0E,$FA,$34,$22,$2C,$C0,$10
+                    .db $FA,$34,$22,$2D,$C0,$10,$FA,$34
+                    .db $23,$40,$40,$1A,$FA,$34,$20,$9C
+                    .db $C0,$2C,$FA,$34,$20,$9D,$C0,$2C
+                    .db $FA,$34,$20,$9E,$C0,$2C,$FA,$34
+                    .db $20,$9F,$C0,$2C,$FA,$34,$23,$60
+                    .db $49,$3E,$FA,$34,$51,$11,$00,$05
+                    .db $1B,$38,$0E,$38,$21,$38,$52,$03
+                    .db $00,$11,$16,$38,$0E,$38,$10,$38
+                    .db $0A,$38,$FC,$00,$16,$38,$18,$38
+                    .db $15,$38,$0E,$38,$53,$30,$00,$15
+                    .db $0B,$38,$0A,$38,$17,$38,$23,$38
+                    .db $0A,$38,$12,$38,$FC,$00,$0B,$38
+                    .db $12,$38,$15,$38,$15,$38,$FF
+
+DATA_0DF742:        .db $20,$00,$41,$06,$FA,$34,$20,$A0
                     .db $C0,$18,$FA,$34,$20,$A1,$C0,$18
                     .db $FA,$34,$20,$A2,$C0,$18,$FA,$34
                     .db $20,$A3,$C0,$18,$FA,$34,$20,$92
@@ -8196,32 +8857,35 @@ DATA_0DF08A:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $27,$38,$1D,$38,$18,$38,$1B,$38
                     .db $0C,$38,$11,$38,$53,$30,$00,$0B
                     .db $14,$38,$18,$38,$18,$38,$19,$38
-                    .db $0A,$38,$1C,$38,$FF,$20,$00,$41
-                    .db $04,$FA,$34,$20,$A0,$C0,$28,$FA
-                    .db $34,$20,$A1,$C0,$28,$FA,$34,$20
-                    .db $A2,$C0,$28,$FA,$34,$20,$8A,$C0
-                    .db $10,$FA,$34,$20,$8B,$C0,$10,$FA
-                    .db $34,$20,$9A,$C0,$2A,$FA,$34,$20
-                    .db $9B,$C0,$2A,$FA,$34,$20,$9C,$C0
-                    .db $2A,$FA,$34,$20,$9D,$C0,$2A,$FA
-                    .db $34,$20,$9E,$C0,$2A,$FA,$34,$20
-                    .db $9F,$C0,$2A,$FA,$34,$21,$AA,$40
-                    .db $B6,$FA,$34,$22,$23,$C0,$10,$FA
-                    .db $34,$22,$24,$C0,$10,$FA,$34,$22
-                    .db $25,$C0,$10,$FA,$34,$22,$19,$C0
-                    .db $12,$FA,$34,$23,$40,$49,$7E,$FA
-                    .db $34,$50,$A2,$00,$11,$1C,$38,$19
-                    .db $38,$12,$38,$14,$38,$0E,$38,$FC
-                    .db $00,$1D,$38,$18,$38,$19,$38,$50
-                    .db $B1,$00,$0F,$1C,$38,$20,$38,$18
-                    .db $38,$18,$38,$19,$38,$0E,$38,$1B
-                    .db $38,$1C,$38,$52,$03,$00,$17,$0B
-                    .db $38,$1E,$38,$23,$38,$23,$38,$22
-                    .db $38,$FC,$00,$0B,$38,$0E,$38,$0E
-                    .db $38,$1D,$38,$15,$38,$0E,$38,$52
-                    .db $72,$00,$0B,$0B,$38,$15,$38,$0A
-                    .db $38,$1B,$38,$10,$38,$10,$38,$FF
-                    .db $20,$00,$40,$BE,$FA,$34,$20,$60
+                    .db $0A,$38,$1C,$38,$FF
+
+DATA_0DF837:        .db $20,$00,$41,$04,$FA,$34,$20,$A0
+                    .db $C0,$28,$FA,$34,$20,$A1,$C0,$28
+                    .db $FA,$34,$20,$A2,$C0,$28,$FA,$34
+                    .db $20,$8A,$C0,$10,$FA,$34,$20,$8B
+                    .db $C0,$10,$FA,$34,$20,$9A,$C0,$2A
+                    .db $FA,$34,$20,$9B,$C0,$2A,$FA,$34
+                    .db $20,$9C,$C0,$2A,$FA,$34,$20,$9D
+                    .db $C0,$2A,$FA,$34,$20,$9E,$C0,$2A
+                    .db $FA,$34,$20,$9F,$C0,$2A,$FA,$34
+                    .db $21,$AA,$40,$B6,$FA,$34,$22,$23
+                    .db $C0,$10,$FA,$34,$22,$24,$C0,$10
+                    .db $FA,$34,$22,$25,$C0,$10,$FA,$34
+                    .db $22,$19,$C0,$12,$FA,$34,$23,$40
+                    .db $49,$7E,$FA,$34,$50,$A2,$00,$11
+                    .db $1C,$38,$19,$38,$12,$38,$14,$38
+                    .db $0E,$38,$FC,$00,$1D,$38,$18,$38
+                    .db $19,$38,$50,$B1,$00,$0F,$1C,$38
+                    .db $20,$38,$18,$38,$18,$38,$19,$38
+                    .db $0E,$38,$1B,$38,$1C,$38,$52,$03
+                    .db $00,$17,$0B,$38,$1E,$38,$23,$38
+                    .db $23,$38,$22,$38,$FC,$00,$0B,$38
+                    .db $0E,$38,$0E,$38,$1D,$38,$15,$38
+                    .db $0E,$38,$52,$72,$00,$0B,$0B,$38
+                    .db $15,$38,$0A,$38,$1B,$38,$10,$38
+                    .db $10,$38,$FF
+
+DATA_0DF8FA:        .db $20,$00,$40,$BE,$FA,$34,$20,$60
                     .db $C0,$16,$FA,$34,$20,$61,$C0,$16
                     .db $FA,$34,$20,$62,$C0,$16,$FA,$34
                     .db $20,$7C,$C0,$16,$FA,$34,$20,$7D
@@ -8247,159 +8911,168 @@ DATA_0DF08A:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $00,$17,$1B,$38,$12,$38,$19,$38
                     .db $FC,$00,$1F,$38,$0A,$38,$17,$38
                     .db $FC,$00,$0F,$38,$12,$38,$1C,$38
-                    .db $11,$38,$FF,$20,$00,$40,$E2,$FA
-                    .db $34,$20,$80,$C0,$2C,$FA,$34,$20
-                    .db $81,$C0,$2C,$FA,$34,$20,$82,$C0
-                    .db $2C,$FA,$34,$20,$83,$C0,$12,$FA
-                    .db $34,$20,$8E,$C0,$26,$FA,$34,$20
-                    .db $8F,$C0,$26,$FA,$34,$20,$90,$C0
-                    .db $10,$FA,$34,$20,$91,$C0,$10,$FA
-                    .db $34,$20,$7C,$C0,$28,$FA,$34,$20
-                    .db $7D,$C0,$28,$FA,$34,$20,$7E,$C0
-                    .db $28,$FA,$34,$20,$7F,$C0,$28,$FA
-                    .db $34,$21,$AE,$40,$C2,$FA,$34,$23
-                    .db $0E,$40,$22,$FA,$34,$23,$2E,$40
-                    .db $22,$FA,$34,$23,$4E,$49,$82,$FA
-                    .db $34,$50,$A3,$00,$19,$86,$78,$0B
-                    .db $38,$18,$38,$18,$38,$86,$38,$FC
-                    .db $00,$0B,$38,$1E,$38,$0D,$38,$0D
-                    .db $38,$12,$38,$0E,$38,$1C,$38,$50
-                    .db $D2,$00,$13,$0F,$38,$12,$38,$1C
-                    .db $38,$11,$38,$12,$38,$17,$38,$85
-                    .db $38,$0B,$38,$18,$38,$18,$38,$52
-                    .db $22,$00,$19,$1D,$38,$11,$38,$0E
-                    .db $38,$FC,$00,$0B,$38,$12,$38,$10
-                    .db $38,$FC,$00,$86,$78,$0B,$38,$18
-                    .db $38,$18,$38,$86,$38,$52,$B3,$00
-                    .db $0B,$0E,$38,$0E,$38,$1B,$38,$12
-                    .db $38,$0E,$38,$1C,$38,$FF,$20,$00
-                    .db $40,$BE,$FA,$34,$20,$60,$C0,$2E
-                    .db $FA,$34,$20,$61,$C0,$2E,$FA,$34
-                    .db $20,$62,$C0,$2E,$FA,$34,$21,$63
-                    .db $C0,$1E,$FA,$34,$21,$64,$C0,$1E
-                    .db $FA,$34,$21,$65,$C0,$1E,$FA,$34
-                    .db $20,$7D,$C0,$2A,$FA,$34,$20,$7E
-                    .db $C0,$2A,$FA,$34,$20,$7F,$C0,$2A
-                    .db $FA,$34,$21,$7C,$C0,$1A,$FA,$34
-                    .db $21,$AE,$C0,$1A,$FA,$34,$21,$AF
-                    .db $C0,$1A,$FA,$34,$21,$60,$40,$7E
-                    .db $FA,$34,$23,$30,$40,$1E,$FA,$34
-                    .db $23,$50,$49,$5E,$FA,$34,$50,$6B
-                    .db $00,$13,$15,$38,$12,$38,$15,$38
-                    .db $FC,$00,$1C,$38,$19,$38,$0A,$38
-                    .db $1B,$38,$14,$38,$22,$38,$50,$F1
-                    .db $00,$15,$0B,$38,$18,$38,$17,$38
-                    .db $22,$38,$FC,$00,$0B,$38,$0E,$38
-                    .db $0E,$38,$1D,$38,$15,$38,$0E,$38
-                    .db $51,$22,$00,$11,$0D,$38,$1B,$38
-                    .db $22,$38,$FC,$00,$0B,$38,$18,$38
-                    .db $17,$38,$0E,$38,$1C,$38,$52,$4F
-                    .db $00,$0B,$1D,$38,$11,$38,$20,$38
-                    .db $18,$38,$16,$38,$19,$38,$52,$B6
-                    .db $00,$0B,$1D,$38,$11,$38,$20,$38
-                    .db $12,$38,$16,$38,$19,$38,$52,$E9
-                    .db $00,$0D,$11,$38,$18,$38,$1D,$38
-                    .db $11,$38,$0E,$38,$0A,$38,$0D,$38
-                    .db $FF,$20,$00,$40,$FE,$FA,$34,$20
-                    .db $80,$C0,$14,$FA,$34,$20,$81,$C0
-                    .db $14,$FA,$34,$20,$82,$C0,$14,$FA
-                    .db $34,$20,$83,$C0,$14,$FA,$34,$20
-                    .db $84,$C0,$14,$FA,$34,$20,$85,$C0
-                    .db $14,$FA,$34,$20,$86,$C0,$14,$FA
-                    .db $34,$20,$87,$C0,$14,$FA,$34,$20
-                    .db $98,$C0,$14,$FA,$34,$20,$99,$C0
-                    .db $14,$FA,$34,$20,$9A,$C0,$14,$FA
-                    .db $34,$20,$9B,$C0,$14,$FA,$34,$20
-                    .db $9C,$C0,$14,$FA,$34,$20,$9D,$C0
-                    .db $14,$FA,$34,$20,$9E,$C0,$14,$FA
-                    .db $34,$20,$9F,$C0,$14,$FA,$34,$21
-                    .db $E0,$40,$7E,$FA,$34,$22,$20,$C0
-                    .db $12,$FA,$34,$22,$21,$C0,$12,$FA
-                    .db $34,$22,$22,$C0,$12,$FA,$34,$22
-                    .db $23,$C0,$12,$FA,$34,$22,$3C,$C0
-                    .db $12,$FA,$34,$22,$3D,$C0,$12,$FA
-                    .db $34,$22,$3E,$C0,$12,$FA,$34,$22
-                    .db $3F,$C0,$12,$FA,$34,$23,$60,$49
-                    .db $3E,$FA,$34,$50,$90,$00,$0D,$10
-                    .db $38,$1B,$38,$12,$38,$17,$38,$0D
-                    .db $38,$0E,$38,$1B,$38,$51,$A7,$00
-                    .db $17,$0B,$38,$0A,$38,$15,$38,$15
-                    .db $38,$85,$78,$17,$38,$85,$38,$0C
-                    .db $38,$11,$38,$0A,$38,$12,$38,$17
-                    .db $38,$52,$4D,$00,$0F,$0F,$38,$12
-                    .db $38,$1C,$38,$11,$38,$0B,$38,$18
-                    .db $38,$17,$38,$0E,$38,$FF,$20,$00
-                    .db $40,$FE,$FA,$34,$20,$80,$C0,$2A
-                    .db $FA,$34,$20,$81,$C0,$2A,$FA,$34
-                    .db $20,$82,$C0,$2A,$FA,$34,$20,$83
-                    .db $C0,$2A,$FA,$34,$20,$84,$C0,$2A
-                    .db $FA,$34,$20,$85,$C0,$2A,$FA,$34
-                    .db $20,$86,$C0,$2A,$FA,$34,$20,$87
-                    .db $C0,$2A,$FA,$34,$20,$98,$C0,$2A
-                    .db $FA,$34,$20,$99,$C0,$2A,$FA,$34
-                    .db $20,$9A,$C0,$2A,$FA,$34,$20,$9B
-                    .db $C0,$2A,$FA,$34,$20,$9C,$C0,$2A
-                    .db $FA,$34,$20,$9D,$C0,$2A,$FA,$34
-                    .db $20,$9E,$C0,$2A,$FA,$34,$20,$9F
-                    .db $C0,$2A,$FA,$34,$23,$40,$49,$7E
-                    .db $FA,$34,$51,$8D,$00,$0B,$1B,$38
-                    .db $0E,$38,$23,$38,$17,$38,$18,$38
-                    .db $1B,$38,$FF,$20,$00,$42,$80,$FA
-                    .db $34,$21,$40,$C0,$12,$FA,$34,$21
-                    .db $41,$C0,$12,$FA,$34,$21,$42,$C0
-                    .db $12,$FA,$34,$21,$43,$C0,$12,$FA
-                    .db $34,$21,$44,$C0,$12,$FA,$34,$21
-                    .db $45,$C0,$12,$FA,$34,$21,$46,$C0
-                    .db $12,$FA,$34,$21,$47,$C0,$12,$FA
-                    .db $34,$21,$58,$C0,$12,$FA,$34,$21
-                    .db $59,$C0,$12,$FA,$34,$21,$5A,$C0
-                    .db $12,$FA,$34,$21,$5B,$C0,$12,$FA
-                    .db $34,$21,$5C,$C0,$12,$FA,$34,$21
-                    .db $5D,$C0,$12,$FA,$34,$21,$5E,$C0
-                    .db $12,$FA,$34,$21,$5F,$C0,$12,$FA
-                    .db $34,$22,$80,$4A,$FE,$FA,$34,$51
-                    .db $8B,$00,$15,$16,$38,$0E,$38,$0C
-                    .db $38,$11,$38,$0A,$38,$14,$38,$18
-                    .db $38,$18,$38,$19,$38,$0A,$38,$1C
-                    .db $38,$FF,$20,$00,$5F,$FE,$FA,$14
-                    .db $51,$25,$00,$0B,$16,$38,$18,$38
-                    .db $1B,$38,$1D,$38,$18,$38,$17,$38
-                    .db $51,$44,$00,$11,$14,$38,$18,$38
-                    .db $18,$38,$19,$38,$0A,$38,$FC,$00
-                    .db $13,$38,$1B,$38,$24,$38,$51,$37
-                    .db $00,$05,$1B,$38,$18,$38,$22,$38
-                    .db $51,$56,$00,$09,$14,$38,$18,$38
-                    .db $18,$38,$19,$38,$0A,$38,$52,$0D
-                    .db $00,$0B,$0B,$38,$18,$38,$20,$38
-                    .db $1C,$38,$0E,$38,$1B,$38,$52,$43
-                    .db $00,$09,$15,$38,$0E,$38,$16,$38
-                    .db $16,$38,$22,$38,$52,$63,$00,$09
-                    .db $14,$38,$18,$38,$18,$38,$19,$38
-                    .db $0A,$38,$52,$59,$00,$09,$20,$38
-                    .db $0E,$38,$17,$38,$0D,$38,$22,$38
-                    .db $52,$78,$00,$0D,$18,$38,$24,$38
-                    .db $14,$38,$18,$38,$18,$38,$19,$38
-                    .db $0A,$38,$53,$06,$00,$07,$12,$38
-                    .db $10,$38,$10,$38,$22,$38,$53,$26
+                    .db $11,$38,$FF
+
+DATA_0DF9CD:        .db $20,$00,$40,$E2,$FA,$34,$20,$80
+                    .db $C0,$2C,$FA,$34,$20,$81,$C0,$2C
+                    .db $FA,$34,$20,$82,$C0,$2C,$FA,$34
+                    .db $20,$83,$C0,$12,$FA,$34,$20,$8E
+                    .db $C0,$26,$FA,$34,$20,$8F,$C0,$26
+                    .db $FA,$34,$20,$90,$C0,$10,$FA,$34
+                    .db $20,$91,$C0,$10,$FA,$34,$20,$7C
+                    .db $C0,$28,$FA,$34,$20,$7D,$C0,$28
+                    .db $FA,$34,$20,$7E,$C0,$28,$FA,$34
+                    .db $20,$7F,$C0,$28,$FA,$34,$21,$AE
+                    .db $40,$C2,$FA,$34,$23,$0E,$40,$22
+                    .db $FA,$34,$23,$2E,$40,$22,$FA,$34
+                    .db $23,$4E,$49,$82,$FA,$34,$50,$A3
+                    .db $00,$19,$86,$78,$0B,$38,$18,$38
+                    .db $18,$38,$86,$38,$FC,$00,$0B,$38
+                    .db $1E,$38,$0D,$38,$0D,$38,$12,$38
+                    .db $0E,$38,$1C,$38,$50,$D2,$00,$13
+                    .db $0F,$38,$12,$38,$1C,$38,$11,$38
+                    .db $12,$38,$17,$38,$85,$38,$0B,$38
+                    .db $18,$38,$18,$38,$52,$22,$00,$19
+                    .db $1D,$38,$11,$38,$0E,$38,$FC,$00
+                    .db $0B,$38,$12,$38,$10,$38,$FC,$00
+                    .db $86,$78,$0B,$38,$18,$38,$18,$38
+                    .db $86,$38,$52,$B3,$00,$0B,$0E,$38
+                    .db $0E,$38,$1B,$38,$12,$38,$0E,$38
+                    .db $1C,$38,$FF
+
+DATA_0DFA98:        .db $20,$00,$40,$BE,$FA,$34,$20,$60
+                    .db $C0,$2E,$FA,$34,$20,$61,$C0,$2E
+                    .db $FA,$34,$20,$62,$C0,$2E,$FA,$34
+                    .db $21,$63,$C0,$1E,$FA,$34,$21,$64
+                    .db $C0,$1E,$FA,$34,$21,$65,$C0,$1E
+                    .db $FA,$34,$20,$7D,$C0,$2A,$FA,$34
+                    .db $20,$7E,$C0,$2A,$FA,$34,$20,$7F
+                    .db $C0,$2A,$FA,$34,$21,$7C,$C0,$1A
+                    .db $FA,$34,$21,$AE,$C0,$1A,$FA,$34
+                    .db $21,$AF,$C0,$1A,$FA,$34,$21,$60
+                    .db $40,$7E,$FA,$34,$23,$30,$40,$1E
+                    .db $FA,$34,$23,$50,$49,$5E,$FA,$34
+                    .db $50,$6B,$00,$13,$15,$38,$12,$38
+                    .db $15,$38,$FC,$00,$1C,$38,$19,$38
+                    .db $0A,$38,$1B,$38,$14,$38,$22,$38
+                    .db $50,$F1,$00,$15,$0B,$38,$18,$38
+                    .db $17,$38,$22,$38,$FC,$00,$0B,$38
+                    .db $0E,$38,$0E,$38,$1D,$38,$15,$38
+                    .db $0E,$38,$51,$22,$00,$11,$0D,$38
+                    .db $1B,$38,$22,$38,$FC,$00,$0B,$38
+                    .db $18,$38,$17,$38,$0E,$38,$1C,$38
+                    .db $52,$4F,$00,$0B,$1D,$38,$11,$38
+                    .db $20,$38,$18,$38,$16,$38,$19,$38
+                    .db $52,$B6,$00,$0B,$1D,$38,$11,$38
+                    .db $20,$38,$12,$38,$16,$38,$19,$38
+                    .db $52,$E9,$00,$0D,$11,$38,$18,$38
+                    .db $1D,$38,$11,$38,$0E,$38,$0A,$38
+                    .db $0D,$38,$FF
+
+DATA_0DFB73:        .db $20,$00,$40,$FE,$FA,$34,$20,$80
+                    .db $C0,$14,$FA,$34,$20,$81,$C0,$14
+                    .db $FA,$34,$20,$82,$C0,$14,$FA,$34
+                    .db $20,$83,$C0,$14,$FA,$34,$20,$84
+                    .db $C0,$14,$FA,$34,$20,$85,$C0,$14
+                    .db $FA,$34,$20,$86,$C0,$14,$FA,$34
+                    .db $20,$87,$C0,$14,$FA,$34,$20,$98
+                    .db $C0,$14,$FA,$34,$20,$99,$C0,$14
+                    .db $FA,$34,$20,$9A,$C0,$14,$FA,$34
+                    .db $20,$9B,$C0,$14,$FA,$34,$20,$9C
+                    .db $C0,$14,$FA,$34,$20,$9D,$C0,$14
+                    .db $FA,$34,$20,$9E,$C0,$14,$FA,$34
+                    .db $20,$9F,$C0,$14,$FA,$34,$21,$E0
+                    .db $40,$7E,$FA,$34,$22,$20,$C0,$12
+                    .db $FA,$34,$22,$21,$C0,$12,$FA,$34
+                    .db $22,$22,$C0,$12,$FA,$34,$22,$23
+                    .db $C0,$12,$FA,$34,$22,$3C,$C0,$12
+                    .db $FA,$34,$22,$3D,$C0,$12,$FA,$34
+                    .db $22,$3E,$C0,$12,$FA,$34,$22,$3F
+                    .db $C0,$12,$FA,$34,$23,$60,$49,$3E
+                    .db $FA,$34,$50,$90,$00,$0D,$10,$38
+                    .db $1B,$38,$12,$38,$17,$38,$0D,$38
+                    .db $0E,$38,$1B,$38,$51,$A7,$00,$17
+                    .db $0B,$38,$0A,$38,$15,$38,$15,$38
+                    .db $85,$78,$17,$38,$85,$38,$0C,$38
+                    .db $11,$38,$0A,$38,$12,$38,$17,$38
+                    .db $52,$4D,$00,$0F,$0F,$38,$12,$38
+                    .db $1C,$38,$11,$38,$0B,$38,$18,$38
+                    .db $17,$38,$0E,$38,$FF
+
+DATA_0DFC58:        .db $20,$00,$40,$FE,$FA,$34,$20,$80
+                    .db $C0,$2A,$FA,$34,$20,$81,$C0,$2A
+                    .db $FA,$34,$20,$82,$C0,$2A,$FA,$34
+                    .db $20,$83,$C0,$2A,$FA,$34,$20,$84
+                    .db $C0,$2A,$FA,$34,$20,$85,$C0,$2A
+                    .db $FA,$34,$20,$86,$C0,$2A,$FA,$34
+                    .db $20,$87,$C0,$2A,$FA,$34,$20,$98
+                    .db $C0,$2A,$FA,$34,$20,$99,$C0,$2A
+                    .db $FA,$34,$20,$9A,$C0,$2A,$FA,$34
+                    .db $20,$9B,$C0,$2A,$FA,$34,$20,$9C
+                    .db $C0,$2A,$FA,$34,$20,$9D,$C0,$2A
+                    .db $FA,$34,$20,$9E,$C0,$2A,$FA,$34
+                    .db $20,$9F,$C0,$2A,$FA,$34,$23,$40
+                    .db $49,$7E,$FA,$34,$51,$8D,$00,$0B
+                    .db $1B,$38,$0E,$38,$23,$38,$17,$38
+                    .db $18,$38,$1B,$38,$FF
+
+DATA_0DFCD5:        .db $20,$00,$42,$80,$FA,$34,$21,$40
+                    .db $C0,$12,$FA,$34,$21,$41,$C0,$12
+                    .db $FA,$34,$21,$42,$C0,$12,$FA,$34
+                    .db $21,$43,$C0,$12,$FA,$34,$21,$44
+                    .db $C0,$12,$FA,$34,$21,$45,$C0,$12
+                    .db $FA,$34,$21,$46,$C0,$12,$FA,$34
+                    .db $21,$47,$C0,$12,$FA,$34,$21,$58
+                    .db $C0,$12,$FA,$34,$21,$59,$C0,$12
+                    .db $FA,$34,$21,$5A,$C0,$12,$FA,$34
+                    .db $21,$5B,$C0,$12,$FA,$34,$21,$5C
+                    .db $C0,$12,$FA,$34,$21,$5D,$C0,$12
+                    .db $FA,$34,$21,$5E,$C0,$12,$FA,$34
+                    .db $21,$5F,$C0,$12,$FA,$34,$22,$80
+                    .db $4A,$FE,$FA,$34,$51,$8B,$00,$15
+                    .db $16,$38,$0E,$38,$0C,$38,$11,$38
+                    .db $0A,$38,$14,$38,$18,$38,$18,$38
+                    .db $19,$38,$0A,$38,$1C,$38,$FF
+
+DATA_0DFD5C:        .db $20,$00,$5F,$FE,$FA,$14,$51,$25
+                    .db $00,$0B,$16,$38,$18,$38,$1B,$38
+                    .db $1D,$38,$18,$38,$17,$38,$51,$44
+                    .db $00,$11,$14,$38,$18,$38,$18,$38
+                    .db $19,$38,$0A,$38,$FC,$00,$13,$38
+                    .db $1B,$38,$24,$38,$51,$37,$00,$05
+                    .db $1B,$38,$18,$38,$22,$38,$51,$56
                     .db $00,$09,$14,$38,$18,$38,$18,$38
-                    .db $19,$38,$0A,$38,$53,$17,$00,$09
-                    .db $15,$38,$0A,$38,$1B,$38,$1B,$38
-                    .db $22,$38,$53,$37,$00,$09,$14,$38
+                    .db $19,$38,$0A,$38,$52,$0D,$00,$0B
+                    .db $0B,$38,$18,$38,$20,$38,$1C,$38
+                    .db $0E,$38,$1B,$38,$52,$43,$00,$09
+                    .db $15,$38,$0E,$38,$16,$38,$16,$38
+                    .db $22,$38,$52,$63,$00,$09,$14,$38
                     .db $18,$38,$18,$38,$19,$38,$0A,$38
-                    .db $53,$2E,$00,$0B,$15,$38,$1E,$38
-                    .db $0D,$38,$20,$38,$12,$38,$10,$38
-                    .db $53,$4D,$00,$11,$1F,$38,$18,$38
-                    .db $17,$38,$FC,$00,$14,$38,$18,$38
-                    .db $18,$38,$19,$38,$0A,$38,$FF,$FF
-                    .db $FF,$52,$C1,$00,$0D,$19,$38,$1E
-                    .db $38,$16,$38,$19,$38,$14,$38,$12
-                    .db $38,$17,$38,$FF,$FF,$53,$2D,$00
-                    .db $0B,$19,$38,$12,$38,$0D,$38,$10
-                    .db $38,$12,$38,$1D,$38,$FF,$FF,$FF
-                    .db $FF,$53,$2E,$00,$15,$16,$38,$0A
-                    .db $38,$1C,$38,$14,$38,$FC,$00,$14
-                    .db $38,$18,$38,$18,$38,$19,$38,$0A
-                    .db $38,$1C,$38,$FF,$FF,$FF,$FF,$FF
+                    .db $52,$59,$00,$09,$20,$38,$0E,$38
+                    .db $17,$38,$0D,$38,$22,$38,$52,$78
+                    .db $00,$0D,$18,$38,$24,$38,$14,$38
+                    .db $18,$38,$18,$38,$19,$38,$0A,$38
+                    .db $53,$06,$00,$07,$12,$38,$10,$38
+                    .db $10,$38,$22,$38,$53,$26,$00,$09
+                    .db $14,$38,$18,$38,$18,$38,$19,$38
+                    .db $0A,$38,$53,$17,$00,$09,$15,$38
+                    .db $0A,$38,$1B,$38,$1B,$38,$22,$38
+                    .db $53,$37,$00,$09,$14,$38,$18,$38
+                    .db $18,$38,$19,$38,$0A,$38,$53,$2E
+                    .db $00,$0B,$15,$38,$1E,$38,$0D,$38
+                    .db $20,$38,$12,$38,$10,$38,$53,$4D
+                    .db $00,$11,$1F,$38,$18,$38,$17,$38
+                    .db $FC,$00,$14,$38,$18,$38,$18,$38
+                    .db $19,$38,$0A,$38,$FF,$FF,$FF,$52
+                    .db $C1,$00,$0D,$19,$38,$1E,$38,$16
+                    .db $38,$19,$38,$14,$38,$12,$38,$17
+                    .db $38,$FF,$FF,$53,$2D,$00,$0B,$19
+                    .db $38,$12,$38,$0D,$38,$10,$38,$12
+                    .db $38,$1D,$38,$FF,$FF,$FF,$FF,$53
+                    .db $2E,$00,$15,$16,$38,$0A,$38,$1C
+                    .db $38,$14,$38,$FC,$00,$14,$38,$18
+                    .db $38,$18,$38,$19,$38,$0A,$38,$1C
+                    .db $38,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
@@ -8445,4 +9118,6 @@ DATA_0DF08A:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-                    .db $FF,$FF,$FF,$FF,$FF,$FF
+                    .db $FF,$FF,$FF,$FF
+
+

@@ -624,34 +624,34 @@ DATA_0C8000:        .db $71,$71,$71,$71,$71,$71,$6E,$11
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-                    .db $20,$00,$5F,$FE,$F8,$00,$30,$00
+DATA_0C9380:        .db $20,$00,$5F,$FE,$F8,$00,$30,$00
                     .db $5F,$FE,$FA,$08,$FF
 
-ADDR_0C938D:        PHB                       
+ExtSub0C938D:       PHB                       ; Wrapper
                     PHK                       
                     PLB                       
                     SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     JSR.W ADDR_0C9F6A         
                     JSR.W ADDR_0CAB1F         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_0C939A:        PHB                       
+ExtSub0C939A:       PHB                       ; Wrapper
                     PHK                       
                     PLB                       
                     JSR.W ADDR_0CA0E3         
                     JSR.W ADDR_0CA1D4         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_0C93A5:        PHB                       
+ExtSub0C93A5:       PHB                       ; Wrapper
                     PHK                       
                     PLB                       
                     JSR.W ADDR_0CAEAD         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_0C93AD:        PHB                       
+ExtSub0C93AD:       PHB                       
                     PHK                       
                     PLB                       
                     DEC.W $145B               
@@ -661,8 +661,7 @@ ADDR_0C93AD:        PHB
                     LDA.B #$FF                
                     STA.W $1DE9               
 ADDR_0C93BF:        PLB                       
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 DATA_0C93C1:        .db $5A,$F4,$C0,$E7,$82,$EC,$44,$DD
                     .db $00,$D9,$59,$DF,$54,$DE
@@ -670,7 +669,7 @@ DATA_0C93C1:        .db $5A,$F4,$C0,$E7,$82,$EC,$44,$DD
 DATA_0C93CF:        .db $FF,$FF,$FF,$FE,$FF,$FE,$FF,$FE
                     .db $FF,$FF,$FF,$FE,$FF,$FE
 
-ADDR_0C93DD:        REP #$30                  ; Index (16 bit) Accum (16 bit) 
+ExtSub0C93DD:       REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     STZ.W $1928               
 ADDR_0C93E2:        LDA.W $1928               
                     AND.W #$00FF              
@@ -709,11 +708,11 @@ ADDR_0C9409:        STA.L $7EBD00,X
                     SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     STZ $67                   
                     STZ.W $1928               
-                    JSL.L ADDR_0C9567         
+                    JSL.L ExtSub0C9567        
                     JSR.W ADDR_0CA051         
                     LDA.B #$09                
-                    STA.W $1DFB               ; / Play sound effect 
-                    RTL                       ; Return 
+                    STA.W $1DFB               ; / Change music
+                    RTL                       ; Return
 
 ADDR_0C944C:        REP #$30                  ; Index (16 bit) Accum (16 bit) 
                     LDY.W #$0000              
@@ -742,6 +741,7 @@ ADDR_0C9475:        STA [$0D],Y
                     BPL ADDR_0C9475           
                     STY $05                   
                     BRA ADDR_0C9492           
+
 ADDR_0C9480:        LDY $03                   
                     LDA [$68],Y               
                     INY                       
@@ -774,7 +774,7 @@ ADDR_0C94AB:        LDA $00
                     INX                       
                     CPX.W #$0400              
                     BNE ADDR_0C94AB           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0C94C0:        SEP #$20                  ; Accum (8 bit) 
                     REP #$10                  ; Index (16 bit) 
@@ -846,18 +846,18 @@ ADDR_0C94EB:        SEP #$20                  ; Accum (8 bit)
                     STA $08                   
                     LDA $04                   
                     CMP.W #$0170              
-                    BNE ADDR_0C9558           
+                    BNE Return0C9558          
                     LDA.W #$02A0              
                     STA $04                   
                     BRA ADDR_0C94EB           
-ADDR_0C9558:        RTS                       ; Return 
 
+Return0C9558:       RTS                       ; Return
 
 DATA_0C9559:        .db $01,$18,$00,$40,$7F,$00,$04
 
 DATA_0C9560:        .db $01,$18,$00,$44,$7F,$00,$04
 
-ADDR_0C9567:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
+ExtSub0C9567:       SEP #$30                  ; Index (8 bit) Accum (8 bit) 
                     PHB                       
                     PHK                       
                     PLB                       
@@ -901,8 +901,7 @@ ADDR_0C95A8:        LDA.W DATA_0C9560,Y
                     STA.W $420B               ; Regular DMA Channel Enable
                     STZ.W $1FFE               
                     PLB                       
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 DATA_0C95C7:        .db $07
 
@@ -1268,12 +1267,11 @@ ADDR_0C9F43:        REP #$20                  ; Accum (16 bit)
                     ADC.W #$0020              
                     STA $65                   
                     AND.W #$03FF              
-                    BNE ADDR_0C9F5B           
+                    BNE Return0C9F5B          
                     LDA $65                   
                     EOR.W #$0C00              
                     STA $65                   
-ADDR_0C9F5B:        RTS                       ; Return 
-
+Return0C9F5B:       RTS                       ; Return
 
 DATA_0C9F5C:        .db $C0,$00,$80,$01,$40,$02,$00,$03
                     .db $C0,$03,$80,$04,$59,$05
@@ -1314,6 +1312,7 @@ ADDR_0C9FAE:        LDA $24
                     DEX                       
                     BPL ADDR_0C9FAE           
                     BRA ADDR_0C9FC6           
+
 ADDR_0C9FBB:        LDA.W $1B88               
                     AND.W #$00FF              
                     BNE ADDR_0C9FC6           
@@ -1332,8 +1331,7 @@ ADDR_0C9FE0:        XBA
                     CLC                       
                     ADC $00,X                 
                     STA $00,X                 
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0C9FE7:        .db $00,$FF,$00
 
@@ -1377,8 +1375,7 @@ ADDR_0C9FEA:        REP #$20                  ; Accum (16 bit)
                     LDA.B #$10                
                     STA $02                   
                     JSR.W ADDR_0CA8DF         
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0CA043:        .db $63,$73,$83,$93,$A3,$B3,$C3
 
@@ -1412,8 +1409,7 @@ ADDR_0CA063:        LDA.W DATA_0CA04A,Y
                     LDA.B #$E2                
                     STA.W $1B89               
                     PLB                       
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0CA08F:        .db $FF,$02,$04,$06,$08,$06,$08,$06
                     .db $08,$06,$08,$04,$02,$FF,$20,$22
@@ -1473,8 +1469,7 @@ ADDR_0CA11A:        LDA $00
 ADDR_0CA130:        INY                       
                     CPY.B #$2A                
                     BNE ADDR_0CA0F1           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0CA136:        .db $26,$28,$2A,$2C,$46,$48,$4A,$4C
                     .db $60,$62,$64,$66,$6A,$6C,$6E,$0A
@@ -1552,22 +1547,27 @@ ADDR_0CA1CD:        INY
                     TYA                       
                     AND.B #$07                
                     BNE ADDR_0CA183           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0CA1D4:        JSR.W ADDR_0CAB1F         
                     LDA.W $1442               
                     JSL.L ExecutePtrLong      
 
-PtrsLong0CA1DE:     .db $ED,$A1,$0C
-                    .db $3C,$A4,$0C
-                    .db $32,$A5,$0C
-                    .db $5B,$A6,$0C
-                    .db $B0,$A6,$0C
+PtrsLong0CA1DE:     .dw ADDR_0CA1ED           
+                    .db :ADDR_0CA1ED
+                    .dw ADDR_0CA43C           
+                    .db :ADDR_0CA43C
+                    .dw ADDR_0CA532           
+                    .db :ADDR_0CA532
+                    .dw ADDR_0CA65B           
+                    .db :ADDR_0CA65B
+                    .dw ADDR_0CA6B0           
+                    .db :ADDR_0CA6B0
 
-                    JSR.W ADDR_0CA315         
+ADDR_0CA1ED:        JSR.W ADDR_0CA315         
                     LDA.W $1B89               
                     BEQ ADDR_0CA1F6           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0CA1F6:        LDA.B #$60                
                     STA $96                   
@@ -1578,8 +1578,8 @@ ADDR_0CA1F6:        LDA.B #$60
                     CMP.B #$70                
                     BNE ADDR_0CA24F           
                     STZ.W $18E2               
-                    LDA.B #$0F                
-                    STA.W $13E0               
+                    LDA.B #$0F                ;  \ Mario's image = Going Down Pipe 
+                    STA.W $13E0               ;  / 
                     JSR.W ADDR_0CA764         
                     JSR.W ADDR_0CA7B4         
                     LDA.W $1442               
@@ -1673,6 +1673,7 @@ ADDR_0CA2C3:        LDA.W $0B57
                     BNE ADDR_0CA2FC           
                     INC.W $1442               
                     BRA ADDR_0CA2FC           
+
 ADDR_0CA2E0:        SEP #$20                  ; Accum (8 bit) 
                     LDX.B #$0D                
 ADDR_0CA2E4:        CPX.B #$0B                
@@ -1693,8 +1694,7 @@ ADDR_0CA2FC:        SEP #$20                  ; Accum (8 bit)
                     LDA.B #$88                
                     STA $02                   
                     JSR.W ADDR_0CA8DF         
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0CA30D:        .db $00,$01,$02,$01
 
@@ -1723,6 +1723,7 @@ ADDR_0CA334:        LDY.B #$00
                     BCC ADDR_0CA355           
                     LDY.B #$02                
                     BRA ADDR_0CA349           
+
 ADDR_0CA349:        CMP.B #$0C                
                     BCS ADDR_0CA355           
                     LDY.B #$01                
@@ -1731,9 +1732,9 @@ ADDR_0CA349:        CMP.B #$0C
                     LDY.B #$02                
 ADDR_0CA355:        STY.W $1458               
                     LDA.W $1457               
-                    BEQ ADDR_0CA3B3           
+                    BEQ Return0CA3B3          
                     CMP.B #$01                
-                    BNE ADDR_0CA3B3           
+                    BNE Return0CA3B3          
                     LDA.B #$18                
                     STA $00                   
                     STZ $01                   
@@ -1774,8 +1775,7 @@ ADDR_0CA355:        STY.W $1458
                     LDA.B #$00                
                     STA $0E                   
                     JSR.W ADDR_0CAA15         
-ADDR_0CA3B3:        RTS                       ; Return 
-
+Return0CA3B3:       RTS                       ; Return
 
 DATA_0CA3B4:        .db $40,$50,$60,$70,$80,$90,$A0
 
@@ -1783,7 +1783,7 @@ DATA_0CA3BB:        .db $AF,$AB,$AF,$AB,$AF,$AB,$AF
 
 DATA_0CA3C2:        .db $F6,$00,$F6,$00,$F6,$00,$F6
 
-ADDR_0CA3C9:        PHB                       
+ExtSub0CA3C9:       PHB                       
                     PHK                       
                     PLB                       
                     LDA.B #$01                
@@ -1811,7 +1811,7 @@ ADDR_0CA3C9:        PHB
                     STA.W $1B89               
                     STA.W $1928               
                     LDA.B #$0A                
-                    STA.W $1DFB               ; / Play sound effect 
+                    STA.W $1DFB               ; / Change music
                     LDX.B #$0D                
                     LDY.B #$06                
 ADDR_0CA414:        LDA.W DATA_0CA3BB,Y       
@@ -1829,12 +1829,11 @@ ADDR_0CA414:        LDA.W DATA_0CA3BB,Y
                     CPX.B #$06                
                     BNE ADDR_0CA414           
                     PLB                       
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 DATA_0CA439:        .db $00,$02,$02
 
-                    LDA.W $1458               
+ADDR_0CA43C:        LDA.W $1458               
                     CMP.B #$08                
                     BCS ADDR_0CA45C           
                     JSR.W ADDR_0CA315         
@@ -1947,12 +1946,11 @@ ADDR_0CA510:        LDA $E4
                     STA $0E                   
                     JSR.W ADDR_0CAA15         
                     BRL ADDR_0CA1F6           
-
 DATA_0CA524:        .db $20,$01,$10,$40,$08,$02,$04
 
 DATA_0CA52B:        .db $10,$60,$20,$00,$30,$50,$40
 
-                    LDA.W $145C               
+ADDR_0CA532:        LDA.W $145C               
                     BEQ ADDR_0CA53A           
                     BRL ADDR_0CA5CB           
 ADDR_0CA53A:        LDA.B #$98                
@@ -2003,20 +2001,21 @@ ADDR_0CA53A:        LDA.B #$98
                     CMP.B #$08                
                     BEQ ADDR_0CA5B6           
                     LDA.B #$0A                
-                    STA.W $1DFC               ; / Play sound effect 
+                    STA.W $1DFC               ; / Play sound effect
                     BRA ADDR_0CA5CB           
+
 ADDR_0CA5B6:        STZ.W $0B70               
                     LDA.B #$80                
                     STA.W $0B52               
                     STZ.W $0B16               
                     LDA.B #$0B                
-                    STA.W $1DFB               ; / Play sound effect 
+                    STA.W $1DFB               ; / Change music
                     INC.W $1442               
                     BRA ADDR_0CA5CE           
+
 ADDR_0CA5CB:        JSR.W ADDR_0CA5DE         
 ADDR_0CA5CE:        JSR.W ADDR_0CA4B6         
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0CA5D2:        .db $C8,$C8,$D8,$D8
 
@@ -2025,7 +2024,7 @@ DATA_0CA5D6:        .db $26,$66,$26,$66
 DATA_0CA5DA:        .db $E8,$18,$F4,$0C
 
 ADDR_0CA5DE:        LDA.W $145C               
-                    BEQ ADDR_0CA65A           
+                    BEQ Return0CA65A          
                     LDX.B #$06                
 ADDR_0CA5E5:        LDA.W $0B05,X             
                     CLC                       
@@ -2086,9 +2085,9 @@ ADDR_0CA618:        LDA.W $0B6E,Y
 ADDR_0CA655:        DEY                       
                     CPY.B #$02                
                     BNE ADDR_0CA618           
-ADDR_0CA65A:        RTS                       ; Return 
+Return0CA65A:       RTS                       ; Return
 
-                    LDX.B #$02                
+ADDR_0CA65B:        LDX.B #$02                
                     LDA.W $0B14,X             
                     SEC                       
                     SBC.B #$04                
@@ -2124,9 +2123,9 @@ ADDR_0CA67A:        STA $00
                     LDA.B #$08                
                     STA.W $1458               
 ADDR_0CA6AC:        JSR.W ADDR_0CA478         
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
-                    JSR.W ADDR_0CA146         
+ADDR_0CA6B0:        JSR.W ADDR_0CA146         
                     JSR.W ADDR_0CA315         
                     JSR.W ADDR_0CA2FC         
                     LDA.B #$60                
@@ -2134,8 +2133,8 @@ ADDR_0CA6AC:        JSR.W ADDR_0CA478
                     LDA.B #$01                
                     STA $97                   
                     STZ.W $18E2               
-                    LDA.B #$26                
-                    STA.W $13E0               
+                    LDA.B #$26                ;  \ Mario's image = Peace Sign 
+                    STA.W $13E0               ;  / 
                     JSR.W ADDR_0CA764         
                     JSR.W ADDR_0CA7B4         
                     LDY.W $1458               
@@ -2174,11 +2173,11 @@ ADDR_0CA6AC:        JSR.W ADDR_0CA478
                     JSR.W ADDR_0CA821         
                     DEC.W $145D               
                     LDA.W $145D               
-                    BNE ADDR_0CA720           
+                    BNE Return0CA720          
                     INC.W $0100               
                     LDA.B #$40                
                     STA.W $145B               
-ADDR_0CA720:        RTS                       ; Return 
+Return0CA720:       RTS                       ; Return
 
 ADDR_0CA721:        LDA.W $0B05,X             
                     ASL                       
@@ -2205,7 +2204,7 @@ ADDR_0CA740:        PLP
                     TYA                       
                     ADC.W $0B5F,X             
                     STA.W $0B5F,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0CA74F:        PHX                       
                     TXA                       
@@ -2214,22 +2213,22 @@ ADDR_0CA74F:        PHX
                     TAX                       
                     JSR.W ADDR_0CA721         
                     PLX                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0CA75A:        PHB                       
                     LDA.B #$00                
                     PHA                       
                     PLB                       
-                    JSL.L ADDR_00CEB1         
+                    JSL.L ExtSub00CEB1        
                     PLB                       
 ADDR_0CA764:        STZ.W $13F9               
                     LDA.W $1496               
                     BEQ ADDR_0CA76F           
                     DEC.W $1496               
 ADDR_0CA76F:        LDA.W $14A2               
-                    BEQ ADDR_0CA777           
+                    BEQ Return0CA777          
                     DEC.W $14A2               
-ADDR_0CA777:        RTS                       ; Return 
+Return0CA777:       RTS                       ; Return
 
 ADDR_0CA778:        LDX.B #$00                
                     STX.W $15E9               
@@ -2237,7 +2236,7 @@ ADDR_0CA778:        LDX.B #$00
                     STA $9E                   
                     LDA.W $1602               
                     PHA                       
-                    JSL.L ADDR_07F7D2         
+                    JSL.L InitSpriteTables    
                     PLA                       
                     STA.W $1602               
                     LDA.B #$02                
@@ -2257,9 +2256,8 @@ ADDR_0CA778:        LDX.B #$00
                     STZ.W $1602               
 ADDR_0CA7AF:        LDA.B #$01                
                     STA.W $18E2               
-ADDR_0CA7B4:        JSL.L ADDR_00E2BD         
-                    RTS                       ; Return 
-
+ADDR_0CA7B4:        JSL.L ExtSub00E2BD        
+                    RTS                       ; Return
 
 DATA_0CA7B9:        .db $63
 
@@ -2345,7 +2343,7 @@ ADDR_0CA855:        LDA $02
                     DEC $04                   
                     BPL ADDR_0CA83C           
 ADDR_0CA8A0:        SEP #$30                  ; Index (8 bit) Accum (8 bit) 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0CA8A3:        LDX.B #$0D                
 ADDR_0CA8A5:        LDA.W $0B05,X             
@@ -2366,8 +2364,7 @@ ADDR_0CA8A5:        LDA.W $0B05,X
 ADDR_0CA8CB:        DEX                       
                     CPX.B #$06                
                     BNE ADDR_0CA8A5           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0CA8D1:        .db $00,$10,$20,$30,$40,$50,$60
 
@@ -2394,6 +2391,7 @@ ADDR_0CA8E6:        LDA.W $0B6E,Y
                     LDA.B #$21                
                     STA.W $0203,X             
                     BRA ADDR_0CA923           
+
 ADDR_0CA911:        PHY                       
                     TYA                       
                     SEC                       
@@ -2417,8 +2415,7 @@ ADDR_0CA923:        TXA
 ADDR_0CA934:        DEY                       
                     CPY.B #$06                
                     BNE ADDR_0CA8E6           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0CA93A:        .db $BB
 
@@ -2502,8 +2499,7 @@ ADDR_0CA9F6:        TYA
                     INY                       
                     DEC $04                   
                     BPL ADDR_0CA9AA           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0CAA0B:        .db $C4
 
@@ -2541,8 +2537,7 @@ ADDR_0CAA15:        PHY
                     LDA.B #$02                
                     STA.W $0420,X             
                     STA.W $0421,X             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0CAA53:        .db $53
 
@@ -2569,7 +2564,7 @@ DATA_0CAA56:        .db $3C,$63,$6A,$82,$3C,$53,$7A,$A0
                     .db $3F,$78,$A8,$EA,$3F,$88,$A8,$EC
                     .db $3F
 
-ADDR_0CAADF:        PHB                       
+ExtSub0CAADF:       PHB                       
                     PHK                       
                     PLB                       
                     LDX.B #$00                
@@ -2598,15 +2593,14 @@ ADDR_0CAAE5:        LDA.W DATA_0CAA53,Y
                     CPY.B #$8C                
                     BNE ADDR_0CAAE5           
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
-ADDR_0CAB13:        PHB                       
+ExtSub0CAB13:       PHB                       ; Wrapper
                     PHK                       
                     PLB                       
                     JSR.W ADDR_0CAB1F         
                     PLB                       
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 DATA_0CAB1B:        .db $FE,$02
 
@@ -2637,6 +2631,7 @@ ADDR_0CAB3B:        STA $43
                     BCC ADDR_0CAB57           
                     INC.W $0100               
                     BRA ADDR_0CAB6B           
+
 ADDR_0CAB57:        PHA                       
                     PHX                       
                     INC.W $1FFE               
@@ -2669,8 +2664,7 @@ ADDR_0CAB7C:        STA.W $04A0,X
                     STA $44                   
                     LDA.B #$80                
                     STA.W $0D9F               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0CAB9C:        .db $00,$18,$30,$48,$60,$78,$90,$A8
 DATA_0CABA4:        .db $06,$00,$00,$02,$05,$06,$00
@@ -2693,7 +2687,7 @@ ADDR_0CABB2:        SEP #$30                  ; Index (8 bit) Accum (8 bit)
                     AND.W #$000F              
                     ASL                       
                     TAX                       
-                    LDA.L DATA_00B0A0,X       
+                    LDA.L Palettes,X          
                     STA.W $0701               
                     LDA.W #$B0B0              
                     STA $00                   
@@ -2729,8 +2723,7 @@ ADDR_0CAC06:        LDA [$00]
                     LDA.W #$0000              
                     STA.W $0684,X             
                     SEP #$30                  ; Index (8 bit) Accum (8 bit) 
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0CAC29:        .db $E0,$00,$00,$00,$00,$26,$2B,$41
                     .db $0A,$F4,$10,$26,$3B,$51,$2B,$37
@@ -2781,7 +2774,7 @@ DATA_0CAD72:        .db $82,$EC,$44,$DD,$59,$DF,$00,$D9
                     .db $5A,$F4,$03,$E1,$5A,$F4,$03,$E1
                     .db $52,$AD
 
-ADDR_0CAD8C:        PHB                       
+ExtSub0CAD8C:       PHB                       
                     PHK                       
                     PLB                       
                     INC.W $1DE9               
@@ -2802,8 +2795,7 @@ ADDR_0CAD9D:        ASL
                     STA $68                   
                     SEP #$20                  ; Accum (8 bit) 
                     PLB                       
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 DATA_0CADB5:        .db $28,$28,$44,$28,$38,$20,$28,$20
                     .db $08,$28,$7C,$68,$28
@@ -2820,7 +2812,7 @@ DATA_0CADDD:        .db $FE,$4B,$FE,$5F,$FE,$71,$FE,$73
                     .db $FE,$97,$FE,$99,$FE,$9B,$FE,$9D
                     .db $FE
 
-ADDR_0CADF6:        PHB                       
+ExtSub0CADF6:       PHB                       
                     PHK                       
                     PLB                       
                     LDA.W $1DE9               
@@ -2834,7 +2826,7 @@ ADDR_0CADF6:        PHB
                     STA $12                   
                     PHY                       
                     PHX                       
-                    JSL.L ADDR_0084C8         
+                    JSL.L ExtSub0084C8        
                     LDA.W $1EEB               
                     BPL ADDR_0CAE48           
                     LDA.W $1DE9               
@@ -2887,6 +2879,7 @@ ADDR_0CAE48:        PLX
                     STZ.W $1466               
                     STZ.W $146A               
                     BRA ADDR_0CAEA3           
+
 ADDR_0CAE88:        LDA.W #$FF00              
                     STA $1A                   
                     STA $22                   
@@ -2901,7 +2894,7 @@ ADDR_0CAEA3:        LDA.W #$00FF
                     STA.W $145B               
                     SEP #$20                  ; Accum (8 bit) 
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_0CAEAD:        SEP #$20                  ; Accum (8 bit) 
                     LDA.W $1DE9               
@@ -2909,6 +2902,7 @@ ADDR_0CAEAD:        SEP #$20                  ; Accum (8 bit)
                     BNE ADDR_0CAEBC           
                     DEC.W $145B               
                     JMP.W ADDR_0CAEF8         
+
 ADDR_0CAEBC:        REP #$20                  ; Accum (16 bit) 
                     LDA $1A                   
                     CMP.W $1462               
@@ -2917,6 +2911,7 @@ ADDR_0CAEBC:        REP #$20                  ; Accum (16 bit)
                     BEQ ADDR_0CAED0           
                     DEC.W $145B               
                     JMP.W ADDR_0CAF0C         
+
 ADDR_0CAED0:        LDA $1A                   
                     CLC                       
                     ADC.W #$0002              
@@ -3228,9 +3223,9 @@ ADDR_0CB5E8:        STY $03
                     INX                       
                     DEC $01                   
                     BRA ADDR_0CB5DB           
-ADDR_0CB633:        SEP #$10                  ; Index (8 bit) 
-                    RTS                       ; Return 
 
+ADDR_0CB633:        SEP #$10                  ; Index (8 bit) 
+                    RTS                       ; Return
 
 DATA_0CB636:        .db $50,$EA,$00,$17,$E3,$20,$FC,$20
                     .db $C7,$20,$FC,$20,$C4,$20,$FC,$20
@@ -3346,512 +3341,594 @@ DATA_0CB800:        .db $30,$00,$5F,$FE,$FA,$28,$30,$64
                     .db $32,$04,$40,$2E,$9A,$35,$32,$07
                     .db $00,$01,$B7,$35,$32,$0E,$00,$01
                     .db $B7,$35,$32,$15,$00,$01,$B7,$35
-                    .db $32,$19,$00,$01,$B7,$35,$FF,$20
-                    .db $00,$5F,$FE,$F8,$00,$20,$F4,$00
-                    .db $0B,$80,$01,$81,$01,$82,$01,$83
-                    .db $01,$81,$41,$85,$01,$21,$14,$00
-                    .db $0B,$90,$01,$91,$01,$92,$01,$93
-                    .db $01,$94,$01,$95,$01,$21,$34,$00
-                    .db $0B,$A0,$01,$A1,$01,$A2,$01,$A3
-                    .db $01,$A4,$01,$A5,$01,$21,$54,$00
-                    .db $0B,$B0,$01,$91,$01,$92,$01,$93
-                    .db $01,$94,$01,$B5,$01,$21,$74,$00
-                    .db $0B,$A0,$01,$A1,$01,$A2,$01,$A3
-                    .db $01,$A4,$01,$A5,$01,$21,$94,$00
-                    .db $0B,$90,$01,$B1,$01,$B2,$01,$B3
-                    .db $01,$B4,$01,$95,$01,$21,$B4,$00
-                    .db $0B,$A0,$01,$C6,$01,$C7,$01,$C6
-                    .db $41,$94,$01,$A5,$01,$21,$D4,$00
-                    .db $0B,$B0,$01,$D6,$01,$C7,$81,$D6
-                    .db $41,$B4,$41,$B5,$01,$21,$F4,$00
-                    .db $0B,$D0,$89,$D0,$C9,$E0,$09,$E1
-                    .db $09,$D0,$C9,$E2,$09,$FF,$30,$00
-                    .db $5F,$FE,$FA,$28,$30,$64,$40,$2E
-                    .db $FA,$08,$30,$84,$40,$2E,$FA,$08
-                    .db $30,$A4,$40,$2E,$FA,$08,$30,$C4
-                    .db $40,$2E,$FA,$08,$30,$E4,$40,$2E
-                    .db $FA,$08,$31,$04,$40,$2E,$FA,$08
-                    .db $31,$24,$40,$2E,$FA,$08,$31,$44
-                    .db $40,$2E,$FA,$08,$31,$64,$40,$2E
-                    .db $FA,$08,$31,$84,$40,$2E,$FA,$08
-                    .db $31,$A4,$40,$2E,$FA,$08,$31,$C4
-                    .db $40,$2E,$FA,$08,$30,$64,$80,$05
-                    .db $F8,$08,$F8,$08,$8C,$09,$30,$65
-                    .db $00,$01,$8C,$09,$30,$68,$00,$01
-                    .db $8C,$09,$30,$69,$80,$03,$F8,$08
-                    .db $8C,$09,$30,$6A,$80,$05,$F8,$08
-                    .db $F8,$08,$8C,$09,$30,$6B,$00,$01
-                    .db $8C,$09,$30,$6C,$80,$03,$F8,$08
-                    .db $8C,$09,$30,$6D,$C0,$06,$F8,$08
-                    .db $30,$ED,$00,$01,$8C,$09,$30,$6E
+                    .db $32,$19,$00,$01,$B7,$35,$FF
+
+DATA_0CB9BF:        .db $20,$00,$5F,$FE,$F8,$00,$20,$F4
+                    .db $00,$0B,$80,$01,$81,$01,$82,$01
+                    .db $83,$01,$81,$41,$85,$01,$21,$14
+                    .db $00,$0B,$90,$01,$91,$01,$92,$01
+                    .db $93,$01,$94,$01,$95,$01,$21,$34
+                    .db $00,$0B,$A0,$01,$A1,$01,$A2,$01
+                    .db $A3,$01,$A4,$01,$A5,$01,$21,$54
+                    .db $00,$0B,$B0,$01,$91,$01,$92,$01
+                    .db $93,$01,$94,$01,$B5,$01,$21,$74
+                    .db $00,$0B,$A0,$01,$A1,$01,$A2,$01
+                    .db $A3,$01,$A4,$01,$A5,$01,$21,$94
+                    .db $00,$0B,$90,$01,$B1,$01,$B2,$01
+                    .db $B3,$01,$B4,$01,$95,$01,$21,$B4
+                    .db $00,$0B,$A0,$01,$C6,$01,$C7,$01
+                    .db $C6,$41,$94,$01,$A5,$01,$21,$D4
+                    .db $00,$0B,$B0,$01,$D6,$01,$C7,$81
+                    .db $D6,$41,$B4,$41,$B5,$01,$21,$F4
+                    .db $00,$0B,$D0,$89,$D0,$C9,$E0,$09
+                    .db $E1,$09,$D0,$C9,$E2,$09,$FF
+
+DATA_0CBA56:        .db $30,$00,$5F,$FE,$FA,$28,$30,$64
+                    .db $40,$2E,$FA,$08,$30,$84,$40,$2E
+                    .db $FA,$08,$30,$A4,$40,$2E,$FA,$08
+                    .db $30,$C4,$40,$2E,$FA,$08,$30,$E4
+                    .db $40,$2E,$FA,$08,$31,$04,$40,$2E
+                    .db $FA,$08,$31,$24,$40,$2E,$FA,$08
+                    .db $31,$44,$40,$2E,$FA,$08,$31,$64
+                    .db $40,$2E,$FA,$08,$31,$84,$40,$2E
+                    .db $FA,$08,$31,$A4,$40,$2E,$FA,$08
+                    .db $31,$C4,$40,$2E,$FA,$08,$30,$64
                     .db $80,$05,$F8,$08,$F8,$08,$8C,$09
-                    .db $30,$6F,$C0,$04,$F8,$08,$30,$CF
-                    .db $00,$01,$8C,$09,$30,$71,$80,$05
-                    .db $F8,$08,$F8,$08,$8C,$09,$30,$74
-                    .db $00,$01,$8C,$09,$30,$75,$80,$03
-                    .db $F8,$08,$8C,$09,$30,$77,$00,$01
-                    .db $8C,$09,$30,$7A,$80,$05,$F8,$08
-                    .db $F8,$08,$8C,$09,$30,$7B,$C0,$04
-                    .db $F8,$08,$30,$DB,$00,$01,$8C,$09
-                    .db $31,$84,$80,$05,$8C,$89,$F8,$08
-                    .db $F8,$08,$31,$45,$00,$01,$8C,$89
-                    .db $31,$65,$C0,$06,$F8,$08,$31,$C7
-                    .db $00,$01,$8C,$89,$31,$A9,$80,$03
-                    .db $8C,$89,$F8,$08,$31,$6B,$00,$01
-                    .db $8C,$89,$31,$8B,$C0,$04,$F8,$08
-                    .db $31,$8C,$80,$05,$8C,$89,$F8,$08
-                    .db $F8,$08,$31,$CD,$00,$01,$8C,$89
-                    .db $31,$AF,$80,$03,$8C,$89,$F8,$08
-                    .db $31,$91,$80,$05,$8C,$89,$F8,$08
-                    .db $F8,$08,$31,$D2,$00,$01,$8C,$89
-                    .db $31,$B6,$80,$03,$8C,$89,$F8,$08
-                    .db $31,$D7,$00,$01,$8C,$89,$31,$99
-                    .db $80,$05,$8C,$89,$F8,$08,$F8,$08
-                    .db $31,$7B,$00,$01,$8C,$89,$31,$9B
-                    .db $C0,$04,$F8,$08,$31,$E4,$40,$2E
+                    .db $30,$65,$00,$01,$8C,$09,$30,$68
+                    .db $00,$01,$8C,$09,$30,$69,$80,$03
+                    .db $F8,$08,$8C,$09,$30,$6A,$80,$05
+                    .db $F8,$08,$F8,$08,$8C,$09,$30,$6B
+                    .db $00,$01,$8C,$09,$30,$6C,$80,$03
+                    .db $F8,$08,$8C,$09,$30,$6D,$C0,$06
+                    .db $F8,$08,$30,$ED,$00,$01,$8C,$09
+                    .db $30,$6E,$80,$05,$F8,$08,$F8,$08
+                    .db $8C,$09,$30,$6F,$C0,$04,$F8,$08
+                    .db $30,$CF,$00,$01,$8C,$09,$30,$71
+                    .db $80,$05,$F8,$08,$F8,$08,$8C,$09
+                    .db $30,$74,$00,$01,$8C,$09,$30,$75
+                    .db $80,$03,$F8,$08,$8C,$09,$30,$77
+                    .db $00,$01,$8C,$09,$30,$7A,$80,$05
+                    .db $F8,$08,$F8,$08,$8C,$09,$30,$7B
+                    .db $C0,$04,$F8,$08,$30,$DB,$00,$01
+                    .db $8C,$09,$31,$84,$80,$05,$8C,$89
+                    .db $F8,$08,$F8,$08,$31,$45,$00,$01
+                    .db $8C,$89,$31,$65,$C0,$06,$F8,$08
+                    .db $31,$C7,$00,$01,$8C,$89,$31,$A9
+                    .db $80,$03,$8C,$89,$F8,$08,$31,$6B
+                    .db $00,$01,$8C,$89,$31,$8B,$C0,$04
+                    .db $F8,$08,$31,$8C,$80,$05,$8C,$89
+                    .db $F8,$08,$F8,$08,$31,$CD,$00,$01
+                    .db $8C,$89,$31,$AF,$80,$03,$8C,$89
+                    .db $F8,$08,$31,$91,$80,$05,$8C,$89
+                    .db $F8,$08,$F8,$08,$31,$D2,$00,$01
+                    .db $8C,$89,$31,$B6,$80,$03,$8C,$89
+                    .db $F8,$08,$31,$D7,$00,$01,$8C,$89
+                    .db $31,$99,$80,$05,$8C,$89,$F8,$08
+                    .db $F8,$08,$31,$7B,$00,$01,$8C,$89
+                    .db $31,$9B,$C0,$04,$F8,$08,$31,$E4
+                    .db $40,$2E,$8A,$25,$32,$04,$40,$2E
+                    .db $9A,$25,$FF
+
+DATA_0CBBB9:        .db $30,$00,$5F,$FE,$FA,$28,$30,$64
+                    .db $40,$2E,$F8,$08,$30,$76,$00,$03
+                    .db $B6,$11,$B6,$51,$30,$84,$40,$2E
+                    .db $F8,$08,$30,$84,$00,$03,$B6,$11
+                    .db $B6,$51,$30,$A4,$40,$2E,$F8,$08
+                    .db $30,$AF,$00,$03,$B6,$11,$B6,$51
+                    .db $30,$C4,$40,$2E,$F8,$08,$30,$E4
+                    .db $40,$2E,$F8,$08,$30,$FA,$00,$03
+                    .db $B6,$11,$B6,$51,$31,$04,$40,$2E
+                    .db $F8,$08,$31,$06,$00,$03,$B6,$11
+                    .db $B6,$51,$31,$24,$40,$2E,$F8,$08
+                    .db $31,$44,$40,$2E,$F8,$08,$31,$4A
+                    .db $00,$05,$8F,$09,$FE,$08,$8D,$49
+                    .db $31,$4F,$00,$09,$8F,$09,$8E,$49
+                    .db $F8,$08,$B6,$11,$B6,$51,$31,$64
+                    .db $40,$2E,$F8,$08,$31,$69,$00,$0F
+                    .db $8F,$09,$FF,$08,$FE,$08,$FD,$08
+                    .db $F8,$08,$8F,$09,$FF,$08,$9B,$C9
+                    .db $31,$75,$00,$05,$8F,$09,$FE,$08
+                    .db $9B,$C9,$31,$84,$40,$2E,$F8,$08
+                    .db $31,$86,$00,$19,$8F,$09,$9C,$C9
+                    .db $9B,$C9,$FF,$08,$FF,$08,$FE,$08
+                    .db $9B,$49,$8D,$49,$FF,$08,$9C,$C9
+                    .db $FE,$08,$FE,$08,$9B,$C9,$31,$95
+                    .db $00,$05,$FF,$08,$FE,$08,$FD,$08
+                    .db $31,$9A,$00,$03,$8F,$09,$8E,$49
+                    .db $31,$A4,$40,$2E,$F8,$08,$31,$A5
+                    .db $00,$1B,$8F,$09,$9C,$C9,$FE,$08
+                    .db $FD,$08,$FF,$08,$9C,$C9,$FE,$08
+                    .db $9B,$C9,$FD,$08,$FF,$08,$9C,$C9
+                    .db $FE,$08,$9B,$C9,$8D,$C9,$31,$B5
+                    .db $00,$0D,$FF,$08,$9C,$C9,$FD,$08
+                    .db $8D,$49,$8F,$09,$9C,$C9,$9B,$C9
+                    .db $31,$C4,$00,$2F,$8F,$09,$9C,$C9
+                    .db $FE,$08,$9B,$C9,$FD,$08,$9B,$89
+                    .db $FE,$08,$9B,$C9,$FD,$08,$9D,$09
+                    .db $9C,$C9,$FE,$08,$9B,$C9,$FD,$08
+                    .db $8D,$49,$F8,$08,$8F,$09,$9C,$C9
+                    .db $FE,$08,$FD,$08,$9D,$09,$9C,$C9
+                    .db $9B,$C9,$FD,$08,$31,$E4,$40,$2E
                     .db $8A,$25,$32,$04,$40,$2E,$9A,$25
-                    .db $FF,$30,$00,$5F,$FE,$FA,$28,$30
-                    .db $64,$40,$2E,$F8,$08,$30,$76,$00
-                    .db $03,$B6,$11,$B6,$51,$30,$84,$40
-                    .db $2E,$F8,$08,$30,$84,$00,$03,$B6
-                    .db $11,$B6,$51,$30,$A4,$40,$2E,$F8
-                    .db $08,$30,$AF,$00,$03,$B6,$11,$B6
-                    .db $51,$30,$C4,$40,$2E,$F8,$08,$30
-                    .db $E4,$40,$2E,$F8,$08,$30,$FA,$00
-                    .db $03,$B6,$11,$B6,$51,$31,$04,$40
-                    .db $2E,$F8,$08,$31,$06,$00,$03,$B6
-                    .db $11,$B6,$51,$31,$24,$40,$2E,$F8
-                    .db $08,$31,$44,$40,$2E,$F8,$08,$31
-                    .db $4A,$00,$05,$8F,$09,$FE,$08,$8D
-                    .db $49,$31,$4F,$00,$09,$8F,$09,$8E
-                    .db $49,$F8,$08,$B6,$11,$B6,$51,$31
-                    .db $64,$40,$2E,$F8,$08,$31,$69,$00
-                    .db $0F,$8F,$09,$FF,$08,$FE,$08,$FD
-                    .db $08,$F8,$08,$8F,$09,$FF,$08,$9B
-                    .db $C9,$31,$75,$00,$05,$8F,$09,$FE
-                    .db $08,$9B,$C9,$31,$84,$40,$2E,$F8
-                    .db $08,$31,$86,$00,$19,$8F,$09,$9C
-                    .db $C9,$9B,$C9,$FF,$08,$FF,$08,$FE
-                    .db $08,$9B,$49,$8D,$49,$FF,$08,$9C
-                    .db $C9,$FE,$08,$FE,$08,$9B,$C9,$31
-                    .db $95,$00,$05,$FF,$08,$FE,$08,$FD
-                    .db $08,$31,$9A,$00,$03,$8F,$09,$8E
-                    .db $49,$31,$A4,$40,$2E,$F8,$08,$31
-                    .db $A5,$00,$1B,$8F,$09,$9C,$C9,$FE
-                    .db $08,$FD,$08,$FF,$08,$9C,$C9,$FE
-                    .db $08,$9B,$C9,$FD,$08,$FF,$08,$9C
-                    .db $C9,$FE,$08,$9B,$C9,$8D,$C9,$31
-                    .db $B5,$00,$0D,$FF,$08,$9C,$C9,$FD
-                    .db $08,$8D,$49,$8F,$09,$9C,$C9,$9B
-                    .db $C9,$31,$C4,$00,$2F,$8F,$09,$9C
-                    .db $C9,$FE,$08,$9B,$C9,$FD,$08,$9B
-                    .db $89,$FE,$08,$9B,$C9,$FD,$08,$9D
-                    .db $09,$9C,$C9,$FE,$08,$9B,$C9,$FD
-                    .db $08,$8D,$49,$F8,$08,$8F,$09,$9C
-                    .db $C9,$FE,$08,$FD,$08,$9D,$09,$9C
-                    .db $C9,$9B,$C9,$FD,$08,$31,$E4,$40
-                    .db $2E,$8A,$25,$32,$04,$40,$2E,$9A
-                    .db $25,$FF,$30,$00,$5F,$FE,$FA,$28
-                    .db $30,$64,$40,$2E,$F8,$00,$30,$76
-                    .db $00,$03,$B6,$11,$B6,$51,$30,$84
-                    .db $40,$2E,$F8,$00,$30,$84,$00,$03
-                    .db $B6,$11,$B6,$51,$30,$A4,$40,$2E
-                    .db $F8,$00,$30,$AF,$00,$03,$B6,$11
-                    .db $B6,$51,$30,$C4,$40,$2E,$F8,$00
-                    .db $30,$E4,$40,$2E,$F8,$00,$30,$FA
-                    .db $00,$03,$B6,$11,$B6,$51,$31,$04
-                    .db $40,$2E,$F8,$00,$31,$06,$00,$03
-                    .db $B6,$11,$B6,$51,$31,$0F,$00,$01
-                    .db $89,$0D,$31,$24,$40,$2E,$F8,$00
-                    .db $31,$2E,$00,$05,$88,$0D,$FC,$0C
-                    .db $88,$4D,$31,$44,$40,$2E,$F8,$00
-                    .db $31,$46,$00,$01,$89,$0D,$31,$4D
-                    .db $00,$0D,$88,$0D,$FC,$0C,$FC,$0C
-                    .db $FC,$0C,$88,$4D,$B6,$11,$B6,$51
-                    .db $31,$64,$40,$2E,$F8,$00,$31,$65
+                    .db $FF
+
+DATA_0CBD02:        .db $30,$00,$5F,$FE,$FA,$28,$30,$64
+                    .db $40,$2E,$F8,$00,$30,$76,$00,$03
+                    .db $B6,$11,$B6,$51,$30,$84,$40,$2E
+                    .db $F8,$00,$30,$84,$00,$03,$B6,$11
+                    .db $B6,$51,$30,$A4,$40,$2E,$F8,$00
+                    .db $30,$AF,$00,$03,$B6,$11,$B6,$51
+                    .db $30,$C4,$40,$2E,$F8,$00,$30,$E4
+                    .db $40,$2E,$F8,$00,$30,$FA,$00,$03
+                    .db $B6,$11,$B6,$51,$31,$04,$40,$2E
+                    .db $F8,$00,$31,$06,$00,$03,$B6,$11
+                    .db $B6,$51,$31,$0F,$00,$01,$89,$0D
+                    .db $31,$24,$40,$2E,$F8,$00,$31,$2E
                     .db $00,$05,$88,$0D,$FC,$0C,$88,$4D
-                    .db $31,$6C,$00,$01,$88,$0D,$31,$6D
-                    .db $40,$08,$FC,$0C,$31,$72,$00,$01
-                    .db $88,$4D,$31,$7B,$00,$01,$88,$0D
-                    .db $31,$84,$40,$2E,$F8,$00,$31,$84
-                    .db $00,$09,$88,$0D,$FC,$0C,$FC,$0C
-                    .db $FC,$0C,$88,$4D,$31,$8B,$00,$01
-                    .db $88,$0D,$31,$8C,$40,$0C,$FC,$0C
-                    .db $31,$93,$00,$01,$88,$4D,$31,$9A
-                    .db $00,$03,$88,$0D,$FC,$0C,$31,$A4
-                    .db $00,$21,$96,$0D,$97,$0D,$98,$0D
-                    .db $99,$0D,$FC,$0C,$88,$4D,$88,$0D
-                    .db $FC,$0C,$96,$0D,$97,$0D,$98,$0D
-                    .db $99,$0D,$FC,$0C,$FC,$0C,$FC,$0C
-                    .db $FC,$0C,$88,$4D,$31,$B5,$40,$06
-                    .db $F8,$00,$31,$B9,$00,$05,$88,$0D
-                    .db $96,$0D,$97,$0D,$31,$C4,$00,$2F
-                    .db $A6,$0D,$A7,$0D,$A8,$0D,$A9,$0D
+                    .db $31,$44,$40,$2E,$F8,$00,$31,$46
+                    .db $00,$01,$89,$0D,$31,$4D,$00,$0D
+                    .db $88,$0D,$FC,$0C,$FC,$0C,$FC,$0C
+                    .db $88,$4D,$B6,$11,$B6,$51,$31,$64
+                    .db $40,$2E,$F8,$00,$31,$65,$00,$05
+                    .db $88,$0D,$FC,$0C,$88,$4D,$31,$6C
+                    .db $00,$01,$88,$0D,$31,$6D,$40,$08
+                    .db $FC,$0C,$31,$72,$00,$01,$88,$4D
+                    .db $31,$7B,$00,$01,$88,$0D,$31,$84
+                    .db $40,$2E,$F8,$00,$31,$84,$00,$09
+                    .db $88,$0D,$FC,$0C,$FC,$0C,$FC,$0C
+                    .db $88,$4D,$31,$8B,$00,$01,$88,$0D
+                    .db $31,$8C,$40,$0C,$FC,$0C,$31,$93
+                    .db $00,$01,$88,$4D,$31,$9A,$00,$03
+                    .db $88,$0D,$FC,$0C,$31,$A4,$00,$21
+                    .db $96,$0D,$97,$0D,$98,$0D,$99,$0D
+                    .db $FC,$0C,$88,$4D,$88,$0D,$FC,$0C
+                    .db $96,$0D,$97,$0D,$98,$0D,$99,$0D
                     .db $FC,$0C,$FC,$0C,$FC,$0C,$FC,$0C
-                    .db $A6,$0D,$A7,$0D,$A8,$0D,$A9,$0D
+                    .db $88,$4D,$31,$B5,$40,$06,$F8,$00
+                    .db $31,$B9,$00,$05,$88,$0D,$96,$0D
+                    .db $97,$0D,$31,$C4,$00,$2F,$A6,$0D
+                    .db $A7,$0D,$A8,$0D,$A9,$0D,$FC,$0C
+                    .db $FC,$0C,$FC,$0C,$FC,$0C,$A6,$0D
+                    .db $A7,$0D,$A8,$0D,$A9,$0D,$FC,$0C
                     .db $FC,$0C,$FC,$0C,$FC,$0C,$FC,$0C
-                    .db $FC,$0C,$88,$4D,$F8,$00,$F8,$00
-                    .db $88,$0D,$FC,$0C,$A6,$0D,$A7,$0D
-                    .db $31,$E4,$40,$2E,$8A,$35,$31,$E4
-                    .db $00,$01,$B8,$35,$31,$E9,$00,$01
-                    .db $B8,$35,$31,$F2,$00,$01,$B8,$35
-                    .db $31,$FB,$00,$01,$B8,$35,$32,$04
-                    .db $40,$2E,$9A,$35,$32,$07,$00,$01
-                    .db $B7,$35,$32,$0E,$00,$01,$B7,$35
-                    .db $32,$15,$00,$01,$B7,$35,$32,$19
-                    .db $00,$01,$B7,$35,$FF,$52,$64,$00
-                    .db $2F,$0C,$39,$40,$39,$51,$39,$48
-                    .db $39,$4E,$39,$1F,$39,$1F,$39,$47
-                    .db $39,$40,$39,$52,$39,$1F,$39,$1F
-                    .db $39,$43,$39,$44,$39,$45,$39,$44
-                    .db $39,$40,$39,$53,$39,$44,$39,$43
-                    .db $39,$1F,$39,$53,$39,$47,$39,$44
-                    .db $39,$FF,$52,$84,$00,$2F,$43,$39
-                    .db $44,$39,$4C,$39,$44,$39,$4D,$39
-                    .db $53,$39,$44,$39,$43,$39,$1F,$39
-                    .db $1F,$39,$08,$39,$46,$39,$46,$39
-                    .db $58,$39,$1F,$39,$0A,$39,$4E,$39
-                    .db $4E,$39,$4F,$39,$40,$39,$1F,$39
-                    .db $1F,$39,$48,$39,$4D,$39,$FF,$52
-                    .db $A4,$00,$2F,$42,$39,$40,$39,$52
-                    .db $39,$53,$39,$4B,$39,$44,$39,$1F
-                    .db $39,$1F,$39,$5A,$39,$64,$39,$1F
-                    .db $39,$1F,$39,$40,$39,$4D,$39,$43
-                    .db $39,$1F,$39,$1F,$39,$51,$39,$44
-                    .db $39,$52,$39,$42,$39,$54,$39,$44
-                    .db $39,$43,$39,$FF,$52,$C4,$00,$2F
-                    .db $18,$39,$4E,$39,$52,$39,$47,$39
-                    .db $48,$39,$5D,$39,$52,$39,$1F,$39
-                    .db $1F,$39,$45,$39,$51,$39,$48,$39
-                    .db $44,$39,$4D,$39,$43,$39,$1F,$39
-                    .db $1F,$39,$56,$39,$47,$39,$4E,$39
-                    .db $1F,$39,$1F,$39,$48,$39,$52,$39
-                    .db $FF,$52,$E4,$00,$2F,$52,$39,$53
-                    .db $39,$48,$39,$4B,$39,$4B,$39,$1F
-                    .db $39,$53,$39,$51,$39,$40,$39,$4F
-                    .db $39,$4F,$39,$44,$39,$43,$39,$1F
-                    .db $39,$48,$39,$4D,$39,$1F,$39,$40
-                    .db $39,$4D,$39,$1F,$39,$44,$39,$46
-                    .db $39,$46,$39,$1B,$39,$FF,$53,$04
-                    .db $00,$2F,$13,$39,$4E,$39,$46,$39
-                    .db $44,$39,$53,$39,$47,$39,$44,$39
-                    .db $51,$39,$1D,$39,$1F,$39,$1F,$39
-                    .db $1F,$39,$1F,$39,$53,$39,$47,$39
-                    .db $44,$39,$58,$39,$1F,$39,$1F,$39
-                    .db $1F,$39,$1F,$39,$4D,$39,$4E,$39
-                    .db $56,$39,$FF,$53,$24,$00,$29,$53
-                    .db $39,$51,$39,$40,$39,$55,$39,$44
-                    .db $39,$4B,$39,$1F,$39,$53,$39,$4E
-                    .db $39,$1F,$39,$03,$39,$4E,$39,$4D
-                    .db $39,$54,$39,$53,$39,$1F,$39,$0B
-                    .db $39,$40,$39,$4D,$39,$43,$39,$1B
-                    .db $39,$FF,$52,$64,$00,$2F,$0C,$39
-                    .db $4E,$39,$51,$39,$53,$39,$4E,$39
-                    .db $4D,$39,$1F,$39,$1F,$39,$1F,$39
-                    .db $0A,$39,$4E,$39,$4E,$39,$4F,$39
-                    .db $40,$39,$1F,$39,$1F,$39,$1F,$39
-                    .db $09,$39,$51,$39,$1B,$39,$1F,$39
-                    .db $1F,$39,$4E,$39,$45,$39,$FF,$52
-                    .db $84,$00,$2F,$42,$39,$40,$39,$52
-                    .db $39,$53,$39,$4B,$39,$44,$39,$1F
-                    .db $39,$1F,$39,$5A,$39,$65,$39,$1F
-                    .db $39,$48,$39,$52,$39,$1F,$39,$4D
-                    .db $39,$4E,$39,$56,$39,$1F,$39,$49
-                    .db $39,$54,$39,$52,$39,$53,$39,$1F
-                    .db $39,$40,$39,$FF,$52,$A4,$00,$2F
-                    .db $4C,$39,$44,$39,$4C,$39,$4E,$39
-                    .db $51,$39,$58,$39,$1B,$39,$1F,$39
-                    .db $13,$39,$47,$39,$44,$39,$1F,$39
-                    .db $4D,$39,$44,$39,$57,$39,$53,$39
-                    .db $1F,$39,$40,$39,$51,$39,$44,$39
-                    .db $40,$39,$1F,$39,$48,$39,$52,$39
-                    .db $FF,$52,$C4,$00,$2F,$53,$39,$47
-                    .db $39,$44,$39,$1F,$39,$1F,$39,$54
-                    .db $39,$4D,$39,$43,$39,$44,$39,$51
-                    .db $39,$46,$39,$51,$39,$4E,$39,$54
-                    .db $39,$4D,$39,$43,$39,$1F,$39,$15
-                    .db $39,$40,$39,$4D,$39,$48,$39,$4B
-                    .db $39,$4B,$39,$40,$39,$FF,$52,$E4
-                    .db $00,$2F,$03,$39,$4E,$39,$4C,$39
-                    .db $44,$39,$1B,$39,$1F,$39,$1F,$39
-                    .db $1F,$39,$16,$39,$47,$39,$40,$39
-                    .db $53,$39,$1F,$39,$53,$39,$51,$39
-                    .db $40,$39,$4F,$39,$52,$39,$1F,$39
-                    .db $40,$39,$56,$39,$40,$39,$48,$39
-                    .db $53,$39,$FF,$53,$04,$00,$2F,$0C
-                    .db $39,$40,$39,$51,$39,$48,$39,$4E
-                    .db $39,$1F,$39,$48,$39,$4D,$39,$1F
-                    .db $39,$53,$39,$47,$39,$48,$39,$52
-                    .db $39,$1F,$39,$4D,$39,$44,$39,$56
-                    .db $39,$1F,$39,$56,$39,$4E,$39,$51
-                    .db $39,$4B,$39,$43,$39,$1E,$39,$FF
-                    .db $53,$24,$00,$2F,$16,$39,$47,$39
+                    .db $88,$4D,$F8,$00,$F8,$00,$88,$0D
+                    .db $FC,$0C,$A6,$0D,$A7,$0D,$31,$E4
+                    .db $40,$2E,$8A,$35,$31,$E4,$00,$01
+                    .db $B8,$35,$31,$E9,$00,$01,$B8,$35
+                    .db $31,$F2,$00,$01,$B8,$35,$31,$FB
+                    .db $00,$01,$B8,$35,$32,$04,$40,$2E
+                    .db $9A,$35,$32,$07,$00,$01,$B7,$35
+                    .db $32,$0E,$00,$01,$B7,$35,$32,$15
+                    .db $00,$01,$B7,$35,$32,$19,$00,$01
+                    .db $B7,$35,$FF
+
+DATA_0CBE85:        .db $52,$64,$00,$2F,$0C,$39,$40,$39
+                    .db $51,$39,$48,$39,$4E,$39,$1F,$39
+                    .db $1F,$39,$47,$39,$40,$39,$52,$39
+                    .db $1F,$39,$1F,$39,$43,$39,$44,$39
+                    .db $45,$39,$44,$39,$40,$39,$53,$39
+                    .db $44,$39,$43,$39,$1F,$39,$53,$39
+                    .db $47,$39,$44,$39,$FF
+
+DATA_0CBEBA:        .db $52,$84,$00,$2F,$43,$39,$44,$39
+                    .db $4C,$39,$44,$39,$4D,$39,$53,$39
+                    .db $44,$39,$43,$39,$1F,$39,$1F,$39
+                    .db $08,$39,$46,$39,$46,$39,$58,$39
+                    .db $1F,$39,$0A,$39,$4E,$39,$4E,$39
+                    .db $4F,$39,$40,$39,$1F,$39,$1F,$39
+                    .db $48,$39,$4D,$39,$FF
+
+DATA_0CBEEF:        .db $52,$A4,$00,$2F,$42,$39,$40,$39
+                    .db $52,$39,$53,$39,$4B,$39,$44,$39
+                    .db $1F,$39,$1F,$39,$5A,$39,$64,$39
+                    .db $1F,$39,$1F,$39,$40,$39,$4D,$39
+                    .db $43,$39,$1F,$39,$1F,$39,$51,$39
+                    .db $44,$39,$52,$39,$42,$39,$54,$39
+                    .db $44,$39,$43,$39,$FF
+
+DATA_0CBF24:        .db $52,$C4,$00,$2F,$18,$39,$4E,$39
+                    .db $52,$39,$47,$39,$48,$39,$5D,$39
+                    .db $52,$39,$1F,$39,$1F,$39,$45,$39
+                    .db $51,$39,$48,$39,$44,$39,$4D,$39
+                    .db $43,$39,$1F,$39,$1F,$39,$56,$39
+                    .db $47,$39,$4E,$39,$1F,$39,$1F,$39
+                    .db $48,$39,$52,$39,$FF
+
+DATA_0CBF59:        .db $52,$E4,$00,$2F,$52,$39,$53,$39
+                    .db $48,$39,$4B,$39,$4B,$39,$1F,$39
+                    .db $53,$39,$51,$39,$40,$39,$4F,$39
+                    .db $4F,$39,$44,$39,$43,$39,$1F,$39
+                    .db $48,$39,$4D,$39,$1F,$39,$40,$39
+                    .db $4D,$39,$1F,$39,$44,$39,$46,$39
+                    .db $46,$39,$1B,$39,$FF
+
+DATA_0CBF8E:        .db $53,$04,$00,$2F,$13,$39,$4E,$39
+                    .db $46,$39,$44,$39,$53,$39,$47,$39
+                    .db $44,$39,$51,$39,$1D,$39,$1F,$39
+                    .db $1F,$39,$1F,$39,$1F,$39,$53,$39
+                    .db $47,$39,$44,$39,$58,$39,$1F,$39
+                    .db $1F,$39,$1F,$39,$1F,$39,$4D,$39
+                    .db $4E,$39,$56,$39,$FF
+
+DATA_0CBFC3:        .db $53,$24,$00,$29,$53,$39,$51,$39
+                    .db $40,$39,$55,$39,$44,$39,$4B,$39
+                    .db $1F,$39,$53,$39,$4E,$39,$1F,$39
+                    .db $03,$39,$4E,$39,$4D,$39,$54,$39
+                    .db $53,$39,$1F,$39,$0B,$39,$40,$39
+                    .db $4D,$39,$43,$39,$1B,$39
+
+DATA_0CBFF1:        .db $FF
+
+DATA_0CBFF2:        .db $52,$64,$00,$2F,$0C,$39,$4E,$39
+                    .db $51,$39,$53,$39,$4E,$39,$4D,$39
+                    .db $1F,$39,$1F,$39,$1F,$39,$0A,$39
+                    .db $4E,$39,$4E,$39,$4F,$39,$40,$39
+                    .db $1F,$39,$1F,$39,$1F,$39,$09,$39
+                    .db $51,$39,$1B,$39,$1F,$39,$1F,$39
+                    .db $4E,$39,$45,$39,$FF
+
+DATA_0CC027:        .db $52,$84,$00,$2F,$42,$39,$40,$39
+                    .db $52,$39,$53,$39,$4B,$39,$44,$39
+                    .db $1F,$39,$1F,$39,$5A,$39,$65,$39
+                    .db $1F,$39,$48,$39,$52,$39,$1F,$39
+                    .db $4D,$39,$4E,$39,$56,$39,$1F,$39
+                    .db $49,$39,$54,$39,$52,$39,$53,$39
+                    .db $1F,$39,$40,$39,$FF
+
+DATA_0CC05C:        .db $52,$A4,$00,$2F,$4C,$39,$44,$39
+                    .db $4C,$39,$4E,$39,$51,$39,$58,$39
+                    .db $1B,$39,$1F,$39,$13,$39,$47,$39
+                    .db $44,$39,$1F,$39,$4D,$39,$44,$39
+                    .db $57,$39,$53,$39,$1F,$39,$40,$39
+                    .db $51,$39,$44,$39,$40,$39,$1F,$39
+                    .db $48,$39,$52,$39,$FF
+
+DATA_0CC091:        .db $52,$C4,$00,$2F,$53,$39,$47,$39
+                    .db $44,$39,$1F,$39,$1F,$39,$54,$39
+                    .db $4D,$39,$43,$39,$44,$39,$51,$39
+                    .db $46,$39,$51,$39,$4E,$39,$54,$39
+                    .db $4D,$39,$43,$39,$1F,$39,$15,$39
+                    .db $40,$39,$4D,$39,$48,$39,$4B,$39
+                    .db $4B,$39,$40,$39,$FF
+
+DATA_0CC0C6:        .db $52,$E4,$00,$2F,$03,$39,$4E,$39
+                    .db $4C,$39,$44,$39,$1B,$39,$1F,$39
+                    .db $1F,$39,$1F,$39,$16,$39,$47,$39
+                    .db $40,$39,$53,$39,$1F,$39,$53,$39
+                    .db $51,$39,$40,$39,$4F,$39,$52,$39
+                    .db $1F,$39,$40,$39,$56,$39,$40,$39
+                    .db $48,$39,$53,$39,$FF
+
+DATA_0CC0FB:        .db $53,$04,$00,$2F,$0C,$39,$40,$39
+                    .db $51,$39,$48,$39,$4E,$39,$1F,$39
+                    .db $48,$39,$4D,$39,$1F,$39,$53,$39
+                    .db $47,$39,$48,$39,$52,$39,$1F,$39
+                    .db $4D,$39,$44,$39,$56,$39,$1F,$39
+                    .db $56,$39,$4E,$39,$51,$39,$4B,$39
+                    .db $43,$39,$1E,$39,$FF
+
+DATA_0CC130:        .db $53,$24,$00,$2F,$16,$39,$47,$39
                     .db $40,$39,$53,$39,$1F,$39,$1F,$39
                     .db $1F,$39,$56,$39,$48,$39,$4B,$39
                     .db $4B,$39,$1F,$39,$1F,$39,$1F,$39
                     .db $41,$39,$44,$39,$42,$39,$4E,$39
                     .db $4C,$39,$44,$39,$1F,$39,$1F,$39
-                    .db $4E,$39,$45,$39,$FF,$53,$44,$00
-                    .db $25,$0F,$39,$51,$39,$48,$39,$4D
-                    .db $39,$42,$39,$44,$39,$52,$39,$52
-                    .db $39,$1F,$39,$13,$39,$4E,$39,$40
-                    .db $39,$43,$39,$52,$39,$53,$39,$4E
-                    .db $39,$4E,$39,$4B,$39,$1E,$39,$FF
-                    .db $52,$64,$00,$2F,$0C,$39,$40,$39
+                    .db $4E,$39,$45,$39,$FF
+
+DATA_0CC165:        .db $53,$44,$00,$25,$0F,$39,$51,$39
+                    .db $48,$39,$4D,$39,$42,$39,$44,$39
+                    .db $52,$39,$52,$39,$1F,$39,$13,$39
+                    .db $4E,$39,$40,$39,$43,$39,$52,$39
+                    .db $53,$39,$4E,$39,$4E,$39,$4B,$39
+                    .db $1E,$39,$FF
+
+DATA_0CC190:        .db $52,$64,$00,$2F,$0C,$39,$40,$39
                     .db $51,$39,$48,$39,$4E,$39,$1F,$39
                     .db $47,$39,$40,$39,$52,$39,$1F,$39
                     .db $53,$39,$51,$39,$48,$39,$54,$39
                     .db $4C,$39,$4F,$39,$47,$39,$44,$39
                     .db $43,$39,$1F,$39,$4E,$39,$55,$39
-                    .db $44,$39,$51,$39,$FF,$52,$84,$00
-                    .db $2F,$0B,$39,$44,$39,$4C,$39,$4C
-                    .db $39,$58,$39,$1F,$39,$1F,$39,$0A
-                    .db $39,$4E,$39,$4E,$39,$4F,$39,$40
-                    .db $39,$1F,$39,$1F,$39,$4E,$39,$45
-                    .db $39,$1F,$39,$1F,$39,$42,$39,$40
-                    .db $39,$52,$39,$53,$39,$4B,$39,$44
-                    .db $39,$FF,$52,$A4,$00,$2F,$5A,$39
-                    .db $66,$39,$1B,$39,$1F,$39,$1F,$39
-                    .db $0C,$39,$40,$39,$51,$39,$48,$39
-                    .db $4E,$39,$5D,$39,$52,$39,$1F,$39
-                    .db $1F,$39,$50,$39,$54,$39,$44,$39
-                    .db $52,$39,$53,$39,$1F,$39,$1F,$39
-                    .db $1F,$39,$48,$39,$52,$39,$FF,$52
-                    .db $C4,$00,$2F,$52,$39,$53,$39,$40
-                    .db $39,$51,$39,$53,$39,$48,$39,$4D
-                    .db $39,$46,$39,$1F,$39,$1F,$39,$53
-                    .db $39,$4E,$39,$1F,$39,$1F,$39,$46
-                    .db $39,$44,$39,$53,$39,$1F,$39,$1F
-                    .db $39,$1F,$39,$4C,$39,$54,$39,$42
-                    .db $39,$47,$39,$FF,$52,$E4,$00,$2F
-                    .db $4C,$39,$4E,$39,$51,$39,$44,$39
-                    .db $1F,$39,$43,$39,$48,$39,$45,$39
-                    .db $45,$39,$48,$39,$42,$39,$54,$39
-                    .db $4B,$39,$53,$39,$1B,$39,$1F,$39
+                    .db $44,$39,$51,$39,$FF
+
+DATA_0CC1C5:        .db $52,$84,$00,$2F,$0B,$39,$44,$39
+                    .db $4C,$39,$4C,$39,$58,$39,$1F,$39
+                    .db $1F,$39,$0A,$39,$4E,$39,$4E,$39
+                    .db $4F,$39,$40,$39,$1F,$39,$1F,$39
+                    .db $4E,$39,$45,$39,$1F,$39,$1F,$39
+                    .db $42,$39,$40,$39,$52,$39,$53,$39
+                    .db $4B,$39,$44,$39,$FF
+
+DATA_0CC1FA:        .db $52,$A4,$00,$2F,$5A,$39,$66,$39
+                    .db $1B,$39,$1F,$39,$1F,$39,$0C,$39
+                    .db $40,$39,$51,$39,$48,$39,$4E,$39
+                    .db $5D,$39,$52,$39,$1F,$39,$1F,$39
+                    .db $50,$39,$54,$39,$44,$39,$52,$39
+                    .db $53,$39,$1F,$39,$1F,$39,$1F,$39
+                    .db $48,$39,$52,$39,$FF
+
+DATA_0CC22F:        .db $52,$C4,$00,$2F,$52,$39,$53,$39
+                    .db $40,$39,$51,$39,$53,$39,$48,$39
+                    .db $4D,$39,$46,$39,$1F,$39,$1F,$39
+                    .db $53,$39,$4E,$39,$1F,$39,$1F,$39
+                    .db $46,$39,$44,$39,$53,$39,$1F,$39
+                    .db $1F,$39,$1F,$39,$4C,$39,$54,$39
+                    .db $42,$39,$47,$39,$FF
+
+DATA_0CC264:        .db $52,$E4,$00,$2F,$4C,$39,$4E,$39
+                    .db $51,$39,$44,$39,$1F,$39,$43,$39
+                    .db $48,$39,$45,$39,$45,$39,$48,$39
+                    .db $42,$39,$54,$39,$4B,$39,$53,$39
+                    .db $1B,$39,$1F,$39,$1F,$39,$1F,$39
+                    .db $1F,$39,$1F,$39,$07,$39,$40,$39
+                    .db $55,$39,$44,$39,$FF
+
+DATA_0CC299:        .db $53,$04,$00,$2F,$58,$39,$4E,$39
+                    .db $54,$39,$1F,$39,$1F,$39,$45,$39
+                    .db $4E,$39,$54,$39,$4D,$39,$43,$39
+                    .db $1F,$39,$1F,$39,$53,$39,$47,$39
+                    .db $44,$39,$1F,$39,$11,$39,$44,$39
+                    .db $43,$39,$1F,$39,$1F,$39,$40,$39
+                    .db $4D,$39,$43,$39,$FF
+
+DATA_0CC2CE:        .db $53,$24,$00,$25,$06,$39,$51,$39
+                    .db $44,$39,$44,$39,$4D,$39,$1F,$39
+                    .db $12,$39,$56,$39,$48,$39,$53,$39
+                    .db $42,$39,$47,$39,$44,$39,$52,$39
+                    .db $1F,$39,$58,$39,$44,$39,$53,$39
+                    .db $1E,$39,$FF
+
+DATA_0CC2F9:        .db $52,$64,$00,$2F,$0B,$39,$54,$39
+                    .db $43,$39,$56,$39,$48,$39,$46,$39
+                    .db $1F,$39,$55,$39,$4E,$39,$4D,$39
+                    .db $1F,$39,$1F,$39,$0A,$39,$4E,$39
+                    .db $4E,$39,$4F,$39,$40,$39,$5D,$39
+                    .db $52,$39,$1F,$39,$43,$39,$40,$39
+                    .db $58,$39,$52,$39,$FF
+
+DATA_0CC32E:        .db $52,$84,$00,$2F,$4E,$39,$45,$39
                     .db $1F,$39,$1F,$39,$1F,$39,$1F,$39
-                    .db $07,$39,$40,$39,$55,$39,$44,$39
-                    .db $FF,$53,$04,$00,$2F,$58,$39,$4E
-                    .db $39,$54,$39,$1F,$39,$1F,$39,$45
-                    .db $39,$4E,$39,$54,$39,$4D,$39,$43
-                    .db $39,$1F,$39,$1F,$39,$53,$39,$47
-                    .db $39,$44,$39,$1F,$39,$11,$39,$44
-                    .db $39,$43,$39,$1F,$39,$1F,$39,$40
-                    .db $39,$4D,$39,$43,$39,$FF,$53,$24
-                    .db $00,$25,$06,$39,$51,$39,$44,$39
-                    .db $44,$39,$4D,$39,$1F,$39,$12,$39
-                    .db $56,$39,$48,$39,$53,$39,$42,$39
-                    .db $47,$39,$44,$39,$52,$39,$1F,$39
-                    .db $58,$39,$44,$39,$53,$39,$1E,$39
-                    .db $FF,$52,$64,$00,$2F,$0B,$39,$54
-                    .db $39,$43,$39,$56,$39,$48,$39,$46
-                    .db $39,$1F,$39,$55,$39,$4E,$39,$4D
-                    .db $39,$1F,$39,$1F,$39,$0A,$39,$4E
-                    .db $39,$4E,$39,$4F,$39,$40,$39,$5D
-                    .db $39,$52,$39,$1F,$39,$43,$39,$40
-                    .db $39,$58,$39,$52,$39,$FF,$52,$84
-                    .db $00,$2F,$4E,$39,$45,$39,$1F,$39
-                    .db $1F,$39,$1F,$39,$1F,$39,$42,$39
-                    .db $4E,$39,$4C,$39,$4F,$39,$4E,$39
-                    .db $52,$39,$48,$39,$4D,$39,$46,$39
-                    .db $1F,$39,$1F,$39,$1F,$39,$1F,$39
-                    .db $0A,$39,$4E,$39,$4E,$39,$4F,$39
-                    .db $40,$39,$FF,$52,$A4,$00,$2F,$52
-                    .db $39,$58,$39,$4C,$39,$4F,$39,$47
-                    .db $39,$4E,$39,$4D,$39,$48,$39,$44
-                    .db $39,$52,$39,$1F,$39,$48,$39,$4D
-                    .db $39,$1F,$39,$42,$39,$40,$39,$52
-                    .db $39,$53,$39,$4B,$39,$44,$39,$1F
-                    .db $39,$1F,$39,$5A,$39,$67,$39,$FF
-                    .db $52,$C4,$00,$2F,$40,$39,$51,$39
+                    .db $42,$39,$4E,$39,$4C,$39,$4F,$39
+                    .db $4E,$39,$52,$39,$48,$39,$4D,$39
+                    .db $46,$39,$1F,$39,$1F,$39,$1F,$39
+                    .db $1F,$39,$0A,$39,$4E,$39,$4E,$39
+                    .db $4F,$39,$40,$39,$FF
+
+DATA_0CC363:        .db $52,$A4,$00,$2F,$52,$39,$58,$39
+                    .db $4C,$39,$4F,$39,$47,$39,$4E,$39
+                    .db $4D,$39,$48,$39,$44,$39,$52,$39
+                    .db $1F,$39,$48,$39,$4D,$39,$1F,$39
+                    .db $42,$39,$40,$39,$52,$39,$53,$39
+                    .db $4B,$39,$44,$39,$1F,$39,$1F,$39
+                    .db $5A,$39,$67,$39,$FF
+
+DATA_0CC398:        .db $52,$C4,$00,$2F,$40,$39,$51,$39
                     .db $44,$39,$1F,$39,$4E,$39,$55,$39
                     .db $44,$39,$51,$39,$1B,$39,$1F,$39
                     .db $1F,$39,$13,$39,$47,$39,$44,$39
                     .db $1F,$39,$05,$39,$4E,$39,$51,$39
                     .db $44,$39,$52,$39,$53,$39,$1F,$39
-                    .db $4E,$39,$45,$39,$FF,$52,$E4,$00
-                    .db $2F,$08,$39,$4B,$39,$4B,$39,$54
-                    .db $39,$52,$39,$48,$39,$4E,$39,$4D
-                    .db $39,$1F,$39,$1F,$39,$1F,$39,$4B
-                    .db $39,$48,$39,$44,$39,$52,$39,$1F
-                    .db $39,$1F,$39,$1F,$39,$40,$39,$47
-                    .db $39,$44,$39,$40,$39,$43,$39,$1B
-                    .db $39,$FF,$53,$04,$00,$2F,$0C,$39
-                    .db $40,$39,$51,$39,$48,$39,$4E,$39
-                    .db $1F,$39,$4C,$39,$54,$39,$52,$39
-                    .db $53,$39,$1F,$39,$54,$39,$52,$39
-                    .db $44,$39,$1F,$39,$47,$39,$48,$39
-                    .db $52,$39,$1F,$39,$41,$39,$51,$39
-                    .db $40,$39,$48,$39,$4D,$39,$FF,$53
-                    .db $24,$00,$2F,$53,$39,$4E,$39,$1F
-                    .db $39,$52,$39,$4E,$39,$4B,$39,$55
-                    .db $39,$44,$39,$1F,$39,$1F,$39,$53
-                    .db $39,$47,$39,$44,$39,$1F,$39,$4F
-                    .db $39,$54,$39,$59,$39,$59,$39,$4B
-                    .db $39,$44,$39,$1F,$39,$1F,$39,$4E
-                    .db $39,$45,$39,$FF,$53,$44,$00,$2D
-                    .db $53,$39,$47,$39,$48,$39,$52,$39
-                    .db $1F,$39,$4F,$39,$44,$39,$51,$39
-                    .db $4F,$39,$4B,$39,$44,$39,$57,$39
-                    .db $48,$39,$4D,$39,$46,$39,$1F,$39
-                    .db $45,$39,$4E,$39,$51,$39,$44,$39
-                    .db $52,$39,$53,$39,$1B,$39,$FF,$52
-                    .db $64,$00,$2F,$0C,$39,$40,$39,$51
-                    .db $39,$48,$39,$4E,$39,$1F,$39,$1F
-                    .db $39,$1F,$39,$45,$39,$4E,$39,$54
-                    .db $39,$4D,$39,$43,$39,$1F,$39,$1F
-                    .db $39,$1F,$39,$47,$39,$48,$39,$52
-                    .db $39,$1F,$39,$1F,$39,$56,$39,$40
-                    .db $39,$58,$39,$FF,$52,$84,$00,$2F
-                    .db $53,$39,$47,$39,$51,$39,$4E,$39
-                    .db $54,$39,$46,$39,$47,$39,$1F,$39
-                    .db $1F,$39,$53,$39,$47,$39,$44,$39
-                    .db $1F,$39,$1F,$39,$05,$39,$4E,$39
+                    .db $4E,$39,$45,$39,$FF
+
+DATA_0CC3CD:        .db $52,$E4,$00,$2F,$08,$39,$4B,$39
+                    .db $4B,$39,$54,$39,$52,$39,$48,$39
+                    .db $4E,$39,$4D,$39,$1F,$39,$1F,$39
+                    .db $1F,$39,$4B,$39,$48,$39,$44,$39
+                    .db $52,$39,$1F,$39,$1F,$39,$1F,$39
+                    .db $40,$39,$47,$39,$44,$39,$40,$39
+                    .db $43,$39,$1B,$39,$FF
+
+DATA_0CC402:        .db $53,$04,$00,$2F,$0C,$39,$40,$39
+                    .db $51,$39,$48,$39,$4E,$39,$1F,$39
+                    .db $4C,$39,$54,$39,$52,$39,$53,$39
+                    .db $1F,$39,$54,$39,$52,$39,$44,$39
+                    .db $1F,$39,$47,$39,$48,$39,$52,$39
+                    .db $1F,$39,$41,$39,$51,$39,$40,$39
+                    .db $48,$39,$4D,$39,$FF
+
+DATA_0CC437:        .db $53,$24,$00,$2F,$53,$39,$4E,$39
+                    .db $1F,$39,$52,$39,$4E,$39,$4B,$39
+                    .db $55,$39,$44,$39,$1F,$39,$1F,$39
+                    .db $53,$39,$47,$39,$44,$39,$1F,$39
+                    .db $4F,$39,$54,$39,$59,$39,$59,$39
+                    .db $4B,$39,$44,$39,$1F,$39,$1F,$39
+                    .db $4E,$39,$45,$39,$FF
+
+DATA_0CC46C:        .db $53,$44,$00,$2D,$53,$39,$47,$39
+                    .db $48,$39,$52,$39,$1F,$39,$4F,$39
+                    .db $44,$39,$51,$39,$4F,$39,$4B,$39
+                    .db $44,$39,$57,$39,$48,$39,$4D,$39
+                    .db $46,$39,$1F,$39,$45,$39,$4E,$39
                     .db $51,$39,$44,$39,$52,$39,$53,$39
-                    .db $1F,$39,$1F,$39,$4E,$39,$45,$39
-                    .db $FF,$52,$A4,$00,$2F,$08,$39,$4B
-                    .db $39,$4B,$39,$54,$39,$52,$39,$48
-                    .db $39,$4E,$39,$4D,$39,$1F,$39,$40
-                    .db $39,$4D,$39,$43,$39,$1F,$39,$1F
-                    .db $39,$47,$39,$40,$39,$52,$39,$1F
-                    .db $39,$4F,$39,$54,$39,$53,$39,$1F
-                    .db $39,$40,$39,$4D,$39,$FF,$52,$C4
-                    .db $00,$2F,$44,$39,$4D,$39,$43,$39
-                    .db $1F,$39,$1F,$39,$53,$39,$4E,$39
-                    .db $1F,$39,$1F,$39,$1F,$39,$11,$39
-                    .db $4E,$39,$58,$39,$1F,$39,$1F,$39
-                    .db $0A,$39,$4E,$39,$4E,$39,$4F,$39
-                    .db $40,$39,$1F,$39,$1F,$39,$4E,$39
-                    .db $45,$39,$FF,$52,$E4,$00,$2F,$42
-                    .db $39,$40,$39,$52,$39,$53,$39,$4B
-                    .db $39,$44,$39,$1F,$39,$1F,$39,$5A
-                    .db $39,$68,$39,$1B,$39,$1F,$39,$1F
-                    .db $39,$1F,$39,$0E,$39,$4D,$39,$56
-                    .db $39,$40,$39,$51,$39,$43,$39,$1F
-                    .db $39,$1F,$39,$53,$39,$4E,$39,$FF
-                    .db $53,$04,$00,$2F,$53,$39,$47,$39
+                    .db $1B,$39,$FF
+
+DATA_0CC49F:        .db $52,$64,$00,$2F,$0C,$39,$40,$39
+                    .db $51,$39,$48,$39,$4E,$39,$1F,$39
+                    .db $1F,$39,$1F,$39,$45,$39,$4E,$39
+                    .db $54,$39,$4D,$39,$43,$39,$1F,$39
+                    .db $1F,$39,$1F,$39,$47,$39,$48,$39
+                    .db $52,$39,$1F,$39,$1F,$39,$56,$39
+                    .db $40,$39,$58,$39,$FF
+
+DATA_0CC4D4:        .db $52,$84,$00,$2F,$53,$39,$47,$39
+                    .db $51,$39,$4E,$39,$54,$39,$46,$39
+                    .db $47,$39,$1F,$39,$1F,$39,$53,$39
+                    .db $47,$39,$44,$39,$1F,$39,$1F,$39
+                    .db $05,$39,$4E,$39,$51,$39,$44,$39
+                    .db $52,$39,$53,$39,$1F,$39,$1F,$39
+                    .db $4E,$39,$45,$39,$FF
+
+DATA_0CC509:        .db $52,$A4,$00,$2F,$08,$39,$4B,$39
+                    .db $4B,$39,$54,$39,$52,$39,$48,$39
+                    .db $4E,$39,$4D,$39,$1F,$39,$40,$39
+                    .db $4D,$39,$43,$39,$1F,$39,$1F,$39
+                    .db $47,$39,$40,$39,$52,$39,$1F,$39
+                    .db $4F,$39,$54,$39,$53,$39,$1F,$39
+                    .db $40,$39,$4D,$39,$FF
+
+DATA_0CC53E:        .db $52,$C4,$00,$2F,$44,$39,$4D,$39
+                    .db $43,$39,$1F,$39,$1F,$39,$53,$39
+                    .db $4E,$39,$1F,$39,$1F,$39,$1F,$39
+                    .db $11,$39,$4E,$39,$58,$39,$1F,$39
+                    .db $1F,$39,$0A,$39,$4E,$39,$4E,$39
+                    .db $4F,$39,$40,$39,$1F,$39,$1F,$39
+                    .db $4E,$39,$45,$39,$FF
+
+DATA_0CC573:        .db $52,$E4,$00,$2F,$42,$39,$40,$39
+                    .db $52,$39,$53,$39,$4B,$39,$44,$39
+                    .db $1F,$39,$1F,$39,$5A,$39,$68,$39
+                    .db $1B,$39,$1F,$39,$1F,$39,$1F,$39
+                    .db $0E,$39,$4D,$39,$56,$39,$40,$39
+                    .db $51,$39,$43,$39,$1F,$39,$1F,$39
+                    .db $53,$39,$4E,$39,$FF
+
+DATA_0CC5A8:        .db $53,$04,$00,$2F,$53,$39,$47,$39
                     .db $44,$39,$1F,$39,$1F,$39,$1F,$39
                     .db $1F,$39,$43,$39,$40,$39,$4D,$39
                     .db $46,$39,$44,$39,$51,$39,$4E,$39
                     .db $54,$39,$52,$39,$1F,$39,$1F,$39
                     .db $1F,$39,$1F,$39,$5B,$39,$41,$39
-                    .db $54,$39,$53,$39,$FF,$53,$24,$00
-                    .db $2F,$53,$39,$40,$39,$52,$39,$53
-                    .db $39,$58,$39,$5C,$39,$1F,$39,$02
-                    .db $39,$47,$39,$4E,$39,$42,$39,$4E
-                    .db $39,$4B,$39,$40,$39,$53,$39,$44
-                    .db $39,$1F,$39,$08,$39,$52,$39,$4B
-                    .db $39,$40,$39,$4D,$39,$43,$39,$1A
-                    .db $39,$FF,$52,$64,$00,$2F,$16,$39
-                    .db $44,$39,$4D,$39,$43,$39,$58,$39
-                    .db $1F,$39,$0E,$39,$1B,$39,$1F,$39
-                    .db $0A,$39,$4E,$39,$4E,$39,$4F,$39
-                    .db $40,$39,$1F,$39,$48,$39,$4D,$39
-                    .db $1F,$39,$42,$39,$40,$39,$52,$39
-                    .db $53,$39,$4B,$39,$44,$39,$FF,$52
-                    .db $84,$00,$2F,$5A,$39,$69,$39,$1F
-                    .db $39,$1F,$39,$47,$39,$40,$39,$52
-                    .db $39,$1F,$39,$1F,$39,$52,$39,$54
-                    .db $39,$4D,$39,$46,$39,$1F,$39,$1F
-                    .db $39,$47,$39,$44,$39,$51,$39,$1F
-                    .db $39,$1F,$39,$4B,$39,$40,$39,$52
-                    .db $39,$53,$39,$FF,$52,$A4,$00,$2F
-                    .db $52,$39,$4E,$39,$4D,$39,$46,$39
-                    .db $1B,$39,$1F,$39,$1F,$39,$0C,$39
-                    .db $40,$39,$51,$39,$48,$39,$4E,$39
-                    .db $1F,$39,$1F,$39,$4C,$39,$54,$39
-                    .db $52,$39,$53,$39,$1F,$39,$1F,$39
-                    .db $4C,$39,$44,$39,$44,$39,$53,$39
-                    .db $FF,$52,$C4,$00,$2F,$53,$39,$47
-                    .db $39,$44,$39,$1F,$39,$1F,$39,$42
-                    .db $39,$47,$39,$40,$39,$4B,$39,$4B
-                    .db $39,$44,$39,$4D,$39,$46,$39,$44
-                    .db $39,$1F,$39,$1F,$39,$53,$39,$47
-                    .db $39,$40,$39,$53,$39,$1F,$39,$1F
-                    .db $39,$48,$39,$52,$39,$FF,$52,$E4
-                    .db $00,$2F,$4D,$39,$4E,$39,$56,$39
-                    .db $1F,$39,$41,$39,$44,$39,$45,$39
-                    .db $4E,$39,$51,$39,$44,$39,$1F,$39
-                    .db $47,$39,$48,$39,$4C,$39,$1B,$39
-                    .db $1F,$39,$1F,$39,$1F,$39,$1F,$39
-                    .db $13,$39,$47,$39,$44,$39,$51,$39
-                    .db $44,$39,$FF,$53,$04,$00,$2F,$48
-                    .db $39,$52,$39,$1F,$39,$40,$39,$1F
-                    .db $39,$1F,$39,$52,$39,$54,$39,$4D
-                    .db $39,$4A,$39,$44,$39,$4D,$39,$1F
-                    .db $39,$1F,$39,$52,$39,$47,$39,$48
-                    .db $39,$4F,$39,$1F,$39,$1F,$39,$53
-                    .db $39,$47,$39,$40,$39,$53,$39,$FF
-                    .db $53,$24,$00,$2F,$40,$39,$4F,$39
+                    .db $54,$39,$53,$39,$FF
+
+DATA_0CC5DD:        .db $53,$24,$00,$2F,$53,$39,$40,$39
+                    .db $52,$39,$53,$39,$58,$39,$5C,$39
+                    .db $1F,$39,$02,$39,$47,$39,$4E,$39
+                    .db $42,$39,$4E,$39,$4B,$39,$40,$39
+                    .db $53,$39,$44,$39,$1F,$39,$08,$39
+                    .db $52,$39,$4B,$39,$40,$39,$4D,$39
+                    .db $43,$39,$1A,$39,$FF
+
+DATA_0CC612:        .db $52,$64,$00,$2F,$16,$39,$44,$39
+                    .db $4D,$39,$43,$39,$58,$39,$1F,$39
+                    .db $0E,$39,$1B,$39,$1F,$39,$0A,$39
+                    .db $4E,$39,$4E,$39,$4F,$39,$40,$39
+                    .db $1F,$39,$48,$39,$4D,$39,$1F,$39
+                    .db $42,$39,$40,$39,$52,$39,$53,$39
+                    .db $4B,$39,$44,$39,$FF
+
+DATA_0CC647:        .db $52,$84,$00,$2F,$5A,$39,$69,$39
+                    .db $1F,$39,$1F,$39,$47,$39,$40,$39
+                    .db $52,$39,$1F,$39,$1F,$39,$52,$39
+                    .db $54,$39,$4D,$39,$46,$39,$1F,$39
+                    .db $1F,$39,$47,$39,$44,$39,$51,$39
+                    .db $1F,$39,$1F,$39,$4B,$39,$40,$39
+                    .db $52,$39,$53,$39,$FF
+
+DATA_0CC67C:        .db $52,$A4,$00,$2F,$52,$39,$4E,$39
+                    .db $4D,$39,$46,$39,$1B,$39,$1F,$39
+                    .db $1F,$39,$0C,$39,$40,$39,$51,$39
+                    .db $48,$39,$4E,$39,$1F,$39,$1F,$39
+                    .db $4C,$39,$54,$39,$52,$39,$53,$39
+                    .db $1F,$39,$1F,$39,$4C,$39,$44,$39
+                    .db $44,$39,$53,$39,$FF
+
+DATA_0CC6B1:        .db $52,$C4,$00,$2F,$53,$39,$47,$39
+                    .db $44,$39,$1F,$39,$1F,$39,$42,$39
+                    .db $47,$39,$40,$39,$4B,$39,$4B,$39
+                    .db $44,$39,$4D,$39,$46,$39,$44,$39
+                    .db $1F,$39,$1F,$39,$53,$39,$47,$39
+                    .db $40,$39,$53,$39,$1F,$39,$1F,$39
+                    .db $48,$39,$52,$39,$FF
+
+DATA_0CC6E6:        .db $52,$E4,$00,$2F,$4D,$39,$4E,$39
+                    .db $56,$39,$1F,$39,$41,$39,$44,$39
+                    .db $45,$39,$4E,$39,$51,$39,$44,$39
+                    .db $1F,$39,$47,$39,$48,$39,$4C,$39
+                    .db $1B,$39,$1F,$39,$1F,$39,$1F,$39
+                    .db $1F,$39,$13,$39,$47,$39,$44,$39
+                    .db $51,$39,$44,$39,$FF
+
+DATA_0CC71B:        .db $53,$04,$00,$2F,$48,$39,$52,$39
+                    .db $1F,$39,$40,$39,$1F,$39,$1F,$39
+                    .db $52,$39,$54,$39,$4D,$39,$4A,$39
+                    .db $44,$39,$4D,$39,$1F,$39,$1F,$39
+                    .db $52,$39,$47,$39,$48,$39,$4F,$39
+                    .db $1F,$39,$1F,$39,$53,$39,$47,$39
+                    .db $40,$39,$53,$39,$FF
+
+DATA_0CC750:        .db $53,$24,$00,$2F,$40,$39,$4F,$39
                     .db $4F,$39,$44,$39,$40,$39,$51,$39
                     .db $52,$39,$1F,$39,$53,$39,$4E,$39
                     .db $1F,$39,$41,$39,$44,$39,$1F,$39
                     .db $1F,$39,$40,$39,$1F,$39,$46,$39
                     .db $40,$39,$53,$39,$44,$39,$56,$39
-                    .db $40,$39,$58,$39,$FF,$53,$44,$00
-                    .db $2F,$53,$39,$4E,$39,$1F,$39,$53
-                    .db $39,$47,$39,$44,$39,$1F,$39,$15
-                    .db $39,$40,$39,$4B,$39,$4B,$39,$44
-                    .db $39,$58,$39,$1F,$39,$4E,$39,$45
-                    .db $39,$1F,$39,$01,$39,$4E,$39,$56
-                    .db $39,$52,$39,$44,$39,$51,$39,$1B
-                    .db $39,$FF,$52,$64,$00,$2F,$0C,$39
-                    .db $40,$39,$51,$39,$48,$39,$4E,$39
-                    .db $1F,$39,$47,$39,$40,$39,$52,$39
-                    .db $1F,$39,$43,$39,$44,$39,$45,$39
-                    .db $44,$39,$40,$39,$53,$39,$44,$39
-                    .db $43,$39,$1F,$39,$0B,$39,$40,$39
-                    .db $51,$39,$51,$39,$58,$39,$FF,$52
-                    .db $84,$00,$2F,$0A,$39,$4E,$39,$4E
-                    .db $39,$4F,$39,$40,$39,$1F,$39,$48
-                    .db $39,$4D,$39,$1F,$39,$42,$39,$40
-                    .db $39,$52,$39,$53,$39,$4B,$39,$44
-                    .db $39,$1F,$39,$5A,$39,$6A,$39,$1B
-                    .db $39,$1F,$39,$1F,$39,$00,$39,$4B
-                    .db $39,$4B,$39,$FF,$52,$A4,$00,$2F
-                    .db $53,$39,$47,$39,$40,$39,$53,$39
-                    .db $1F,$39,$48,$39,$52,$39,$1F,$39
-                    .db $4B,$39,$44,$39,$45,$39,$53,$39
-                    .db $1F,$39,$48,$39,$52,$39,$1F,$39
-                    .db $01,$39,$4E,$39,$56,$39,$52,$39
-                    .db $44,$39,$51,$39,$5D,$39,$52,$39
-                    .db $FF,$52,$C4,$00,$2F,$02,$39,$40
-                    .db $39,$52,$39,$53,$39,$4B,$39,$44
-                    .db $39,$1F,$39,$1F,$39,$56,$39,$47
-                    .db $39,$44,$39,$51,$39,$44,$39,$1F
-                    .db $39,$1F,$39,$1F,$39,$0F,$39,$51
-                    .db $39,$48,$39,$4D,$39,$42,$39,$44
-                    .db $39,$52,$39,$52,$39,$FF,$52,$E4
-                    .db $00,$2F,$13,$39,$4E,$39,$40,$39
-                    .db $43,$39,$52,$39,$53,$39,$4E,$39
-                    .db $4E,$39,$4B,$39,$1F,$39,$48,$39
-                    .db $52,$39,$1F,$39,$41,$39,$44,$39
-                    .db $48,$39,$4D,$39,$46,$39,$1F,$39
-                    .db $47,$39,$44,$39,$4B,$39,$43,$39
-                    .db $1B,$39,$FF,$53,$04,$00,$2F,$02
-                    .db $39,$40,$39,$4D,$39,$1F,$39,$0C
-                    .db $39,$40,$39,$51,$39,$48,$39,$4E
-                    .db $39,$1F,$39,$51,$39,$44,$39,$52
-                    .db $39,$42,$39,$54,$39,$44,$39,$1F
-                    .db $39,$47,$39,$44,$39,$51,$39,$1F
-                    .db $39,$40,$39,$4D,$39,$43,$39,$FF
-                    .db $53,$24,$00,$2F,$51,$39,$44,$39
+                    .db $40,$39,$58,$39,$FF
+
+DATA_0CC785:        .db $53,$44,$00,$2F,$53,$39,$4E,$39
+                    .db $1F,$39,$53,$39,$47,$39,$44,$39
+                    .db $1F,$39,$15,$39,$40,$39,$4B,$39
+                    .db $4B,$39,$44,$39,$58,$39,$1F,$39
+                    .db $4E,$39,$45,$39,$1F,$39,$01,$39
+                    .db $4E,$39,$56,$39,$52,$39,$44,$39
+                    .db $51,$39,$1B,$39,$FF
+
+DATA_0CC7BA:        .db $52,$64,$00,$2F,$0C,$39,$40,$39
+                    .db $51,$39,$48,$39,$4E,$39,$1F,$39
+                    .db $47,$39,$40,$39,$52,$39,$1F,$39
+                    .db $43,$39,$44,$39,$45,$39,$44,$39
+                    .db $40,$39,$53,$39,$44,$39,$43,$39
+                    .db $1F,$39,$0B,$39,$40,$39,$51,$39
+                    .db $51,$39,$58,$39,$FF
+
+DATA_0CC7EF:        .db $52,$84,$00,$2F,$0A,$39,$4E,$39
+                    .db $4E,$39,$4F,$39,$40,$39,$1F,$39
+                    .db $48,$39,$4D,$39,$1F,$39,$42,$39
+                    .db $40,$39,$52,$39,$53,$39,$4B,$39
+                    .db $44,$39,$1F,$39,$5A,$39,$6A,$39
+                    .db $1B,$39,$1F,$39,$1F,$39,$00,$39
+                    .db $4B,$39,$4B,$39,$FF
+
+DATA_0CC824:        .db $52,$A4,$00,$2F,$53,$39,$47,$39
+                    .db $40,$39,$53,$39,$1F,$39,$48,$39
+                    .db $52,$39,$1F,$39,$4B,$39,$44,$39
+                    .db $45,$39,$53,$39,$1F,$39,$48,$39
+                    .db $52,$39,$1F,$39,$01,$39,$4E,$39
+                    .db $56,$39,$52,$39,$44,$39,$51,$39
+                    .db $5D,$39,$52,$39,$FF
+
+DATA_0CC859:        .db $52,$C4,$00,$2F,$02,$39,$40,$39
+                    .db $52,$39,$53,$39,$4B,$39,$44,$39
+                    .db $1F,$39,$1F,$39,$56,$39,$47,$39
+                    .db $44,$39,$51,$39,$44,$39,$1F,$39
+                    .db $1F,$39,$1F,$39,$0F,$39,$51,$39
+                    .db $48,$39,$4D,$39,$42,$39,$44,$39
+                    .db $52,$39,$52,$39,$FF
+
+DATA_0CC88E:        .db $52,$E4,$00,$2F,$13,$39,$4E,$39
+                    .db $40,$39,$43,$39,$52,$39,$53,$39
+                    .db $4E,$39,$4E,$39,$4B,$39,$1F,$39
+                    .db $48,$39,$52,$39,$1F,$39,$41,$39
+                    .db $44,$39,$48,$39,$4D,$39,$46,$39
+                    .db $1F,$39,$47,$39,$44,$39,$4B,$39
+                    .db $43,$39,$1B,$39,$FF
+
+DATA_0CC8C3:        .db $53,$04,$00,$2F,$02,$39,$40,$39
+                    .db $4D,$39,$1F,$39,$0C,$39,$40,$39
+                    .db $51,$39,$48,$39,$4E,$39,$1F,$39
+                    .db $51,$39,$44,$39,$52,$39,$42,$39
+                    .db $54,$39,$44,$39,$1F,$39,$47,$39
+                    .db $44,$39,$51,$39,$1F,$39,$40,$39
+                    .db $4D,$39,$43,$39,$FF
+
+DATA_0CC8F8:        .db $53,$24,$00,$2F,$51,$39,$44,$39
                     .db $52,$39,$53,$39,$4E,$39,$51,$39
                     .db $44,$39,$1F,$39,$1F,$39,$1F,$39
                     .db $1F,$39,$1F,$39,$4F,$39,$44,$39
                     .db $40,$39,$42,$39,$44,$39,$1F,$39
                     .db $1F,$39,$1F,$39,$1F,$39,$1F,$39
-                    .db $53,$39,$4E,$39,$FF,$53,$44,$00
-                    .db $1B,$03,$39,$48,$39,$4D,$39,$4E
-                    .db $39,$52,$39,$40,$39,$54,$39,$51
-                    .db $39,$1F,$39,$0B,$39,$40,$39,$4D
-                    .db $39,$43,$39,$1E,$39,$FF
+                    .db $53,$39,$4E,$39,$FF
+
+DATA_0CC92D:        .db $53,$44,$00,$1B,$03,$39,$48,$39
+                    .db $4D,$39,$4E,$39,$52,$39,$40,$39
+                    .db $54,$39,$51,$39,$1F,$39,$0B,$39
+                    .db $40,$39,$4D,$39,$43,$39,$1E,$39
+                    .db $FF
 
 ADDR_0CC94E:        LDA.W $1443               
-                    BEQ ADDR_0CC97D           
+                    BEQ Return0CC97D          
                     DEC.W $1443               
                     LDA.W $1443               
                     AND.B #$1F                
-                    BNE ADDR_0CC97D           
+                    BNE Return0CC97D          
                     LDA.W $13C6               
                     DEC A                     
                     ASL                       
@@ -3873,16 +3950,16 @@ ADDR_0CC94E:        LDA.W $1443
                     CLC                       
                     ADC.B #$21                
                     STA $12                   
-ADDR_0CC97D:        RTS                       ; Return 
+Return0CC97D:       RTS                       ; Return
 
-ADDR_0CC97E:        PHB                       
+ExtSub0CC97E:       PHB                       
                     PHK                       
                     PLB                       
                     JSR.W ADDR_0CC94E         
                     JSR.W ADDR_0CCA8F         
                     JSR.W ADDR_0CC98C         
                     PLB                       
-                    RTL                       ; Return 
+                    RTL                       ; Return
 
 ADDR_0CC98C:        LDA $13                   
                     AND.B #$03                
@@ -4011,7 +4088,7 @@ DATA_0CCA86:        .db $18,$30,$48,$A8,$18,$28,$58,$8D
                     .db $08
 
 ADDR_0CCA8F:        LDA.W $144A               
-                    BEQ ADDR_0CCACD           
+                    BEQ Return0CCACD          
                     LDY.B #$00                
                     TYX                       
 ADDR_0CCA97:        LDA.W DATA_0CCA83,Y       
@@ -4043,16 +4120,17 @@ ADDR_0CCA97:        LDA.W DATA_0CCA83,Y
                     TXY                       
                     CPY.B #$0C                
                     BNE ADDR_0CCA97           
-ADDR_0CCACD:        RTS                       ; Return 
+Return0CCACD:       RTS                       ; Return
 
 ADDR_0CCACE:        LDA.W $1442               
                     BNE ADDR_0CCADD           
                     STZ.W $1444               
                     LDA.B #$98                
                     STA.W $0B51               
-                    BRA ADDR_0CCAFC           
+                    BRA Return0CCAFC          
+
 ADDR_0CCADD:        LDA.W $1444               
-                    BEQ ADDR_0CCAFC           
+                    BEQ Return0CCAFC          
                     LDA.W $0B51               
                     CMP.B #$5C                
                     BCC ADDR_0CCAF3           
@@ -4064,7 +4142,7 @@ ADDR_0CCAF3:        LDX.B #$30
                     LDA.B #$AB                
                     STA $00                   
                     BRL ADDR_0CCAFD           
-ADDR_0CCAFC:        RTS                       ; Return 
+Return0CCAFC:       RTS                       ; Return
 
 ADDR_0CCAFD:        LDA $00                   
                     STA.W $0380,X             
@@ -4080,7 +4158,7 @@ ADDR_0CCAFD:        LDA $00
                     TAX                       
                     LDA.B #$02                
                     STA.W $0480,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0CCB1C:        LDA.W $143E               
                     BNE ADDR_0CCB30           
@@ -4090,6 +4168,7 @@ ADDR_0CCB1C:        LDA.W $143E
                     STA.W $143F               
                     STZ.W $1440               
                     BRA ADDR_0CCB55           
+
 ADDR_0CCB30:        LDX.B #$00                
                     LDY.B #$30                
                     LDA.W $13C6               
@@ -4121,8 +4200,7 @@ ADDR_0CCB64:        STY.W $0202
                     STA.W $0201               
                     LDA.B #$02                
                     STA.W $0420               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0CCB7C:        .db $86,$87,$96,$97
 
@@ -4163,14 +4241,15 @@ ADDR_0CCBB5:        LDA $00
                     CPX.B #$28                
                     BNE ADDR_0CCB92           
                     LDA.W $143E               
-                    BEQ ADDR_0CCBF9           
+                    BEQ Return0CCBF9          
                     LDA.W $0B50               
                     SEC                       
                     SBC.B #$08                
                     CMP.B #$B0                
                     BCC ADDR_0CCBD8           
                     INC.W $1442               
-                    BRA ADDR_0CCBF9           
+                    BRA Return0CCBF9          
+
 ADDR_0CCBD8:        STA.W $0380,X             
                     LDA.B #$6F                
                     STA.W $0381,X             
@@ -4187,7 +4266,7 @@ ADDR_0CCBE9:        TYA
                     LSR                       
                     TAX                       
                     STZ.W $0480,X             
-ADDR_0CCBF9:        RTS                       ; Return 
+Return0CCBF9:       RTS                       ; Return
 
 ADDR_0CCBFA:        LDX.B #$04                
 ADDR_0CCBFC:        LDA.B #$A8                
@@ -4232,8 +4311,7 @@ ADDR_0CCC40:        INX
                     INX                       
                     CPY.B #$04                
                     BNE ADDR_0CCC08           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0CCC49:        .db $03,$01,$03,$01
 
@@ -4250,11 +4328,11 @@ ADDR_0CCC51:        LDA $13
                     BPL ADDR_0CCC82           
                     JSR.W ADDR_0CD373         
                     LDX.W $13C6               
-                    LDA.L CutsceneBGCol,X     
+                    LDA.L CutsceneBgColor-1,X 
                     ASL                       
                     TAX                       
                     REP #$20                  ; Accum (16 bit) 
-                    LDA.L DATA_00B0A0,X       
+                    LDA.L Palettes,X          
                     STA.W $0701               
                     SEP #$20                  ; Accum (8 bit) 
                     INC.W $1442               
@@ -4271,7 +4349,6 @@ ADDR_0CCC82:        DEC.W $143F
 ADDR_0CCC97:        JSR.W ADDR_0CCCB6         
 ADDR_0CCC9A:        LDX.B #$1C                
                     BRL ADDR_0CCBFC           
-
 DATA_0CCC9F:        .db $A0,$A4,$00,$C0,$C4,$00,$A0,$A2
                     .db $A4,$C0,$C2,$C4,$00,$00,$00,$00
                     .db $00,$00
@@ -4335,7 +4412,7 @@ ADDR_0CCD02:        INC $08
                     STA $02                   
 ADDR_0CCD1E:        CPX.B #$18                
                     BNE ADDR_0CCCD2           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0CCD23:        LDX.B #$00                
                     LDA $1C                   
@@ -4344,6 +4421,7 @@ ADDR_0CCD23:        LDX.B #$00
                     STZ $1A                   
                     STZ $1B                   
                     BRA ADDR_0CCD75           
+
 ADDR_0CCD31:        STA.W $0B41,X             
                     LDA $1D                   
                     STA.W $0B5F,X             
@@ -4368,7 +4446,7 @@ ADDR_0CCD62:        LDA $1C
                     CMP.B #$C0                
                     BNE ADDR_0CCD75           
                     LDA.B #$22                
-                    STA.W $1DF9               ; / Play sound effect 
+                    STA.W $1DF9               ; / Play sound effect
                     JSR.W ADDR_0CD1D0         
                     LDA.B #$08                
                     STA.W $0B06               
@@ -4379,11 +4457,13 @@ ADDR_0CCD75:        LDX.B #$01
                     CMP.B #$68                
                     BCS ADDR_0CCD91           
                     BRA ADDR_0CCD94           
+
 ADDR_0CCD85:        LDA.W $0B41,X             
                     CMP.B #$78                
                     BNE ADDR_0CCD91           
                     INC.W $1442               
                     BRA ADDR_0CCD9E           
+
 ADDR_0CCD91:        JSR.W ADDR_0CD33A         
 ADDR_0CCD94:        LDX.B #$00                
                     LDA.B #$04                
@@ -4431,6 +4511,7 @@ ADDR_0CCDEF:        LDA.W $0B41,X
                     STA.W $143F               
                     INC.W $1442               
                     BRA ADDR_0CCE1E           
+
 ADDR_0CCE02:        SEP #$20                  ; Accum (8 bit) 
                     LDX.B #$01                
                     LDA.W $0B05,X             
@@ -4439,6 +4520,7 @@ ADDR_0CCE02:        SEP #$20                  ; Accum (8 bit)
                     CMP.B #$68                
                     BCS ADDR_0CCE1B           
                     BRA ADDR_0CCE1E           
+
 ADDR_0CCE14:        LDA.W $0B41,X             
                     CMP.B #$78                
                     BCS ADDR_0CCE1E           
@@ -4458,7 +4540,6 @@ ADDR_0CCE2A:        JSR.W ADDR_0CCE48
                     SBC.W $0B41               
                     STA $01                   
                     BRL ADDR_0CCC06           
-
 DATA_0CCE40:        .db $80,$81,$82,$83,$83,$82,$81,$80
 
 ADDR_0CCE48:        DEC.W $143F               
@@ -4507,8 +4588,7 @@ ADDR_0CCE71:        LDA $00
                     INX                       
                     CPX.B #$10                
                     BNE ADDR_0CCE71           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0CCEA3:        .db $C6,$C8,$C6,$C8
 
@@ -4533,8 +4613,7 @@ ADDR_0CCEAB:        LDX.B #$30
                     TAX                       
                     LDA.B #$02                
                     STA.W $0420,X             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0CCED4:        .db $02,$FF,$02,$03,$04,$05,$06
 
@@ -4558,7 +4637,9 @@ ADDR_0CCEF7:        LDX.B #$02
                     LDA.B #$02                
                     STA.W $1440               
                     BRA ADDR_0CCF0F           
+
 ADDR_0CCF0D:        BRA ADDR_0CCF38           
+
 ADDR_0CCF0F:        DEC.W $143F               
                     BPL ADDR_0CCF38           
                     LDA.W $1447               
@@ -4572,19 +4653,18 @@ ADDR_0CCF0F:        DEC.W $143F
                     CPX.B #$01                
                     BNE ADDR_0CCF31           
                     LDA.B #$08                
-                    STA.W $1DF9               ; / Play sound effect 
+                    STA.W $1DF9               ; / Play sound effect
 ADDR_0CCF31:        CPX.B #$06                
                     BNE ADDR_0CCF38           
                     JSR.W ADDR_0CD5C6         
 ADDR_0CCF38:        BRL ADDR_0CCF49           
-
 DATA_0CCF3B:        .db $B7,$B8,$89,$99,$A9,$B9,$E8
 
 DATA_0CCF42:        .db $25,$25,$23,$23,$23,$23,$23
 
 ADDR_0CCF49:        LDY.W $1440               
                     CPY.B #$FF                
-                    BEQ ADDR_0CCF71           
+                    BEQ Return0CCF71          
                     LDX.B #$04                
                     LDA.W $0B52               
                     STA.W $0200,X             
@@ -4599,7 +4679,7 @@ ADDR_0CCF49:        LDY.W $1440
                     LSR                       
                     TAX                       
                     STZ.W $0420,X             
-ADDR_0CCF71:        RTS                       ; Return 
+Return0CCF71:       RTS                       ; Return
 
 ADDR_0CCF72:        DEC.W $143F               
                     BPL ADDR_0CCF8B           
@@ -4611,6 +4691,7 @@ ADDR_0CCF72:        DEC.W $143F
                     BNE ADDR_0CCF8B           
                     INC.W $1442               
                     BRA ADDR_0CCF90           
+
 ADDR_0CCF8B:        LDX.B #$04                
                     JSR.W ADDR_0CCFA3         
 ADDR_0CCF90:        LDX.B #$08                
@@ -4620,7 +4701,6 @@ ADDR_0CCF90:        LDX.B #$08
                     LDA.B #$5F                
                     STA $01                   
                     BRL ADDR_0CCC06           
-
 DATA_0CCF9F:        .db $60,$62,$64,$66
 
 ADDR_0CCFA3:        LDY.W $1440               
@@ -4638,7 +4718,7 @@ ADDR_0CCFA3:        LDY.W $1440
                     TAX                       
                     LDA.B #$02                
                     STA.W $0420,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0CCFC5:        LDA.W $1445               
                     CMP.B #$03                
@@ -4646,27 +4726,28 @@ ADDR_0CCFC5:        LDA.W $1445
                     LDA.B #$08                
                     STA.W $143F               
                     BRA ADDR_0CCFDB           
+
 ADDR_0CCFD3:        DEC.W $143F               
                     BPL ADDR_0CCFDB           
                     INC.W $1442               
 ADDR_0CCFDB:        BRL ADDR_0CCF90           
 ADDR_0CCFDE:        LDA.W $1443               
                     ORA.W $144D               
-                    BNE ADDR_0CCFF6           
+                    BNE Return0CCFF6          
                     LDA $16                   
                     ORA $18                   
                     AND.B #$C0                
-                    BEQ ADDR_0CCFF6           
+                    BEQ Return0CCFF6          
                     STZ.W $1442               
                     LDA.B #$0B                
                     STA.W $0100               
-ADDR_0CCFF6:        RTS                       ; Return 
+Return0CCFF6:       RTS                       ; Return
 
 ADDR_0CCFF7:        LDA.W $1443               
-                    BEQ ADDR_0CD002           
+                    BEQ Return0CD002          
                     INC.W $1442               
                     BRL ADDR_0CCFDE           
-ADDR_0CD002:        RTS                       ; Return 
+Return0CD002:       RTS                       ; Return
 
 ADDR_0CD003:        LDA.W $143E               
                     CMP.B #$01                
@@ -4678,6 +4759,7 @@ ADDR_0CD003:        LDA.W $143E
                     LDA.B #$10                
                     STA.W $143F               
                     BRA ADDR_0CD046           
+
 ADDR_0CD019:        LDA.W $143F               
                     AND.B #$F8                
                     BEQ ADDR_0CD023           
@@ -4689,6 +4771,7 @@ ADDR_0CD023:        JSR.W ADDR_0CD283
                     STZ $1A                   
                     STZ $1B                   
                     BRA ADDR_0CD046           
+
 ADDR_0CD034:        LDA.B #$3F                
                     STA.W $143F               
                     LDA.B #$03                
@@ -4702,6 +4785,7 @@ ADDR_0CD046:        LDX.B #$A8
                     BPL ADDR_0CD052           
                     LDX.B #$A9                
                     BRA ADDR_0CD054           
+
 ADDR_0CD052:        LDX.B #$A7                
 ADDR_0CD054:        STX $00                   
                     STX $02                   
@@ -4709,7 +4793,6 @@ ADDR_0CD054:        STX $00
                     STA $01                   
                     LDX.B #$08                
                     BRL ADDR_0CCC06           
-
 DATA_0CD061:        .db $7C,$7D,$7D,$7C
 
 DATA_0CD065:        .db $30,$30,$F0,$F0
@@ -4759,7 +4842,7 @@ ADDR_0CD0B3:        INX
                     INX                       
                     CPY.B #$04                
                     BNE ADDR_0CD07D           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0CD0BC:        LDA.W $143E               
                     CMP.B #$01                
@@ -4767,13 +4850,13 @@ ADDR_0CD0BC:        LDA.W $143E
                     INC.W $1442               
 ADDR_0CD0C6:        BRL ADDR_0CCF90           
 ADDR_0CD0C9:        LDA.W $143E               
-                    BEQ ADDR_0CD0D1           
+                    BEQ Return0CD0D1          
                     JSR.W ADDR_0CD5C6         
-ADDR_0CD0D1:        RTS                       ; Return 
+Return0CD0D1:       RTS                       ; Return
 
 ADDR_0CD0D2:        LDA.W $143E               
                     CMP.B #$01                
-                    BNE ADDR_0CD107           
+                    BNE Return0CD107          
                     LDX.B #$00                
                     LDA $1C                   
                     STA.W $0B41,X             
@@ -4789,15 +4872,16 @@ ADDR_0CD0D2:        LDA.W $143E
                     INC.W $1442               
                     LDA.B #$28                
                     STA.W $1447               
-                    BRA ADDR_0CD107           
+                    BRA Return0CD107          
+
 ADDR_0CD100:        STA $1C                   
                     LDA.W $0B5F,X             
                     STA $1D                   
-ADDR_0CD107:        RTS                       ; Return 
+Return0CD107:       RTS                       ; Return
 
 ADDR_0CD108:        LDA.W $143E               
                     CMP.B #$02                
-                    BNE ADDR_0CD16E           
+                    BNE Return0CD16E          
                     DEC.W $1447               
                     LDA.W $1447               
                     BMI ADDR_0CD11E           
@@ -4810,9 +4894,9 @@ ADDR_0CD11E:        LDA.W $1447
                     LDA.B #$40                
                     STA.W $143F               
                     LDA.B #$1A                
-                    STA.W $1DFC               ; / Play sound effect 
+                    STA.W $1DFC               ; / Play sound effect
                     INC.W $1442               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0CD133:        LDX.B #$00                
                     LDA $1C                   
@@ -4837,7 +4921,7 @@ ADDR_0CD133:        LDX.B #$00
                     STA $1A                   
                     LDA.W $0B6E,X             
                     STA $1B                   
-ADDR_0CD16E:        RTS                       ; Return 
+Return0CD16E:       RTS                       ; Return
 
 ADDR_0CD16F:        LDA $13                   
                     AND.B #$02                
@@ -4849,6 +4933,7 @@ ADDR_0CD16F:        LDA $13
                     STA $20                   
                     SEP #$20                  ; Accum (8 bit) 
                     BRA ADDR_0CD18F           
+
 ADDR_0CD183:        REP #$20                  ; Accum (16 bit) 
                     LDA $20                   
                     CLC                       
@@ -4856,18 +4941,17 @@ ADDR_0CD183:        REP #$20                  ; Accum (16 bit)
                     STA $20                   
                     SEP #$20                  ; Accum (8 bit) 
 ADDR_0CD18F:        DEC.W $143F               
-                    BPL ADDR_0CD19B           
+                    BPL Return0CD19B          
                     STZ $20                   
                     STZ $21                   
                     INC.W $1442               
-ADDR_0CD19B:        RTS                       ; Return 
+Return0CD19B:       RTS                       ; Return
 
 ADDR_0CD19C:        LDA.W $143E               
                     CMP.B #$03                
-                    BNE ADDR_0CD1A6           
+                    BNE Return0CD1A6          
                     JSR.W ADDR_0CD5C6         
-ADDR_0CD1A6:        RTS                       ; Return 
-
+Return0CD1A6:       RTS                       ; Return
 
 DATA_0CD1A7:        .db $20,$B3,$00,$0F,$C0,$01,$C1,$01
                     .db $C2,$01,$C3,$01,$C4,$01,$C5,$01
@@ -4890,8 +4974,7 @@ ADDR_0CD1D9:        LDA.W DATA_0CD1A7,Y
                     CLC                       
                     ADC.L $7F837B             
                     STA.L $7F837B             
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0CD1F0:        .db $20,$F4,$40,$02,$F8,$00,$21,$14
                     .db $40,$02,$F8,$00,$FF
@@ -4941,10 +5024,10 @@ ADDR_0CD23C:        LDA.W DATA_0CD1F0,Y
                     STA.L $7F8383,X           
                     SEP #$20                  ; Accum (8 bit) 
                     CPY.B #$1C                
-                    BNE ADDR_0CD282           
+                    BNE Return0CD282          
                     LDA.B #$01                
                     STA.W $1444               
-ADDR_0CD282:        RTS                       ; Return 
+Return0CD282:       RTS                       ; Return
 
 ADDR_0CD283:        REP #$20                  ; Accum (16 bit) 
                     LDA $13                   
@@ -4952,12 +5035,13 @@ ADDR_0CD283:        REP #$20                  ; Accum (16 bit)
                     BEQ ADDR_0CD290           
                     INC $1A                   
                     BRA ADDR_0CD292           
+
 ADDR_0CD290:        DEC $1A                   
 ADDR_0CD292:        SEP #$20                  ; Accum (8 bit) 
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0CD295:        LDA.B #$1A                
-                    STA.W $1DFC               ; / Play sound effect 
+                    STA.W $1DFC               ; / Play sound effect
                     LDA.B #$FF                
                     STA.W $1440               
                     LDA.B #$30                
@@ -4968,11 +5052,11 @@ ADDR_0CD295:        LDA.B #$1A
                     JSR.W ADDR_0CCBFA         
                     BRL ADDR_0CCC51           
 ADDR_0CD2B2:        LDA.B #$21                
-                    STA.W $1DF9               ; / Play sound effect 
+                    STA.W $1DF9               ; / Play sound effect
                     JSR.W ADDR_0CD31A         
                     BRL ADDR_0CCD23           
 ADDR_0CD2BD:        LDA.B #$17                
-                    STA.W $1DFC               ; / Play sound effect 
+                    STA.W $1DFC               ; / Play sound effect
                     LDA.B #$77                
                     STA.W $0B43               
                     STZ.W $1447               
@@ -4982,13 +5066,13 @@ ADDR_0CD2D0:        LDA.B #$03
                     STA.W $143F               
                     STZ.W $1440               
                     LDA.B #$19                
-                    STA.W $1DFC               ; / Play sound effect 
+                    STA.W $1DFC               ; / Play sound effect
                     INC.W $1442               
                     JSR.W ADDR_0CCBFA         
                     BRL ADDR_0CCF72           
 ADDR_0CD2E6:        DEC.W $143F               
                     BMI ADDR_0CD2EC           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0CD2EC:        JSR.W ADDR_0CD373         
                     LDA.B #$0F                
@@ -5044,7 +5128,7 @@ ADDR_0CD359:        PLP
                     TYA                       
                     ADC.W $0B5F,X             
                     STA.W $0B5F,X             
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0CD368:        PHX                       
                     TXA                       
@@ -5053,7 +5137,7 @@ ADDR_0CD368:        PHX
                     TAX                       
                     JSR.W ADDR_0CD33A         
                     PLX                       
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0CD373:        STZ.W $0B23               
                     STZ.W $0B32               
@@ -5061,8 +5145,7 @@ ADDR_0CD373:        STZ.W $0B23
                     STZ.W $0B33               
                     STZ.W $0B34               
                     STZ.W $0B34               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0CD386:        .db $C8,$C0,$C4,$C8,$C0,$B4,$C8,$B8
                     .db $C6,$B7,$C4,$B0,$C8,$C0,$C8,$C4
@@ -5072,10 +5155,10 @@ DATA_0CD396:        .db $18,$F8,$0A,$20,$E8,$1A,$EA,$08
 ADDR_0CD3A6:        LDA.W $1445               
                     DEC A                     
                     CMP.B #$E7                
-                    BCS ADDR_0CD3F3           
+                    BCS Return0CD3F3          
                     LDA $13                   
                     AND.B #$01                
-                    BNE ADDR_0CD3F3           
+                    BNE Return0CD3F3          
                     LDX.B #$0E                
 ADDR_0CD3B6:        LDA.W $0B8C,X             
                     BNE ADDR_0CD3EE           
@@ -5097,14 +5180,15 @@ ADDR_0CD3B6:        LDA.W $0B8C,X
                     STA.W $0B41,X             
                     LDA $13                   
                     AND.B #$02                
-                    BNE ADDR_0CD3F3           
+                    BNE Return0CD3F3          
                     LDA.B #$07                
-                    STA.W $1DFC               ; / Play sound effect 
-                    BRA ADDR_0CD3F3           
+                    STA.W $1DFC               ; / Play sound effect
+                    BRA Return0CD3F3          
+
 ADDR_0CD3EE:        DEX                       
                     CPX.B #$03                
                     BNE ADDR_0CD3B6           
-ADDR_0CD3F3:        RTS                       ; Return 
+Return0CD3F3:       RTS                       ; Return
 
 ADDR_0CD3F4:        LDX.B #$0E                
 ADDR_0CD3F6:        LDA.W $0B8C,X             
@@ -5126,7 +5210,6 @@ ADDR_0CD41B:        DEX
                     CPX.B #$03                
                     BNE ADDR_0CD3F6           
                     BRL ADDR_0CD425           
-
 DATA_0CD423:        .db $3C,$3D
 
 ADDR_0CD425:        LDY.B #$0E                
@@ -5163,8 +5246,7 @@ ADDR_0CD45A:        INX
                     DEY                       
                     CPY.B #$03                
                     BNE ADDR_0CD429           
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0CD464:        .db $F8,$80,$80,$80,$FA,$80,$80,$80
                     .db $FA,$FC,$80,$80,$FA,$FC,$04,$80
@@ -5175,7 +5257,7 @@ DATA_0CD484:        .db $08,$80,$80,$80,$09,$80,$80,$80
                     .db $04,$80,$80,$80,$00,$80,$80,$80
                     .db $FF,$80,$80,$80,$00,$80,$80,$80
 
-ADDR_0CD4A4:        PHB                       
+ExtSub0CD4A4:       PHB                       
                     PHK                       
                     PLB                       
                     LDX.B #$00                
@@ -5221,15 +5303,15 @@ ADDR_0CD4ED:        INY
                     DEC $00                   
                     BPL ADDR_0CD4BD           
                     PLB                       
-                    RTL                       ; Return 
-
+                    RTL                       ; Return
 
 DATA_0CD4F4:        .db $89,$99,$A9,$B9
 
 ADDR_0CD4F8:        LDA.W $1446               
                     BNE ADDR_0CD502           
                     STZ.W $0B43               
-                    BRA ADDR_0CD556           
+                    BRA Return0CD556          
+
 ADDR_0CD502:        LDX.B #$02                
                     LDA.B #$FD                
                     STA.W $0B05,X             
@@ -5240,7 +5322,8 @@ ADDR_0CD502:        LDX.B #$02
                     CMP.B #$0D                
                     BCC ADDR_0CD51B           
                     STZ.W $1446               
-                    BRA ADDR_0CD556           
+                    BRA Return0CD556          
+
 ADDR_0CD51B:        LDX.B #$00                
                     LDA $19                   
                     BNE ADDR_0CD523           
@@ -5272,13 +5355,14 @@ ADDR_0CD523:        STX $00
                     LSR                       
                     TAX                       
                     STZ.W $0420,X             
-ADDR_0CD556:        RTS                       ; Return 
+Return0CD556:       RTS                       ; Return
 
 ADDR_0CD557:        LDA.W $1446               
                     BNE ADDR_0CD564           
                     STZ.W $0B44               
                     STZ.W $0B53               
-                    BRA ADDR_0CD5C5           
+                    BRA Return0CD5C5          
+
 ADDR_0CD564:        LDX.B #$03                
                     LDA.B #$06                
                     STA.W $0B14,X             
@@ -5291,7 +5375,8 @@ ADDR_0CD564:        LDX.B #$03
                     BCC ADDR_0CD585           
                     STZ.W $1446               
                     INC.W $1442               
-                    BRA ADDR_0CD5C5           
+                    BRA Return0CD5C5          
+
 ADDR_0CD585:        LDX.B #$0F                
                     LDY.B #$0C                
                     LDA $19                   
@@ -5325,7 +5410,7 @@ ADDR_0CD58F:        STX $00
                     LSR                       
                     TAX                       
                     STZ.W $0420,X             
-ADDR_0CD5C5:        RTS                       ; Return 
+Return0CD5C5:       RTS                       ; Return
 
 ADDR_0CD5C6:        INC.W $1442               
 ADDR_0CD5C9:        LDA.B #$FF                
@@ -5333,13 +5418,9 @@ ADDR_0CD5C9:        LDA.B #$FF
                     LDA.B #$D0                
                     STA.W $144D               
                     LDA.B #$13                
+Instr0CD5D5:        .db $8D,$FB,$1D
 
-Instr0CD5D5:        .db $8D
-
-ADDR_0CD5D6:        .db $FB,$1D
-
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0CD5D9:        .db $35,$36,$36,$36,$37,$37,$37,$37
                     .db $37,$37,$37,$36,$36,$35,$35,$35
@@ -5365,11 +5446,12 @@ DATA_0CD635:        .db $06,$03,$07,$00,$07,$01,$0D,$08
 
 ADDR_0CD65B:        LDA.W $144A               
                     LSR                       
-                    BEQ ADDR_0CD6C3           
+                    BEQ Return0CD6C3          
                     LDA.W $1445               
                     BNE ADDR_0CD66B           
                     LDX.W $13DB               
                     BRA ADDR_0CD680           
+
 ADDR_0CD66B:        DEC.W $1445               
                     CMP.B #$F0                
                     BCC ADDR_0CD674           
@@ -5378,7 +5460,7 @@ ADDR_0CD674:        AND.B #$0F
                     CLC                       
                     ADC.B #$03                
                     TAX                       
-                    LDA.W ADDR_0CD5D6,X       
+                    LDA.W DATA_0CD5D9-3,X     
                     STA.W $13E0               
 ADDR_0CD680:        LDY.B #$00                
                     LDA.W DATA_0CD5E9,X       
@@ -5417,8 +5499,7 @@ ADDR_0CD6B4:        CLC
                     TAY                       
                     LDA.B #$02                
                     STA.W $045F,Y             
-ADDR_0CD6C3:        RTS                       ; Return 
-
+Return0CD6C3:       RTS                       ; Return
 
 DATA_0CD6C4:        .db $E7,$E6,$E6,$EA,$E6,$E7
 
@@ -5438,7 +5519,7 @@ DATA_0CD6E5:        .db $68,$34,$B0,$00,$C0,$00,$C0
 
 ADDR_0CD6EC:        LDA.W $144A               
                     LSR                       
-                    BEQ ADDR_0CD751           
+                    BEQ Return0CD751          
                     LDY.B #$04                
                     LDA.B #$02                
 ADDR_0CD6F6:        STA.W $0470,Y             
@@ -5489,7 +5570,7 @@ ADDR_0CD731:        CLC
                     STA.W $0343,Y             
                     DEX                       
                     BPL ADDR_0CD720           
-ADDR_0CD751:        RTS                       ; Return 
+Return0CD751:       RTS                       ; Return
 
 ADDR_0CD752:        AND.B #$07                
                     BNE ADDR_0CD759           
@@ -5498,8 +5579,8 @@ ADDR_0CD759:        LDY.B #$25
                     LDA.W $1446               
                     CMP.B #$4C                
                     BCC ADDR_0CD764           
-                    LDY.B #$38                
-ADDR_0CD764:        STY.W $13E0               
+                    LDY.B #$38                ;  \ Mario's image = Ducking, back to camera 
+ADDR_0CD764:        STY.W $13E0               ;  / 
                     LDY.B #$00                
                     DEC A                     
                     STA $00                   
@@ -5531,7 +5612,7 @@ ADDR_0CD789:        STA $00
                     LDA.W $1449               
                     BEQ ADDR_0CD7A9           
                     DEC.W $1449               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0CD7A9:        TXA                       
                     BEQ ADDR_0CD7C9           
@@ -5540,8 +5621,8 @@ ADDR_0CD7A9:        TXA
                     LDA $13                   
                     AND.B #$04                
                     BEQ ADDR_0CD7BA           
-                    LDA.B #$39                
-                    STA.W $13E0               
+                    LDA.B #$39                ;  \ Mario's image = Standing, back to camera 
+                    STA.W $13E0               ;  / 
 ADDR_0CD7BA:        LDA $94                   
                     CMP.W DATA_0CD6E5,X       
                     BEQ ADDR_0CD7C9           
@@ -5549,28 +5630,27 @@ ADDR_0CD7BA:        LDA $94
                     STA $94                   
                     AND.B #$0F                
                     BEQ ADDR_0CD7E5           
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0CD7C9:        INC.W $1445               
                     CPX.B #$06                
                     BCC ADDR_0CD7D4           
                     STZ.W $1446               
-                    RTS                       ; Return 
+                    RTS                       ; Return
 
 ADDR_0CD7D4:        TXA                       
                     LSR                       
-                    BCS ADDR_0CD7DD           
+                    BCS Return0CD7DD          
                     LDA.B #$0F                
-                    STA.W $1DF9               ; / Play sound effect 
-ADDR_0CD7DD:        RTS                       ; Return 
+                    STA.W $1DF9               ; / Play sound effect
+Return0CD7DD:       RTS                       ; Return
 
 ADDR_0CD7DE:        CLC                       
                     ADC.W DATA_0CD6D9,X       
                     STA.W $1446               
 ADDR_0CD7E5:        LDA.B #$10                
                     STA.W $1449               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0CD7EB:        .db $F7,$F6
 
@@ -5586,6 +5666,7 @@ ADDR_0CD803:        LDX.W $144A
                     LSR                       
                     BEQ ADDR_0CD849           
                     BRA ADDR_0CD84F           
+
 ADDR_0CD812:        LDY $19                   
                     BEQ ADDR_0CD818           
                     LDY.B #$01                
@@ -5627,8 +5708,7 @@ ADDR_0CD858:        STA.W $0381
                     STA.W $0383               
                     LDA.B #$02                
                     STA.W $0480               
-                    RTS                       ; Return 
-
+                    RTS                       ; Return
 
 DATA_0CD86F:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
@@ -5648,361 +5728,370 @@ DATA_0CD86F:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-                    .db $FF,$E2,$00,$00,$01,$81,$02,$00
-                    .db $03,$B0,$00,$03,$04,$05,$06,$07
-                    .db $8B,$00,$00,$08,$81,$09,$00,$0A
-                    .db $8B,$00,$03,$0B,$0C,$09,$0D,$8B
-                    .db $00,$00,$0B,$81,$09,$00,$0D,$8B
-                    .db $00,$08,$0B,$0E,$09,$0D,$0F,$10
-                    .db $11,$00,$11,$86,$00,$00,$0B,$81
-                    .db $09,$05,$0D,$12,$13,$14,$00,$14
-                    .db $84,$00,$0D,$04,$05,$15,$16,$0C
-                    .db $0D,$02,$17,$18,$00,$18,$01,$02
-                    .db $03,$81,$00,$00,$08,$81,$09,$09
-                    .db $19,$1A,$1B,$1C,$1D,$18,$02,$18
-                    .db $02,$03,$82,$00,$04,$0B,$0C,$09
-                    .db $0D,$1E,$81,$09,$05,$1F,$18,$00
-                    .db $20,$06,$07,$82,$00,$10,$0B,$09
-                    .db $0E,$0D,$0B,$09,$0E,$0D,$18,$00
-                    .db $0C,$09,$0A,$00,$04,$05,$0B,$81
-                    .db $09,$01,$0D,$0B,$81,$09,$02,$0D
-                    .db $18,$00,$81,$09,$0D,$0D,$00,$08
-                    .db $09,$0B,$0C,$09,$0D,$0B,$0C,$09
-                    .db $0D,$18,$00,$81,$09,$04,$0D,$02
-                    .db $0B,$09,$0B,$81,$09,$01,$0D,$0B
-                    .db $81,$09,$00,$0D,$81,$02,$06,$09
-                    .db $0E,$0D,$00,$0B,$0E,$0B,$81,$09
-                    .db $08,$0D,$0B,$09,$0E,$0D,$02,$03
-                    .db $09,$21,$88,$22,$06,$23,$09,$0D
-                    .db $18,$00,$16,$24,$88,$25,$0A,$26
-                    .db $09,$0D,$18,$02,$22,$23,$0D,$02
-                    .db $0B,$21,$89,$22,$05,$25,$26,$0D
-                    .db $22,$0B,$24,$89,$25,$FF,$00,$87
-                    .db $00,$00,$01,$81,$02,$00,$03,$84
-                    .db $00,$00,$01,$81,$02,$00,$03,$D8
-                    .db $00,$01,$0F,$10,$8D,$00,$02,$12
-                    .db $13,$03,$83,$00,$02,$0F,$10,$11
-                    .db $82,$00,$04,$0F,$10,$11,$27,$28
-                    .db $84,$00,$02,$12,$13,$14,$82,$00
-                    .db $04,$12,$13,$14,$29,$28,$82,$00
-                    .db $00,$01,$81,$02,$01,$17,$18,$82
-                    .db $00,$07,$29,$28,$18,$27,$2A,$0F
-                    .db $10,$11,$81,$00,$03,$27,$13,$18
-                    .db $01,$81,$02,$07,$17,$28,$18,$27
-                    .db $2B,$12,$13,$14,$81,$00,$02,$29
-                    .db $28,$18,$82,$00,$18,$29,$28,$2C
-                    .db $02,$0B,$02,$17,$18,$04,$05,$1C
-                    .db $1D,$18,$00,$01,$02,$2A,$20,$1C
-                    .db $1D,$0B,$29,$28,$18,$08,$81,$09
-                    .db $01,$1F,$18,$81,$02,$01,$03,$2B
-                    .db $81,$09,$15,$1F,$0B,$27,$13,$18
-                    .db $0B,$0C,$09,$0D,$18,$00,$2D,$22
-                    .db $0B,$09,$0C,$0D,$0B,$29,$2C,$02
-                    .db $0B,$81,$09,$09,$0D,$02,$03,$2E
-                    .db $25,$0B,$09,$1A,$1B,$15,$83,$22
-                    .db $02,$23,$0E,$0D,$83,$22,$01,$0B
-                    .db $21,$82,$22,$83,$25,$02,$26,$09
-                    .db $0D,$83,$25,$01,$0B,$24,$82,$25
-                    .db $FF,$FF,$D6,$00,$02,$2F,$30,$31
-                    .db $95,$00,$02,$2F,$30,$31,$BE,$00
-                    .db $01,$32,$33,$8C,$00,$02,$34,$35
-                    .db $36,$8C,$00,$02,$37,$38,$32,$86
-                    .db $00,$00,$33,$84,$00,$81,$39,$01
-                    .db $3A,$3B,$81,$00,$01,$2F,$31,$81
-                    .db $00,$01,$36,$3C,$83,$00,$03,$3D
-                    .db $34,$35,$3E,$84,$00,$01,$33,$32
-                    .db $81,$00,$00,$3F,$81,$00,$04,$32
-                    .db $40,$41,$3D,$42,$83,$00,$01,$36
-                    .db $39,$81,$00,$00,$43,$81,$00,$00
-                    .db $39,$81,$00,$01,$3C,$44,$83,$00
-                    .db $04,$45,$41,$00,$3F,$46,$84,$00
-                    .db $01,$47,$3D,$86,$00,$01,$48,$49
-                    .db $83,$00,$02,$4A,$4B,$4C,$84,$00
-                    .db $0A,$2F,$31,$43,$4D,$4E,$2F,$31
-                    .db $00,$4F,$50,$3E,$82,$00,$00,$32
-                    .db $82,$00,$02,$51,$52,$3E,$82,$00
-                    .db $02,$53,$54,$55,$81,$00,$02,$33
-                    .db $3A,$3B,$81,$00,$02,$4F,$54,$3E
-                    .db $82,$00,$0C,$51,$56,$49,$30,$31
-                    .db $36,$57,$3E,$00,$33,$58,$49,$55
-                    .db $82,$00,$0C,$4F,$59,$5A,$3F,$3C
-                    .db $34,$35,$40,$00,$36,$51,$56,$49
-                    .db $81,$00,$0D,$3F,$58,$5B,$5C,$48
-                    .db $3F,$5D,$32,$39,$00,$5D,$46,$57
-                    .db $4D,$81,$00,$0D,$48,$34,$35,$5E
-                    .db $43,$48,$32,$39,$33,$00,$39,$35
-                    .db $3A,$35,$81,$00,$00,$43,$81,$45
-                    .db $0A,$39,$3D,$43,$41,$40,$36,$3C
-                    .db $39,$41,$39,$5D,$E5,$00,$02,$2F
-                    .db $30,$31,$D6,$00,$02,$2F,$30,$31
-                    .db $93,$00,$00,$32,$8D,$00,$07,$2F
-                    .db $5E,$31,$3C,$00,$2F,$30,$31,$81
-                    .db $00,$01,$2F,$31,$82,$00,$04,$33
-                    .db $34,$35,$2F,$31,$89,$00,$04,$3C
-                    .db $36,$5F,$3A,$3B,$8B,$00,$03,$45
-                    .db $39,$38,$41,$82,$00,$01,$2F,$31
-                    .db $86,$00,$02,$33,$5D,$45,$82,$00
-                    .db $00,$33,$86,$00,$02,$32,$00,$36
-                    .db $83,$00,$01,$33,$36,$86,$00,$02
-                    .db $3A,$3B,$39,$83,$00,$01,$36,$32
-                    .db $81,$00,$07,$33,$00,$3F,$00,$34
-                    .db $35,$41,$3F,$81,$00,$03,$46,$00
-                    .db $34,$35,$81,$00,$26,$36,$00,$43
-                    .db $00,$5F,$39,$3D,$43,$00,$4A,$4B
-                    .db $4C,$45,$39,$00,$33,$32,$00,$45
-                    .db $00,$41,$3A,$3B,$45,$00,$53,$54
-                    .db $3E,$40,$41,$3C,$36,$39,$00,$4E
-                    .db $3F,$33,$40,$41,$81,$00,$28,$4A
-                    .db $4B,$4C,$3F,$47,$3F,$00,$41,$00
-                    .db $3D,$48,$36,$3C,$33,$00,$3F,$4F
-                    .db $50,$54,$43,$49,$48,$33,$00,$33
-                    .db $41,$43,$39,$00,$36,$00,$43,$53
-                    .db $54,$49,$51,$5A,$43,$36,$00,$36
-                    .db $FF,$FF,$A1,$00,$01,$60,$61,$F5
-                    .db $00,$01,$60,$61,$9A,$00,$01,$60
-                    .db $61,$DA,$00,$01,$60,$61,$BE,$00
-                    .db $00,$62,$88,$00,$00,$63,$83,$00
-                    .db $02,$64,$65,$66,$82,$00,$00,$67
-                    .db $82,$00,$01,$63,$68,$82,$00,$0C
-                    .db $64,$69,$6A,$6B,$66,$6C,$6D,$6E
-                    .db $6F,$70,$71,$68,$22,$81,$00,$01
-                    .db $64,$69,$81,$72,$0C,$73,$6B,$74
-                    .db $75,$76,$77,$78,$79,$7A,$22,$00
-                    .db $64,$69,$81,$72,$00,$6A,$81,$72
-                    .db $01,$6B,$74,$82,$76,$06,$77,$78
-                    .db $79,$64,$69,$6A,$73,$81,$72,$09
-                    .db $73,$6A,$73,$6B,$74,$75,$76,$75
-                    .db $76,$77,$E8,$00,$01,$60,$61,$E7
-                    .db $00,$01,$60,$61,$BE,$00,$01,$63
-                    .db $7B,$84,$00,$01,$60,$61,$85,$00
-                    .db $03,$63,$68,$7C,$7B,$89,$00,$02
-                    .db $7D,$7E,$68,$81,$22,$01,$7C,$7B
-                    .db $87,$00,$01,$63,$68,$84,$22,$02
-                    .db $7C,$7F,$80,$85,$00,$00,$68,$87
-                    .db $22,$01,$7C,$7B,$84,$00,$89,$22
-                    .db $01,$7C,$7B,$83,$00,$8A,$22,$01
-                    .db $7C,$7B,$82,$00,$8B,$22,$01,$7C
-                    .db $7B,$81,$00,$00,$7A,$8B,$22,$05
-                    .db $7C,$7B,$00,$78,$79,$7A,$8A,$22
-                    .db $01,$7C,$7B,$FF,$FF,$DA,$00,$01
-                    .db $60,$61,$93,$00,$01,$60,$61,$B4
-                    .db $00,$02,$7D,$7E,$7B,$8B,$00,$04
-                    .db $63,$68,$22,$81,$7B,$89,$00,$01
-                    .db $63,$68,$82,$22,$01,$7C,$7B,$87
-                    .db $00,$01,$63,$68,$84,$22,$02,$7C
-                    .db $7F,$80,$83,$00,$02,$7D,$7E,$68
-                    .db $87,$22,$01,$7C,$7F,$81,$00,$01
-                    .db $63,$68,$8A,$22,$03,$82,$00,$63
-                    .db $68,$8A,$22,$03,$83,$68,$63,$68
-                    .db $8A,$22,$03,$83,$68,$22,$68,$87
-                    .db $22,$04,$83,$84,$85,$81,$68,$81
-                    .db $22,$00,$86,$86,$22,$04,$83,$68
-                    .db $22,$7C,$86,$82,$22,$03,$7C,$86
-                    .db $82,$85,$82,$22,$01,$83,$68,$82
-                    .db $22,$01,$7C,$87,$82,$22,$06,$7C
-                    .db $68,$7C,$87,$82,$88,$68,$8B,$22
-                    .db $01,$83,$68,$8C,$22,$01,$83,$68
-                    .db $84,$22,$01,$82,$85,$85,$22,$01
-                    .db $81,$68,$84,$22,$01,$81,$68,$A4
-                    .db $22,$EB,$00,$01,$60,$61,$97,$00
-                    .db $01,$60,$61,$C9,$00,$01,$63,$7B
-                    .db $8B,$00,$04,$80,$63,$68,$7C,$7B
-                    .db $8A,$00,$01,$88,$68,$81,$22,$01
-                    .db $83,$7B,$86,$00,$02,$60,$61,$00
-                    .db $82,$22,$03,$83,$68,$7C,$7B,$88
-                    .db $00,$81,$22,$01,$81,$68,$81,$22
-                    .db $04,$7C,$7F,$80,$63,$7B,$84,$00
-                    .db $87,$22,$07,$83,$68,$7C,$7B,$7D
-                    .db $80,$7D,$7E,$86,$22,$01,$81,$68
-                    .db $81,$22,$04,$7C,$86,$7C,$86,$83
-                    .db $8B,$22,$06,$7C,$86,$7C,$68,$22
-                    .db $83,$86,$89,$22,$06,$7C,$87,$22
-                    .db $81,$68,$7C,$86,$8E,$22,$01,$7C
-                    .db $84,$BA,$22,$FF,$FF,$A2,$00,$01
-                    .db $60,$61,$CD,$00,$01,$60,$61,$F8
-                    .db $00,$01,$60,$61,$8A,$00,$01,$60
-                    .db $61,$A9,$00,$00,$67,$8C,$00,$05
-                    .db $6C,$6D,$6E,$6F,$70,$67,$87,$00
-                    .db $09,$6C,$6D,$89,$76,$77,$75,$78
-                    .db $6E,$6F,$70,$83,$00,$04,$6C,$6D
-                    .db $89,$77,$8A,$83,$76,$0D,$77,$76
-                    .db $78,$6F,$70,$8B,$6D,$89,$75,$77
-                    .db $8C,$65,$74,$77,$82,$76,$04,$75
-                    .db $77,$8D,$8E,$8F,$81,$77,$0B,$76
-                    .db $8C,$69,$6A,$6B,$74,$76,$75,$76
-                    .db $8D,$8E,$8F,$81,$72,$0C,$76,$77
-                    .db $8C,$69,$6A,$72,$6A,$6B,$74,$8D
-                    .db $8E,$8F,$6A,$82,$72,$02,$90,$8C
-                    .db $69,$83,$72,$03,$73,$6B,$91,$73
-                    .db $83,$72,$06,$6A,$8C,$69,$73,$6A
-                    .db $72,$6A,$82,$72,$01,$6B,$91,$81
-                    .db $6A,$02,$72,$92,$93,$B2,$00,$01
-                    .db $60,$61,$C8,$00,$01,$60,$61,$95
-                    .db $00,$01,$60,$61,$EB,$00,$01,$60
-                    .db $61,$A5,$00,$01,$60,$61,$92,$00
-                    .db $00,$94,$8D,$00,$03,$95,$65,$96
-                    .db $97,$83,$00,$00,$67,$86,$00,$0A
-                    .db $72,$6A,$73,$98,$96,$97,$6C,$6D
-                    .db $6E,$6F,$70,$83,$00,$01,$6C,$6A
-                    .db $82,$72,$03,$92,$93,$89,$77,$81
-                    .db $76,$05,$78,$6F,$70,$6C,$6D,$89
-                    .db $81,$72,$02,$92,$93,$89,$84,$76
-                    .db $09,$75,$77,$78,$99,$90,$77,$92
-                    .db $93,$89,$77,$84,$76,$00,$75,$83
-                    .db $76,$04,$78,$99,$89,$76,$77,$82
-                    .db $76,$01,$77,$75,$86,$76,$00,$77
-                    .db $FF,$FF,$BB,$00,$01,$60,$61,$83
-                    .db $00,$01,$60,$61,$D4,$00,$01,$60
-                    .db $61,$B5,$00,$01,$60,$61,$9B,$00
-                    .db $00,$7D,$8D,$00,$01,$63,$68,$84
-                    .db $00,$02,$9A,$9B,$9C,$83,$00,$0C
-                    .db $7D,$7E,$68,$22,$9D,$9A,$9B,$9C
-                    .db $9A,$9E,$9F,$09,$9C,$81,$00,$01
-                    .db $71,$68,$82,$22,$0B,$A0,$9E,$A1
-                    .db $09,$A2,$9F,$A3,$A4,$A5,$9A,$A6
-                    .db $A7,$83,$22,$01,$A8,$9F,$81,$09
-                    .db $01,$A9,$A3,$81,$72,$03,$AA,$AB
-                    .db $9F,$A9,$82,$22,$05,$A0,$9F,$A3
-                    .db $AC,$AD,$AE,$82,$72,$08,$AF,$AD
-                    .db $B0,$A6,$A7,$A0,$9B,$A2,$A3,$82
-                    .db $72,$00,$B1,$81,$72,$56,$AF,$A3
-                    .db $B2,$9E,$9F,$B3,$B4,$A1,$09,$B5
-                    .db $72,$B2,$9B,$B6,$B2,$9B,$B3,$B2
-                    .db $9E,$9F,$09,$A3,$B2,$A1,$09,$B6
-                    .db $B5,$9F,$A3,$A5,$B7,$AC,$09,$A2
-                    .db $9B,$09,$A3,$AA,$9E,$B8,$A9,$A4
-                    .db $AA,$AE,$72,$B9,$BA,$72,$AC,$09
-                    .db $B3,$A9,$72,$B2,$9E,$9F,$09,$72
-                    .db $BB,$B7,$B2,$B8,$09,$B6,$B1,$A4
-                    .db $AF,$A3,$B2,$BC,$9B,$BD,$B3,$AA
-                    .db $BE,$B2,$9E,$B7,$A4,$A5,$72,$AA
-                    .db $A3,$B2,$BF,$C0,$B8,$81,$09,$D6
-                    .db $00,$01,$60,$61,$A8,$00,$01,$60
-                    .db $61,$A8,$00,$01,$60,$61,$95,$00
-                    .db $01,$60,$61,$98,$00,$00,$80,$8E
-                    .db $00,$01,$7C,$7B,$84,$00,$02,$9A
-                    .db $9F,$9C,$85,$00,$09,$22,$7C,$7F
-                    .db $7E,$7F,$80,$9A,$9F,$A3,$A5,$81
-                    .db $00,$01,$7D,$80,$81,$00,$84,$22
-                    .db $4A,$7C,$A8,$9F,$C1,$AA,$00,$63
-                    .db $68,$7C,$7F,$7E,$22,$A0,$9B,$C2
-                    .db $22,$A0,$9F,$A3,$BA,$C3,$71,$68
-                    .db $A0,$9F,$A7,$22,$C4,$9F,$A3,$AA
-                    .db $C4,$9F,$A3,$B2,$9E,$9F,$A7,$22
-                    .db $A8,$A1,$09,$A7,$9E,$A1,$C1,$AA
-                    .db $BD,$AE,$B2,$9F,$BD,$A3,$C5,$A0
-                    .db $9F,$A3,$A4,$B2,$A2,$A1,$C1,$AF
-                    .db $A3,$B2,$9F,$09,$A3,$B2,$9B,$BE
-                    .db $AC,$C1,$B2,$9F,$81,$A3,$02,$AA
-                    .db $B0,$9B,$81,$BD,$20,$B3,$C1,$A8
-                    .db $A1,$A3,$AA,$B2,$BC,$A6,$72,$B5
-                    .db $B2,$9E,$9F,$09,$A3,$A5,$B2,$9E
-                    .db $B8,$B6,$72,$C0,$A2,$9F,$B6,$72
-                    .db $A8,$9F,$09,$A3,$72,$AA,$81,$9E
-                    .db $04,$9F,$A9,$72,$AA,$09,$81,$A3
-                    .db $11,$B2,$9E,$A1,$09,$BE,$72,$AA
-                    .db $9E,$9F,$09,$A3,$72,$AA,$AE,$72
-                    .db $BD,$A2,$9F,$81,$09,$05,$A3,$72
-                    .db $AF,$BD,$09,$A9,$81,$72,$02,$B2
-                    .db $B7,$72,$FF,$FF,$7F,$C6,$9E,$C7
+                    .db $FF
+
+DATA_0CD900:        .db $E2,$00,$00,$01,$81,$02,$00,$03
+                    .db $B0,$00,$03,$04,$05,$06,$07,$8B
+                    .db $00,$00,$08,$81,$09,$00,$0A,$8B
+                    .db $00,$03,$0B,$0C,$09,$0D,$8B,$00
+                    .db $00,$0B,$81,$09,$00,$0D,$8B,$00
+                    .db $08,$0B,$0E,$09,$0D,$0F,$10,$11
+                    .db $00,$11,$86,$00,$00,$0B,$81,$09
+                    .db $05,$0D,$12,$13,$14,$00,$14,$84
+                    .db $00,$0D,$04,$05,$15,$16,$0C,$0D
+                    .db $02,$17,$18,$00,$18,$01,$02,$03
+                    .db $81,$00,$00,$08,$81,$09,$09,$19
+                    .db $1A,$1B,$1C,$1D,$18,$02,$18,$02
+                    .db $03,$82,$00,$04,$0B,$0C,$09,$0D
+                    .db $1E,$81,$09,$05,$1F,$18,$00,$20
+                    .db $06,$07,$82,$00,$10,$0B,$09,$0E
+                    .db $0D,$0B,$09,$0E,$0D,$18,$00,$0C
+                    .db $09,$0A,$00,$04,$05,$0B,$81,$09
+                    .db $01,$0D,$0B,$81,$09,$02,$0D,$18
+                    .db $00,$81,$09,$0D,$0D,$00,$08,$09
+                    .db $0B,$0C,$09,$0D,$0B,$0C,$09,$0D
+                    .db $18,$00,$81,$09,$04,$0D,$02,$0B
+                    .db $09,$0B,$81,$09,$01,$0D,$0B,$81
+                    .db $09,$00,$0D,$81,$02,$06,$09,$0E
+                    .db $0D,$00,$0B,$0E,$0B,$81,$09,$08
+                    .db $0D,$0B,$09,$0E,$0D,$02,$03,$09
+                    .db $21,$88,$22,$06,$23,$09,$0D,$18
+                    .db $00,$16,$24,$88,$25,$0A,$26,$09
+                    .db $0D,$18,$02,$22,$23,$0D,$02,$0B
+                    .db $21,$89,$22,$05,$25,$26,$0D,$22
+                    .db $0B,$24,$89,$25,$FF,$00,$87,$00
+                    .db $00,$01,$81,$02,$00,$03,$84,$00
+                    .db $00,$01,$81,$02,$00,$03,$D8,$00
+                    .db $01,$0F,$10,$8D,$00,$02,$12,$13
+                    .db $03,$83,$00,$02,$0F,$10,$11,$82
+                    .db $00,$04,$0F,$10,$11,$27,$28,$84
+                    .db $00,$02,$12,$13,$14,$82,$00,$04
+                    .db $12,$13,$14,$29,$28,$82,$00,$00
+                    .db $01,$81,$02,$01,$17,$18,$82,$00
+                    .db $07,$29,$28,$18,$27,$2A,$0F,$10
+                    .db $11,$81,$00,$03,$27,$13,$18,$01
+                    .db $81,$02,$07,$17,$28,$18,$27,$2B
+                    .db $12,$13,$14,$81,$00,$02,$29,$28
+                    .db $18,$82,$00,$18,$29,$28,$2C,$02
+                    .db $0B,$02,$17,$18,$04,$05,$1C,$1D
+                    .db $18,$00,$01,$02,$2A,$20,$1C,$1D
+                    .db $0B,$29,$28,$18,$08,$81,$09,$01
+                    .db $1F,$18,$81,$02,$01,$03,$2B,$81
+                    .db $09,$15,$1F,$0B,$27,$13,$18,$0B
+                    .db $0C,$09,$0D,$18,$00,$2D,$22,$0B
+                    .db $09,$0C,$0D,$0B,$29,$2C,$02,$0B
+                    .db $81,$09,$09,$0D,$02,$03,$2E,$25
+                    .db $0B,$09,$1A,$1B,$15,$83,$22,$02
+                    .db $23,$0E,$0D,$83,$22,$01,$0B,$21
+                    .db $82,$22,$83,$25,$02,$26,$09,$0D
+                    .db $83,$25,$01,$0B,$24,$82,$25,$FF
+                    .db $FF
+
+DATA_0CDAB9:        .db $D6,$00,$02,$2F,$30,$31,$95,$00
+                    .db $02,$2F,$30,$31,$BE,$00,$01,$32
+                    .db $33,$8C,$00,$02,$34,$35,$36,$8C
+                    .db $00,$02,$37,$38,$32,$86,$00,$00
+                    .db $33,$84,$00,$81,$39,$01,$3A,$3B
+                    .db $81,$00,$01,$2F,$31,$81,$00,$01
+                    .db $36,$3C,$83,$00,$03,$3D,$34,$35
+                    .db $3E,$84,$00,$01,$33,$32,$81,$00
+                    .db $00,$3F,$81,$00,$04,$32,$40,$41
+                    .db $3D,$42,$83,$00,$01,$36,$39,$81
+                    .db $00,$00,$43,$81,$00,$00,$39,$81
+                    .db $00,$01,$3C,$44,$83,$00,$04,$45
+                    .db $41,$00,$3F,$46,$84,$00,$01,$47
+                    .db $3D,$86,$00,$01,$48,$49,$83,$00
+                    .db $02,$4A,$4B,$4C,$84,$00,$0A,$2F
+                    .db $31,$43,$4D,$4E,$2F,$31,$00,$4F
+                    .db $50,$3E,$82,$00,$00,$32,$82,$00
+                    .db $02,$51,$52,$3E,$82,$00,$02,$53
+                    .db $54,$55,$81,$00,$02,$33,$3A,$3B
+                    .db $81,$00,$02,$4F,$54,$3E,$82,$00
+                    .db $0C,$51,$56,$49,$30,$31,$36,$57
+                    .db $3E,$00,$33,$58,$49,$55,$82,$00
+                    .db $0C,$4F,$59,$5A,$3F,$3C,$34,$35
+                    .db $40,$00,$36,$51,$56,$49,$81,$00
+                    .db $0D,$3F,$58,$5B,$5C,$48,$3F,$5D
+                    .db $32,$39,$00,$5D,$46,$57,$4D,$81
+                    .db $00,$0D,$48,$34,$35,$5E,$43,$48
+                    .db $32,$39,$33,$00,$39,$35,$3A,$35
+                    .db $81,$00,$00,$43,$81,$45,$0A,$39
+                    .db $3D,$43,$41,$40,$36,$3C,$39,$41
+                    .db $39,$5D,$E5,$00,$02,$2F,$30,$31
+                    .db $D6,$00,$02,$2F,$30,$31,$93,$00
+                    .db $00,$32,$8D,$00,$07,$2F,$5E,$31
+                    .db $3C,$00,$2F,$30,$31,$81,$00,$01
+                    .db $2F,$31,$82,$00,$04,$33,$34,$35
+                    .db $2F,$31,$89,$00,$04,$3C,$36,$5F
+                    .db $3A,$3B,$8B,$00,$03,$45,$39,$38
+                    .db $41,$82,$00,$01,$2F,$31,$86,$00
+                    .db $02,$33,$5D,$45,$82,$00,$00,$33
+                    .db $86,$00,$02,$32,$00,$36,$83,$00
+                    .db $01,$33,$36,$86,$00,$02,$3A,$3B
+                    .db $39,$83,$00,$01,$36,$32,$81,$00
+                    .db $07,$33,$00,$3F,$00,$34,$35,$41
+                    .db $3F,$81,$00,$03,$46,$00,$34,$35
+                    .db $81,$00,$26,$36,$00,$43,$00,$5F
+                    .db $39,$3D,$43,$00,$4A,$4B,$4C,$45
+                    .db $39,$00,$33,$32,$00,$45,$00,$41
+                    .db $3A,$3B,$45,$00,$53,$54,$3E,$40
+                    .db $41,$3C,$36,$39,$00,$4E,$3F,$33
+                    .db $40,$41,$81,$00,$28,$4A,$4B,$4C
+                    .db $3F,$47,$3F,$00,$41,$00,$3D,$48
+                    .db $36,$3C,$33,$00,$3F,$4F,$50,$54
+                    .db $43,$49,$48,$33,$00,$33,$41,$43
+                    .db $39,$00,$36,$00,$43,$53,$54,$49
+                    .db $51,$5A,$43,$36,$00,$36,$FF,$FF
+DATA_0CDC71:        .db $A1,$00,$01,$60,$61,$F5,$00,$01
+                    .db $60,$61,$9A,$00,$01,$60,$61,$DA
+                    .db $00,$01,$60,$61,$BE,$00,$00,$62
+                    .db $88,$00,$00,$63,$83,$00,$02,$64
+                    .db $65,$66,$82,$00,$00,$67,$82,$00
+                    .db $01,$63,$68,$82,$00,$0C,$64,$69
+                    .db $6A,$6B,$66,$6C,$6D,$6E,$6F,$70
+                    .db $71,$68,$22,$81,$00,$01,$64,$69
+                    .db $81,$72,$0C,$73,$6B,$74,$75,$76
+                    .db $77,$78,$79,$7A,$22,$00,$64,$69
+                    .db $81,$72,$00,$6A,$81,$72,$01,$6B
+                    .db $74,$82,$76,$06,$77,$78,$79,$64
+                    .db $69,$6A,$73,$81,$72,$09,$73,$6A
+                    .db $73,$6B,$74,$75,$76,$75,$76,$77
+                    .db $E8,$00,$01,$60,$61,$E7,$00,$01
+                    .db $60,$61,$BE,$00,$01,$63,$7B,$84
+                    .db $00,$01,$60,$61,$85,$00,$03,$63
+                    .db $68,$7C,$7B,$89,$00,$02,$7D,$7E
+                    .db $68,$81,$22,$01,$7C,$7B,$87,$00
+                    .db $01,$63,$68,$84,$22,$02,$7C,$7F
+                    .db $80,$85,$00,$00,$68,$87,$22,$01
+                    .db $7C,$7B,$84,$00,$89,$22,$01,$7C
+                    .db $7B,$83,$00,$8A,$22,$01,$7C,$7B
+                    .db $82,$00,$8B,$22,$01,$7C,$7B,$81
+                    .db $00,$00,$7A,$8B,$22,$05,$7C,$7B
+                    .db $00,$78,$79,$7A,$8A,$22,$01,$7C
+                    .db $7B,$FF,$FF
+
+DATA_0CDD44:        .db $DA,$00,$01,$60,$61,$93,$00,$01
+                    .db $60,$61,$B4,$00,$02,$7D,$7E,$7B
+                    .db $8B,$00,$04,$63,$68,$22,$81,$7B
+                    .db $89,$00,$01,$63,$68,$82,$22,$01
+                    .db $7C,$7B,$87,$00,$01,$63,$68,$84
+                    .db $22,$02,$7C,$7F,$80,$83,$00,$02
+                    .db $7D,$7E,$68,$87,$22,$01,$7C,$7F
+                    .db $81,$00,$01,$63,$68,$8A,$22,$03
+                    .db $82,$00,$63,$68,$8A,$22,$03,$83
+                    .db $68,$63,$68,$8A,$22,$03,$83,$68
+                    .db $22,$68,$87,$22,$04,$83,$84,$85
+                    .db $81,$68,$81,$22,$00,$86,$86,$22
+                    .db $04,$83,$68,$22,$7C,$86,$82,$22
+                    .db $03,$7C,$86,$82,$85,$82,$22,$01
+                    .db $83,$68,$82,$22,$01,$7C,$87,$82
+                    .db $22,$06,$7C,$68,$7C,$87,$82,$88
+                    .db $68,$8B,$22,$01,$83,$68,$8C,$22
+                    .db $01,$83,$68,$84,$22,$01,$82,$85
+                    .db $85,$22,$01,$81,$68,$84,$22,$01
+                    .db $81,$68,$A4,$22,$EB,$00,$01,$60
+                    .db $61,$97,$00,$01,$60,$61,$C9,$00
+                    .db $01,$63,$7B,$8B,$00,$04,$80,$63
+                    .db $68,$7C,$7B,$8A,$00,$01,$88,$68
+                    .db $81,$22,$01,$83,$7B,$86,$00,$02
+                    .db $60,$61,$00,$82,$22,$03,$83,$68
+                    .db $7C,$7B,$88,$00,$81,$22,$01,$81
+                    .db $68,$81,$22,$04,$7C,$7F,$80,$63
+                    .db $7B,$84,$00,$87,$22,$07,$83,$68
+                    .db $7C,$7B,$7D,$80,$7D,$7E,$86,$22
+                    .db $01,$81,$68,$81,$22,$04,$7C,$86
+                    .db $7C,$86,$83,$8B,$22,$06,$7C,$86
+                    .db $7C,$68,$22,$83,$86,$89,$22,$06
+                    .db $7C,$87,$22,$81,$68,$7C,$86,$8E
+                    .db $22,$01,$7C,$84,$BA,$22,$FF,$FF
+DATA_0CDE54:        .db $A2,$00,$01,$60,$61,$CD,$00,$01
+                    .db $60,$61,$F8,$00,$01,$60,$61,$8A
+                    .db $00,$01,$60,$61,$A9,$00,$00,$67
+                    .db $8C,$00,$05,$6C,$6D,$6E,$6F,$70
+                    .db $67,$87,$00,$09,$6C,$6D,$89,$76
+                    .db $77,$75,$78,$6E,$6F,$70,$83,$00
+                    .db $04,$6C,$6D,$89,$77,$8A,$83,$76
+                    .db $0D,$77,$76,$78,$6F,$70,$8B,$6D
+                    .db $89,$75,$77,$8C,$65,$74,$77,$82
+                    .db $76,$04,$75,$77,$8D,$8E,$8F,$81
+                    .db $77,$0B,$76,$8C,$69,$6A,$6B,$74
+                    .db $76,$75,$76,$8D,$8E,$8F,$81,$72
+                    .db $0C,$76,$77,$8C,$69,$6A,$72,$6A
+                    .db $6B,$74,$8D,$8E,$8F,$6A,$82,$72
+                    .db $02,$90,$8C,$69,$83,$72,$03,$73
+                    .db $6B,$91,$73,$83,$72,$06,$6A,$8C
+                    .db $69,$73,$6A,$72,$6A,$82,$72,$01
+                    .db $6B,$91,$81,$6A,$02,$72,$92,$93
+                    .db $B2,$00,$01,$60,$61,$C8,$00,$01
+                    .db $60,$61,$95,$00,$01,$60,$61,$EB
+                    .db $00,$01,$60,$61,$A5,$00,$01,$60
+                    .db $61,$92,$00,$00,$94,$8D,$00,$03
+                    .db $95,$65,$96,$97,$83,$00,$00,$67
+                    .db $86,$00,$0A,$72,$6A,$73,$98,$96
+                    .db $97,$6C,$6D,$6E,$6F,$70,$83,$00
+                    .db $01,$6C,$6A,$82,$72,$03,$92,$93
+                    .db $89,$77,$81,$76,$05,$78,$6F,$70
+                    .db $6C,$6D,$89,$81,$72,$02,$92,$93
+                    .db $89,$84,$76,$09,$75,$77,$78,$99
+                    .db $90,$77,$92,$93,$89,$77,$84,$76
+                    .db $00,$75,$83,$76,$04,$78,$99,$89
+                    .db $76,$77,$82,$76,$01,$77,$75,$86
+                    .db $76,$00,$77,$FF,$FF
+
+DATA_0CDF59:        .db $BB,$00,$01,$60,$61,$83,$00,$01
+                    .db $60,$61,$D4,$00,$01,$60,$61,$B5
+                    .db $00,$01,$60,$61,$9B,$00,$00,$7D
+                    .db $8D,$00,$01,$63,$68,$84,$00,$02
+                    .db $9A,$9B,$9C,$83,$00,$0C,$7D,$7E
+                    .db $68,$22,$9D,$9A,$9B,$9C,$9A,$9E
+                    .db $9F,$09,$9C,$81,$00,$01,$71,$68
+                    .db $82,$22,$0B,$A0,$9E,$A1,$09,$A2
+                    .db $9F,$A3,$A4,$A5,$9A,$A6,$A7,$83
+                    .db $22,$01,$A8,$9F,$81,$09,$01,$A9
+                    .db $A3,$81,$72,$03,$AA,$AB,$9F,$A9
+                    .db $82,$22,$05,$A0,$9F,$A3,$AC,$AD
+                    .db $AE,$82,$72,$08,$AF,$AD,$B0,$A6
+                    .db $A7,$A0,$9B,$A2,$A3,$82,$72,$00
+                    .db $B1,$81,$72,$56,$AF,$A3,$B2,$9E
+                    .db $9F,$B3,$B4,$A1,$09,$B5,$72,$B2
+                    .db $9B,$B6,$B2,$9B,$B3,$B2,$9E,$9F
+                    .db $09,$A3,$B2,$A1,$09,$B6,$B5,$9F
+                    .db $A3,$A5,$B7,$AC,$09,$A2,$9B,$09
+                    .db $A3,$AA,$9E,$B8,$A9,$A4,$AA,$AE
+                    .db $72,$B9,$BA,$72,$AC,$09,$B3,$A9
+                    .db $72,$B2,$9E,$9F,$09,$72,$BB,$B7
+                    .db $B2,$B8,$09,$B6,$B1,$A4,$AF,$A3
+                    .db $B2,$BC,$9B,$BD,$B3,$AA,$BE,$B2
+                    .db $9E,$B7,$A4,$A5,$72,$AA,$A3,$B2
+                    .db $BF,$C0,$B8,$81,$09,$D6,$00,$01
+                    .db $60,$61,$A8,$00,$01,$60,$61,$A8
+                    .db $00,$01,$60,$61,$95,$00,$01,$60
+                    .db $61,$98,$00,$00,$80,$8E,$00,$01
+                    .db $7C,$7B,$84,$00,$02,$9A,$9F,$9C
+                    .db $85,$00,$09,$22,$7C,$7F,$7E,$7F
+                    .db $80,$9A,$9F,$A3,$A5,$81,$00,$01
+                    .db $7D,$80,$81,$00,$84,$22,$4A,$7C
+                    .db $A8,$9F,$C1,$AA,$00,$63,$68,$7C
+                    .db $7F,$7E,$22,$A0,$9B,$C2,$22,$A0
+                    .db $9F,$A3,$BA,$C3,$71,$68,$A0,$9F
+                    .db $A7,$22,$C4,$9F,$A3,$AA,$C4,$9F
+                    .db $A3,$B2,$9E,$9F,$A7,$22,$A8,$A1
+                    .db $09,$A7,$9E,$A1,$C1,$AA,$BD,$AE
+                    .db $B2,$9F,$BD,$A3,$C5,$A0,$9F,$A3
+                    .db $A4,$B2,$A2,$A1,$C1,$AF,$A3,$B2
+                    .db $9F,$09,$A3,$B2,$9B,$BE,$AC,$C1
+                    .db $B2,$9F,$81,$A3,$02,$AA,$B0,$9B
+                    .db $81,$BD,$20,$B3,$C1,$A8,$A1,$A3
+                    .db $AA,$B2,$BC,$A6,$72,$B5,$B2,$9E
+                    .db $9F,$09,$A3,$A5,$B2,$9E,$B8,$B6
+                    .db $72,$C0,$A2,$9F,$B6,$72,$A8,$9F
+                    .db $09,$A3,$72,$AA,$81,$9E,$04,$9F
+                    .db $A9,$72,$AA,$09,$81,$A3,$11,$B2
+                    .db $9E,$A1,$09,$BE,$72,$AA,$9E,$9F
+                    .db $09,$A3,$72,$AA,$AE,$72,$BD,$A2
+                    .db $9F,$81,$09,$05,$A3,$72,$AF,$BD
+                    .db $09,$A9,$81,$72,$02,$B2,$B7,$72
+                    .db $FF,$FF
+
+DATA_0CE103:        .db $7F,$C6,$9E,$C7,$9E,$C6,$9E,$C8
                     .db $9E,$C6,$9E,$C8,$9E,$C6,$9E,$C8
-                    .db $9E,$C6,$9E,$C8,$9E,$C6,$9E,$C8
-                    .db $9E,$C6,$9E,$C8,$C9,$C6,$9E,$C8
-                    .db $9E,$C6,$9E,$C8,$9E,$C6,$9E,$C8
-                    .db $9E,$CA,$9E,$C8,$9E,$C6,$9E,$C8
-                    .db $9E,$CA,$9E,$C8,$9E,$C6,$9E,$C8
-                    .db $9E,$C6,$9E,$C8,$9E,$C6,$9E,$C8
-                    .db $9E,$C6,$9E,$C8,$9E,$C6,$9E,$C8
-                    .db $9E,$C6,$9E,$C8,$9E,$C6,$9E,$C8
-                    .db $9E,$C6,$9E,$C8,$CB,$C6,$9E,$C8
-                    .db $9E,$C6,$9E,$C8,$CB,$CC,$9E,$C8
-                    .db $9E,$C6,$9E,$C8,$9E,$C6,$9E,$C7
                     .db $9E,$C6,$9E,$C8,$9E,$C6,$9E,$C8
                     .db $C9,$C6,$9E,$C8,$9E,$C6,$9E,$C8
                     .db $9E,$C6,$9E,$C8,$9E,$CA,$9E,$C8
-                    .db $9E,$C6,$9E,$C8,$C9,$80,$C6,$7F
-                    .db $9E,$C8,$9E,$CA,$9E,$C8,$9E,$C6
-                    .db $C9,$C8,$9E,$C6,$9E,$C8,$9E,$C6
-                    .db $9E,$C8,$9E,$C6,$9E,$C7,$9E,$C6
+                    .db $9E,$C6,$9E,$C8,$9E,$CA,$9E,$C8
+                    .db $9E,$C6,$9E,$C8,$9E,$C6,$9E,$C8
+                    .db $9E,$C6,$9E,$C8,$9E,$C6,$9E,$C8
+                    .db $9E,$C6,$9E,$C8,$9E,$C6,$9E,$C8
+                    .db $9E,$C6,$9E,$C8,$9E,$C6,$9E,$C8
+                    .db $CB,$C6,$9E,$C8,$9E,$C6,$9E,$C8
+                    .db $CB,$CC,$9E,$C8,$9E,$C6,$9E,$C8
+                    .db $9E,$C6,$9E,$C7,$9E,$C6,$9E,$C8
+                    .db $9E,$C6,$9E,$C8,$C9,$C6,$9E,$C8
+                    .db $9E,$C6,$9E,$C8,$9E,$C6,$9E,$C8
+                    .db $9E,$CA,$9E,$C8,$9E,$C6,$9E,$C8
+                    .db $C9,$80,$C6,$7F,$9E,$C8,$9E,$CA
                     .db $9E,$C8,$9E,$C6,$C9,$C8,$9E,$C6
-                    .db $9E,$CD,$CE,$C6,$9E,$C8,$9E,$C6
-                    .db $9E,$C8,$CB,$CC,$9E,$C8,$9E,$C6
                     .db $9E,$C8,$9E,$C6,$9E,$C8,$9E,$C6
-                    .db $9E,$C8,$9E,$C6,$9E,$C8,$9E,$CA
+                    .db $9E,$C7,$9E,$C6,$9E,$C8,$9E,$C6
+                    .db $C9,$C8,$9E,$C6,$9E,$CD,$CE,$C6
+                    .db $9E,$C8,$9E,$C6,$9E,$C8,$CB,$CC
                     .db $9E,$C8,$9E,$C6,$9E,$C8,$9E,$C6
-                    .db $9E,$C8,$9E,$C6,$9E,$C8,$C9,$C6
-                    .db $9E,$C8,$9E,$C6,$9E,$C8,$C9,$C6
-                    .db $9E,$C8,$9E,$CA,$9E,$C8,$9E,$C6
                     .db $9E,$C8,$9E,$C6,$9E,$C8,$9E,$C6
                     .db $9E,$C8,$9E,$CA,$9E,$C8,$9E,$C6
-                    .db $CF,$C8,$9E,$C6,$CF,$C8,$C9,$C6
-                    .db $CF,$C8,$C9,$C6,$CF,$C8,$9E,$C6
-                    .db $80,$D0,$7F,$C8,$9E,$CA,$D0,$C8
-                    .db $9E,$C6,$D0,$C8,$9E,$C6,$D0,$C7
-                    .db $9E,$D1,$D2,$D3,$D4,$D1,$D2,$D3
-                    .db $D4,$D1,$D2,$D3,$D4,$D1,$D2,$D3
-                    .db $D4,$D5,$D6,$D7,$D8,$D5,$D6,$D7
-                    .db $D8,$D5,$D6,$D7,$D8,$D5,$D6,$D7
-                    .db $D8,$00,$D9,$00,$DA,$00,$D9,$00
-                    .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
-                    .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
-                    .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
-                    .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
-                    .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
-                    .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
-                    .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
-                    .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
-                    .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
-                    .db $DA,$00,$D9,$80,$00,$7F,$DA,$00
-                    .db $D9,$00,$DA,$00,$D9,$00,$DA,$00
-                    .db $D9,$00,$DA,$00,$D9,$00,$DA,$00
-                    .db $D9,$00,$DA,$00,$D9,$00,$DA,$00
-                    .db $D9,$00,$DA,$00,$D9,$00,$DA,$00
-                    .db $D9,$00,$DA,$00,$D9,$00,$DA,$00
-                    .db $D9,$00,$DA,$C6,$9E,$C8,$9E,$C6
-                    .db $9E,$C8,$9E,$C6,$9E,$C8,$9E,$C6
-                    .db $9E,$C8,$9E,$C6,$9E,$C7,$9E,$C6
                     .db $9E,$C8,$9E,$C6,$9E,$C8,$9E,$C6
                     .db $9E,$C8,$C9,$C6,$9E,$C8,$9E,$C6
-                    .db $9E,$C7,$9E,$C6,$9E,$C8,$9E,$C6
+                    .db $9E,$C8,$C9,$C6,$9E,$C8,$9E,$CA
                     .db $9E,$C8,$9E,$C6,$9E,$C8,$9E,$C6
+                    .db $9E,$C8,$9E,$C6,$9E,$C8,$9E,$CA
+                    .db $9E,$C8,$9E,$C6,$CF,$C8,$9E,$C6
+                    .db $CF,$C8,$C9,$C6,$CF,$C8,$C9,$C6
+                    .db $CF,$C8,$9E,$C6,$80,$D0,$7F,$C8
+                    .db $9E,$CA,$D0,$C8,$9E,$C6,$D0,$C8
+                    .db $9E,$C6,$D0,$C7,$9E,$D1,$D2,$D3
+                    .db $D4,$D1,$D2,$D3,$D4,$D1,$D2,$D3
+                    .db $D4,$D1,$D2,$D3,$D4,$D5,$D6,$D7
+                    .db $D8,$D5,$D6,$D7,$D8,$D5,$D6,$D7
+                    .db $D8,$D5,$D6,$D7,$D8,$00,$D9,$00
+                    .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
+                    .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
+                    .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
+                    .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
+                    .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
+                    .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
+                    .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
+                    .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
+                    .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
+                    .db $DA,$00,$D9,$00,$DA,$00,$D9,$80
+                    .db $00,$7F,$DA,$00,$D9,$00,$DA,$00
+                    .db $D9,$00,$DA,$00,$D9,$00,$DA,$00
+                    .db $D9,$00,$DA,$00,$D9,$00,$DA,$00
+                    .db $D9,$00,$DA,$00,$D9,$00,$DA,$00
+                    .db $D9,$00,$DA,$00,$D9,$00,$DA,$00
+                    .db $D9,$00,$DA,$00,$D9,$00,$DA,$C6
+                    .db $9E,$C8,$9E,$C6,$9E,$C8,$9E,$C6
+                    .db $9E,$C8,$9E,$C6,$9E,$C8,$9E,$C6
+                    .db $9E,$C7,$9E,$C6,$9E,$C8,$9E,$C6
                     .db $9E,$C8,$9E,$C6,$9E,$C8,$C9,$C6
-                    .db $9E,$C8,$9E,$CC,$9E,$C8,$9E,$CA
-                    .db $9E,$C8,$CB,$CC,$9E,$C8,$9E,$C6
-                    .db $C9,$C8,$9E,$C6,$9E,$C8,$80,$9E
-                    .db $7F,$C6,$9E,$C8,$9E,$C6,$9E,$C8
+                    .db $9E,$C8,$9E,$C6,$9E,$C7,$9E,$C6
+                    .db $9E,$C8,$9E,$C6,$9E,$C8,$9E,$C6
+                    .db $9E,$C8,$9E,$C6,$9E,$C8,$9E,$C6
+                    .db $9E,$C8,$C9,$C6,$9E,$C8,$9E,$CC
+                    .db $9E,$C8,$9E,$CA,$9E,$C8,$CB,$CC
+                    .db $9E,$C8,$9E,$C6,$C9,$C8,$9E,$C6
+                    .db $9E,$C8,$80,$9E,$7F,$C6,$9E,$C8
                     .db $9E,$C6,$9E,$C8,$9E,$C6,$9E,$C8
                     .db $9E,$C6,$9E,$C8,$9E,$C6,$9E,$C8
-                    .db $9E,$C6,$9E,$C7,$9E,$C6,$C9,$C8
+                    .db $9E,$C6,$9E,$C8,$9E,$C6,$9E,$C7
+                    .db $9E,$C6,$C9,$C8,$9E,$C6,$9E,$C8
+                    .db $C9,$C6,$9E,$C8,$9E,$C6,$9E,$C8
                     .db $9E,$C6,$9E,$C8,$C9,$C6,$9E,$C8
                     .db $9E,$C6,$9E,$C8,$9E,$C6,$9E,$C8
-                    .db $C9,$C6,$9E,$C8,$9E,$C6,$9E,$C8
                     .db $9E,$C6,$9E,$C8,$9E,$C6,$9E,$C8
-                    .db $9E,$C6,$9E,$C8,$9E,$C6,$9E,$C8
-                    .db $9E,$CA,$9E,$C8,$9E,$C6,$9E,$C7
                     .db $9E,$C6,$9E,$C8,$9E,$CA,$9E,$C8
-                    .db $9E,$C6,$9E,$C8,$9E,$C6,$9E,$C8
-                    .db $9E,$C6,$C9,$C8,$9E,$C6,$9E,$C8
                     .db $9E,$C6,$9E,$C7,$9E,$C6,$9E,$C8
+                    .db $9E,$CA,$9E,$C8,$9E,$C6,$9E,$C8
+                    .db $9E,$C6,$9E,$C8,$9E,$C6,$C9,$C8
+                    .db $9E,$C6,$9E,$C8,$9E,$C6,$9E,$C7
                     .db $9E,$C6,$9E,$C8,$9E,$C6,$9E,$C8
                     .db $9E,$C6,$9E,$C8,$9E,$C6,$9E,$C8
-                    .db $C9,$80,$C6,$7F,$9E,$C8,$9E,$C6
-                    .db $9E,$C8,$9E,$CA,$9E,$C8,$9E,$C6
-                    .db $9E,$C8,$9E,$C6,$9E,$C8,$C9,$C6
+                    .db $9E,$C6,$9E,$C8,$C9,$80,$C6,$7F
+                    .db $9E,$C8,$9E,$C6,$9E,$C8,$9E,$CA
                     .db $9E,$C8,$9E,$C6,$9E,$C8,$9E,$C6
-                    .db $CF,$C8,$9E,$C6,$CF,$C8,$9E,$C6
-                    .db $CF,$C8,$C9,$C6,$CF,$C8,$9E,$C6
-                    .db $D0,$CD,$CE,$C6,$D0,$C8,$C9,$C6
-                    .db $D0,$C8,$9E,$C6,$D0,$C8,$C9,$D1
+                    .db $9E,$C8,$C9,$C6,$9E,$C8,$9E,$C6
+                    .db $9E,$C8,$9E,$C6,$CF,$C8,$9E,$C6
+                    .db $CF,$C8,$9E,$C6,$CF,$C8,$C9,$C6
+                    .db $CF,$C8,$9E,$C6,$D0,$CD,$CE,$C6
+                    .db $D0,$C8,$C9,$C6,$D0,$C8,$9E,$C6
+                    .db $D0,$C8,$C9,$D1,$D2,$D3,$D4,$D1
                     .db $D2,$D3,$D4,$D1,$D2,$D3,$D4,$D1
-                    .db $D2,$D3,$D4,$D1,$D2,$D3,$D4,$D5
+                    .db $D2,$D3,$D4,$D5,$D6,$D7,$D8,$D5
                     .db $D6,$D7,$D8,$D5,$D6,$D7,$D8,$D5
-                    .db $D6,$D7,$D8,$D5,$D6,$D7,$D8,$00
+                    .db $D6,$D7,$D8,$00,$D9,$00,$DA,$00
                     .db $D9,$00,$DA,$00,$D9,$00,$DA,$00
                     .db $D9,$00,$DA,$00,$D9,$00,$DA,$00
                     .db $D9,$00,$DA,$00,$D9,$00,$DA,$00
                     .db $D9,$00,$DA,$00,$D9,$00,$DA,$00
-                    .db $D9,$00,$DA,$00,$80,$D9,$59,$00
+                    .db $80,$D9,$59,$00,$DA,$00,$D9,$00
                     .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
                     .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
                     .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
@@ -6013,74 +6102,96 @@ DATA_0CD86F:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
                     .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
                     .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
-                    .db $DA,$00,$D9,$00,$DA,$00,$D9,$00
-                    .db $DA,$FF,$FF,$81,$00,$01,$60,$61
-                    .db $C4,$00,$01,$60,$61,$A1,$00,$02
-                    .db $63,$7F,$80,$8B,$00,$03,$63,$68
-                    .db $22,$7C,$89,$00,$02,$7D,$7E,$68
-                    .db $82,$22,$88,$00,$01,$63,$68,$84
-                    .db $22,$87,$00,$01,$63,$68,$85,$22
-                    .db $86,$00,$01,$63,$68,$86,$22,$83
-                    .db $00,$03,$63,$7B,$71,$68,$87,$22
-                    .db $82,$00,$03,$63,$68,$7C,$86,$88
-                    .db $22,$03,$DB,$7D,$7E,$68,$81,$22
-                    .db $02,$7C,$84,$85,$81,$22,$00,$DC
-                    .db $83,$22,$01,$DD,$DE,$87,$22,$02
-                    .db $DF,$65,$E0,$81,$22,$03,$E1,$76
-                    .db $DD,$DE,$85,$22,$06,$DF,$69,$6A
-                    .db $6B,$E0,$E1,$E2,$81,$76,$01,$DD
-                    .db $DE,$83,$22,$01,$DF,$69,$81,$72
-                    .db $02,$6A,$6B,$74,$82,$76,$02,$77
-                    .db $DD,$DE,$81,$22,$02,$DF,$69,$6A
-                    .db $83,$72,$02,$6B,$74,$77,$82,$76
-                    .db $05,$DD,$DE,$DF,$69,$73,$6A,$84
-                    .db $72,$00,$6B,$84,$76,$01,$8C,$69
-                    .db $87,$72,$06,$6A,$90,$76,$77,$76
-                    .db $8C,$69,$83,$72,$00,$73,$84,$72
-                    .db $04,$78,$99,$90,$8C,$69,$81,$72
-                    .db $00,$6A,$84,$72,$00,$73,$81,$72
-                    .db $03,$77,$76,$8C,$69,$88,$72,$07
-                    .db $6A,$73,$E3,$76,$8C,$69,$72,$73
-                    .db $87,$72,$05,$E3,$E4,$8F,$8C,$69
-                    .db $73,$86,$72,$03,$73,$E3,$E4,$8F
-                    .db $81,$72,$00,$69,$81,$73,$02,$6A
-                    .db $72,$6A,$82,$72,$03,$E3,$E4,$8F
-                    .db $73,$82,$72,$A7,$00,$01,$60,$61
-                    .db $BD,$00,$00,$E5,$86,$00,$01,$7F
-                    .db $E6,$84,$00,$02,$E7,$E8,$DB,$85
-                    .db $00,$02,$22,$E9,$80,$82,$00,$04
-                    .db $E7,$E2,$76,$DD,$DB,$84,$00,$81
-                    .db $22,$04,$7C,$7F,$80,$E7,$E2,$82
-                    .db $76,$01,$DD,$DB,$83,$00,$83,$22
-                    .db $03,$E1,$E2,$76,$77,$82,$76,$01
-                    .db $DD,$DB,$82,$00,$82,$22,$01,$E1
-                    .db $E2,$81,$77,$83,$76,$02,$75,$DD
-                    .db $DB,$81,$00,$81,$22,$01,$E1,$E2
-                    .db $88,$76,$05,$DD,$DB,$00,$22,$E1
-                    .db $E2,$8A,$76,$03,$DD,$DB,$E1,$E2
-                    .db $86,$76,$00,$75,$82,$76,$03,$75
-                    .db $76,$DD,$E2,$8D,$76,$00,$77,$83
-                    .db $76,$00,$77,$84,$76,$00,$77,$84
-                    .db $76,$01,$75,$77,$85,$76,$00,$EA
-                    .db $8C,$76,$04,$EB,$EC,$6E,$99,$90
-                    .db $82,$76,$08,$75,$76,$74,$76,$75
-                    .db $76,$EB,$EC,$89,$82,$76,$02,$78
-                    .db $99,$90,$82,$76,$05,$6B,$74,$EB
-                    .db $EC,$89,$77,$81,$76,$01,$77,$75
-                    .db $81,$76,$07,$78,$99,$90,$76,$72
-                    .db $6B,$74,$ED,$81,$76,$01,$75,$77
-                    .db $84,$76,$08,$77,$78,$99,$72,$E3
-                    .db $E4,$EE,$EF,$F0,$88,$76,$02,$77
-                    .db $E4,$8F,$81,$72,$05,$6A,$98,$EF
-                    .db $F0,$76,$77,$83,$76,$02,$75,$76
-                    .db $73,$85,$72,$02,$98,$EF,$F0,$81
-                    .db $76,$00,$75,$82,$76,$03,$72,$6A
-                    .db $72,$73,$82,$72,$05,$6A,$72,$98
-                    .db $EF,$F0,$77,$82,$76,$83,$72,$00
-                    .db $73,$83,$72,$06,$6A,$72,$98,$EF
-                    .db $F0,$76,$8C,$FF,$FF,$FF,$F1,$FF
-                    .db $F1,$FF,$F1,$FF,$F1,$FF,$F1,$FF
-                    .db $F1,$DF,$F1,$FF,$FF,$8D,$00,$00
+                    .db $DA,$00,$D9,$00,$DA,$FF,$FF
+
+DATA_0CE472:        .db $81,$00,$01,$60,$61,$C4,$00,$01
+                    .db $60,$61,$A1,$00,$02,$63,$7F,$80
+                    .db $8B,$00,$03,$63,$68,$22,$7C,$89
+                    .db $00,$02,$7D,$7E,$68,$82,$22,$88
+                    .db $00,$01,$63,$68,$84,$22,$87,$00
+                    .db $01,$63,$68,$85,$22,$86,$00,$01
+                    .db $63,$68,$86,$22,$83,$00,$03,$63
+                    .db $7B,$71,$68,$87,$22,$82,$00,$03
+                    .db $63,$68,$7C,$86,$88,$22,$03,$DB
+                    .db $7D,$7E,$68,$81,$22,$02,$7C,$84
+                    .db $85,$81,$22,$00,$DC,$83,$22,$01
+                    .db $DD,$DE,$87,$22,$02,$DF,$65,$E0
+                    .db $81,$22,$03,$E1,$76,$DD,$DE,$85
+                    .db $22,$06,$DF,$69,$6A,$6B,$E0,$E1
+                    .db $E2,$81,$76,$01,$DD,$DE,$83,$22
+                    .db $01,$DF,$69,$81,$72,$02,$6A,$6B
+                    .db $74,$82,$76,$02,$77,$DD,$DE,$81
+                    .db $22,$02,$DF,$69,$6A,$83,$72,$02
+                    .db $6B,$74,$77,$82,$76,$05,$DD,$DE
+                    .db $DF,$69,$73,$6A,$84,$72,$00,$6B
+                    .db $84,$76,$01,$8C,$69,$87,$72,$06
+                    .db $6A,$90,$76,$77,$76,$8C,$69,$83
+                    .db $72,$00,$73,$84,$72,$04,$78,$99
+                    .db $90,$8C,$69,$81,$72,$00,$6A,$84
+                    .db $72,$00,$73,$81,$72,$03,$77,$76
+                    .db $8C,$69,$88,$72,$07,$6A,$73,$E3
+                    .db $76,$8C,$69,$72,$73,$87,$72,$05
+                    .db $E3,$E4,$8F,$8C,$69,$73,$86,$72
+                    .db $03,$73,$E3,$E4,$8F,$81,$72,$00
+                    .db $69,$81,$73,$02,$6A,$72,$6A,$82
+                    .db $72,$03,$E3,$E4,$8F,$73,$82,$72
+                    .db $A7,$00,$01,$60,$61,$BD,$00,$00
+                    .db $E5,$86,$00,$01,$7F,$E6,$84,$00
+                    .db $02,$E7,$E8,$DB,$85,$00,$02,$22
+                    .db $E9,$80,$82,$00,$04,$E7,$E2,$76
+                    .db $DD,$DB,$84,$00,$81,$22,$04,$7C
+                    .db $7F,$80,$E7,$E2,$82,$76,$01,$DD
+                    .db $DB,$83,$00,$83,$22,$03,$E1,$E2
+                    .db $76,$77,$82,$76,$01,$DD,$DB,$82
+                    .db $00,$82,$22,$01,$E1,$E2,$81,$77
+                    .db $83,$76,$02,$75,$DD,$DB,$81,$00
+                    .db $81,$22,$01,$E1,$E2,$88,$76,$05
+                    .db $DD,$DB,$00,$22,$E1,$E2,$8A,$76
+                    .db $03,$DD,$DB,$E1,$E2,$86,$76,$00
+                    .db $75,$82,$76,$03,$75,$76,$DD,$E2
+                    .db $8D,$76,$00,$77,$83,$76,$00,$77
+                    .db $84,$76,$00,$77,$84,$76,$01,$75
+                    .db $77,$85,$76,$00,$EA,$8C,$76,$04
+                    .db $EB,$EC,$6E,$99,$90,$82,$76,$08
+                    .db $75,$76,$74,$76,$75,$76,$EB,$EC
+                    .db $89,$82,$76,$02,$78,$99,$90,$82
+                    .db $76,$05,$6B,$74,$EB,$EC,$89,$77
+                    .db $81,$76,$01,$77,$75,$81,$76,$07
+                    .db $78,$99,$90,$76,$72,$6B,$74,$ED
+                    .db $81,$76,$01,$75,$77,$84,$76,$08
+                    .db $77,$78,$99,$72,$E3,$E4,$EE,$EF
+                    .db $F0,$88,$76,$02,$77,$E4,$8F,$81
+                    .db $72,$05,$6A,$98,$EF,$F0,$76,$77
+                    .db $83,$76,$02,$75,$76,$73,$85,$72
+                    .db $02,$98,$EF,$F0,$81,$76,$00,$75
+                    .db $82,$76,$03,$72,$6A,$72,$73,$82
+                    .db $72,$05,$6A,$72,$98,$EF,$F0,$77
+                    .db $82,$76,$83,$72,$00,$73,$83,$72
+                    .db $06,$6A,$72,$98,$EF,$F0,$76,$8C
+                    .db $FF,$FF
+
+DATA_0CE674:        .db $FF,$F1,$FF,$F1,$FF,$F1,$FF,$F1
+                    .db $FF,$F1,$FF,$F1,$DF,$F1,$FF,$FF
+DATA_0CE684:        .db $8D,$00,$00,$F2,$83,$00,$02,$F3
+                    .db $00,$F3,$95,$00,$00,$F4,$83,$00
+                    .db $00,$F4,$87,$00,$00,$F2,$89,$00
+                    .db $00,$F2,$81,$00,$00,$F5,$93,$00
+                    .db $00,$F3,$88,$00,$00,$F2,$89,$00
+                    .db $00,$F5,$88,$00,$00,$F2,$82,$00
+                    .db $00,$F2,$92,$00,$00,$F2,$82,$00
+                    .db $00,$F4,$89,$00,$00,$F3,$88,$00
+                    .db $00,$F5,$8F,$00,$00,$F2,$83,$00
+                    .db $02,$F3,$00,$F3,$95,$00,$00,$F4
+                    .db $83,$00,$00,$F4,$87,$00,$00,$F2
+                    .db $89,$00,$00,$F2,$81,$00,$00,$F5
+                    .db $93,$00,$00,$F3,$88,$00,$00,$F2
+                    .db $89,$00,$00,$F5,$88,$00,$00,$F2
+                    .db $82,$00,$00,$F2,$92,$00,$00,$F2
+                    .db $82,$00,$00,$F4,$89,$00,$00,$F3
+                    .db $88,$00,$00,$F5,$8C,$00,$00,$F3
+                    .db $83,$00,$0D,$F6,$F7,$F8,$F6,$F7
+                    .db $F8,$F6,$F7,$F8,$F6,$F7,$F8,$F6
+                    .db $F7,$81,$F8,$AF,$72,$8D,$00,$00
                     .db $F2,$83,$00,$02,$F3,$00,$F3,$95
                     .db $00,$00,$F4,$83,$00,$00,$F4,$87
                     .db $00,$00,$F2,$89,$00,$00,$F2,$81
@@ -6100,800 +6211,790 @@ DATA_0CD86F:        .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $F5,$8C,$00,$00,$F3,$83,$00,$0D
                     .db $F6,$F7,$F8,$F6,$F7,$F8,$F6,$F7
                     .db $F8,$F6,$F7,$F8,$F6,$F7,$81,$F8
-                    .db $AF,$72,$8D,$00,$00,$F2,$83,$00
-                    .db $02,$F3,$00,$F3,$95,$00,$00,$F4
-                    .db $83,$00,$00,$F4,$87,$00,$00,$F2
-                    .db $89,$00,$00,$F2,$81,$00,$00,$F5
-                    .db $93,$00,$00,$F3,$88,$00,$00,$F2
-                    .db $89,$00,$00,$F5,$88,$00,$00,$F2
-                    .db $82,$00,$00,$F2,$92,$00,$00,$F2
-                    .db $82,$00,$00,$F4,$89,$00,$00,$F3
-                    .db $88,$00,$00,$F5,$8F,$00,$00,$F2
-                    .db $83,$00,$02,$F3,$00,$F3,$95,$00
-                    .db $00,$F4,$83,$00,$00,$F4,$87,$00
-                    .db $00,$F2,$89,$00,$00,$F2,$81,$00
-                    .db $00,$F5,$93,$00,$00,$F3,$88,$00
-                    .db $00,$F2,$89,$00,$00,$F5,$88,$00
-                    .db $00,$F2,$82,$00,$00,$F2,$92,$00
-                    .db $00,$F2,$82,$00,$00,$F4,$89,$00
-                    .db $00,$F3,$88,$00,$00,$F5,$8C,$00
-                    .db $00,$F3,$83,$00,$0D,$F6,$F7,$F8
-                    .db $F6,$F7,$F8,$F6,$F7,$F8,$F6,$F7
-                    .db $F8,$F6,$F7,$81,$F8,$AF,$72,$FF
-                    .db $FF,$9A,$00,$01,$60,$61,$C9,$00
-                    .db $01,$60,$61,$EE,$00,$01,$9A,$9C
-                    .db $87,$00,$01,$60,$61,$83,$00,$02
-                    .db $A8,$A1,$9C,$8B,$00,$03,$9A,$9E
-                    .db $A1,$A3,$82,$00,$01,$60,$61,$85
-                    .db $00,$05,$9A,$9E,$9F,$09,$AA,$9C
-                    .db $89,$00,$05,$A8,$9E,$A1,$A3,$AF
-                    .db $A9,$88,$00,$06,$9A,$9E,$9F,$A3
-                    .db $AF,$09,$A3,$88,$00,$06,$A8,$9E
-                    .db $A1,$AF,$B8,$A3,$AA,$88,$00,$07
-                    .db $A8,$9F,$B0,$A3,$09,$B6,$AF,$9C
-                    .db $81,$00,$00,$9A,$84,$00,$0A,$9F
-                    .db $B0,$9F,$72,$09,$B0,$A1,$A9,$00
-                    .db $9A,$9F,$83,$00,$00,$9A,$81,$09
-                    .db $08,$A3,$AF,$B0,$9E,$A1,$A3,$9A
-                    .db $9E,$A1,$82,$00,$09,$9A,$9E,$09
-                    .db $A3,$AF,$A9,$9E,$9F,$C1,$AA,$81
-                    .db $9E,$00,$A1,$81,$00,$00,$9A,$81
-                    .db $9E,$0A,$B0,$A1,$AC,$A9,$9F,$09
-                    .db $C1,$AF,$A2,$9F,$09,$81,$00,$01
-                    .db $A8,$9F,$81,$9E,$07,$A1,$72,$A3
-                    .db $AF,$A3,$AF,$09,$A3,$81,$09,$06
-                    .db $00,$9A,$9F,$A3,$9E,$9F,$A3,$83
-                    .db $72,$04,$09,$A3,$72,$AC,$B0,$CC
-                    .db $00,$01,$60,$61,$A3,$00,$01,$60
-                    .db $61,$FF,$00,$95,$00,$01,$60,$61
-                    .db $83,$00,$01,$9A,$9C,$8C,$00,$02
-                    .db $9A,$9F,$A3,$8C,$00,$02,$A8,$A1
-                    .db $AA,$8C,$00,$03,$9F,$09,$AC,$9C
-                    .db $8B,$00,$04,$09,$B0,$B6,$AC,$9C
-                    .db $8A,$00,$01,$B0,$9F,$81,$72,$03
-                    .db $AA,$9A,$9B,$9C,$87,$00,$01,$9F
-                    .db $A3,$81,$72,$03,$AA,$9E,$B8,$A3
-                    .db $87,$00,$07,$09,$BB,$09,$B6,$AF
-                    .db $C0,$9E,$AA,$87,$00,$08,$B0,$B7
-                    .db $72,$AF,$A3,$72,$C0,$AF,$9C,$86
-                    .db $00,$08,$B7,$72,$AF,$A3,$AF,$C1
-                    .db $AA,$B8,$A3,$87,$00,$FF,$FF,$FF
-                    .db $00,$FF,$00,$FF,$00,$FF,$00,$FF
-                    .db $00,$FF,$00,$E0,$00,$FF,$FF,$0C
-                    .db $00,$01,$02,$03,$04,$05,$06,$07
-                    .db $08,$02,$09,$0A,$0B,$81,$01,$0D
-                    .db $0C,$0D,$01,$0E,$02,$0F,$10,$06
-                    .db $07,$11,$03,$12,$13,$14,$81,$01
-                    .db $13,$0C,$0D,$15,$0C,$03,$12,$09
-                    .db $06,$07,$08,$03,$16,$17,$18,$01
-                    .db $15,$00,$19,$1A,$00,$81,$03,$08
-                    .db $1B,$06,$1C,$11,$02,$01,$05,$1D
-                    .db $01,$81,$0D,$1E,$1E,$1F,$0D,$02
-                    .db $20,$05,$06,$21,$08,$0E,$01,$0B
-                    .db $22,$15,$23,$19,$21,$1F,$22,$03
-                    .db $0F,$10,$06,$21,$24,$0C,$09,$10
-                    .db $0D,$23,$25,$81,$1E,$0D,$1F,$0D
-                    .db $0E,$26,$01,$06,$1E,$1F,$00,$27
-                    .db $01,$0D,$28,$1E,$81,$21,$0C,$1F
-                    .db $0D,$0C,$12,$09,$29,$2A,$2B,$0D
-                    .db $0E,$01,$22,$28,$82,$21,$06,$1F
-                    .db $22,$00,$02,$05,$18,$22,$81,$0D
-                    .db $0C,$0C,$01,$0D,$2C,$1E,$2D,$1E
-                    .db $2E,$23,$19,$03,$06,$18,$82,$0D
-                    .db $0C,$00,$01,$22,$2F,$21,$1F,$21
-                    .db $30,$31,$21,$02,$06,$1D,$82,$0D
-                    .db $05,$22,$15,$23,$32,$1E,$1F,$81
-                    .db $21,$06,$07,$1E,$03,$06,$19,$1A
-                    .db $22,$82,$0D,$00,$28,$81,$21,$00
-                    .db $1F,$81,$21,$05,$1C,$21,$03,$0B
-                    .db $21,$1F,$82,$0D,$01,$22,$28,$81
-                    .db $21,$00,$33,$82,$21,$09,$2D,$0E
-                    .db $06,$1E,$2E,$0D,$23,$19,$34,$28
-                    .db $81,$21,$0E,$1E,$21,$35,$21,$1F
-                    .db $0C,$06,$21,$08,$0D,$28,$21,$01
-                    .db $36,$37,$81,$21,$7F,$38,$39,$1E
-                    .db $1F,$0C,$0B,$21,$30,$1A,$2C,$1E
-                    .db $01,$3A,$2F,$1E,$2D,$11,$36,$2A
-                    .db $2B,$3B,$06,$1E,$35,$3C,$3D,$21
-                    .db $01,$18,$3E,$21,$1F,$3F,$22,$34
-                    .db $40,$02,$06,$2A,$39,$1C,$21,$41
-                    .db $01,$42,$36,$2A,$2B,$1F,$40,$01
-                    .db $0C,$03,$43,$3A,$28,$21,$35,$08
-                    .db $01,$0B,$19,$1A,$22,$1F,$44,$01
-                    .db $44,$02,$45,$18,$28,$1E,$07,$08
-                    .db $01,$06,$1E,$1F,$0D,$33,$02,$01
-                    .db $03,$46,$01,$18,$28,$21,$07,$30
-                    .db $01,$06,$2A,$2B,$40,$21,$03,$01
-                    .db $03,$47,$01,$42,$36,$2A,$07,$1E
-                    .db $01,$0B,$40,$3A,$0C,$1E,$03,$01
-                    .db $46,$04,$01,$43,$3A,$34,$48,$37
-                    .db $01,$49,$3B,$18,$44,$80,$2A,$12
-                    .db $02,$4A,$4B,$4C,$4D,$4B,$18,$01
-                    .db $2B,$3E,$4D,$4B,$46,$42,$03,$34
-                    .db $46,$49,$4E,$81,$46,$0F,$4E,$4F
-                    .db $01,$22,$40,$50,$4E,$45,$49,$02
-                    .db $4D,$4B,$45,$49,$26,$45,$81,$49
-                    .db $0D,$4D,$3A,$0C,$45,$43,$4A,$26
-                    .db $03,$46,$13,$01,$26,$47,$4A,$81
-                    .db $26,$31,$02,$4F,$0C,$4D,$4B,$49
-                    .db $26,$02,$04,$09,$0A,$04,$0F,$01
-                    .db $12,$26,$05,$01,$0B,$06,$21,$07
-                    .db $21,$01,$0F,$27,$13,$0F,$27,$09
-                    .db $20,$05,$06,$01,$06,$0B,$21,$07
-                    .db $38,$15,$27,$16,$13,$51,$02,$05
-                    .db $04,$0B,$06,$09,$81,$06,$7F,$21
-                    .db $1C,$11,$0D,$03,$01,$13,$06,$03
-                    .db $06,$0F,$10,$0B,$12,$06,$0B,$52
-                    .db $21,$24,$23,$03,$01,$17,$29,$16
-                    .db $0B,$27,$01,$29,$03,$0B,$06,$36
-                    .db $2A,$2B,$28,$03,$01,$51,$1D,$01
-                    .db $29,$0E,$09,$18,$53,$49,$06,$23
-                    .db $19,$1A,$28,$03,$09,$06,$0D,$01
-                    .db $1D,$00,$27,$18,$0C,$26,$14,$28
-                    .db $21,$1F,$28,$02,$12,$06,$22,$15
-                    .db $0D,$22,$16,$1D,$0C,$26,$18,$2C
-                    .db $21,$1F,$28,$53,$02,$06,$0D,$23
-                    .db $19,$1A,$01,$22,$00,$27,$18,$54
-                    .db $1E,$55,$2C,$0C,$03,$14,$0D,$28
-                    .db $1E,$1F,$15,$23,$19,$03,$18,$54
-                    .db $21,$24,$2F,$0C,$02,$18,$0D,$2C
-                    .db $21,$1F,$23,$25,$21,$16,$1D,$80
-                    .db $54,$0A,$41,$2B,$2F,$00,$03,$18
-                    .db $0D,$2F,$1E,$33,$31,$81,$21,$0A
-                    .db $01,$55,$2F,$08,$23,$32,$1A,$16
-                    .db $1D,$22,$3E,$81,$21,$00,$07,$81
-                    .db $21,$07,$01,$24,$54,$08,$28,$21
-                    .db $1F,$01,$81,$0D,$00,$28,$81,$1E
-                    .db $0A,$1C,$21,$2D,$01,$3A,$54,$08
-                    .db $28,$21,$1F,$15,$81,$0D,$01,$36
-                    .db $52,$81,$21,$08,$2D,$2B,$01,$18
-                    .db $3E,$24,$28,$21,$2B,$81,$22,$39
-                    .db $0D,$34,$36,$52,$21,$2E,$40,$4A
-                    .db $18,$23,$19,$31,$21,$22,$34,$0D
-                    .db $2C,$01,$55,$28,$1E,$08,$0C,$49
-                    .db $18,$28,$21,$07,$21,$40,$01,$0D
-                    .db $54,$01,$24,$28,$21,$11,$0C,$45
-                    .db $4F,$28,$21,$1C,$21,$0C,$4D,$3A
-                    .db $3E,$4D,$3A,$2C,$21,$3F,$44,$01
-                    .db $0B,$28,$82,$21,$16,$3B,$46,$18
-                    .db $40,$02,$42,$2F,$1E,$33,$02,$01
-                    .db $06,$36,$52,$21,$56,$46,$45,$18
-                    .db $0C,$03,$06,$54,$81,$21,$2F,$02
-                    .db $01,$49,$3A,$28,$21,$07,$45,$01
-                    .db $4F,$0C,$02,$06,$57,$35,$1E,$03
-                    .db $4D,$4B,$4F,$25,$41,$07,$4D,$01
-                    .db $49,$3B,$03,$0B,$58,$07,$37,$03
-                    .db $02,$13,$0B,$1E,$11,$07,$46,$4D
-                    .db $4B,$50,$03,$06,$36,$39,$3E,$81
-                    .db $03,$0B,$4E,$06,$21,$08,$48,$47
-                    .db $50,$4E,$47,$02,$06,$22,$81,$36
-                    .db $1F,$03,$02,$49,$0B,$1E,$3F,$2B
-                    .db $04,$26,$49,$4C,$46,$06,$40,$3A
-                    .db $34,$02,$03,$26,$06,$2A,$2B,$40
-                    .db $04,$26,$47,$46,$45,$06,$44,$42
-                    .db $01,$81,$46,$04,$26,$0B,$3A,$34
-                    .db $0C,$FF,$FF,$86,$59,$01,$5A,$5B
-                    .db $87,$59,$01,$5A,$5B,$94,$59,$04
-                    .db $5C,$5D,$59,$5A,$5B,$87,$59,$05
-                    .db $5C,$5D,$5C,$5E,$5F,$5D,$88,$59
-                    .db $03,$5C,$5E,$5F,$5E,$81,$60,$03
-                    .db $5F,$5D,$5C,$5D,$82,$59,$06,$5C
-                    .db $5D,$5C,$5E,$60,$61,$62,$81,$60
-                    .db $04,$63,$5F,$5E,$5F,$5D,$81,$5C
-                    .db $07,$5E,$5F,$5E,$60,$61,$64,$65
-                    .db $62,$84,$60,$00,$5F,$81,$5E,$01
-                    .db $66,$63,$81,$60,$04,$5F,$5D,$5C
-                    .db $5E,$66,$86,$60,$01,$67,$68,$82
-                    .db $60,$01,$5F,$5E,$87,$60,$05,$67
-                    .db $69,$6A,$68,$67,$68,$81,$60,$01
-                    .db $67,$68,$83,$60,$14,$67,$68,$69
-                    .db $6B,$6C,$6A,$69,$6A,$68,$67,$69
-                    .db $6A,$68,$67,$68,$67,$69,$6A,$6B
-                    .db $6C,$6D,$82,$6B,$01,$6A,$69,$81
-                    .db $6B,$03,$6A,$69,$6A,$69,$81,$6B
-                    .db $00,$6E,$82,$6B,$04,$6F,$6E,$6B
-                    .db $6C,$6D,$81,$6B,$20,$70,$71,$70
-                    .db $71,$6B,$72,$6E,$6B,$6F,$73,$72
-                    .db $6E,$6B,$6C,$6B,$70,$74,$75,$74
-                    .db $75,$71,$67,$69,$6C,$6A,$68,$60
-                    .db $72,$6E,$6B,$70,$74,$76,$82,$77
-                    .db $01,$75,$69,$81,$6B,$07,$6F,$73
-                    .db $60,$67,$69,$6B,$78,$79,$82,$77
-                    .db $01,$7A,$79,$82,$6B,$03,$6A,$68
-                    .db $67,$69,$81,$6B,$06,$70,$74,$77
-                    .db $76,$7A,$7B,$78,$81,$6B,$03,$70
-                    .db $71,$70,$71,$81,$6B,$10,$70,$74
-                    .db $77,$76,$7C,$75,$71,$70,$6B,$70
-                    .db $74,$75,$74,$75,$71,$70,$74,$84
-                    .db $77,$03,$75,$74,$70,$74,$83,$77
-                    .db $01,$75,$74,$86,$77,$01,$7A,$74
-                    .db $82,$77,$01,$76,$7C,$83,$77,$01
-                    .db $7D,$7E,$82,$77,$01,$75,$7E,$83
-                    .db $77,$01,$76,$7C,$81,$77,$03,$7D
-                    .db $7F,$80,$7E,$82,$77,$03,$80,$7E
-                    .db $7D,$7E,$83,$77,$05,$7D,$7F,$81
-                    .db $82,$80,$7E,$81,$77,$09,$83,$80
-                    .db $7F,$80,$7E,$7D,$7E,$77,$84,$85
-                    .db $82,$83,$02,$80,$7E,$77,$81,$83
-                    .db $12,$82,$83,$80,$7F,$80,$7E,$77
-                    .db $84,$85,$86,$85,$86,$87,$77,$83
-                    .db $81,$83,$86,$85,$81,$83,$08,$80
-                    .db $7E,$77,$84,$87,$84,$87,$77,$76
-                    .db $81,$83,$07,$86,$87,$84,$85,$83
-                    .db $82,$80,$7E,$85,$77,$8F,$59,$01
-                    .db $5A,$5B,$85,$59,$01,$5A,$5B,$8A
-                    .db $59,$01,$5A,$5B,$89,$59,$03,$5C
-                    .db $5D,$5C,$5D,$8A,$59,$07,$5C,$5E
-                    .db $5F,$5E,$5F,$5D,$5C,$5D,$85,$59
-                    .db $02,$5A,$5B,$5E,$82,$60,$04,$66
-                    .db $5F,$5E,$5F,$5D,$81,$59,$01,$5C
-                    .db $5D,$82,$59,$81,$60,$01,$61,$62
-                    .db $81,$60,$07,$63,$60,$5F,$5D,$5C
-                    .db $5E,$5F,$5D,$81,$59,$06,$60,$61
-                    .db $64,$65,$62,$61,$62,$81,$60,$08
-                    .db $5F,$5E,$60,$63,$5F,$5D,$5C,$61
-                    .db $64,$81,$59,$05,$65,$64,$65,$62
-                    .db $60,$66,$83,$60,$05,$5F,$5E,$5F
-                    .db $5D,$5C,$5D,$81,$59,$01,$5C,$5E
-                    .db $81,$60,$01,$67,$68,$83,$60,$19
-                    .db $68,$5F,$5E,$5F,$5D,$5C,$5E,$67
-                    .db $68,$67,$69,$6A,$68,$67,$68,$67
-                    .db $6A,$68,$66,$60,$67,$68,$67,$69
-                    .db $6A,$69,$81,$6B,$0F,$6A,$69,$6A
-                    .db $69,$6D,$6A,$68,$67,$69,$6A,$69
-                    .db $6B,$70,$71,$6B,$6D,$82,$6B,$00
-                    .db $6F,$81,$6B,$10,$6A,$69,$6C,$6D
-                    .db $6B,$70,$74,$75,$71,$70,$71,$6B
-                    .db $6F,$73,$71,$70,$71,$83,$6B,$0C
-                    .db $78,$79,$76,$75,$74,$75,$71,$6A
-                    .db $68,$75,$74,$75,$71,$83,$6B,$0E
-                    .db $78,$79,$7A,$79,$7A,$7B,$6B,$6A
-                    .db $79,$77,$7C,$75,$71,$6B,$6C,$81
-                    .db $6B,$08,$78,$7B,$78,$7B,$6B,$70
-                    .db $71,$74,$76,$81,$77,$04,$75,$71
-                    .db $70,$71,$6D,$82,$6B,$05,$70,$71
-                    .db $78,$7B,$7A,$79,$82,$77,$0D,$75
-                    .db $74,$75,$71,$70,$71,$70,$74,$75
-                    .db $71,$6B,$7B,$78,$79,$84,$77,$06
-                    .db $75,$74,$75,$74,$77,$7C,$75,$81
-                    .db $71,$04,$6B,$78,$79,$77,$7C,$88
-                    .db $77,$81,$75,$05,$71,$70,$74,$77
-                    .db $76,$7C,$87,$77,$03,$7D,$77,$75
-                    .db $74,$87,$77,$07,$76,$7C,$77,$7D
-                    .db $7F,$77,$7D,$7E,$83,$77,$01,$7D
-                    .db $7E,$84,$77,$0B,$84,$85,$77,$84
-                    .db $87,$77,$7D,$7E,$7D,$7F,$80,$7E
-                    .db $83,$77,$02,$7D,$7F,$7C,$81,$77
-                    .db $07,$7D,$7F,$80,$7F,$83,$82,$80
-                    .db $7E,$81,$77,$02,$7D,$7F,$83,$81
-                    .db $77,$03,$7D,$7F,$81,$82,$83,$83
-                    .db $05,$80,$7E,$77,$84,$85,$83,$FF
-                    .db $FF,$86,$83,$00,$88,$81,$83,$00
-                    .db $88,$8B,$83,$00,$88,$81,$83,$00
-                    .db $88,$8B,$83,$00,$88,$81,$83,$00
-                    .db $88,$8B,$83,$00,$88,$81,$83,$00
-                    .db $88,$8B,$83,$00,$88,$81,$83,$00
-                    .db $88,$8B,$83,$00,$88,$81,$83,$00
-                    .db $88,$8B,$83,$00,$88,$81,$83,$00
-                    .db $88,$8B,$83,$00,$88,$81,$83,$00
-                    .db $88,$8B,$83,$00,$88,$81,$83,$00
-                    .db $88,$88,$83,$07,$89,$83,$8A,$8B
-                    .db $8C,$83,$8B,$8C,$86,$83,$0A,$8D
-                    .db $8E,$8F,$90,$91,$92,$8A,$91,$92
-                    .db $8A,$8C,$83,$83,$0D,$8D,$8C,$93
-                    .db $90,$94,$95,$96,$97,$95,$96,$97
-                    .db $8C,$89,$83,$82,$98,$1C,$99,$9A
+                    .db $AF,$72,$FF,$FF
+
+DATA_0CE7C0:        .db $9A,$00,$01,$60,$61,$C9,$00,$01
+                    .db $60,$61,$EE,$00,$01,$9A,$9C,$87
+                    .db $00,$01,$60,$61,$83,$00,$02,$A8
+                    .db $A1,$9C,$8B,$00,$03,$9A,$9E,$A1
+                    .db $A3,$82,$00,$01,$60,$61,$85,$00
+                    .db $05,$9A,$9E,$9F,$09,$AA,$9C,$89
+                    .db $00,$05,$A8,$9E,$A1,$A3,$AF,$A9
+                    .db $88,$00,$06,$9A,$9E,$9F,$A3,$AF
+                    .db $09,$A3,$88,$00,$06,$A8,$9E,$A1
+                    .db $AF,$B8,$A3,$AA,$88,$00,$07,$A8
+                    .db $9F,$B0,$A3,$09,$B6,$AF,$9C,$81
+                    .db $00,$00,$9A,$84,$00,$0A,$9F,$B0
+                    .db $9F,$72,$09,$B0,$A1,$A9,$00,$9A
+                    .db $9F,$83,$00,$00,$9A,$81,$09,$08
+                    .db $A3,$AF,$B0,$9E,$A1,$A3,$9A,$9E
+                    .db $A1,$82,$00,$09,$9A,$9E,$09,$A3
+                    .db $AF,$A9,$9E,$9F,$C1,$AA,$81,$9E
+                    .db $00,$A1,$81,$00,$00,$9A,$81,$9E
+                    .db $0A,$B0,$A1,$AC,$A9,$9F,$09,$C1
+                    .db $AF,$A2,$9F,$09,$81,$00,$01,$A8
+                    .db $9F,$81,$9E,$07,$A1,$72,$A3,$AF
+                    .db $A3,$AF,$09,$A3,$81,$09,$06,$00
+                    .db $9A,$9F,$A3,$9E,$9F,$A3,$83,$72
+                    .db $04,$09,$A3,$72,$AC,$B0,$CC,$00
+                    .db $01,$60,$61,$A3,$00,$01,$60,$61
+                    .db $FF,$00,$95,$00,$01,$60,$61,$83
+                    .db $00,$01,$9A,$9C,$8C,$00,$02,$9A
+                    .db $9F,$A3,$8C,$00,$02,$A8,$A1,$AA
+                    .db $8C,$00,$03,$9F,$09,$AC,$9C,$8B
+                    .db $00,$04,$09,$B0,$B6,$AC,$9C,$8A
+                    .db $00,$01,$B0,$9F,$81,$72,$03,$AA
+                    .db $9A,$9B,$9C,$87,$00,$01,$9F,$A3
+                    .db $81,$72,$03,$AA,$9E,$B8,$A3,$87
+                    .db $00,$07,$09,$BB,$09,$B6,$AF,$C0
+                    .db $9E,$AA,$87,$00,$08,$B0,$B7,$72
+                    .db $AF,$A3,$72,$C0,$AF,$9C,$86,$00
+                    .db $08,$B7,$72,$AF,$A3,$AF,$C1,$AA
+                    .db $B8,$A3,$87,$00,$FF,$FF
+
+DATA_0CE8EE:        .db $FF,$00,$FF,$00,$FF,$00,$FF,$00
+                    .db $FF,$00,$FF,$00,$E0,$00,$FF,$FF
+DATA_0CE8FE:        .db $0C,$00,$01,$02,$03,$04,$05,$06
+                    .db $07,$08,$02,$09,$0A,$0B,$81,$01
+                    .db $0D,$0C,$0D,$01,$0E,$02,$0F,$10
+                    .db $06,$07,$11,$03,$12,$13,$14,$81
+                    .db $01,$13,$0C,$0D,$15,$0C,$03,$12
+                    .db $09,$06,$07,$08,$03,$16,$17,$18
+                    .db $01,$15,$00,$19,$1A,$00,$81,$03
+                    .db $08,$1B,$06,$1C,$11,$02,$01,$05
+                    .db $1D,$01,$81,$0D,$1E,$1E,$1F,$0D
+                    .db $02,$20,$05,$06,$21,$08,$0E,$01
+                    .db $0B,$22,$15,$23,$19,$21,$1F,$22
+                    .db $03,$0F,$10,$06,$21,$24,$0C,$09
+                    .db $10,$0D,$23,$25,$81,$1E,$0D,$1F
+                    .db $0D,$0E,$26,$01,$06,$1E,$1F,$00
+                    .db $27,$01,$0D,$28,$1E,$81,$21,$0C
+                    .db $1F,$0D,$0C,$12,$09,$29,$2A,$2B
+                    .db $0D,$0E,$01,$22,$28,$82,$21,$06
+                    .db $1F,$22,$00,$02,$05,$18,$22,$81
+                    .db $0D,$0C,$0C,$01,$0D,$2C,$1E,$2D
+                    .db $1E,$2E,$23,$19,$03,$06,$18,$82
+                    .db $0D,$0C,$00,$01,$22,$2F,$21,$1F
+                    .db $21,$30,$31,$21,$02,$06,$1D,$82
+                    .db $0D,$05,$22,$15,$23,$32,$1E,$1F
+                    .db $81,$21,$06,$07,$1E,$03,$06,$19
+                    .db $1A,$22,$82,$0D,$00,$28,$81,$21
+                    .db $00,$1F,$81,$21,$05,$1C,$21,$03
+                    .db $0B,$21,$1F,$82,$0D,$01,$22,$28
+                    .db $81,$21,$00,$33,$82,$21,$09,$2D
+                    .db $0E,$06,$1E,$2E,$0D,$23,$19,$34
+                    .db $28,$81,$21,$0E,$1E,$21,$35,$21
+                    .db $1F,$0C,$06,$21,$08,$0D,$28,$21
+                    .db $01,$36,$37,$81,$21,$7F,$38,$39
+                    .db $1E,$1F,$0C,$0B,$21,$30,$1A,$2C
+                    .db $1E,$01,$3A,$2F,$1E,$2D,$11,$36
+                    .db $2A,$2B,$3B,$06,$1E,$35,$3C,$3D
+                    .db $21,$01,$18,$3E,$21,$1F,$3F,$22
+                    .db $34,$40,$02,$06,$2A,$39,$1C,$21
+                    .db $41,$01,$42,$36,$2A,$2B,$1F,$40
+                    .db $01,$0C,$03,$43,$3A,$28,$21,$35
+                    .db $08,$01,$0B,$19,$1A,$22,$1F,$44
+                    .db $01,$44,$02,$45,$18,$28,$1E,$07
+                    .db $08,$01,$06,$1E,$1F,$0D,$33,$02
+                    .db $01,$03,$46,$01,$18,$28,$21,$07
+                    .db $30,$01,$06,$2A,$2B,$40,$21,$03
+                    .db $01,$03,$47,$01,$42,$36,$2A,$07
+                    .db $1E,$01,$0B,$40,$3A,$0C,$1E,$03
+                    .db $01,$46,$04,$01,$43,$3A,$34,$48
+                    .db $37,$01,$49,$3B,$18,$44,$80,$2A
+                    .db $12,$02,$4A,$4B,$4C,$4D,$4B,$18
+                    .db $01,$2B,$3E,$4D,$4B,$46,$42,$03
+                    .db $34,$46,$49,$4E,$81,$46,$0F,$4E
+                    .db $4F,$01,$22,$40,$50,$4E,$45,$49
+                    .db $02,$4D,$4B,$45,$49,$26,$45,$81
+                    .db $49,$0D,$4D,$3A,$0C,$45,$43,$4A
+                    .db $26,$03,$46,$13,$01,$26,$47,$4A
+                    .db $81,$26,$31,$02,$4F,$0C,$4D,$4B
+                    .db $49,$26,$02,$04,$09,$0A,$04,$0F
+                    .db $01,$12,$26,$05,$01,$0B,$06,$21
+                    .db $07,$21,$01,$0F,$27,$13,$0F,$27
+                    .db $09,$20,$05,$06,$01,$06,$0B,$21
+                    .db $07,$38,$15,$27,$16,$13,$51,$02
+                    .db $05,$04,$0B,$06,$09,$81,$06,$7F
+                    .db $21,$1C,$11,$0D,$03,$01,$13,$06
+                    .db $03,$06,$0F,$10,$0B,$12,$06,$0B
+                    .db $52,$21,$24,$23,$03,$01,$17,$29
+                    .db $16,$0B,$27,$01,$29,$03,$0B,$06
+                    .db $36,$2A,$2B,$28,$03,$01,$51,$1D
+                    .db $01,$29,$0E,$09,$18,$53,$49,$06
+                    .db $23,$19,$1A,$28,$03,$09,$06,$0D
+                    .db $01,$1D,$00,$27,$18,$0C,$26,$14
+                    .db $28,$21,$1F,$28,$02,$12,$06,$22
+                    .db $15,$0D,$22,$16,$1D,$0C,$26,$18
+                    .db $2C,$21,$1F,$28,$53,$02,$06,$0D
+                    .db $23,$19,$1A,$01,$22,$00,$27,$18
+                    .db $54,$1E,$55,$2C,$0C,$03,$14,$0D
+                    .db $28,$1E,$1F,$15,$23,$19,$03,$18
+                    .db $54,$21,$24,$2F,$0C,$02,$18,$0D
+                    .db $2C,$21,$1F,$23,$25,$21,$16,$1D
+                    .db $80,$54,$0A,$41,$2B,$2F,$00,$03
+                    .db $18,$0D,$2F,$1E,$33,$31,$81,$21
+                    .db $0A,$01,$55,$2F,$08,$23,$32,$1A
+                    .db $16,$1D,$22,$3E,$81,$21,$00,$07
+                    .db $81,$21,$07,$01,$24,$54,$08,$28
+                    .db $21,$1F,$01,$81,$0D,$00,$28,$81
+                    .db $1E,$0A,$1C,$21,$2D,$01,$3A,$54
+                    .db $08,$28,$21,$1F,$15,$81,$0D,$01
+                    .db $36,$52,$81,$21,$08,$2D,$2B,$01
+                    .db $18,$3E,$24,$28,$21,$2B,$81,$22
+                    .db $39,$0D,$34,$36,$52,$21,$2E,$40
+                    .db $4A,$18,$23,$19,$31,$21,$22,$34
+                    .db $0D,$2C,$01,$55,$28,$1E,$08,$0C
+                    .db $49,$18,$28,$21,$07,$21,$40,$01
+                    .db $0D,$54,$01,$24,$28,$21,$11,$0C
+                    .db $45,$4F,$28,$21,$1C,$21,$0C,$4D
+                    .db $3A,$3E,$4D,$3A,$2C,$21,$3F,$44
+                    .db $01,$0B,$28,$82,$21,$16,$3B,$46
+                    .db $18,$40,$02,$42,$2F,$1E,$33,$02
+                    .db $01,$06,$36,$52,$21,$56,$46,$45
+                    .db $18,$0C,$03,$06,$54,$81,$21,$2F
+                    .db $02,$01,$49,$3A,$28,$21,$07,$45
+                    .db $01,$4F,$0C,$02,$06,$57,$35,$1E
+                    .db $03,$4D,$4B,$4F,$25,$41,$07,$4D
+                    .db $01,$49,$3B,$03,$0B,$58,$07,$37
+                    .db $03,$02,$13,$0B,$1E,$11,$07,$46
+                    .db $4D,$4B,$50,$03,$06,$36,$39,$3E
+                    .db $81,$03,$0B,$4E,$06,$21,$08,$48
+                    .db $47,$50,$4E,$47,$02,$06,$22,$81
+                    .db $36,$1F,$03,$02,$49,$0B,$1E,$3F
+                    .db $2B,$04,$26,$49,$4C,$46,$06,$40
+                    .db $3A,$34,$02,$03,$26,$06,$2A,$2B
+                    .db $40,$04,$26,$47,$46,$45,$06,$44
+                    .db $42,$01,$81,$46,$04,$26,$0B,$3A
+                    .db $34,$0C,$FF,$FF
+
+DATA_0CEC82:        .db $86,$59,$01,$5A,$5B,$87,$59,$01
+                    .db $5A,$5B,$94,$59,$04,$5C,$5D,$59
+                    .db $5A,$5B,$87,$59,$05,$5C,$5D,$5C
+                    .db $5E,$5F,$5D,$88,$59,$03,$5C,$5E
+                    .db $5F,$5E,$81,$60,$03,$5F,$5D,$5C
+                    .db $5D,$82,$59,$06,$5C,$5D,$5C,$5E
+                    .db $60,$61,$62,$81,$60,$04,$63,$5F
+                    .db $5E,$5F,$5D,$81,$5C,$07,$5E,$5F
+                    .db $5E,$60,$61,$64,$65,$62,$84,$60
+                    .db $00,$5F,$81,$5E,$01,$66,$63,$81
+                    .db $60,$04,$5F,$5D,$5C,$5E,$66,$86
+                    .db $60,$01,$67,$68,$82,$60,$01,$5F
+                    .db $5E,$87,$60,$05,$67,$69,$6A,$68
+                    .db $67,$68,$81,$60,$01,$67,$68,$83
+                    .db $60,$14,$67,$68,$69,$6B,$6C,$6A
+                    .db $69,$6A,$68,$67,$69,$6A,$68,$67
+                    .db $68,$67,$69,$6A,$6B,$6C,$6D,$82
+                    .db $6B,$01,$6A,$69,$81,$6B,$03,$6A
+                    .db $69,$6A,$69,$81,$6B,$00,$6E,$82
+                    .db $6B,$04,$6F,$6E,$6B,$6C,$6D,$81
+                    .db $6B,$20,$70,$71,$70,$71,$6B,$72
+                    .db $6E,$6B,$6F,$73,$72,$6E,$6B,$6C
+                    .db $6B,$70,$74,$75,$74,$75,$71,$67
+                    .db $69,$6C,$6A,$68,$60,$72,$6E,$6B
+                    .db $70,$74,$76,$82,$77,$01,$75,$69
+                    .db $81,$6B,$07,$6F,$73,$60,$67,$69
+                    .db $6B,$78,$79,$82,$77,$01,$7A,$79
+                    .db $82,$6B,$03,$6A,$68,$67,$69,$81
+                    .db $6B,$06,$70,$74,$77,$76,$7A,$7B
+                    .db $78,$81,$6B,$03,$70,$71,$70,$71
+                    .db $81,$6B,$10,$70,$74,$77,$76,$7C
+                    .db $75,$71,$70,$6B,$70,$74,$75,$74
+                    .db $75,$71,$70,$74,$84,$77,$03,$75
+                    .db $74,$70,$74,$83,$77,$01,$75,$74
+                    .db $86,$77,$01,$7A,$74,$82,$77,$01
+                    .db $76,$7C,$83,$77,$01,$7D,$7E,$82
+                    .db $77,$01,$75,$7E,$83,$77,$01,$76
+                    .db $7C,$81,$77,$03,$7D,$7F,$80,$7E
+                    .db $82,$77,$03,$80,$7E,$7D,$7E,$83
+                    .db $77,$05,$7D,$7F,$81,$82,$80,$7E
+                    .db $81,$77,$09,$83,$80,$7F,$80,$7E
+                    .db $7D,$7E,$77,$84,$85,$82,$83,$02
+                    .db $80,$7E,$77,$81,$83,$12,$82,$83
+                    .db $80,$7F,$80,$7E,$77,$84,$85,$86
+                    .db $85,$86,$87,$77,$83,$81,$83,$86
+                    .db $85,$81,$83,$08,$80,$7E,$77,$84
+                    .db $87,$84,$87,$77,$76,$81,$83,$07
+                    .db $86,$87,$84,$85,$83,$82,$80,$7E
+                    .db $85,$77,$8F,$59,$01,$5A,$5B,$85
+                    .db $59,$01,$5A,$5B,$8A,$59,$01,$5A
+                    .db $5B,$89,$59,$03,$5C,$5D,$5C,$5D
+                    .db $8A,$59,$07,$5C,$5E,$5F,$5E,$5F
+                    .db $5D,$5C,$5D,$85,$59,$02,$5A,$5B
+                    .db $5E,$82,$60,$04,$66,$5F,$5E,$5F
+                    .db $5D,$81,$59,$01,$5C,$5D,$82,$59
+                    .db $81,$60,$01,$61,$62,$81,$60,$07
+                    .db $63,$60,$5F,$5D,$5C,$5E,$5F,$5D
+                    .db $81,$59,$06,$60,$61,$64,$65,$62
+                    .db $61,$62,$81,$60,$08,$5F,$5E,$60
+                    .db $63,$5F,$5D,$5C,$61,$64,$81,$59
+                    .db $05,$65,$64,$65,$62,$60,$66,$83
+                    .db $60,$05,$5F,$5E,$5F,$5D,$5C,$5D
+                    .db $81,$59,$01,$5C,$5E,$81,$60,$01
+                    .db $67,$68,$83,$60,$19,$68,$5F,$5E
+                    .db $5F,$5D,$5C,$5E,$67,$68,$67,$69
+                    .db $6A,$68,$67,$68,$67,$6A,$68,$66
+                    .db $60,$67,$68,$67,$69,$6A,$69,$81
+                    .db $6B,$0F,$6A,$69,$6A,$69,$6D,$6A
+                    .db $68,$67,$69,$6A,$69,$6B,$70,$71
+                    .db $6B,$6D,$82,$6B,$00,$6F,$81,$6B
+                    .db $10,$6A,$69,$6C,$6D,$6B,$70,$74
+                    .db $75,$71,$70,$71,$6B,$6F,$73,$71
+                    .db $70,$71,$83,$6B,$0C,$78,$79,$76
+                    .db $75,$74,$75,$71,$6A,$68,$75,$74
+                    .db $75,$71,$83,$6B,$0E,$78,$79,$7A
+                    .db $79,$7A,$7B,$6B,$6A,$79,$77,$7C
+                    .db $75,$71,$6B,$6C,$81,$6B,$08,$78
+                    .db $7B,$78,$7B,$6B,$70,$71,$74,$76
+                    .db $81,$77,$04,$75,$71,$70,$71,$6D
+                    .db $82,$6B,$05,$70,$71,$78,$7B,$7A
+                    .db $79,$82,$77,$0D,$75,$74,$75,$71
+                    .db $70,$71,$70,$74,$75,$71,$6B,$7B
+                    .db $78,$79,$84,$77,$06,$75,$74,$75
+                    .db $74,$77,$7C,$75,$81,$71,$04,$6B
+                    .db $78,$79,$77,$7C,$88,$77,$81,$75
+                    .db $05,$71,$70,$74,$77,$76,$7C,$87
+                    .db $77,$03,$7D,$77,$75,$74,$87,$77
+                    .db $07,$76,$7C,$77,$7D,$7F,$77,$7D
+                    .db $7E,$83,$77,$01,$7D,$7E,$84,$77
+                    .db $0B,$84,$85,$77,$84,$87,$77,$7D
+                    .db $7E,$7D,$7F,$80,$7E,$83,$77,$02
+                    .db $7D,$7F,$7C,$81,$77,$07,$7D,$7F
+                    .db $80,$7F,$83,$82,$80,$7E,$81,$77
+                    .db $02,$7D,$7F,$83,$81,$77,$03,$7D
+                    .db $7F,$81,$82,$83,$83,$05,$80,$7E
+                    .db $77,$84,$85,$83,$FF,$FF
+
+DATA_0CEF80:        .db $86,$83,$00,$88,$81,$83,$00,$88
+                    .db $8B,$83,$00,$88,$81,$83,$00,$88
+                    .db $8B,$83,$00,$88,$81,$83,$00,$88
+                    .db $8B,$83,$00,$88,$81,$83,$00,$88
+                    .db $8B,$83,$00,$88,$81,$83,$00,$88
+                    .db $8B,$83,$00,$88,$81,$83,$00,$88
+                    .db $8B,$83,$00,$88,$81,$83,$00,$88
+                    .db $8B,$83,$00,$88,$81,$83,$00,$88
+                    .db $8B,$83,$00,$88,$81,$83,$00,$88
+                    .db $88,$83,$07,$89,$83,$8A,$8B,$8C
+                    .db $83,$8B,$8C,$86,$83,$0A,$8D,$8E
+                    .db $8F,$90,$91,$92,$8A,$91,$92,$8A
+                    .db $8C,$83,$83,$0D,$8D,$8C,$93,$90
+                    .db $94,$95,$96,$97,$95,$96,$97,$8C
+                    .db $89,$83,$82,$98,$1C,$99,$9A,$9B
+                    .db $9C,$9D,$9E,$9C,$9D,$9E,$9F,$A0
+                    .db $A1,$98,$83,$89,$8A,$90,$A2,$A3
+                    .db $A4,$A5,$A4,$A6,$A5,$A4,$A6,$96
+                    .db $A7,$8C,$82,$98,$5C,$99,$9A,$9B
+                    .db $9C,$A8,$9E,$9C,$A8,$9E,$9F,$A0
+                    .db $A1,$98,$A9,$83,$8D,$8E,$A2,$A3
+                    .db $A4,$AA,$A6,$AB,$AA,$A6,$AB,$96
+                    .db $AC,$8F,$AD,$AE,$8D,$AD,$AE,$AF
+                    .db $A3,$B0,$AB,$B1,$B0,$B2,$AF,$AD
+                    .db $AE,$A9,$B3,$B4,$92,$B3,$B4,$92
+                    .db $90,$B5,$B6,$B1,$B5,$B6,$B1,$B3
+                    .db $B4,$B7,$B8,$B9,$B7,$B8,$B9,$92
+                    .db $8C,$88,$97,$8E,$88,$97,$8E,$B8
+                    .db $B9,$8C,$BA,$8C,$B7,$93,$A9,$8D
+                    .db $8C,$88,$8A,$A9,$88,$8A,$A9,$83
+                    .db $93,$8C,$8F,$98,$8F,$B5,$8F,$88
+                    .db $C6,$83,$00,$88,$81,$83,$00,$88
+                    .db $8B,$83,$00,$88,$81,$83,$00,$88
+                    .db $8B,$83,$00,$88,$81,$83,$00,$88
+                    .db $8B,$83,$00,$88,$81,$83,$00,$88
+                    .db $8B,$83,$00,$88,$81,$83,$00,$88
+                    .db $8B,$83,$00,$88,$81,$83,$00,$88
+                    .db $8B,$83,$00,$88,$81,$83,$00,$88
+                    .db $8B,$83,$00,$88,$81,$83,$00,$88
+                    .db $8B,$83,$03,$88,$83,$93,$88,$88
+                    .db $83,$07,$89,$83,$8A,$8B,$8C,$83
+                    .db $8B,$8C,$86,$83,$0C,$8D,$8E,$8F
+                    .db $90,$91,$90,$BB,$91,$92,$8A,$8C
+                    .db $83,$89,$81,$83,$0D,$8D,$8A,$8E
+                    .db $A2,$A3,$95,$BC,$A3,$95,$BD,$BC
+                    .db $B1,$8F,$8C,$82,$98,$1C,$99,$9A
                     .db $9B,$9C,$9D,$9E,$9C,$9D,$9E,$9F
                     .db $A0,$A1,$98,$83,$89,$8A,$90,$A2
                     .db $A3,$A4,$A5,$A4,$A6,$A5,$A4,$A6
                     .db $96,$A7,$8C,$82,$98,$5C,$99,$9A
                     .db $9B,$9C,$A8,$9E,$9C,$A8,$9E,$9F
                     .db $A0,$A1,$98,$A9,$83,$8D,$8E,$A2
-                    .db $A3,$A4,$AA,$A6,$AB,$AA,$A6,$AB
+                    .db $A3,$A4,$AA,$A6,$AB,$AA,$A4,$A6
                     .db $96,$AC,$8F,$AD,$AE,$8D,$AD,$AE
-                    .db $AF,$A3,$B0,$AB,$B1,$B0,$B2,$AF
-                    .db $AD,$AE,$A9,$B3,$B4,$92,$B3,$B4
+                    .db $AF,$A3,$B0,$BE,$BC,$B0,$BE,$BC
+                    .db $AD,$AE,$A9,$B3,$B4,$B7,$B3,$B4
                     .db $92,$90,$B5,$B6,$B1,$B5,$B6,$B1
                     .db $B3,$B4,$B7,$B8,$B9,$B7,$B8,$B9
                     .db $92,$8C,$88,$97,$8E,$88,$97,$8E
-                    .db $B8,$B9,$8C,$BA,$8C,$B7,$93,$A9
-                    .db $8D,$8C,$88,$8A,$A9,$88,$8A,$A9
-                    .db $83,$93,$8C,$8F,$98,$8F,$B5,$8F
-                    .db $88,$C6,$83,$00,$88,$81,$83,$00
-                    .db $88,$8B,$83,$00,$88,$81,$83,$00
-                    .db $88,$8B,$83,$00,$88,$81,$83,$00
-                    .db $88,$8B,$83,$00,$88,$81,$83,$00
-                    .db $88,$8B,$83,$00,$88,$81,$83,$00
-                    .db $88,$8B,$83,$00,$88,$81,$83,$00
-                    .db $88,$8B,$83,$00,$88,$81,$83,$00
-                    .db $88,$8B,$83,$00,$88,$81,$83,$00
-                    .db $88,$8B,$83,$03,$88,$83,$93,$88
-                    .db $88,$83,$07,$89,$83,$8A,$8B,$8C
-                    .db $83,$8B,$8C,$86,$83,$0C,$8D,$8E
-                    .db $8F,$90,$91,$90,$BB,$91,$92,$8A
-                    .db $8C,$83,$89,$81,$83,$0D,$8D,$8A
-                    .db $8E,$A2,$A3,$95,$BC,$A3,$95,$BD
-                    .db $BC,$B1,$8F,$8C,$82,$98,$1C,$99
-                    .db $9A,$9B,$9C,$9D,$9E,$9C,$9D,$9E
-                    .db $9F,$A0,$A1,$98,$83,$89,$8A,$90
-                    .db $A2,$A3,$A4,$A5,$A4,$A6,$A5,$A4
-                    .db $A6,$96,$A7,$8C,$82,$98,$5C,$99
-                    .db $9A,$9B,$9C,$A8,$9E,$9C,$A8,$9E
-                    .db $9F,$A0,$A1,$98,$A9,$83,$8D,$8E
-                    .db $A2,$A3,$A4,$AA,$A6,$AB,$AA,$A4
-                    .db $A6,$96,$AC,$8F,$AD,$AE,$8D,$AD
-                    .db $AE,$AF,$A3,$B0,$BE,$BC,$B0,$BE
-                    .db $BC,$AD,$AE,$A9,$B3,$B4,$B7,$B3
-                    .db $B4,$92,$90,$B5,$B6,$B1,$B5,$B6
-                    .db $B1,$B3,$B4,$B7,$B8,$B9,$B7,$B8
-                    .db $B9,$92,$8C,$88,$97,$8E,$88,$97
-                    .db $8E,$B8,$B9,$8E,$83,$8D,$8E,$8F
-                    .db $8C,$8D,$8C,$88,$8A,$A9,$88,$8A
-                    .db $BA,$8A,$A9,$8D,$8F,$98,$8F,$B5
-                    .db $8F,$88,$BF,$83,$FF,$FF,$00,$BF
-                    .db $81,$C0,$04,$C1,$C2,$C3,$C0,$BF
-                    .db $81,$C0,$00,$BF,$81,$C0,$00,$BF
-                    .db $81,$C0,$00,$C4,$81,$C5,$04,$C1
-                    .db $C2,$C6,$C5,$C4,$81,$C5,$00,$C4
-                    .db $81,$C5,$00,$C4,$81,$C5,$82,$C0
-                    .db $02,$C1,$C2,$C3,$89,$C0,$82,$C5
-                    .db $02,$C1,$C2,$C6,$89,$C5,$82,$C7
-                    .db $01,$C8,$C2,$88,$C7,$01,$C9,$C7
-                    .db $82,$CA,$01,$C1,$C2,$83,$CA,$81
-                    .db $CB,$84,$CA,$82,$CC,$02,$C1,$C2
-                    .db $CD,$89,$CC,$82,$C5,$02,$C1,$C2
-                    .db $C6,$89,$C5,$82,$C0,$04,$C1,$C2
-                    .db $C3,$C0,$BF,$81,$C0,$00,$BF,$81
-                    .db $C0,$00,$CE,$81,$59,$82,$C5,$04
-                    .db $C1,$CF,$C6,$C5,$C4,$81,$C5,$00
-                    .db $C4,$81,$C5,$00,$D0,$81,$59,$00
-                    .db $D1,$81,$C0,$02,$C8,$C2,$C3,$85
-                    .db $C0,$00,$CE,$82,$59,$00,$D2,$81
-                    .db $C5,$02,$C1,$C2,$C6,$85,$C5,$00
-                    .db $D0,$81,$59,$00,$D3,$82,$C0,$02
-                    .db $C1,$C2,$C3,$84,$C0,$00,$CE,$81
-                    .db $59,$01,$D1,$D4,$82,$C5,$02,$C1
-                    .db $C2,$C6,$84,$C5,$04,$D0,$D3,$D5
-                    .db $D2,$C5,$82,$C0,$04,$C1,$C2,$C3
-                    .db $C0,$BF,$83,$C0,$03,$D4,$C0,$BF
-                    .db $C0,$82,$C5,$04,$C1,$C2,$C6,$C5
-                    .db $C4,$81,$C5,$00,$D6,$82,$C5,$07
-                    .db $C4,$C5,$59,$D1,$C0,$C1,$C2,$C3
-                    .db $81,$C0,$02,$CE,$59,$D7,$85,$59
-                    .db $04,$D2,$C5,$C1,$C2,$C6,$81,$C5
-                    .db $00,$D0,$82,$59,$00,$D5,$81,$59
-                    .db $00,$D3,$82,$C7,$01,$C1,$C2,$84
-                    .db $C7,$00,$C9,$84,$C7,$81,$CA,$03
-                    .db $CB,$C1,$C2,$CB,$87,$CA,$01,$CB
-                    .db $CA,$82,$CC,$02,$C1,$CF,$CD,$89
-                    .db $CC,$82,$C5,$02,$C1,$C2,$C6,$89
-                    .db $C5,$00,$BF,$81,$C0,$04,$C8,$C2
-                    .db $C3,$C0,$CE,$82,$59,$02,$D1,$C0
-                    .db $BF,$81,$C0,$00,$C4,$81,$C5,$0A
-                    .db $C1,$C2,$C6,$C5,$D0,$59,$D3,$59
-                    .db $D2,$D6,$C4,$81,$C5,$82,$C0,$02
-                    .db $C1,$C2,$C3,$82,$C0,$03,$D4,$CE
-                    .db $59,$D7,$82,$59,$82,$C5,$02,$C1
-                    .db $CF,$C6,$83,$C5,$01,$D0,$59,$81
-                    .db $D5,$01,$D3,$59,$82,$C0,$02,$C1
-                    .db $C2,$C3,$87,$C0,$02,$D4,$C0,$BF
-                    .db $81,$C0,$04,$C1,$C2,$C3,$C0,$BF
-                    .db $81,$C0,$00,$BF,$81,$C0,$00,$BF
-                    .db $81,$C0,$00,$C4,$81,$C5,$04,$C1
-                    .db $C2,$C6,$C5,$C4,$81,$C5,$00,$C4
-                    .db $81,$C5,$00,$C4,$81,$C5,$82,$C0
-                    .db $02,$C8,$C2,$C3,$89,$C0,$82,$C5
-                    .db $02,$C1,$C2,$C6,$89,$C5,$82,$C7
-                    .db $03,$C1,$C2,$C7,$C9,$83,$C7,$00
-                    .db $C9,$83,$C7,$82,$CA,$01,$C1,$C2
-                    .db $81,$CA,$00,$CB,$87,$CA,$82,$CC
-                    .db $02,$C1,$C2,$CD,$89,$CC,$82,$C5
-                    .db $02,$C1,$C2,$C6,$89,$C5,$00,$D1
-                    .db $81,$C0,$04,$C1,$C2,$C3,$C0,$CE
-                    .db $83,$59,$01,$D1,$BF,$81,$C0,$00
-                    .db $D2,$81,$C5,$04,$C1,$C2,$C6,$C5
-                    .db $D0,$83,$59,$01,$D2,$C4,$81,$C5
-                    .db $82,$59,$03,$C1,$C2,$C3,$CE,$89
-                    .db $59,$05,$D5,$59,$C1,$C2,$C6,$D0
-                    .db $81,$59,$03,$D3,$59,$D5,$D3,$81
-                    .db $59,$00,$D5,$82,$C0,$02,$C8,$C2
-                    .db $C3,$82,$C0,$03,$D4,$BF,$C0,$D4
-                    .db $82,$C0,$82,$C5,$02,$C1,$C2,$C6
-                    .db $81,$C5,$02,$D6,$C5,$C4,$84,$C5
-                    .db $82,$C0,$01,$C1,$C2,$82,$59,$00
-                    .db $D7,$83,$59,$00,$D1,$81,$C0,$82
-                    .db $C5,$02,$C1,$C2,$D5,$86,$59,$09
-                    .db $D2,$D6,$C5,$59,$D1,$C0,$C1,$CF
-                    .db $C3,$CE,$81,$59,$00,$D1,$82,$C0
-                    .db $01,$CE,$D7,$81,$59,$08,$D2,$C5
-                    .db $C1,$C2,$C6,$D0,$D5,$59,$D2,$82
-                    .db $C5,$00,$D0,$81,$59,$82,$C7,$03
-                    .db $C1,$C2,$C7,$C9,$84,$C7,$00,$C9
-                    .db $82,$C7,$82,$CA,$01,$C1,$CF,$84
-                    .db $CA,$00,$CB,$84,$CA,$82,$CC,$02
+                    .db $B8,$B9,$8E,$83,$8D,$8E,$8F,$8C
+                    .db $8D,$8C,$88,$8A,$A9,$88,$8A,$BA
+                    .db $8A,$A9,$8D,$8F,$98,$8F,$B5,$8F
+                    .db $88,$BF,$83,$FF,$FF
+
+DATA_0CF175:        .db $00,$BF,$81,$C0,$04,$C1,$C2,$C3
+                    .db $C0,$BF,$81,$C0,$00,$BF,$81,$C0
+                    .db $00,$BF,$81,$C0,$00,$C4,$81,$C5
+                    .db $04,$C1,$C2,$C6,$C5,$C4,$81,$C5
+                    .db $00,$C4,$81,$C5,$00,$C4,$81,$C5
+                    .db $82,$C0,$02,$C1,$C2,$C3,$89,$C0
+                    .db $82,$C5,$02,$C1,$C2,$C6,$89,$C5
+                    .db $82,$C7,$01,$C8,$C2,$88,$C7,$01
+                    .db $C9,$C7,$82,$CA,$01,$C1,$C2,$83
+                    .db $CA,$81,$CB,$84,$CA,$82,$CC,$02
                     .db $C1,$C2,$CD,$89,$CC,$82,$C5,$02
-                    .db $C1,$C2,$C6,$89,$C5,$00,$BF,$81
-                    .db $C0,$05,$C8,$C2,$C3,$C0,$BF,$CE
-                    .db $81,$59,$02,$D1,$C0,$BF,$81,$C0
-                    .db $00,$C4,$81,$C5,$05,$C1,$CF,$C6
-                    .db $C5,$C4,$D0,$81,$59,$02,$D2,$D6
-                    .db $C4,$81,$C5,$00,$D1,$81,$C0,$03
-                    .db $C1,$C2,$C3,$CE,$84,$59,$01,$D7
-                    .db $D1,$81,$C0,$00,$D2,$81,$C5,$04
-                    .db $C1,$C2,$C6,$D0,$D3,$81,$59,$00
-                    .db $D5,$81,$59,$00,$D2,$81,$C5,$82
-                    .db $C0,$04,$C1,$C2,$C3,$C0,$D4,$87
-                    .db $C0,$FF,$FF,$0B,$76,$D8,$D9,$DA
-                    .db $DB,$D9,$DA,$DB,$76,$D8,$D9,$DA
-                    .db $81,$DB,$0D,$D9,$DA,$76,$DC,$DD
-                    .db $DE,$DF,$DD,$DE,$DF,$76,$DC,$DD
-                    .db $DE,$81,$DF,$09,$DD,$DE,$DB,$D9
-                    .db $DA,$D9,$DA,$DB,$D9,$DA,$83,$DB
-                    .db $0B,$D9,$E0,$DA,$DB,$DF,$DD,$DE
-                    .db $DD,$DE,$DF,$DD,$DE,$83,$DF,$0B
-                    .db $DD,$E1,$DE,$DF,$E2,$E3,$E4,$E3
-                    .db $E4,$E2,$E3,$E4,$83,$E2,$06,$E3
-                    .db $E5,$E4,$E2,$E6,$E7,$E8,$81,$E9
-                    .db $03,$E7,$E8,$E9,$E6,$82,$E9,$06
-                    .db $E7,$E8,$E9,$E7,$76,$EA,$DE,$81
-                    .db $DF,$04,$DD,$DE,$DF,$76,$DC,$81
-                    .db $DF,$0D,$DD,$DE,$DF,$DD,$76,$EB
-                    .db $E4,$E2,$DF,$E3,$E4,$DF,$76,$DC
-                    .db $81,$E2,$3F,$E3,$E4,$E2,$E3,$76
-                    .db $EC,$ED,$EE,$E5,$ED,$EE,$E4,$76
-                    .db $EB,$ED,$EE,$E0,$ED,$EE,$DA,$76
-                    .db $EB,$EF,$F0,$E0,$EF,$F0,$DA,$76
-                    .db $EC,$EF,$F0,$E1,$EF,$F0,$E4,$76
-                    .db $EC,$F1,$F2,$E5,$F1,$F2,$E4,$76
-                    .db $EB,$F1,$F2,$E5,$F1,$F2,$DA,$76
-                    .db $DC,$D9,$DA,$DB,$D9,$DA,$DB,$76
-                    .db $D8,$D9,$DA,$81,$DB,$0D,$D9,$DE
-                    .db $76,$DC,$DD,$DE,$DF,$DD,$DE,$DF
-                    .db $76,$DC,$DD,$DE,$81,$DF,$09,$DD
-                    .db $DE,$DB,$D9,$DA,$D9,$DA,$DB,$D9
-                    .db $DA,$81,$DB,$1F,$D9,$DA,$D9,$DA
-                    .db $DB,$D9,$DF,$DD,$DE,$DD,$DE,$DF
-                    .db $DD,$E4,$E2,$F3,$E3,$DE,$DD,$DE
-                    .db $DF,$DD,$E2,$E3,$E4,$E3,$E4,$E2
-                    .db $E3,$E4,$E3,$E4,$81,$E2,$06,$E3
-                    .db $E4,$E2,$E3,$E6,$E7,$E8,$81,$E9
-                    .db $03,$E7,$E8,$E9,$E6,$83,$E9,$0C
-                    .db $E7,$E8,$E7,$76,$EA,$DE,$DF,$E2
-                    .db $DD,$DE,$DF,$76,$DC,$82,$DF,$0C
-                    .db $DD,$DE,$DD,$76,$EB,$E4,$E3,$E0
-                    .db $E5,$E4,$DF,$76,$DC,$82,$E2,$3D
-                    .db $E3,$E4,$E3,$76,$EC,$ED,$EE,$E1
-                    .db $ED,$EE,$E4,$76,$EB,$ED,$EE,$E0
-                    .db $ED,$EE,$DA,$76,$EB,$EF,$F0,$E5
-                    .db $EF,$F0,$DA,$76,$EC,$EF,$F0,$E1
-                    .db $EF,$F0,$DE,$76,$EC,$F1,$F2,$E0
-                    .db $F1,$F2,$E4,$76,$EB,$F1,$F2,$E5
-                    .db $F1,$F2,$DE,$76,$DC,$D9,$DA,$DF
-                    .db $D9,$DA,$DB,$76,$D8,$D9,$81,$E0
-                    .db $0D,$DA,$D9,$E4,$76,$DC,$DD,$DE
-                    .db $DF,$DD,$DE,$DF,$76,$DC,$DD,$81
-                    .db $E1,$05,$DE,$DD,$DA,$DB,$D9,$DA
-                    .db $82,$DB,$01,$D9,$DA,$83,$DB,$00
-                    .db $D9,$81,$E0,$04,$DA,$DF,$DD,$E4
-                    .db $E2,$81,$F3,$01,$E3,$DE,$83,$DF
-                    .db $00,$DD,$81,$E1,$03,$DE,$DF,$DD
-                    .db $DA,$82,$DB,$01,$D9,$DE,$83,$DF
-                    .db $00,$DD,$81,$E5,$0C,$DE,$76,$D8
-                    .db $D9,$DA,$DB,$D9,$DA,$DB,$76,$D8
-                    .db $D9,$DA,$81,$DB,$0D,$D9,$DA,$76
-                    .db $DC,$DD,$DE,$DF,$DD,$DE,$DF,$76
-                    .db $DC,$DD,$DE,$81,$DF,$06,$DD,$DE
-                    .db $D9,$E0,$DA,$D9,$DA,$81,$DB,$06
-                    .db $D9,$DA,$D9,$DA,$DB,$D9,$DA,$81
-                    .db $DB,$04,$DD,$E1,$DE,$DD,$DE,$81
-                    .db $DF,$06,$DD,$DE,$DD,$DE,$DF,$DD
-                    .db $DE,$81,$DF,$04,$E3,$E5,$E4,$E3
-                    .db $E4,$81,$E2,$06,$E3,$E4,$E3,$E4
-                    .db $E2,$E3,$E4,$81,$E2,$04,$E6,$E7
-                    .db $E8,$E7,$E8,$82,$E9,$0C,$E6,$E7
-                    .db $E8,$E9,$E7,$E8,$E9,$E7,$76,$EA
-                    .db $DE,$DD,$DE,$81,$DF,$4E,$E2,$76
-                    .db $EB,$DE,$DF,$DD,$DE,$DF,$DD,$76
-                    .db $EB,$E4,$E3,$E4,$E2,$E3,$DA,$76
-                    .db $EC,$E4,$E2,$E3,$E4,$E2,$E3,$76
-                    .db $EC,$ED,$EE,$E0,$ED,$EE,$DE,$76
-                    .db $EA,$ED,$EE,$E0,$ED,$EE,$DA,$76
-                    .db $EB,$EF,$F0,$E5,$EF,$F0,$DE,$76
-                    .db $EA,$EF,$F0,$E1,$EF,$F0,$E4,$76
-                    .db $EC,$F1,$F2,$E0,$F1,$F2,$E4,$76
-                    .db $EB,$F1,$F2,$E5,$F1,$F2,$DA,$76
-                    .db $DC,$D9,$DA,$DD,$DA,$81,$DB,$03
-                    .db $76,$EC,$E0,$DA,$81,$DB,$07,$D9
-                    .db $DE,$76,$DC,$DD,$DE,$DD,$DE,$81
-                    .db $DF,$03,$76,$EB,$E1,$DE,$81,$DF
-                    .db $06,$DD,$DE,$DA,$D9,$DA,$DB,$D9
-                    .db $81,$E0,$06,$DA,$DB,$D9,$DA,$DB
-                    .db $D9,$DA,$81,$DB,$0D,$DE,$DD,$DE
-                    .db $DF,$DD,$E5,$E1,$DE,$DF,$DD,$DE
-                    .db $DF,$DD,$DE,$81,$DF,$04,$E4,$E3
-                    .db $E4,$E2,$E3,$81,$E5,$06,$E4,$E2
-                    .db $E3,$E4,$E2,$E3,$E4,$81,$E2,$02
+                    .db $C1,$C2,$C6,$89,$C5,$82,$C0,$04
+                    .db $C1,$C2,$C3,$C0,$BF,$81,$C0,$00
+                    .db $BF,$81,$C0,$00,$CE,$81,$59,$82
+                    .db $C5,$04,$C1,$CF,$C6,$C5,$C4,$81
+                    .db $C5,$00,$C4,$81,$C5,$00,$D0,$81
+                    .db $59,$00,$D1,$81,$C0,$02,$C8,$C2
+                    .db $C3,$85,$C0,$00,$CE,$82,$59,$00
+                    .db $D2,$81,$C5,$02,$C1,$C2,$C6,$85
+                    .db $C5,$00,$D0,$81,$59,$00,$D3,$82
+                    .db $C0,$02,$C1,$C2,$C3,$84,$C0,$00
+                    .db $CE,$81,$59,$01,$D1,$D4,$82,$C5
+                    .db $02,$C1,$C2,$C6,$84,$C5,$04,$D0
+                    .db $D3,$D5,$D2,$C5,$82,$C0,$04,$C1
+                    .db $C2,$C3,$C0,$BF,$83,$C0,$03,$D4
+                    .db $C0,$BF,$C0,$82,$C5,$04,$C1,$C2
+                    .db $C6,$C5,$C4,$81,$C5,$00,$D6,$82
+                    .db $C5,$07,$C4,$C5,$59,$D1,$C0,$C1
+                    .db $C2,$C3,$81,$C0,$02,$CE,$59,$D7
+                    .db $85,$59,$04,$D2,$C5,$C1,$C2,$C6
+                    .db $81,$C5,$00,$D0,$82,$59,$00,$D5
+                    .db $81,$59,$00,$D3,$82,$C7,$01,$C1
+                    .db $C2,$84,$C7,$00,$C9,$84,$C7,$81
+                    .db $CA,$03,$CB,$C1,$C2,$CB,$87,$CA
+                    .db $01,$CB,$CA,$82,$CC,$02,$C1,$CF
+                    .db $CD,$89,$CC,$82,$C5,$02,$C1,$C2
+                    .db $C6,$89,$C5,$00,$BF,$81,$C0,$04
+                    .db $C8,$C2,$C3,$C0,$CE,$82,$59,$02
+                    .db $D1,$C0,$BF,$81,$C0,$00,$C4,$81
+                    .db $C5,$0A,$C1,$C2,$C6,$C5,$D0,$59
+                    .db $D3,$59,$D2,$D6,$C4,$81,$C5,$82
+                    .db $C0,$02,$C1,$C2,$C3,$82,$C0,$03
+                    .db $D4,$CE,$59,$D7,$82,$59,$82,$C5
+                    .db $02,$C1,$CF,$C6,$83,$C5,$01,$D0
+                    .db $59,$81,$D5,$01,$D3,$59,$82,$C0
+                    .db $02,$C1,$C2,$C3,$87,$C0,$02,$D4
+                    .db $C0,$BF,$81,$C0,$04,$C1,$C2,$C3
+                    .db $C0,$BF,$81,$C0,$00,$BF,$81,$C0
+                    .db $00,$BF,$81,$C0,$00,$C4,$81,$C5
+                    .db $04,$C1,$C2,$C6,$C5,$C4,$81,$C5
+                    .db $00,$C4,$81,$C5,$00,$C4,$81,$C5
+                    .db $82,$C0,$02,$C8,$C2,$C3,$89,$C0
+                    .db $82,$C5,$02,$C1,$C2,$C6,$89,$C5
+                    .db $82,$C7,$03,$C1,$C2,$C7,$C9,$83
+                    .db $C7,$00,$C9,$83,$C7,$82,$CA,$01
+                    .db $C1,$C2,$81,$CA,$00,$CB,$87,$CA
+                    .db $82,$CC,$02,$C1,$C2,$CD,$89,$CC
+                    .db $82,$C5,$02,$C1,$C2,$C6,$89,$C5
+                    .db $00,$D1,$81,$C0,$04,$C1,$C2,$C3
+                    .db $C0,$CE,$83,$59,$01,$D1,$BF,$81
+                    .db $C0,$00,$D2,$81,$C5,$04,$C1,$C2
+                    .db $C6,$C5,$D0,$83,$59,$01,$D2,$C4
+                    .db $81,$C5,$82,$59,$03,$C1,$C2,$C3
+                    .db $CE,$89,$59,$05,$D5,$59,$C1,$C2
+                    .db $C6,$D0,$81,$59,$03,$D3,$59,$D5
+                    .db $D3,$81,$59,$00,$D5,$82,$C0,$02
+                    .db $C8,$C2,$C3,$82,$C0,$03,$D4,$BF
+                    .db $C0,$D4,$82,$C0,$82,$C5,$02,$C1
+                    .db $C2,$C6,$81,$C5,$02,$D6,$C5,$C4
+                    .db $84,$C5,$82,$C0,$01,$C1,$C2,$82
+                    .db $59,$00,$D7,$83,$59,$00,$D1,$81
+                    .db $C0,$82,$C5,$02,$C1,$C2,$D5,$86
+                    .db $59,$09,$D2,$D6,$C5,$59,$D1,$C0
+                    .db $C1,$CF,$C3,$CE,$81,$59,$00,$D1
+                    .db $82,$C0,$01,$CE,$D7,$81,$59,$08
+                    .db $D2,$C5,$C1,$C2,$C6,$D0,$D5,$59
+                    .db $D2,$82,$C5,$00,$D0,$81,$59,$82
+                    .db $C7,$03,$C1,$C2,$C7,$C9,$84,$C7
+                    .db $00,$C9,$82,$C7,$82,$CA,$01,$C1
+                    .db $CF,$84,$CA,$00,$CB,$84,$CA,$82
+                    .db $CC,$02,$C1,$C2,$CD,$89,$CC,$82
+                    .db $C5,$02,$C1,$C2,$C6,$89,$C5,$00
+                    .db $BF,$81,$C0,$05,$C8,$C2,$C3,$C0
+                    .db $BF,$CE,$81,$59,$02,$D1,$C0,$BF
+                    .db $81,$C0,$00,$C4,$81,$C5,$05,$C1
+                    .db $CF,$C6,$C5,$C4,$D0,$81,$59,$02
+                    .db $D2,$D6,$C4,$81,$C5,$00,$D1,$81
+                    .db $C0,$03,$C1,$C2,$C3,$CE,$84,$59
+                    .db $01,$D7,$D1,$81,$C0,$00,$D2,$81
+                    .db $C5,$04,$C1,$C2,$C6,$D0,$D3,$81
+                    .db $59,$00,$D5,$81,$59,$00,$D2,$81
+                    .db $C5,$82,$C0,$04,$C1,$C2,$C3,$C0
+                    .db $D4,$87,$C0,$FF,$FF
+
+DATA_0CF45A:        .db $0B,$76,$D8,$D9,$DA,$DB,$D9,$DA
+                    .db $DB,$76,$D8,$D9,$DA,$81,$DB,$0D
+                    .db $D9,$DA,$76,$DC,$DD,$DE,$DF,$DD
+                    .db $DE,$DF,$76,$DC,$DD,$DE,$81,$DF
+                    .db $09,$DD,$DE,$DB,$D9,$DA,$D9,$DA
+                    .db $DB,$D9,$DA,$83,$DB,$0B,$D9,$E0
+                    .db $DA,$DB,$DF,$DD,$DE,$DD,$DE,$DF
+                    .db $DD,$DE,$83,$DF,$0B,$DD,$E1,$DE
+                    .db $DF,$E2,$E3,$E4,$E3,$E4,$E2,$E3
+                    .db $E4,$83,$E2,$06,$E3,$E5,$E4,$E2
                     .db $E6,$E7,$E8,$81,$E9,$03,$E7,$E8
                     .db $E9,$E6,$82,$E9,$06,$E7,$E8,$E9
                     .db $E7,$76,$EA,$DE,$81,$DF,$04,$DD
-                    .db $DE,$DF,$76,$DC,$81,$DF,$06,$DD
-                    .db $DE,$DF,$DD,$76,$EB,$E4,$81,$E2
-                    .db $04,$E3,$E4,$DF,$76,$DC,$81,$E2
-                    .db $51,$E3,$E4,$E2,$E3,$76,$EC,$ED
-                    .db $EE,$E0,$ED,$EE,$E4,$76,$EB,$ED
-                    .db $EE,$E0,$ED,$EE,$DA,$76,$EA,$EF
-                    .db $F0,$E1,$EF,$F0,$DA,$76,$EC,$EF
-                    .db $F0,$E1,$EF,$F0,$E4,$76,$EA,$F1
-                    .db $F2,$E5,$F1,$F2,$E4,$76,$EB,$F1
-                    .db $F2,$E5,$F1,$F2,$DA,$76,$EB,$E0
-                    .db $DA,$DB,$D9,$DA,$DB,$76,$EC,$DA
-                    .db $DB,$D9,$DA,$DB,$DF,$76,$EC,$E1
-                    .db $DE,$DF,$DD,$DE,$DF,$76,$EA,$DE
-                    .db $DF,$DD,$DE,$81,$DF,$02,$DB,$D9
-                    .db $DA,$82,$DB,$0C,$D9,$DA,$DB,$D9
-                    .db $DA,$DB,$D9,$DA,$D9,$DA,$DF,$DD
-                    .db $DE,$82,$DF,$0C,$DD,$E4,$E2,$E3
-                    .db $DE,$DF,$DD,$DE,$DD,$DE,$DF,$DD
-                    .db $DE,$82,$DF,$09,$DD,$DA,$DB,$D9
-                    .db $DE,$DF,$DD,$DE,$DD,$DE,$FF,$FF
+                    .db $DE,$DF,$76,$DC,$81,$DF,$0D,$DD
+                    .db $DE,$DF,$DD,$76,$EB,$E4,$E2,$DF
+                    .db $E3,$E4,$DF,$76,$DC,$81,$E2,$3F
+                    .db $E3,$E4,$E2,$E3,$76,$EC,$ED,$EE
+                    .db $E5,$ED,$EE,$E4,$76,$EB,$ED,$EE
+                    .db $E0,$ED,$EE,$DA,$76,$EB,$EF,$F0
+                    .db $E0,$EF,$F0,$DA,$76,$EC,$EF,$F0
+                    .db $E1,$EF,$F0,$E4,$76,$EC,$F1,$F2
+                    .db $E5,$F1,$F2,$E4,$76,$EB,$F1,$F2
+                    .db $E5,$F1,$F2,$DA,$76,$DC,$D9,$DA
+                    .db $DB,$D9,$DA,$DB,$76,$D8,$D9,$DA
+                    .db $81,$DB,$0D,$D9,$DE,$76,$DC,$DD
+                    .db $DE,$DF,$DD,$DE,$DF,$76,$DC,$DD
+                    .db $DE,$81,$DF,$09,$DD,$DE,$DB,$D9
+                    .db $DA,$D9,$DA,$DB,$D9,$DA,$81,$DB
+                    .db $1F,$D9,$DA,$D9,$DA,$DB,$D9,$DF
+                    .db $DD,$DE,$DD,$DE,$DF,$DD,$E4,$E2
+                    .db $F3,$E3,$DE,$DD,$DE,$DF,$DD,$E2
+                    .db $E3,$E4,$E3,$E4,$E2,$E3,$E4,$E3
+                    .db $E4,$81,$E2,$06,$E3,$E4,$E2,$E3
+                    .db $E6,$E7,$E8,$81,$E9,$03,$E7,$E8
+                    .db $E9,$E6,$83,$E9,$0C,$E7,$E8,$E7
+                    .db $76,$EA,$DE,$DF,$E2,$DD,$DE,$DF
+                    .db $76,$DC,$82,$DF,$0C,$DD,$DE,$DD
+                    .db $76,$EB,$E4,$E3,$E0,$E5,$E4,$DF
+                    .db $76,$DC,$82,$E2,$3D,$E3,$E4,$E3
+                    .db $76,$EC,$ED,$EE,$E1,$ED,$EE,$E4
+                    .db $76,$EB,$ED,$EE,$E0,$ED,$EE,$DA
+                    .db $76,$EB,$EF,$F0,$E5,$EF,$F0,$DA
+                    .db $76,$EC,$EF,$F0,$E1,$EF,$F0,$DE
+                    .db $76,$EC,$F1,$F2,$E0,$F1,$F2,$E4
+                    .db $76,$EB,$F1,$F2,$E5,$F1,$F2,$DE
+                    .db $76,$DC,$D9,$DA,$DF,$D9,$DA,$DB
+                    .db $76,$D8,$D9,$81,$E0,$0D,$DA,$D9
+                    .db $E4,$76,$DC,$DD,$DE,$DF,$DD,$DE
+                    .db $DF,$76,$DC,$DD,$81,$E1,$05,$DE
+                    .db $DD,$DA,$DB,$D9,$DA,$82,$DB,$01
+                    .db $D9,$DA,$83,$DB,$00,$D9,$81,$E0
+                    .db $04,$DA,$DF,$DD,$E4,$E2,$81,$F3
+                    .db $01,$E3,$DE,$83,$DF,$00,$DD,$81
+                    .db $E1,$03,$DE,$DF,$DD,$DA,$82,$DB
+                    .db $01,$D9,$DE,$83,$DF,$00,$DD,$81
+                    .db $E5,$0C,$DE,$76,$D8,$D9,$DA,$DB
+                    .db $D9,$DA,$DB,$76,$D8,$D9,$DA,$81
+                    .db $DB,$0D,$D9,$DA,$76,$DC,$DD,$DE
+                    .db $DF,$DD,$DE,$DF,$76,$DC,$DD,$DE
+                    .db $81,$DF,$06,$DD,$DE,$D9,$E0,$DA
+                    .db $D9,$DA,$81,$DB,$06,$D9,$DA,$D9
+                    .db $DA,$DB,$D9,$DA,$81,$DB,$04,$DD
+                    .db $E1,$DE,$DD,$DE,$81,$DF,$06,$DD
+                    .db $DE,$DD,$DE,$DF,$DD,$DE,$81,$DF
+                    .db $04,$E3,$E5,$E4,$E3,$E4,$81,$E2
+                    .db $06,$E3,$E4,$E3,$E4,$E2,$E3,$E4
+                    .db $81,$E2,$04,$E6,$E7,$E8,$E7,$E8
+                    .db $82,$E9,$0C,$E6,$E7,$E8,$E9,$E7
+                    .db $E8,$E9,$E7,$76,$EA,$DE,$DD,$DE
+                    .db $81,$DF,$4E,$E2,$76,$EB,$DE,$DF
+                    .db $DD,$DE,$DF,$DD,$76,$EB,$E4,$E3
+                    .db $E4,$E2,$E3,$DA,$76,$EC,$E4,$E2
+                    .db $E3,$E4,$E2,$E3,$76,$EC,$ED,$EE
+                    .db $E0,$ED,$EE,$DE,$76,$EA,$ED,$EE
+                    .db $E0,$ED,$EE,$DA,$76,$EB,$EF,$F0
+                    .db $E5,$EF,$F0,$DE,$76,$EA,$EF,$F0
+                    .db $E1,$EF,$F0,$E4,$76,$EC,$F1,$F2
+                    .db $E0,$F1,$F2,$E4,$76,$EB,$F1,$F2
+                    .db $E5,$F1,$F2,$DA,$76,$DC,$D9,$DA
+                    .db $DD,$DA,$81,$DB,$03,$76,$EC,$E0
+                    .db $DA,$81,$DB,$07,$D9,$DE,$76,$DC
+                    .db $DD,$DE,$DD,$DE,$81,$DF,$03,$76
+                    .db $EB,$E1,$DE,$81,$DF,$06,$DD,$DE
+                    .db $DA,$D9,$DA,$DB,$D9,$81,$E0,$06
+                    .db $DA,$DB,$D9,$DA,$DB,$D9,$DA,$81
+                    .db $DB,$0D,$DE,$DD,$DE,$DF,$DD,$E5
+                    .db $E1,$DE,$DF,$DD,$DE,$DF,$DD,$DE
+                    .db $81,$DF,$04,$E4,$E3,$E4,$E2,$E3
+                    .db $81,$E5,$06,$E4,$E2,$E3,$E4,$E2
+                    .db $E3,$E4,$81,$E2,$02,$E6,$E7,$E8
+                    .db $81,$E9,$03,$E7,$E8,$E9,$E6,$82
+                    .db $E9,$06,$E7,$E8,$E9,$E7,$76,$EA
+                    .db $DE,$81,$DF,$04,$DD,$DE,$DF,$76
+                    .db $DC,$81,$DF,$06,$DD,$DE,$DF,$DD
+                    .db $76,$EB,$E4,$81,$E2,$04,$E3,$E4
+                    .db $DF,$76,$DC,$81,$E2,$51,$E3,$E4
+                    .db $E2,$E3,$76,$EC,$ED,$EE,$E0,$ED
+                    .db $EE,$E4,$76,$EB,$ED,$EE,$E0,$ED
+                    .db $EE,$DA,$76,$EA,$EF,$F0,$E1,$EF
+                    .db $F0,$DA,$76,$EC,$EF,$F0,$E1,$EF
+                    .db $F0,$E4,$76,$EA,$F1,$F2,$E5,$F1
+                    .db $F2,$E4,$76,$EB,$F1,$F2,$E5,$F1
+                    .db $F2,$DA,$76,$EB,$E0,$DA,$DB,$D9
+                    .db $DA,$DB,$76,$EC,$DA,$DB,$D9,$DA
+                    .db $DB,$DF,$76,$EC,$E1,$DE,$DF,$DD
+                    .db $DE,$DF,$76,$EA,$DE,$DF,$DD,$DE
+                    .db $81,$DF,$02,$DB,$D9,$DA,$82,$DB
+                    .db $0C,$D9,$DA,$DB,$D9,$DA,$DB,$D9
+                    .db $DA,$D9,$DA,$DF,$DD,$DE,$82,$DF
+                    .db $0C,$DD,$E4,$E2,$E3,$DE,$DF,$DD
+                    .db $DE,$DD,$DE,$DF,$DD,$DE,$82,$DF
+                    .db $09,$DD,$DA,$DB,$D9,$DE,$DF,$DD
+                    .db $DE,$DD,$DE,$FF,$FF,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$82,$04,$6E,$04,$72,$04
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$99,$A3,$9B,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$97,$98,$6E,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$10,$00,$00
-                    .db $00,$00,$00,$00,$00,$83,$00,$00
-                    .db $00,$00,$00,$0A,$03,$63,$04,$4E
-                    .db $04,$6E,$15,$1A,$00,$10,$00,$00
-                    .db $00,$00,$00,$12,$00,$10,$00,$00
-                    .db $00,$3F,$00,$20,$88,$4C,$00,$00
-                    .db $00,$00,$00,$10,$00,$3F,$00,$00
-                    .db $00,$2A,$00,$6E,$04,$5D,$00,$00
-                    .db $00,$76,$04,$7B,$00,$2A,$00,$BC
-                    .db $00,$1E,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$74,$32,$35
-                    .db $00,$19,$16,$82,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$2A,$00,$20
+                    .db $00,$00,$00,$00,$00,$00,$00,$82
+                    .db $04,$6E,$04,$72,$04,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$8A,$A6,$00,$00,$00,$00,$00
-                    .db $58,$04,$04,$04,$6E,$04,$6E,$04
-                    .db $04,$04,$5D,$15,$1A,$00,$00,$00
+                    .db $99,$A3,$9B,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$10,$00,$20,$00,$00,$00
-                    .db $00,$00,$08,$16,$70,$4F,$04,$6E
-                    .db $00,$00,$3F,$00,$3F,$00,$00,$00
-                    .db $00,$0D,$0E,$00,$3F,$00,$00,$1E
-                    .db $00,$00,$41,$00,$3F,$00,$00,$00
-                    .db $00,$82,$00,$00,$3F,$00,$00,$19
-                    .db $06,$06,$09,$00,$3F,$00,$00,$00
-                    .db $00,$00,$00,$00,$72,$00,$00,$00
-                    .db $00,$00,$00,$00,$3F,$00,$00,$00
-                    .db $00,$00,$00,$00,$31,$BC,$00,$00
-                    .db $00,$00,$00,$00,$10,$00,$00,$00
-                    .db $00,$00,$00,$28,$29,$00,$00,$00
-                    .db $00,$00,$00,$00,$4D,$00,$00,$00
-                    .db $00,$00,$00,$2F,$00,$00,$00,$00
+                    .db $97,$98,$6E,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$28,$29,$00,$00,$00,$00
+                    .db $00,$00,$10,$00,$00,$00,$00,$00
+                    .db $00,$00,$83,$00,$00,$00,$00,$00
+                    .db $0A,$03,$63,$04,$4E,$04,$6E,$15
+                    .db $1A,$00,$10,$00,$00,$00,$00,$00
+                    .db $12,$00,$10,$00,$00,$00,$3F,$00
+                    .db $20,$88,$4C,$00,$00,$00,$00,$00
+                    .db $10,$00,$3F,$00,$00,$00,$2A,$00
+                    .db $6E,$04,$5D,$00,$00,$00,$76,$04
+                    .db $7B,$00,$2A,$00,$BC,$00,$1E,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$3A,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$3A,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $5A,$00,$2F,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $99,$A3,$9B,$00,$00,$10,$00,$63
-                    .db $04,$82,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$76,$00,$00,$70,$00,$10
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $97,$00,$10,$00,$9B,$10,$00,$5A
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$3F,$97,$98,$10,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$40,$00,$00,$10,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $99,$9A,$9B,$00,$00,$4D,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$4D,$00
-                    .db $00,$00,$00,$00,$00,$A6,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$2A,$00
-                    .db $00,$00,$00,$00,$00,$5D,$87,$00
-                    .db $00,$00,$00,$00,$2E,$2B,$7F,$BD
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$82,$96,$50,$00,$00,$00
-                    .db $00,$00,$00,$56,$00,$00,$00,$00
-                    .db $00,$00,$10,$00,$2A,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$1E,$00,$4C,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$19,$16,$5D,$8C,$00,$58
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$10,$00,$00,$10
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$6E,$04,$04,$57
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $3F,$00,$30,$00,$5A,$04,$58,$04
-                    .db $04,$42,$00,$00,$4D,$00,$00,$00
-                    .db $34,$00,$30,$00,$00,$00,$00,$00
-                    .db $A6,$00,$00,$00,$0F,$00,$00,$00
-                    .db $37,$33,$2D,$00,$00,$00,$00,$8B
-                    .db $5D,$04,$04,$05,$09,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $10,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $10,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $10,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$63,$04,$04
-                    .db $6E,$00,$00,$00,$00,$00,$00,$00
-                    .db $BE,$00,$82,$00,$00,$10,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$10,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$0A,$02,$1A,$00,$10,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$12,$00,$20,$00,$10,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$10,$00,$70,$04,$70,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$1E,$00,$0F,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$19,$06,$09,$00,$00,$00,$00
+                    .db $00,$00,$74,$32,$35,$00,$19,$16
+                    .db $82,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$2A,$00,$20,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$40,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$8A,$A6
+                    .db $00,$00,$00,$00,$00,$58,$04,$04
+                    .db $04,$6E,$04,$6E,$04,$04,$04,$5D
+                    .db $15,$1A,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$10
+                    .db $00,$20,$00,$00,$00,$00,$00,$08
+                    .db $16,$70,$4F,$04,$6E,$00,$00,$3F
+                    .db $00,$3F,$00,$00,$00,$00,$0D,$0E
+                    .db $00,$3F,$00,$00,$1E,$00,$00,$41
+                    .db $00,$3F,$00,$00,$00,$00,$82,$00
+                    .db $00,$3F,$00,$00,$19,$06,$06,$09
+                    .db $00,$3F,$00,$00,$00,$00,$00,$00
+                    .db $00,$72,$00,$00,$00,$00,$00,$00
+                    .db $00,$3F,$00,$00,$00,$00,$00,$00
+                    .db $00,$31,$BC,$00,$00,$00,$00,$00
+                    .db $00,$10,$00,$00,$00,$00,$00,$00
+                    .db $28,$29,$00,$00,$00,$00,$00,$00
                     .db $00,$4D,$00,$00,$00,$00,$00,$00
-                    .db $97,$00,$98,$00,$3F,$00,$99,$9A
-                    .db $9B,$4C,$87,$9C,$9D,$00,$00,$00
-                    .db $00,$9E,$9F,$00,$2A,$00,$00,$00
-                    .db $00,$5D,$15,$1A,$9E,$9F,$00,$00
-                    .db $99,$A0,$00,$00,$3F,$00,$00,$A1
-                    .db $A2,$99,$A0,$20,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$3F,$00,$00,$00
-                    .db $00,$00,$00,$72,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$0F,$00,$00,$9E
-                    .db $00,$9F,$00,$0F,$00,$00,$00,$00
-                    .db $00,$00,$00,$0D,$0E,$00,$B5,$99
-                    .db $A0,$6E,$05,$09,$00,$00,$00,$00
-                    .db $00,$00,$00,$12,$00,$07,$56,$17
-                    .db $00,$10,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$66,$05,$11,$00,$1F
-                    .db $16,$66,$00,$00,$00,$00,$00,$00
+                    .db $2F,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$28
+                    .db $29,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$3A
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$3A
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$5A,$00,$2F
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$99,$A3,$9B
+                    .db $00,$00,$10,$00,$63,$04,$82,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$76
+                    .db $00,$00,$70,$00,$10,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$97,$00,$10
+                    .db $00,$9B,$10,$00,$5A,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$3F
+                    .db $97,$98,$10,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$40
+                    .db $00,$00,$10,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$99,$9A,$9B
+                    .db $00,$00,$4D,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$4D,$00,$00,$00,$00
+                    .db $00,$00,$A6,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$2A,$00,$00,$00,$00
+                    .db $00,$00,$5D,$87,$00,$00,$00,$00
+                    .db $00,$2E,$2B,$7F,$BD,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$82
+                    .db $96,$50,$00,$00,$00,$00,$00,$00
+                    .db $56,$00,$00,$00,$00,$00,$00,$10
+                    .db $00,$2A,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$1E
+                    .db $00,$4C,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$19
+                    .db $16,$5D,$8C,$00,$58,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$10,$00,$00,$10,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$6E,$04,$04,$57,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $B6,$BB,$00,$82,$00,$00,$B8,$00
-                    .db $00,$00,$00,$00,$00,$B8,$00,$00
-                    .db $B8,$00,$B9,$3F,$00,$00,$00,$00
-                    .db $63,$04,$04,$15,$1A,$B9,$00,$00
-                    .db $00,$00,$BA,$3F,$B8,$00,$00,$00
-                    .db $10,$00,$00,$00,$20,$00,$00,$00
-                    .db $5A,$04,$04,$70,$00,$00,$00,$BB
-                    .db $3F,$B9,$00,$00,$6F,$00,$00,$00
-                    .db $00,$00,$B8,$3F,$B6,$00,$00,$B8
-                    .db $3F,$BA,$00,$B8,$10,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$A7,$A8
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $6E,$04,$82,$00,$00,$A9,$AA,$AB
-                    .db $AC,$00,$00,$00,$00,$00,$00,$00
-                    .db $10,$00,$00,$00,$00,$AD,$AE,$AF
-                    .db $B0,$B1,$00,$00,$00,$00,$00,$00
-                    .db $82,$00,$00,$B6,$5A,$B2,$B3,$60
-                    .db $B4,$61,$00,$BA,$00,$00,$00,$00
-                    .db $00,$00,$B8,$00,$10,$00,$8D,$4C
-                    .db $00,$10,$00,$00,$00,$BA,$00,$00
-                    .db $00,$00,$00,$BA,$70,$04,$04,$5D
-                    .db $00,$58,$00,$00,$B8,$BB,$00,$00
-                    .db $00,$00,$00,$B7,$10,$00,$00,$10
-                    .db $00,$10,$00,$00,$00,$00,$00,$00
-                    .db $00,$B8,$78,$00,$6E,$04,$04,$63
-                    .db $04,$71,$04,$6E,$04,$15,$1A,$00
-                    .db $B6,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$20,$00
-                    .db $BB,$B9,$00,$00,$82,$04,$04,$6E
-                    .db $04,$04,$04,$04,$82,$00,$47,$00
-                    .db $00,$00,$00,$00,$00,$00,$8E,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$8F,$90,$91
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$92,$93
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$B9,$00,$3F,$BB,$00,$00,$00
-                    .db $74,$32,$35,$00,$6E,$00,$00,$00
-                    .db $00,$00,$00,$1E,$00,$00,$00,$00
-                    .db $31,$00,$3D,$00,$4C,$00,$00,$00
-                    .db $00,$00,$00,$19,$16,$71,$04,$2C
-                    .db $2D,$00,$78,$00,$5D,$89,$00,$00
+                    .db $00,$00,$00,$00,$00,$3F,$00,$30
+                    .db $00,$5A,$04,$58,$04,$04,$42,$00
+                    .db $00,$4D,$00,$00,$00,$34,$00,$30
+                    .db $00,$00,$00,$00,$00,$A6,$00,$00
+                    .db $00,$0F,$00,$00,$00,$37,$33,$2D
+                    .db $00,$00,$00,$00,$8B,$5D,$04,$04
+                    .db $05,$09,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$10,$00,$00
-                    .db $00,$00,$00,$00,$0F,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$48,$00,$00
-                    .db $00,$00,$82,$05,$09,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$10,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$10,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$63,$04,$04,$6E,$00,$00
+                    .db $00,$00,$00,$00,$00,$BE,$00,$82
+                    .db $00,$00,$10,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$10,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$0A,$02
+                    .db $1A,$00,$10,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$12,$00
+                    .db $20,$00,$10,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$10,$00
+                    .db $70,$04,$70,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$1E,$00
+                    .db $0F,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$19,$06
+                    .db $09,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$40,$00,$00,$00,$00,$4D,$00
+                    .db $00,$00,$00,$00,$00,$97,$00,$98
+                    .db $00,$3F,$00,$99,$9A,$9B,$4C,$87
+                    .db $9C,$9D,$00,$00,$00,$00,$9E,$9F
+                    .db $00,$2A,$00,$00,$00,$00,$5D,$15
+                    .db $1A,$9E,$9F,$00,$00,$99,$A0,$00
+                    .db $00,$3F,$00,$00,$A1,$A2,$99,$A0
+                    .db $20,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$3F,$00,$00,$00,$00,$00,$00
+                    .db $72,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$0F,$00,$00,$9E,$00,$9F,$00
+                    .db $0F,$00,$00,$00,$00,$00,$00,$00
+                    .db $0D,$0E,$00,$B5,$99,$A0,$6E,$05
+                    .db $09,$00,$00,$00,$00,$00,$00,$00
+                    .db $12,$00,$07,$56,$17,$00,$10,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $66,$05,$11,$00,$1F,$16,$66,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$B6,$BB,$00
+                    .db $82,$00,$00,$B8,$00,$00,$00,$00
+                    .db $00,$00,$B8,$00,$00,$B8,$00,$B9
+                    .db $3F,$00,$00,$00,$00,$63,$04,$04
+                    .db $15,$1A,$B9,$00,$00,$00,$00,$BA
+                    .db $3F,$B8,$00,$00,$00,$10,$00,$00
+                    .db $00,$20,$00,$00,$00,$5A,$04,$04
+                    .db $70,$00,$00,$00,$BB,$3F,$B9,$00
+                    .db $00,$6F,$00,$00,$00,$00,$00,$B8
+                    .db $3F,$B6,$00,$00,$B8,$3F,$BA,$00
+                    .db $B8,$10,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$A7,$A8,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$6E,$04,$82
+                    .db $00,$00,$A9,$AA,$AB,$AC,$00,$00
+                    .db $00,$00,$00,$00,$00,$10,$00,$00
+                    .db $00,$00,$AD,$AE,$AF,$B0,$B1,$00
+                    .db $00,$00,$00,$00,$00,$82,$00,$00
+                    .db $B6,$5A,$B2,$B3,$60,$B4,$61,$00
+                    .db $BA,$00,$00,$00,$00,$00,$00,$B8
+                    .db $00,$10,$00,$8D,$4C,$00,$10,$00
+                    .db $00,$00,$BA,$00,$00,$00,$00,$00
+                    .db $BA,$70,$04,$04,$5D,$00,$58,$00
+                    .db $00,$B8,$BB,$00,$00,$00,$00,$00
+                    .db $B7,$10,$00,$00,$10,$00,$10,$00
+                    .db $00,$00,$00,$00,$00,$00,$B8,$78
+                    .db $00,$6E,$04,$04,$63,$04,$71,$04
+                    .db $6E,$04,$15,$1A,$00,$B6,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$20,$00,$BB,$B9,$00
+                    .db $00,$82,$04,$04,$6E,$04,$04,$04
+                    .db $04,$82,$00,$47,$00,$00,$00,$00
+                    .db $00,$00,$00,$8E,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$8F,$90,$91,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$92,$93,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$B9,$00
+                    .db $3F,$BB,$00,$00,$00,$74,$32,$35
+                    .db $00,$6E,$00,$00,$00,$00,$00,$00
+                    .db $1E,$00,$00,$00,$00,$31,$00,$3D
+                    .db $00,$4C,$00,$00,$00,$00,$00,$00
+                    .db $19,$16,$71,$04,$2C,$2D,$00,$78
+                    .db $00,$5D,$89,$00,$00,$00,$00,$00
+                    .db $00,$00,$10,$00,$00,$00,$00,$00
+                    .db $00,$0F,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$48,$00,$00,$00,$00,$82
+                    .db $05,$09,$00,$00,$00,$00,$99,$9A
+                    .db $9B,$00,$00,$00,$00,$4D,$00,$00
+                    .db $00,$97,$A3,$9B,$00,$9F,$00,$00
+                    .db $00,$00,$00,$00,$00,$10,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$0A,$03,$7A,$04,$69,$15,$1A
+                    .db $00,$9E,$9F,$00,$00,$9A,$9B,$00
+                    .db $00,$12,$00,$10,$00,$00,$00,$20
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$10,$00,$10,$00,$00,$00,$10
+                    .db $00,$00,$99,$9A,$9B,$98,$00,$00
+                    .db $00,$70,$00,$10,$00,$00,$00,$74
+                    .db $04,$78,$00,$00,$00,$00,$00,$00
+                    .db $00,$10,$00,$1E,$00,$00,$00,$0F
+                    .db $00,$00,$00,$00,$00,$00,$9E,$9F
+                    .db $00,$6E,$00,$19,$16,$70,$05,$09
+                    .db $00,$00,$97,$A3,$9B,$97,$A3,$9B
+                    .db $00,$0F,$00,$00,$00,$10,$00,$00
+                    .db $00,$00,$00,$00,$00,$42,$04,$04
+                    .db $05,$09,$00,$00,$00,$10,$00,$00
                     .db $00,$99,$9A,$9B,$00,$00,$00,$00
-                    .db $4D,$00,$00,$00,$97,$A3,$9B,$00
-                    .db $9F,$00,$00,$00,$00,$00,$00,$00
-                    .db $10,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$0A,$03,$7A,$04
-                    .db $69,$15,$1A,$00,$9E,$9F,$00,$00
-                    .db $9A,$9B,$00,$00,$12,$00,$10,$00
-                    .db $00,$00,$20,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$10,$00,$10,$00
-                    .db $00,$00,$10,$00,$00,$99,$9A,$9B
-                    .db $98,$00,$00,$00,$70,$00,$10,$00
-                    .db $00,$00,$74,$04,$78,$00,$00,$00
-                    .db $00,$00,$00,$00,$10,$00,$1E,$00
-                    .db $00,$00,$0F,$00,$00,$00,$00,$00
-                    .db $00,$9E,$9F,$00,$6E,$00,$19,$16
-                    .db $70,$05,$09,$00,$00,$97,$A3,$9B
-                    .db $97,$A3,$9B,$00,$0F,$00,$00,$00
-                    .db $10,$00,$00,$00,$00,$00,$00,$00
-                    .db $42,$04,$04,$05,$09,$00,$00,$00
-                    .db $10,$00,$00,$00,$99,$9A,$9B,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $4D,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$4D,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$5A,$04,$7D,$04,$04,$6E,$04
-                    .db $04,$7D,$04,$04,$6E,$04,$15,$1A
+                    .db $00,$00,$00,$00,$00,$00,$5A,$04
+                    .db $7D,$04,$04,$6E,$04,$04,$7D,$04
+                    .db $04,$6E,$04,$15,$1A,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$30
-                    .db $00,$5F,$04,$66,$04,$04,$7D,$04
-                    .db $04,$6E,$04,$04,$7D,$04,$05,$09
+                    .db $00,$00,$00,$00,$30,$00,$5F,$04
+                    .db $66,$04,$04,$7D,$04,$04,$6E,$04
+                    .db $04,$7D,$04,$05,$09,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$49,$5F
-                    .db $4A,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$0A,$22,$00
-                    .db $21,$1A,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$5F,$04,$04,$68,$00,$5A
-                    .db $00,$68,$04,$04,$5F,$00,$00,$00
-                    .db $00,$00,$19,$18,$00,$00,$00,$3F
-                    .db $00,$00,$00,$08,$09,$00,$00,$00
-                    .db $00,$00,$00,$4B,$68,$00,$00,$3F
-                    .db $00,$00,$68,$51,$00,$00,$00,$00
-                    .db $00,$00,$00,$0D,$0E,$00,$07,$68
-                    .db $17,$00,$1D,$1C,$00,$00,$00,$00
-                    .db $00,$00,$0A,$22,$07,$01,$11,$00
-                    .db $1F,$14,$17,$21,$1A,$00,$00,$00
-                    .db $00,$00,$5F,$05,$11,$00,$00,$00
-                    .db $00,$00,$1F,$16,$5F,$00,$00,$00
+                    .db $00,$00,$00,$49,$5F,$4A,$00,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$0A,$22,$00,$21,$1A,$00
+                    .db $00,$00,$00,$00,$00,$00,$00,$5F
+                    .db $04,$04,$68,$00,$5A,$00,$68,$04
+                    .db $04,$5F,$00,$00,$00,$00,$00,$19
+                    .db $18,$00,$00,$00,$3F,$00,$00,$00
+                    .db $08,$09,$00,$00,$00,$00,$00,$00
+                    .db $4B,$68,$00,$00,$3F,$00,$00,$68
+                    .db $51,$00,$00,$00,$00,$00,$00,$00
+                    .db $0D,$0E,$00,$07,$68,$17,$00,$1D
+                    .db $1C,$00,$00,$00,$00,$00,$00,$0A
+                    .db $22,$07,$01,$11,$00,$1F,$14,$17
+                    .db $21,$1A,$00,$00,$00,$00,$00,$5F
+                    .db $05,$11,$00,$00,$00,$00,$00,$1F
+                    .db $16,$5F,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
                     .db $00,$00,$00,$00,$00,$00,$00,$00
-                    .db $00,$00,$00,$00,$00,$00,$00,$00
+                    .db $00,$00,$00,$00,$00,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
                     .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-                    .db $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-                    .db $FF
+                    .db $FF,$FF,$FF,$FF,$FF,$FF
+
+
