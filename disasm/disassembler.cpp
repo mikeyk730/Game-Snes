@@ -91,9 +91,24 @@ std::string Disassembler::get_comment(unsigned char bank, unsigned int pc)
     return "";
 }
 
+int Disassembler::get_default_ptr_bank() const
+{
+    auto it = m_ptr_bank_lookup.find(get_index(m_current_bank, m_current_addr));
+    if (it != m_ptr_bank_lookup.end())
+        return it->second;
+    return m_current_bank;
+}
+
 unsigned int Disassembler::current_full_address() const
 {
     return full_address(m_current_bank, m_current_addr);
+}
+
+char Disassembler::read_next_byte()
+{
+    char c = read_char(m_rom_file);
+    increment_address(&m_current_bank, &m_current_addr, m_hirom);
+    return c;
 }
 
 void Disassembler::handleRequest(const Request& request)
@@ -181,16 +196,13 @@ void Disassembler::setProcessFlags()
 {    
     m_flag = 0;
 
-    unsigned char bank = m_current_bank;
-    unsigned int pc = m_current_addr;
-
-    map<int, int>::iterator it = m_accum_lookup.find(full_address(bank,pc));
+    map<int, int>::iterator it = m_accum_lookup.find(current_full_address());
     if (it != m_accum_lookup.end()){
         m_accum_16 = ((it->second) == 16);
         m_flag |= (m_accum_16) ? 0x20 : 0x02;
     }
 
-    map<int, int>::iterator it2 = m_index_lookup.find(full_address(bank,pc));
+    map<int, int>::iterator it2 = m_index_lookup.find(current_full_address());
     if (it2 != m_index_lookup.end()){
         m_index_16 = ((it2->second) == 16);    
         m_flag |= (m_index_16) ? 0x10 : 0x01;
@@ -517,10 +529,8 @@ void Disassembler::doDcb(int bytes_per_line)
                 cout << ".BANK " << int(m_current_bank) << endl;
             }
 
-            unsigned char c = read_char(m_rom_file);
+            unsigned char c = read_next_byte();
             bytes.push_back(c);
-
-            increment_address(&m_current_bank, &m_current_addr, m_hirom);
         }
 
         if (current_full_address() == end_full_address){
@@ -532,26 +542,23 @@ void Disassembler::doDcb(int bytes_per_line)
 
 void Disassembler::doPtr(bool long_ptrs)
 {
+    cout << endl;
+
     unsigned int end_full_address = m_range_properties.full_end_address();
 
-    cout << endl;
-    for (int i = 0; current_full_address() < end_full_address; ++i){
-
-        string label = get_line_label(m_current_bank, m_current_addr, false);
+    while (current_full_address() < end_full_address){
 
         if (finalPass() && m_current_addr == 0x8000){
             cout << ".BANK " << int(m_current_bank) << endl;
         }
 
-        auto it = m_ptr_bank_lookup.find(get_index(m_current_bank, m_current_addr));
-        unsigned char default_bank = (it != m_ptr_bank_lookup.end()) ? it->second : m_current_bank;
+        string label = get_line_label(m_current_bank, m_current_addr, false);
+        string comment = get_comment(m_current_bank, m_current_addr);
+        unsigned char default_bank = get_default_ptr_bank();
 
-        if(long_ptrs)
-            disassembleInstruction(m_instruction_lookup[0x101], true, default_bank, label);
-        else
-            disassembleInstruction(m_instruction_lookup[0x100], true, default_bank, label);
-       
+        disassembleInstruction(m_instruction_lookup[long_ptrs ? 0x101 : 0x100], default_bank, label, comment, 0);
     }
+
     cout << endl;
 }
 
@@ -566,36 +573,29 @@ void Disassembler::doDisasm()
         }
 
         string label = get_line_label(m_current_bank, m_current_addr, true);
+        string comment = get_comment(m_current_bank, m_current_addr);
+        int offset = get_offset(m_current_bank, m_current_addr);
 
-
-        unsigned char code = read_char(m_rom_file);
+        unsigned char code = read_next_byte();
         if (feof(m_rom_file)){
             cout << "; End of file." << endl;
             break;
         }
 
-
         InstructionMetadata instr = m_instruction_lookup[code];
-        disassembleInstruction(instr, false, m_current_bank, label);
+        disassembleInstruction(instr, m_current_bank, label, comment, offset);
         if (m_range_properties.m_stop_at_rts && instr.isReturn()){
             break;
         }
     }
 }
 
-void Disassembler::disassembleInstruction(const InstructionMetadata& instr, bool is_data, unsigned char default_bank, const string& label)
+void Disassembler::disassembleInstruction(const InstructionMetadata& instr, unsigned char default_bank, const string& label, const string& comment, int offset)
 {
     setProcessFlags();
 
-    int offset = get_offset(m_current_bank, m_current_addr);
-    string comment = get_comment(m_current_bank, m_current_addr);
-
-    if (!is_data) {
-        increment_address(&m_current_bank, &m_current_addr, m_hirom);
-    }
-
     DisassemblerContext context((Disassembler*)this, instr, &m_current_addr, &m_flag, &m_accum_16,
-        &m_index_16, default_bank, offset, m_rom_file);
+        &m_index_16, default_bank, offset);
     Instruction output(instr, m_accum_16, m_index_16, m_range_properties.m_comment_level);
 
     auto instruction_handler = instr.handler();

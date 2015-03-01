@@ -24,7 +24,6 @@ public:
     void doDisasm();
     void doSmart();
 
-    void disassembleInstruction(const InstructionMetadata& instr, bool is_data, unsigned char default_bank, const std::string& label);
     void setProcessFlags();
 
     void load_data(char *fname, bool is_ptr_data = false);
@@ -41,6 +40,7 @@ public:
 
     int get_offset(unsigned char bank, unsigned int pc);
     std::string get_comment(unsigned char bank, unsigned int pc);
+    int get_default_ptr_bank() const;
 
     inline void hirom(bool hirom) { m_hirom = hirom; }
     inline bool hirom() const { return m_hirom; }
@@ -52,9 +52,13 @@ public:
     bool finalPass() const { return (m_current_pass == m_passes_to_make); }
     bool printInstructionBytes() const { return (!m_range_properties.m_quiet && finalPass()); }
 
-private:    
+    char read_next_byte();
+
+private:
     std::string get_label_helper(unsigned char bank, int pc, bool use_addr_label, bool mark_instruction_used, bool is_branch);
     void disassembleRange(const Request& request);
+    void disassembleInstruction(const InstructionMetadata& instr, unsigned char default_bank, const std::string& label, const std::string& comment, int offset);
+
     unsigned int current_full_address() const;
 
     std::map<int, InstructionMetadata> m_instruction_lookup;

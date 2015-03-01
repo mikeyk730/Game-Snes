@@ -6,7 +6,7 @@ class InstructionMetadata;
 struct DisassemblerContext
 {
     DisassemblerContext(Disassembler* disasm,
-    const InstructionMetadata& instr, unsigned int* pc, int* flag, bool* accum16, bool* index16, int bank, int offset, FILE* rom_file);
+    const InstructionMetadata& instr, unsigned int* pc, int* flag, bool* accum16, bool* index16, int bank, int offset);
 
     unsigned char read_next_byte(int* pc);
 
@@ -31,5 +31,4 @@ private:
     int m_offset;
     Disassembler& d;
     const InstructionMetadata& i;
-    FILE* m_rom_file;
 };
