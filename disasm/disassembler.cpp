@@ -3,19 +3,18 @@
 #include <sstream>
 #include <fstream>
 #include "disassembler.h"
-#include "request.h"
-#include "utils.h"
-#include "annotation_handlers.h"
-#include "instruction_handlers.h"
-#include "output_handlers.h"
 #include "disassembler_context.h"
+#include "request.h"
 #include "instruction.h"
+#include "instruction_handlers.h"
+#include "annotation_handlers.h"
+#include "output_handlers.h"
+#include "utils.h"
 
 using namespace std;
 using namespace Address;
 
 namespace{
-   const unsigned int BANK_SIZE = 0x08000;
    const int MAX_FILE_SIZE = 0x400000;
 }
 
@@ -329,8 +328,8 @@ void Disassembler::load_data(char *fname, bool is_ptr_data)
             end_bank = bank;            
         }
 
-        unsigned int index = (bank * BANK_SIZE + addr - 0x08000);
-        unsigned int size = (end_bank * BANK_SIZE + end_addr - 0x08000) - index;
+        unsigned int index = get_index(bank, addr);
+        unsigned int size = get_index(end_bank, end_addr) - index;
 
         if(size > 0x80000){
             cerr << "Error in data: " << line << endl;
@@ -448,7 +447,7 @@ void Disassembler::doSmart()
     unsigned int end_pc = m_request_prop.m_end_addr;
 
     unsigned int end_address = full_address(end_bank, end_pc);
-    for (int i = bank * BANK_SIZE + pc - 0x08000; i >= 0 && i < MAX_FILE_SIZE &&
+    for (int i = get_index(bank, pc); i >= 0 && i < MAX_FILE_SIZE &&
         full_address(bank, pc) < end_address;){
 
             Request request(m_request_prop);
@@ -557,7 +556,7 @@ void Disassembler::doPtr(bool long_ptrs)
         }
 
         unsigned char default_bank = bank;
-        unsigned int index = (bank * BANK_SIZE + pc - 0x08000);
+        unsigned int index = get_index(bank, pc);
         auto it = m_ptr_bank_lookup.find(index);
         if (it != m_ptr_bank_lookup.end()){
             default_bank = it->second;

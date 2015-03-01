@@ -26,6 +26,12 @@ namespace Address
         return (a & 0x0FFFF);
     }
 
+    inline unsigned int get_index(unsigned char bank, unsigned int pc)
+    {
+        const unsigned int BANK_SIZE = 0x08000;
+        return bank * BANK_SIZE + pc - 0x08000;
+    }
+
     inline char read_char(FILE * stream)
     {
         char c;
