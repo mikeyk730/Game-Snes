@@ -6,7 +6,7 @@ class InstructionMetadata;
 struct DisassemblerContext
 {
     DisassemblerContext(Disassembler* disasm,
-    const InstructionMetadata& instr, unsigned int* pc, int* flag, bool* accum16, bool* index16, int* low, int* high, int bank, int offset, FILE* rom_file);
+    const InstructionMetadata& instr, unsigned int* pc, int* flag, bool* accum16, bool* index16, int bank, int offset, FILE* rom_file);
 
     unsigned char read_next_byte(int* pc);
 
@@ -14,8 +14,6 @@ struct DisassemblerContext
 
     void set_accum_16(bool is_16);
     void set_index_16(bool is_16);
-
-    void set_range(int low, int high);
 
     unsigned char address_bank() const { return m_bank; }
     int offset() const { return m_offset; }
@@ -28,9 +26,7 @@ private:
     unsigned int& m_pc;
     int& m_flag;
     bool& m_accum_16;
-    bool& m_index_16;
-    int& m_low;
-    int& m_high;
+    bool& m_index_16;    
     unsigned char m_bank;
     int m_offset;
     Disassembler& d;

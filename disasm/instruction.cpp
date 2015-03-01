@@ -37,10 +37,11 @@ bool InstructionMetadata::isCodeBreak() const
         || m_name == "JMP" || m_name == "BRA");
 }
 
-Instruction::Instruction(const InstructionMetadata& metadata, bool accum_16, bool index_16)
+Instruction::Instruction(const InstructionMetadata& metadata, bool accum_16, bool index_16, int comment_level)
 : m_metadata(metadata),
 m_accum_16(accum_16),
-m_index_16(index_16)
+m_index_16(index_16),
+m_comment_level(comment_level)
 {
     address[0] = 0;
     additional_instruction[0] = 0;

@@ -589,29 +589,15 @@ void Disassembler::doType(const InstructionMetadata& instr, bool is_data, unsign
 
     if (!is_data) ++m_current_addr;
 
-    int high = 0, low = 0;
-    DisassemblerContext context((Disassembler*)this, instr, &m_current_addr, &m_flag, &m_accum_16, &m_index_16, &low, &high, default_bank, offset, m_rom_file);
-    Instruction output(instr, m_accum_16, m_index_16);
+    DisassemblerContext context((Disassembler*)this, instr, &m_current_addr, &m_flag, &m_accum_16,
+        &m_index_16, default_bank, offset, m_rom_file);
+    Instruction output(instr, m_accum_16, m_index_16, m_request_prop.m_comment_level);
 
-    auto f = instr.handler();
-    f(&context, &output);
-
-    //get comment
-    if (comment != "")
-        comment = ";" + comment + " ";
-    if (m_flag != 0){
-        comment += "; ";
-        if (m_flag & 0x10) comment += "Index (16 bit) ";
-        if (m_flag & 0x20) comment += "Accum (16 bit) ";
-        if (m_flag & 0x01) comment += "Index (8 bit) ";
-        if (m_flag & 0x02) comment += "Accum (8 bit) ";
-    }
-
-    if (high)
-        comment += getRAMComment(address_16bit(low, high));
+    auto instruction_handler = instr.handler();
+    instruction_handler(&context, &output);
 
     if (finalPass()){
-        m_output_handler->PrintInstruction(output, label, comment, !m_request_prop.m_quiet);
+        m_output_handler->PrintInstruction(output, label, comment, !m_request_prop.m_quiet, m_flag);
     }
 }
 

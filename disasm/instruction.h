@@ -45,7 +45,7 @@ private:
 
 struct Instruction
 {
-    Instruction(const InstructionMetadata& metadata, bool accum_16, bool index_16);
+    Instruction(const InstructionMetadata& metadata, bool accum_16, bool index_16, int comment_level);
     
     void addInstructionBytes(unsigned char a);
     void addInstructionBytes(unsigned char a, unsigned char b);
@@ -60,6 +60,11 @@ struct Instruction
     void setAdditionalInstruction(const char* format, ...);
     std::string getAdditionalInstruction() const;
 
+    void set_ram_comment(const std::string& ram_comment) { m_ram_comment = ram_comment; }
+    std::string ram_comment() const { return m_ram_comment; }
+
+    int comment_level() const { return m_comment_level; }
+
     const InstructionMetadata& metadata() const { return m_metadata; }
 
 private:
@@ -69,5 +74,7 @@ private:
     char additional_instruction[80];
     bool m_accum_16;
     bool m_index_16;
+    int m_comment_level;
+    std::string m_ram_comment;
 };
 
