@@ -572,8 +572,6 @@ void Disassembler::doPtr(bool long_ptrs)
     cout << endl;
 }
 
-//todo: bank msg printed twice
-
 void Disassembler::doType(const InstructionMetadata& instr, bool is_data, unsigned char default_bank, const string& label)
 {
     setProcessFlags();
