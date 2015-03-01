@@ -91,30 +91,49 @@ std::string Disassembler::get_comment(unsigned char bank, unsigned int pc)
     return "";
 }
 
-void Disassembler::handleRequest(const Request& request, bool user_request)
+unsigned int Disassembler::current_addr24() const
 {
-    if (user_request) {
-        m_passes_to_make = request.m_properties.m_passes;
+    return full_address(m_current_bank, m_current_addr);
+}
 
-        m_start = full_address(request.m_properties.m_start_bank,
-            request.m_properties.m_start_addr);
+void Disassembler::handleRequest(const Request& request)
+{
+    m_passes_to_make = request.m_properties.m_passes;
 
-        m_end = full_address(request.m_properties.m_end_bank,
-            request.m_properties.m_end_addr);
+    m_start = full_address(request.m_properties.m_start_bank,
+        request.m_properties.m_start_addr);
 
-        m_accum_16 = request.m_properties.m_start_w_accum_16;
-        m_index_16 = request.m_properties.m_start_w_index_16;
+    m_end = full_address(request.m_properties.m_end_bank,
+        request.m_properties.m_end_addr);
+
+    m_accum_16 = request.m_properties.m_start_w_accum_16;
+    m_index_16 = request.m_properties.m_start_w_index_16;
+
+    disassembleRange(request);
+
+    if (!m_unresolved_symbol_lookup.empty() && !quiet()){
+        cout << "Unresolved symbols: " << endl;
+        for (map<int, string>::iterator it = m_unresolved_symbol_lookup.begin(),
+            end_it = m_unresolved_symbol_lookup.end(); it != end_it; ++it){
+            cout << to_string(it->first, 6) << " " << it->second << endl;
+        }
+        m_unresolved_symbol_lookup.clear();
     }
 
-    do{
-        m_request_prop = request.m_properties;
+    m_current_pass = 1;
+}
 
-        m_current_bank = m_request_prop.m_start_bank;
-        m_current_addr = m_request_prop.m_start_addr;
+void Disassembler::disassembleRange(const Request& request)
+{
+    do{
+        m_range_properties = request.m_properties;
+
+        m_current_bank = m_range_properties.m_start_bank;
+        m_current_addr = m_range_properties.m_start_addr;
 
         fseek(m_rom_file, 512, 0);
         if (m_hirom)
-            fseek(m_rom_file, full_address(m_current_bank, m_current_addr), 1);
+            fseek(m_rom_file, current_addr24(), 1);
         else
             fseek(m_rom_file, m_current_bank * 32768 + m_current_addr - 0x8000, 1);
 
@@ -136,51 +155,35 @@ void Disassembler::handleRequest(const Request& request, bool user_request)
             if (m_current_pass > m_passes_to_make)               
                 break;
         }
-    } while(request.m_type == Request::Smart);
-    
-    if (user_request){
-        if (!m_unresolved_symbol_lookup.empty() && !quiet()){
-            cout << "Unresolved symbols: " << endl; 
-            for (map<int,string>::iterator it = m_unresolved_symbol_lookup.begin(), 
-                end_it = m_unresolved_symbol_lookup.end(); it != end_it; ++it){
-                    cout << to_string(it->first, 6) << " " << it->second << endl;
-                }
-                m_unresolved_symbol_lookup.clear();
-        }
-
-        m_current_pass = 1;
-    }
-
+    } while(request.m_type == Request::Smart);    
 }
-
 
 void Disassembler::doDisasm()
 {
-    unsigned int& pc = m_current_addr;
-    unsigned char& bank = m_current_bank;
+    unsigned int end_pc = m_range_properties.m_end_addr;
+    unsigned char end_bank = m_range_properties.m_end_bank;
 
-    unsigned int end_pc = m_request_prop.m_end_addr;
-    unsigned char end_bank = m_request_prop.m_end_bank;
+    while (current_addr24() < full_address(end_bank, end_pc)){
 
-    while ((!feof(m_rom_file)) && (full_address(bank, pc) < full_address(end_bank, end_pc))){
+        if (finalPass() && m_current_addr == 0x8000){
+            cout << ".BANK " << int(m_current_bank) << endl;
+        }
+
+        string label = get_line_label(m_current_bank, m_current_addr, true);
+
 
         unsigned char code = read_char(m_rom_file);
-        InstructionMetadata instr = m_instruction_lookup[code];
-
-        if (!feof(m_rom_file)){
-            string label = get_line_label(bank, pc, true);
-            
-            if (finalPass() && pc == 0x8000){
-                cout << ".BANK " << int(bank) << endl;
-            }
-
-            doType(instr, false, bank, label);
-
-            if (m_request_prop.m_stop_at_rts &&
-                (instr.name() == "RTS" || instr.name() == "RTI" || instr.name() == "RTL"))
-                break;            
+        if (feof(m_rom_file)){
+            cout << "; End of file." << endl;
+            break;
         }
-        if (feof(m_rom_file)) cout << "; End of file." << endl;
+
+
+        InstructionMetadata instr = m_instruction_lookup[code];
+        doType(instr, false, m_current_bank, label);
+        if (m_range_properties.m_stop_at_rts && instr.isReturn()){
+            break;
+        }
     }
 }
 
@@ -271,7 +274,6 @@ void Disassembler::load_offsets(char* fname)
         }
     }
 }
-
 
 void Disassembler::load_symbols(char *fname, bool ram)
 {
@@ -422,7 +424,7 @@ string Disassembler::get_label_helper(unsigned char bank, int pc, bool use_addr_
 
     // does the symbol lie outside of the range we are disassembling?
     bool is_extern = (key < m_start || key > m_end);
-    if(is_extern && !m_request_prop.m_use_extern_symbols)
+    if(is_extern && !m_range_properties.m_use_extern_symbols)
         return "";
 
     string label;
@@ -461,20 +463,19 @@ string Disassembler::get_label_helper(unsigned char bank, int pc, bool use_addr_
 
 void Disassembler::doSmart()
 {
-    unsigned char bank = m_request_prop.m_start_bank;
-    unsigned int pc = m_request_prop.m_start_addr;
-    unsigned char end_bank = m_request_prop.m_end_bank;
-    unsigned int end_pc = m_request_prop.m_end_addr;
+    unsigned char bank = m_range_properties.m_start_bank;
+    unsigned int pc = m_range_properties.m_start_addr;
+    unsigned char end_bank = m_range_properties.m_end_bank;
+    unsigned int end_pc = m_range_properties.m_end_addr;
 
     unsigned int end_address = full_address(end_bank, end_pc);
     for (int i = get_index(bank, pc); i >= 0 && i < MAX_FILE_SIZE &&
         full_address(bank, pc) < end_address;){
 
-            Request request(m_request_prop);
+            Request request(m_range_properties);
             request.m_properties.m_start_bank = bank;
             request.m_properties.m_start_addr = pc;
-            //cerr << "start " << hex << bank * 65536 + pc ;
-
+ 
             if (m_data[i] == 1){
                 request.m_type = Request::Dcb;
                 do{
@@ -506,16 +507,16 @@ void Disassembler::doSmart()
 
             request.m_properties.m_end_bank = bank;
             request.m_properties.m_end_addr = pc;
-            handleRequest(request, false);
+            disassembleRange(request);
         }
 }
 
 void Disassembler::doDcb(int bytes_per_line)
 {
-    unsigned char bank = m_request_prop.m_start_bank;
-    unsigned int pc = m_request_prop.m_start_addr;
-    unsigned char end_bank = m_request_prop.m_end_bank;
-    unsigned int end_pc = m_request_prop.m_end_addr;
+    unsigned char bank = m_range_properties.m_start_bank;
+    unsigned int pc = m_range_properties.m_start_addr;
+    unsigned char end_bank = m_range_properties.m_end_bank;
+    unsigned int end_pc = m_range_properties.m_end_addr;
 
     while (full_address(bank, pc) < full_address(end_bank, end_pc)){
         vector<unsigned char> bytes;
@@ -558,17 +559,17 @@ void Disassembler::doDcb(int bytes_per_line)
         if (full_address(bank, pc) == full_address(end_bank, end_pc)){
             end_of_chunk = true;
         }
-        m_output_handler->PrintData(bytes, label, comment, !m_request_prop.m_quiet, end_of_chunk);
+        m_output_handler->PrintData(bytes, label, comment, !m_range_properties.m_quiet, end_of_chunk);
     }
 }
 
 void Disassembler::doPtr(bool long_ptrs)
 {
-    unsigned char end_bank = m_request_prop.m_end_bank;
-    unsigned int end_pc = m_request_prop.m_end_addr;
+    unsigned char end_bank = m_range_properties.m_end_bank;
+    unsigned int end_pc = m_range_properties.m_end_addr;
 
     cout << endl;
-    for (int i = 0; full_address(m_current_bank, m_current_addr) < full_address(end_bank, end_pc); ++i){
+    for (int i = 0; current_addr24() < full_address(end_bank, end_pc); ++i){
 
         string label = get_line_label(m_current_bank, m_current_addr, false);
 
@@ -601,13 +602,13 @@ void Disassembler::doType(const InstructionMetadata& instr, bool is_data, unsign
 
     DisassemblerContext context((Disassembler*)this, instr, &m_current_addr, &m_flag, &m_accum_16,
         &m_index_16, default_bank, offset, m_rom_file);
-    Instruction output(instr, m_accum_16, m_index_16, m_request_prop.m_comment_level);
+    Instruction output(instr, m_accum_16, m_index_16, m_range_properties.m_comment_level);
 
     auto instruction_handler = instr.handler();
     instruction_handler(&context, &output);
 
     if (finalPass()){
-        m_output_handler->PrintInstruction(output, label, comment, !m_request_prop.m_quiet, m_flag);
+        m_output_handler->PrintInstruction(output, label, comment, !m_range_properties.m_quiet, m_flag);
     }
 }
 

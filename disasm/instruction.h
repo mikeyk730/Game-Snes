@@ -26,7 +26,9 @@ public:
     }
 
     std::string annotated_name(bool is_accum_16, bool is_index_16) const;
+
     bool isBranch() const;
+    bool isReturn() const;
     bool isCodeBreak() const;
 
     InstructionHandlerPtr handler() const { return m_instruction_handler; }

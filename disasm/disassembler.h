@@ -17,7 +17,7 @@ public:
     Disassembler(FILE* rom_file);
     ~Disassembler();
  
-    void handleRequest(const Request& request, bool user_request = true);
+    void handleRequest(const Request& request);
 
     void doDcb(int bytes_per_line = 8);
     void doPtr(bool long_ptrs = false);
@@ -50,10 +50,12 @@ public:
 
     inline void passes(int passes) { m_passes_to_make = passes; }
     bool finalPass() const { return (m_current_pass == m_passes_to_make); }
-    bool printInstructionBytes() const { return (!m_request_prop.m_quiet && finalPass()); }
+    bool printInstructionBytes() const { return (!m_range_properties.m_quiet && finalPass()); }
 
 private:    
     std::string get_label_helper(unsigned char bank, int pc, bool use_addr_label, bool mark_instruction_used, bool is_branch);
+    void disassembleRange(const Request& request);
+    unsigned int current_addr24() const;
 
     std::map<int, InstructionMetadata> m_instruction_lookup;
     std::map<int, std::string> m_label_lookup;
@@ -70,7 +72,7 @@ private:
     // m_data holds a char for every byte of the rom, indicating if that byte is data, code, ptr, etc
     unsigned char *m_data; 
 
-    DisassemblerProperties m_request_prop;
+    DisassemblerProperties m_range_properties;
 
     bool m_hirom;
     bool m_quiet;

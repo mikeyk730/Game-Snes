@@ -40,8 +40,12 @@ bool InstructionMetadata::isBranch() const
 
 bool InstructionMetadata::isCodeBreak() const
 {
-    return (m_name == "RTS" || m_name == "RTI" || m_name == "RTL"
-        || m_name == "JMP" || m_name == "BRA");
+    return (isReturn() || m_name == "JMP" || m_name == "BRA");
+}
+
+bool InstructionMetadata::isReturn() const
+{
+    return (m_name == "RTS" || m_name == "RTI" || m_name == "RTL");
 }
 
 Instruction::Instruction(const InstructionMetadata& metadata, bool accum_16, bool index_16, int comment_level)
