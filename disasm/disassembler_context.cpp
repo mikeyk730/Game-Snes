@@ -32,5 +32,5 @@ void DisassemblerContext::set_index_16(bool is_16) {
 
 std::string DisassemblerContext::get_label(unsigned char bank, unsigned int pc)
 {
-    return d.get_label(i, bank, pc, m_offset, true, true);
+    return d.get_instr_label(i, bank, pc, m_offset);
 }

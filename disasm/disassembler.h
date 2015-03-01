@@ -37,7 +37,8 @@ public:
     bool is_comment(const std::string& line);    
     bool add_label(int bank, int pc, const std::string& label);
     void mark_label_used(int bank, int pc, const std::string& label);
-    std::string get_label(const InstructionMetadata& instr, unsigned char bank, int pc, int offset, bool use_addr_label, bool mark_instruction_used);
+    std::string get_instr_label(const InstructionMetadata& instr, unsigned char bank, int pc, int offset);
+    std::string get_line_label(unsigned char bank, int pc, bool use_addr_label);
 
     std::istream& get_address(std::istream& in, unsigned char& bank, unsigned int& addr);
     std::string get_comment(unsigned char bank, unsigned int pc);
@@ -54,6 +55,8 @@ public:
     bool printInstructionBytes() const { return (!m_request_prop.m_quiet && finalPass()); }
 
 private:    
+    std::string get_label_helper(unsigned char bank, int pc, bool use_addr_label, bool mark_instruction_used, bool is_branch);
+
     std::map<int, InstructionMetadata> m_instruction_lookup;
     std::map<int, std::string> m_label_lookup;
     std::map<int, std::string> m_ram_lookup;

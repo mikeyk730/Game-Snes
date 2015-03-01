@@ -157,10 +157,10 @@ void Disassembler::doDisasm()
             //adjust pc address
             fix_address(bank,pc);
 
-            string label = get_label(InstructionMetadata("", 0, &InstructionHandler::Implied, 0), bank, pc, 0, true, false);
+            string label = get_line_label(bank, pc, true);
             
-            if (finalPass()){
-                if (pc == 0x8000) cout << ".BANK " << int(bank) << endl;
+            if (finalPass() && pc == 0x8000){
+                cout << ".BANK " << int(bank) << endl;
             }
 
             doType(instr, false, bank, label);
@@ -385,9 +385,32 @@ void Disassembler::mark_label_used(int bank, int pc, const string& label)
     m_used_label_lookup.insert(make_pair(full_addr, label));
 }
 
-string Disassembler::get_label(const InstructionMetadata& instr, unsigned char bank, int pc, int offset, bool use_addr_label, bool mark_instruction_used)
+string Disassembler::get_instr_label(const InstructionMetadata& instr, unsigned char bank, int pc, int offset)
 {
     pc -= offset;
+    bool is_branch = instr.isBranch();
+
+    string label = get_label_helper(bank, pc, true, true, is_branch);
+
+    if (offset != 0){
+        stringstream ss;
+        ss << label;
+        if (offset > 0){
+            ss << "+";
+        }
+        ss << offset;
+        label = ss.str();
+    }
+    return label;
+}
+
+string Disassembler::get_line_label(unsigned char bank, int pc, bool use_addr_label)
+{
+    return get_label_helper(bank, pc, use_addr_label, false, false);
+}
+
+string Disassembler::get_label_helper(unsigned char bank, int pc, bool use_addr_label, bool mark_instruction_used, bool is_branch)
+{
     if (pc < 0x8000 && bank != 0x7f) bank = 0x7e;
     int key = full_address(bank,pc);
 
@@ -406,11 +429,12 @@ string Disassembler::get_label(const InstructionMetadata& instr, unsigned char b
         map<int, string>::iterator it = m_label_lookup.find(key);
         if (it != m_label_lookup.end()){
             label = it->second;
-            mark_label_used(bank, pc, label);
+            if (mark_instruction_used)
+                mark_label_used(bank, pc, label);
         }
 
         else if (((pc >= 0x8000 && use_addr_label) ||
-            (pc < 0x8000 && instr.isBranch()) ) && bank < 0x7E){
+            (pc < 0x8000 && is_branch) ) && bank < 0x7E){
                 label = "ADDR_" + to_string(bank, 2) + /*"_" +*/ to_string(pc, 4);
                 if (mark_instruction_used)
                     mark_label_used(bank, pc, label);
@@ -425,16 +449,6 @@ string Disassembler::get_label(const InstructionMetadata& instr, unsigned char b
     
     if (label.size() > 0 && finalPass() && is_extern)
         m_unresolved_symbol_lookup.insert(make_pair(key, label));
-
-    if (offset != 0){
-        stringstream ss;
-        ss << label;
-        if (offset > 0){
-            ss << "+";
-        }
-        ss << offset;
-        label = ss.str();
-    }
 
     return label;
 }
@@ -504,7 +518,7 @@ void Disassembler::doDcb(int bytes_per_line)
         bool end_of_chunk = false;
 
         for (int j = 0; j < bytes_per_line && full_address(bank, pc) < full_address(end_bank, end_pc); ++j){
-            string current_label = get_label(InstructionMetadata("", 0, &InstructionHandler::Implied, 0), bank, pc, 0, false, false);
+            string current_label = get_line_label(bank, pc, false);
             if (!current_label.empty()){
                 if (j == 0){
                     label = current_label;
@@ -549,18 +563,14 @@ void Disassembler::doPtr(bool long_ptrs)
         //adjust pc address
         fix_address(bank,pc);
 
-        string label = get_label(InstructionMetadata("", 0, &InstructionHandler::Implied, 0), bank, pc, 0, false, false);
+        string label = get_line_label(bank, pc, false);
 
-        if (finalPass()){
-            if (pc == 0x8000) cout << ".BANK " << int(bank) << endl;
+        if (finalPass() && pc == 0x8000){
+            cout << ".BANK " << int(bank) << endl;
         }
 
-        unsigned char default_bank = bank;
-        unsigned int index = get_index(bank, pc);
-        auto it = m_ptr_bank_lookup.find(index);
-        if (it != m_ptr_bank_lookup.end()){
-            default_bank = it->second;
-        }
+        auto it = m_ptr_bank_lookup.find(get_index(bank, pc));
+        unsigned char default_bank = (it != m_ptr_bank_lookup.end()) ? it->second : bank;
 
         if(long_ptrs)
             doType(m_instruction_lookup[0x101], true, default_bank, label);
