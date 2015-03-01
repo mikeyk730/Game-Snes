@@ -34,15 +34,13 @@ public:
     void load_accum_bytes(char *fname, bool accum);
     void load_offsets(char *fname);
 
-    bool is_comment(const std::string& line);    
     bool add_label(int bank, int pc, const std::string& label);
     void mark_label_used(int bank, int pc, const std::string& label);
     std::string get_instr_label(const InstructionMetadata& instr, unsigned char bank, int pc, int offset);
     std::string get_line_label(unsigned char bank, int pc, bool use_addr_label);
 
-    std::istream& get_address(std::istream& in, unsigned char& bank, unsigned int& addr);
+    int get_offset(unsigned char bank, unsigned int pc);
     std::string get_comment(unsigned char bank, unsigned int pc);
-    void fix_address(unsigned char& bank, unsigned int& pc);
 
     inline void hirom(bool hirom) { m_hirom = hirom; }
     inline bool hirom() const { return m_hirom; }

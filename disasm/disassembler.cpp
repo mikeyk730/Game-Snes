@@ -16,6 +16,42 @@ using namespace Address;
 
 namespace{
    const int MAX_FILE_SIZE = 0x400000;
+
+   bool is_comment(const string& line)
+   {
+       return (line.length() < 1 || line[0] == ';');
+   }
+
+   istream& get_raw_address(istream& in, unsigned char* bank, unsigned int* addr)
+   {
+       unsigned int full;
+       if (!(in >> hex >> full))
+           return in;
+
+       *addr = addr16_from_addr24(full);
+       *bank = bank_from_addr24(full);
+
+       return in;
+   }
+
+   istream& get_data_address(istream& in, unsigned char* bank, unsigned int* addr)
+   {
+       get_raw_address(in, bank, addr);
+
+       if (*addr < 0x8000)
+           *addr += 0x8000;
+
+       return in;
+   }
+
+   void increment_address(unsigned char* bank, unsigned int* pc, bool hirom)
+   {
+       ++(*pc);
+       if (*pc > 0x0ffff){
+           ++(*bank);
+           *pc -= (hirom ? 0x10000 : 0x8000);
+       }
+   }
 }
 
 Disassembler::Disassembler(FILE* rom_file) :
@@ -39,41 +75,20 @@ Disassembler::~Disassembler()
     delete [] m_data;
 }
 
+int Disassembler::get_offset(unsigned char bank, unsigned int pc)
+{
+    auto it = m_load_offsets.find(full_address(bank, pc));
+    if (it != m_load_offsets.end())
+        return it->second;
+    return 0;
+}
+
 std::string Disassembler::get_comment(unsigned char bank, unsigned int pc)
 {
-    map<int,string>::iterator it = m_comment_lookup.find(full_address(bank,pc));
+    auto it = m_comment_lookup.find(full_address(bank,pc));
     if (it != m_comment_lookup.end())
         return it->second;
     return "";
-}
-
-void Disassembler::fix_address(unsigned char& bank, unsigned int& pc)
-{
-    char s2[10];
-    sprintf_s(s2, "%.4X", pc);
-    if (strlen(s2) == 5){
-        bank++; 
-        if (m_hirom)
-            pc -= 0x10000;
-        else
-            pc -= 0x8000;
-    }
-}
-
-istream& Disassembler::get_address(istream& in, unsigned char& bank, unsigned int& addr)
-{
-    unsigned int full;
-    if(!(in >> hex >> full))
-        return in;
-
-    addr = addr16_from_addr24(full);
-    bank = bank_from_addr24(full);
-
-    if (addr < 0x8000)
-        addr += 0x8000;
-
-    //cerr << hex << int(bank) << " " << addr << endl;
-    return in;
 }
 
 void Disassembler::handleRequest(const Request& request, bool user_request)
@@ -153,10 +168,6 @@ void Disassembler::doDisasm()
         InstructionMetadata instr = m_instruction_lookup[code];
 
         if (!feof(m_rom_file)){
-
-            //adjust pc address
-            fix_address(bank,pc);
-
             string label = get_line_label(bank, pc, true);
             
             if (finalPass() && pc == 0x8000){
@@ -210,11 +221,6 @@ void Disassembler::setProcessFlags()
         m_index_16 = ((it2->second) == 16);    
         m_flag |= (m_index_16) ? 0x10 : 0x01;
     }
-}
-
-bool Disassembler::is_comment(const string& line)
-{
-    return (line.length() < 1 || line[0] == ';');
 }
 
 void Disassembler::load_comments(char* fname)
@@ -275,15 +281,14 @@ void Disassembler::load_symbols(char *fname, bool ram)
     while (getline(in, line)){
         if (is_comment(line)) continue;
 
-        int fulladdr;
         string label;
         istringstream line_stream(line);
-        if(!(line_stream >> hex >> fulladdr))
+
+        unsigned int addr;
+        unsigned char bank;
+        if (!get_raw_address(line_stream, &bank, &addr))
             continue;
-
-        unsigned int addr = addr16_from_addr24(fulladdr);
-        unsigned char bank = bank_from_addr24(fulladdr);
-
+        
         if (addr < 0x8000 && bank != 0x7F) bank = 0x7e;
 
         if(!(line_stream >> label)){
@@ -321,11 +326,10 @@ void Disassembler::load_data(char *fname, bool is_ptr_data)
         istringstream line_stream(line);
 
         unsigned char bank, end_bank;
-        unsigned int addr, end_addr;        
-        if(!get_address(line_stream, bank, addr))
+        unsigned int addr, end_addr;
+        if(!get_data_address(line_stream, &bank, &addr))
             continue;
-        
-        if(!get_address(line_stream, end_bank, end_addr)){
+        if (!get_data_address(line_stream, &end_bank, &end_addr)){
             end_addr = addr + 1;
             end_bank = bank;            
         }
@@ -475,28 +479,28 @@ void Disassembler::doSmart()
                 request.m_type = Request::Dcb;
                 do{
                     ++i;
-                    fix_address(bank,++pc);
+                    increment_address(&bank, &pc, m_hirom);
                 } while ((m_data[i] == 1) && (full_address(bank, pc) < end_address));
             }
             else if (m_data[i] == 2){
                 request.m_type = Request::Ptr;
                 do{
                     ++i;
-                    fix_address(bank,++pc);
+                    increment_address(&bank, &pc, m_hirom);
                 } while ((m_data[i] == 2) && (full_address(bank, pc) < end_address));
             }
             else if (m_data[i] == 3){
                 request.m_type = Request::PtrLong;
                 do{
                     ++i;
-                    fix_address(bank,++pc);
+                    increment_address(&bank, &pc, m_hirom);
                 } while ((m_data[i] == 3) && (full_address(bank, pc) < end_address));
             }
             else{
                 request.m_type = Request::Asm;
                 do{
                     ++i;
-                    fix_address(bank,++pc);
+                    increment_address(&bank, &pc, m_hirom);
                 } while ((m_data[i] == 0) && (full_address(bank, pc) < end_address));
             }
 
@@ -548,7 +552,7 @@ void Disassembler::doDcb(int bytes_per_line)
             unsigned char c = read_char(m_rom_file);
             bytes.push_back(c);
 
-            fix_address(bank, ++pc);
+            increment_address(&bank, &pc, m_hirom);
         }
 
         if (full_address(bank, pc) == full_address(end_bank, end_pc)){
@@ -560,24 +564,20 @@ void Disassembler::doDcb(int bytes_per_line)
 
 void Disassembler::doPtr(bool long_ptrs)
 {
-    unsigned char& bank = m_current_bank;
-    unsigned int& pc = m_current_addr;
     unsigned char end_bank = m_request_prop.m_end_bank;
     unsigned int end_pc = m_request_prop.m_end_addr;
 
     cout << endl;
-    for (int i = 0; full_address(bank, pc) < full_address(end_bank, end_pc); ++i){
-        //adjust pc address
-        fix_address(bank,pc);
+    for (int i = 0; full_address(m_current_bank, m_current_addr) < full_address(end_bank, end_pc); ++i){
 
-        string label = get_line_label(bank, pc, false);
+        string label = get_line_label(m_current_bank, m_current_addr, false);
 
-        if (finalPass() && pc == 0x8000){
-            cout << ".BANK " << int(bank) << endl;
+        if (finalPass() && m_current_addr == 0x8000){
+            cout << ".BANK " << int(m_current_bank) << endl;
         }
 
-        auto it = m_ptr_bank_lookup.find(get_index(bank, pc));
-        unsigned char default_bank = (it != m_ptr_bank_lookup.end()) ? it->second : bank;
+        auto it = m_ptr_bank_lookup.find(get_index(m_current_bank, m_current_addr));
+        unsigned char default_bank = (it != m_ptr_bank_lookup.end()) ? it->second : m_current_bank;
 
         if(long_ptrs)
             doType(m_instruction_lookup[0x101], true, default_bank, label);
@@ -592,16 +592,12 @@ void Disassembler::doType(const InstructionMetadata& instr, bool is_data, unsign
 {
     setProcessFlags();
 
-    int offset = 0;
-    int full_addr = full_address(m_current_bank, m_current_addr);
-    auto load_offset = m_load_offsets.find(full_addr);
-    if (load_offset != m_load_offsets.end()){
-        offset = load_offset->second;
-    }
-
+    int offset = get_offset(m_current_bank, m_current_addr);
     string comment = get_comment(m_current_bank, m_current_addr);
 
-    if (!is_data) ++m_current_addr;
+    if (!is_data) {
+        increment_address(&m_current_bank, &m_current_addr, m_hirom);
+    }
 
     DisassemblerContext context((Disassembler*)this, instr, &m_current_addr, &m_flag, &m_accum_16,
         &m_index_16, default_bank, offset, m_rom_file);
