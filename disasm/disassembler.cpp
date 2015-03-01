@@ -229,6 +229,8 @@ void Disassembler::load_comments(char* fname)
         int hex_addr;
         if (!(ss >> hex >> hex_addr)) continue;
         
+        ss.get(); //skip a single space
+
         string comment;
         if(!getline(ss, comment)) continue;
 
@@ -529,9 +531,14 @@ void Disassembler::doDcb(int bytes_per_line)
                 }
             }
 
-            string comment_buffer = get_comment(bank, pc);
-            if (!comment_buffer.empty()) {
-                comment += (";" + comment_buffer + " ");
+            string current_comment = get_comment(bank, pc);
+            if (!current_comment.empty()) {
+                if (comment.empty()){
+                    comment = current_comment;
+                }
+                else{
+                    comment += (" ; " + current_comment);
+                }
             }
 
             if (finalPass() && pc == 0x8000){
