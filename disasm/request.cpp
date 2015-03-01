@@ -30,6 +30,11 @@ namespace{
     }
 }
 
+unsigned int DisassemblerProperties::full_end_address() const
+{
+    return Address::full_address(m_end_bank, m_end_addr);
+}
+
 bool Request::get(istream & in, bool hirom)
 {
     string line;

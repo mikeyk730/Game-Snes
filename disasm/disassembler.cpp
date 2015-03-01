@@ -91,7 +91,7 @@ std::string Disassembler::get_comment(unsigned char bank, unsigned int pc)
     return "";
 }
 
-unsigned int Disassembler::current_addr24() const
+unsigned int Disassembler::current_full_address() const
 {
     return full_address(m_current_bank, m_current_addr);
 }
@@ -133,7 +133,7 @@ void Disassembler::disassembleRange(const Request& request)
 
         fseek(m_rom_file, 512, 0);
         if (m_hirom)
-            fseek(m_rom_file, current_addr24(), 1);
+            fseek(m_rom_file, current_full_address(), 1);
         else
             fseek(m_rom_file, m_current_bank * 32768 + m_current_addr - 0x8000, 1);
 
@@ -156,35 +156,6 @@ void Disassembler::disassembleRange(const Request& request)
                 break;
         }
     } while(request.m_type == Request::Smart);    
-}
-
-void Disassembler::doDisasm()
-{
-    unsigned int end_pc = m_range_properties.m_end_addr;
-    unsigned char end_bank = m_range_properties.m_end_bank;
-
-    while (current_addr24() < full_address(end_bank, end_pc)){
-
-        if (finalPass() && m_current_addr == 0x8000){
-            cout << ".BANK " << int(m_current_bank) << endl;
-        }
-
-        string label = get_line_label(m_current_bank, m_current_addr, true);
-
-
-        unsigned char code = read_char(m_rom_file);
-        if (feof(m_rom_file)){
-            cout << "; End of file." << endl;
-            break;
-        }
-
-
-        InstructionMetadata instr = m_instruction_lookup[code];
-        doType(instr, false, m_current_bank, label);
-        if (m_range_properties.m_stop_at_rts && instr.isReturn()){
-            break;
-        }
-    }
 }
 
 void Disassembler::load_accum_bytes(char *fname, bool accum)
@@ -465,12 +436,11 @@ void Disassembler::doSmart()
 {
     unsigned char bank = m_range_properties.m_start_bank;
     unsigned int pc = m_range_properties.m_start_addr;
-    unsigned char end_bank = m_range_properties.m_end_bank;
-    unsigned int end_pc = m_range_properties.m_end_addr;
 
-    unsigned int end_address = full_address(end_bank, end_pc);
+    unsigned int end_full_address = m_range_properties.full_end_address();
+
     for (int i = get_index(bank, pc); i >= 0 && i < MAX_FILE_SIZE &&
-        full_address(bank, pc) < end_address;){
+        full_address(bank, pc) < end_full_address;){
 
             Request request(m_range_properties);
             request.m_properties.m_start_bank = bank;
@@ -481,28 +451,28 @@ void Disassembler::doSmart()
                 do{
                     ++i;
                     increment_address(&bank, &pc, m_hirom);
-                } while ((m_data[i] == 1) && (full_address(bank, pc) < end_address));
+                } while ((m_data[i] == 1) && (full_address(bank, pc) < end_full_address));
             }
             else if (m_data[i] == 2){
                 request.m_type = Request::Ptr;
                 do{
                     ++i;
                     increment_address(&bank, &pc, m_hirom);
-                } while ((m_data[i] == 2) && (full_address(bank, pc) < end_address));
+                } while ((m_data[i] == 2) && (full_address(bank, pc) < end_full_address));
             }
             else if (m_data[i] == 3){
                 request.m_type = Request::PtrLong;
                 do{
                     ++i;
                     increment_address(&bank, &pc, m_hirom);
-                } while ((m_data[i] == 3) && (full_address(bank, pc) < end_address));
+                } while ((m_data[i] == 3) && (full_address(bank, pc) < end_full_address));
             }
             else{
                 request.m_type = Request::Asm;
                 do{
                     ++i;
                     increment_address(&bank, &pc, m_hirom);
-                } while ((m_data[i] == 0) && (full_address(bank, pc) < end_address));
+                } while ((m_data[i] == 0) && (full_address(bank, pc) < end_full_address));
             }
 
             request.m_properties.m_end_bank = bank;
@@ -513,19 +483,16 @@ void Disassembler::doSmart()
 
 void Disassembler::doDcb(int bytes_per_line)
 {
-    unsigned char bank = m_range_properties.m_start_bank;
-    unsigned int pc = m_range_properties.m_start_addr;
-    unsigned char end_bank = m_range_properties.m_end_bank;
-    unsigned int end_pc = m_range_properties.m_end_addr;
+    unsigned int end_full_address = m_range_properties.full_end_address();
 
-    while (full_address(bank, pc) < full_address(end_bank, end_pc)){
+    while (current_full_address() < end_full_address){
         vector<unsigned char> bytes;
         string comment;
         string label;
         bool end_of_chunk = false;
 
-        for (int j = 0; j < bytes_per_line && full_address(bank, pc) < full_address(end_bank, end_pc); ++j){
-            string current_label = get_line_label(bank, pc, false);
+        for (int j = 0; j < bytes_per_line && current_full_address() < end_full_address; ++j){
+            string current_label = get_line_label(m_current_bank, m_current_addr, false);
             if (!current_label.empty()){
                 if (j == 0){
                     label = current_label;
@@ -536,7 +503,7 @@ void Disassembler::doDcb(int bytes_per_line)
                 }
             }
 
-            string current_comment = get_comment(bank, pc);
+            string current_comment = get_comment(m_current_bank, m_current_addr);
             if (!current_comment.empty()) {
                 if (comment.empty()){
                     comment = current_comment;
@@ -546,17 +513,17 @@ void Disassembler::doDcb(int bytes_per_line)
                 }
             }
 
-            if (finalPass() && pc == 0x8000){
-                cout << ".BANK " << int(bank) << endl;
+            if (finalPass() && m_current_addr == 0x8000){
+                cout << ".BANK " << int(m_current_bank) << endl;
             }
 
             unsigned char c = read_char(m_rom_file);
             bytes.push_back(c);
 
-            increment_address(&bank, &pc, m_hirom);
+            increment_address(&m_current_bank, &m_current_addr, m_hirom);
         }
 
-        if (full_address(bank, pc) == full_address(end_bank, end_pc)){
+        if (current_full_address() == end_full_address){
             end_of_chunk = true;
         }
         m_output_handler->PrintData(bytes, label, comment, !m_range_properties.m_quiet, end_of_chunk);
@@ -565,11 +532,10 @@ void Disassembler::doDcb(int bytes_per_line)
 
 void Disassembler::doPtr(bool long_ptrs)
 {
-    unsigned char end_bank = m_range_properties.m_end_bank;
-    unsigned int end_pc = m_range_properties.m_end_addr;
+    unsigned int end_full_address = m_range_properties.full_end_address();
 
     cout << endl;
-    for (int i = 0; current_addr24() < full_address(end_bank, end_pc); ++i){
+    for (int i = 0; current_full_address() < end_full_address; ++i){
 
         string label = get_line_label(m_current_bank, m_current_addr, false);
 
@@ -581,15 +547,43 @@ void Disassembler::doPtr(bool long_ptrs)
         unsigned char default_bank = (it != m_ptr_bank_lookup.end()) ? it->second : m_current_bank;
 
         if(long_ptrs)
-            doType(m_instruction_lookup[0x101], true, default_bank, label);
+            disassembleInstruction(m_instruction_lookup[0x101], true, default_bank, label);
         else
-            doType(m_instruction_lookup[0x100], true, default_bank, label);
+            disassembleInstruction(m_instruction_lookup[0x100], true, default_bank, label);
        
     }
     cout << endl;
 }
 
-void Disassembler::doType(const InstructionMetadata& instr, bool is_data, unsigned char default_bank, const string& label)
+void Disassembler::doDisasm()
+{
+    unsigned int end_full_address = m_range_properties.full_end_address();
+
+    while (current_full_address() < end_full_address){
+
+        if (finalPass() && m_current_addr == 0x8000){
+            cout << ".BANK " << int(m_current_bank) << endl;
+        }
+
+        string label = get_line_label(m_current_bank, m_current_addr, true);
+
+
+        unsigned char code = read_char(m_rom_file);
+        if (feof(m_rom_file)){
+            cout << "; End of file." << endl;
+            break;
+        }
+
+
+        InstructionMetadata instr = m_instruction_lookup[code];
+        disassembleInstruction(instr, false, m_current_bank, label);
+        if (m_range_properties.m_stop_at_rts && instr.isReturn()){
+            break;
+        }
+    }
+}
+
+void Disassembler::disassembleInstruction(const InstructionMetadata& instr, bool is_data, unsigned char default_bank, const string& label)
 {
     setProcessFlags();
 

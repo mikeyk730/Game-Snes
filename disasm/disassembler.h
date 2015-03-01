@@ -24,7 +24,7 @@ public:
     void doDisasm();
     void doSmart();
 
-    void doType(const InstructionMetadata& instr, bool is_data, unsigned char default_bank, const std::string& label);
+    void disassembleInstruction(const InstructionMetadata& instr, bool is_data, unsigned char default_bank, const std::string& label);
     void setProcessFlags();
 
     void load_data(char *fname, bool is_ptr_data = false);
@@ -55,7 +55,7 @@ public:
 private:    
     std::string get_label_helper(unsigned char bank, int pc, bool use_addr_label, bool mark_instruction_used, bool is_branch);
     void disassembleRange(const Request& request);
-    unsigned int current_addr24() const;
+    unsigned int current_full_address() const;
 
     std::map<int, InstructionMetadata> m_instruction_lookup;
     std::map<int, std::string> m_label_lookup;

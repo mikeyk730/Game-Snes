@@ -33,6 +33,8 @@ struct DisassemblerProperties{
   unsigned int m_end_addr;
 
   int m_passes;
+
+  unsigned int full_end_address() const;
 };
 
 struct Request{
