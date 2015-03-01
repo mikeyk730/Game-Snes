@@ -17,5 +17,6 @@ bE.o
 bF.o
 [libraries]
 [header]
+header.dat
 [footer]
 [definitions]
