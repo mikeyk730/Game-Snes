@@ -8,7 +8,6 @@ struct Instruction;
 
 struct InstructionNameProvider
 {
-    InstructionNameProvider();
     InstructionNameProvider(std::istream& input);
     std::string get_name(int opcode) const;
 
@@ -22,11 +21,11 @@ class InstructionMetadata{
     typedef std::string(*AnnotationHandlerPtr)(bool, bool);
 public:
     InstructionMetadata();
-    InstructionMetadata(unsigned int opcode, InstructionHandlerPtr address_mode_handler, AnnotationHandlerPtr annotation_handler = 0);
+    InstructionMetadata(const std::string& internal_name, unsigned int opcode, InstructionHandlerPtr address_mode_handler, AnnotationHandlerPtr annotation_handler = 0);
 
-    //std::string name() const {
-    //    return m_name;
-    //}
+    std::string internal_name() const {
+        return m_internal_name;
+    }
 
     bool is_snes_instruction() const
     {
@@ -49,6 +48,7 @@ public:
     AnnotationHandlerPtr annotationHandler() const { return m_annotation_handler; }
 
 private:
+    std::string m_internal_name;
     unsigned int m_opcode;
 
     InstructionHandlerPtr m_instruction_handler;
@@ -91,4 +91,3 @@ private:
     std::string m_ram_comment;
     std::shared_ptr<InstructionNameProvider> m_name_provider;
 };
-
