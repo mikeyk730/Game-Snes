@@ -65,7 +65,7 @@ private:
     std::string get_label_helper(unsigned char bank, int pc, bool use_addr_label, bool mark_instruction_used, bool is_branch);
     void disassembleRange(const Request& request);
     void disassembleInstruction(const InstructionMetadata& instr, unsigned char default_bank, const std::string& label, const std::string& comment, int offset);
-    OutputHandler* output_handler() const
+    std::shared_ptr<OutputHandler> output_handler() const
     {
         return finalPass() ? m_output_handler : m_noop_handler;
     }
@@ -103,8 +103,8 @@ private:
     int m_start;
     int m_end;
 
-    OutputHandler* m_noop_handler;
-    OutputHandler* m_output_handler;
+    std::shared_ptr<OutputHandler> m_noop_handler;
+    std::shared_ptr<OutputHandler> m_output_handler;
     std::shared_ptr<InstructionNameProvider> m_instruction_name_provider;
     std::shared_ptr<AnnotationProvider> m_annotation_provider;
 

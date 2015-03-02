@@ -71,8 +71,6 @@ m_annotation_provider(new DefaultAnnotations)
 
 Disassembler::~Disassembler()
 {
-    delete m_noop_handler;
-    delete m_output_handler;
     delete [] m_data;
 }
 
