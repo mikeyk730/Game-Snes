@@ -5,6 +5,7 @@
 
 struct DisassemblerContext;
 struct Instruction;
+struct AnnotationProvider;
 
 struct InstructionNameProvider
 {
@@ -18,10 +19,9 @@ private:
 
 class InstructionMetadata{
     typedef void(*InstructionHandlerPtr)(DisassemblerContext*, Instruction*);
-    typedef std::string(*AnnotationHandlerPtr)(bool, bool);
 public:
     InstructionMetadata();
-    InstructionMetadata(const std::string& internal_name, unsigned int opcode, InstructionHandlerPtr address_mode_handler, AnnotationHandlerPtr annotation_handler = 0);
+    InstructionMetadata(const std::string& internal_name, unsigned int opcode, InstructionHandlerPtr address_mode_handler);
 
     std::string internal_name() const {
         return m_internal_name;
@@ -37,35 +37,33 @@ public:
         return m_opcode;
     }
 
-    std::string annotation(bool is_accum_16, bool is_index_16) const;
-
     bool isBranch() const;
     bool isJump() const;
     bool isReturn() const;
     bool isCodeBreak() const { return isReturn() || isJump(); }
 
     InstructionHandlerPtr handler() const { return m_instruction_handler; }
-    AnnotationHandlerPtr annotationHandler() const { return m_annotation_handler; }
 
 private:
     std::string m_internal_name;
     unsigned int m_opcode;
 
     InstructionHandlerPtr m_instruction_handler;
-    AnnotationHandlerPtr m_annotation_handler;
 };
 
 struct Instruction
 {
-    Instruction(const InstructionMetadata& metadata, std::shared_ptr<InstructionNameProvider> name_provider, bool accum_16, bool index_16, int comment_level);
+    Instruction(const InstructionMetadata& metadata, std::shared_ptr<InstructionNameProvider> name_provider, std::shared_ptr<AnnotationProvider> annotation_provider, bool accum_16, bool index_16, int comment_level);
     
     void addInstructionBytes(unsigned char a);
     void addInstructionBytes(unsigned char a, unsigned char b);
     void addInstructionBytes(unsigned char a, unsigned char b, unsigned char c);
     std::string getInstructionBytes() const;
 
-    void setAddress(const char *format, ...);
+    void setDirectAddress(const char *format, ...);
+    void setSymbolicAddress(const char *format, ...);
     std::string getAddress() const;
+    bool isAddressSymbolic() const { return m_is_address_symbolic;  }
 
     std::string annotatedName() const;
     std::string toString() const;
@@ -85,10 +83,12 @@ private:
     InstructionMetadata m_metadata;
     std::ostringstream instruction_bytes;
     char address[80];
+    bool m_is_address_symbolic;
     char additional_instruction[80];
     bool m_accum_16;
     bool m_index_16;
     int m_comment_level;
     std::string m_ram_comment;
     std::shared_ptr<InstructionNameProvider> m_name_provider;
+    std::shared_ptr<AnnotationProvider> m_annotation_provider;
 };

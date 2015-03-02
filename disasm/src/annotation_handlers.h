@@ -1,20 +1,18 @@
 #include <string>
+#include <map>
 
-namespace AnnotationHandler
+struct AnnotationProvider
 {
-    inline std::string Word(bool is_accum_16, bool is_index_16){
-        return ".W";
-    }
+    virtual std::string get_annotation(int opcode, bool is_accum_16, bool is_index_16, bool is_symbolic_address) = 0;
+    virtual ~AnnotationProvider() = 0;
+};
 
-    inline std::string AccumDependentWord(bool is_accum_16, bool is_index_16){
-        return (is_accum_16 ? ".W" : ".B");
-    }
-
-    inline std::string IndexDependentWord(bool is_accum_16, bool is_index_16){
-        return (is_index_16 ? ".W" : ".B");
-    }
-
-    inline std::string Long(bool is_accum_16, bool is_index_16){
-        return ".L";
-    }
-}
+struct DefaultAnnotations : public AnnotationProvider
+{
+    DefaultAnnotations();
+    virtual std::string get_annotation(int opcode, bool is_accum_16, bool is_index_16, bool is_symbolic_address);
+    virtual ~DefaultAnnotations();
+private:
+    typedef std::string(*HandlerPtr)(bool, bool, bool);
+    std::map<int, HandlerPtr> m_handlers;
+};

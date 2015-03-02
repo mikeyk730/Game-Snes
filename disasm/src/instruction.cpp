@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <iostream>
 #include "instruction.h"
+#include "annotation_handlers.h"
 #include "utils.h"
 
 using namespace std;
@@ -11,19 +12,11 @@ m_opcode(0),
 m_instruction_handler(0)
 { }
 
-InstructionMetadata::InstructionMetadata(const string& internal_name, unsigned int opcode, InstructionHandlerPtr address_mode_handler, AnnotationHandlerPtr annotation_handler) :
+InstructionMetadata::InstructionMetadata(const string& internal_name, unsigned int opcode, InstructionHandlerPtr address_mode_handler) :
 m_internal_name(internal_name),
 m_opcode(opcode),
-m_instruction_handler(address_mode_handler),
-m_annotation_handler(annotation_handler)
+m_instruction_handler(address_mode_handler)
 { }
-
-string InstructionMetadata::annotation(bool is_accum_16, bool is_index_16) const {
-    if (m_annotation_handler){
-        return (*m_annotation_handler)(is_accum_16, is_index_16);
-    }
-    return string();
-}
 
 bool InstructionMetadata::isBranch() const 
 {
@@ -57,9 +50,11 @@ bool InstructionMetadata::isReturn() const
         m_opcode == 0x6B;   //RTL
 }
 
-Instruction::Instruction(const InstructionMetadata& metadata, shared_ptr<InstructionNameProvider> name_provider, bool accum_16, bool index_16, int comment_level)
+Instruction::Instruction(const InstructionMetadata& metadata, shared_ptr<InstructionNameProvider> name_provider, shared_ptr<AnnotationProvider> annotation_provider, bool accum_16, bool index_16, int comment_level)
 : m_metadata(metadata),
-m_name_provider(name_provider),
+m_name_provider(name_provider), 
+m_annotation_provider(annotation_provider),
+m_is_address_symbolic(false),
 m_accum_16(accum_16),
 m_index_16(index_16),
 m_comment_level(comment_level)
@@ -97,7 +92,20 @@ string Instruction::getInstructionBytes() const
     return instruction_bytes.str();
 }
 
-void Instruction::setAddress(const char *format, ...){
+void Instruction::setSymbolicAddress(const char *format, ...)
+{
+    m_is_address_symbolic = true;
+
+    va_list args;
+    va_start(args, format);
+    vsprintf_s(address, format, args);
+    va_end(args);
+}
+
+void Instruction::setDirectAddress(const char *format, ...)
+{
+    m_is_address_symbolic = false;
+
     va_list args;
     va_start(args, format);
     vsprintf_s(address, format, args);
@@ -125,7 +133,8 @@ string Instruction::annotatedName() const
 {
     string name = m_name_provider ? m_name_provider->get_name(m_metadata.opcode()) 
         : m_metadata.internal_name();
-    return name + m_metadata.annotation(m_accum_16, m_index_16);
+    string annotation = m_annotation_provider->get_annotation(m_metadata.opcode(), m_accum_16, m_index_16, isAddressSymbolic());
+    return name + annotation;
 }
 
 string Instruction::toString() const

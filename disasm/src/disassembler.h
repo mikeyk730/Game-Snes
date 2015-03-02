@@ -10,6 +10,7 @@
 class InstructionMetadata;
 struct OutputHandler;
 struct InstructionNameProvider;
+struct AnnotationProvider;
 
 struct Disassembler{
 private:    
@@ -105,6 +106,7 @@ private:
     OutputHandler* m_noop_handler;
     OutputHandler* m_output_handler;
     std::shared_ptr<InstructionNameProvider> m_instruction_name_provider;
+    std::shared_ptr<AnnotationProvider> m_annotation_provider;
 
     FILE* m_rom_file;
     int m_header_size;

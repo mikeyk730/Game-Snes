@@ -16,7 +16,7 @@ namespace InstructionHandler
 
     void Accumulator(DisassemblerContext* context, Instruction* output)
     {
-        output->setAddress("A");
+        output->setDirectAddress("A");
     }
 
     /* Accum  #$xx or #$xxxx */
@@ -29,10 +29,10 @@ namespace InstructionHandler
             unsigned char j = context->read_next_byte(NULL);
             output->addInstructionBytes(j);
 
-            output->setAddress("#$%.4X", address_16bit(i, j));
+            output->setDirectAddress("#$%.4X", address_16bit(i, j));
         }
         else{
-            output->setAddress("#$%.2X", i);
+            output->setDirectAddress("#$%.2X", i);
         }
     }
 
@@ -46,9 +46,9 @@ namespace InstructionHandler
         string msg = context->get_label(context->address_bank(), address_16bit(i, j));
 
         if (msg.empty())
-            output->setAddress("$%.4X", address_16bit(i, j));
+            output->setDirectAddress("$%.4X", address_16bit(i, j));
         else
-            output->setAddress(msg.c_str());
+            output->setSymbolicAddress(msg.c_str());
 
         string ram_comment = getRAMComment(address_16bit(i, j), output->comment_level());
         output->set_ram_comment(ram_comment);
@@ -64,9 +64,9 @@ namespace InstructionHandler
 
         string msg = context->get_label(k, address_16bit(i, j));
         if (msg.empty())
-            output->setAddress("$%.6X", address_24bit(i, j, k));
+            output->setDirectAddress("$%.6X", address_24bit(i, j, k));
         else
-            output->setAddress(msg.c_str());
+            output->setSymbolicAddress(msg.c_str());
     }
 
     /* $xx */
@@ -77,9 +77,9 @@ namespace InstructionHandler
 
         string msg = context->get_label(context->address_bank(), i);
         if (msg.empty())
-            output->setAddress("$%.2X", i);
+            output->setDirectAddress("$%.2X", i);
         else
-            output->setAddress(msg.c_str());
+            output->setSymbolicAddress(msg.c_str());
     }
 
     /* ($xx),Y */
@@ -90,9 +90,9 @@ namespace InstructionHandler
 
         string msg = context->get_label(context->address_bank(), i);
         if (msg.empty())
-            output->setAddress("($%.2X),Y", i);
+            output->setDirectAddress("($%.2X),Y", i);
         else
-            output->setAddress("(%s),Y", msg.c_str());
+            output->setSymbolicAddress("(%s),Y", msg.c_str());
     }
 
     /* [$xx],Y */
@@ -103,9 +103,9 @@ namespace InstructionHandler
 
         string msg = context->get_label(context->address_bank(), i);
         if (msg.empty())
-            output->setAddress("[$%.2X],Y", i);
+            output->setDirectAddress("[$%.2X],Y", i);
         else
-            output->setAddress("[%s],Y", msg.c_str());
+            output->setSymbolicAddress("[%s],Y", msg.c_str());
     }
 
     /* ($xx,X) */
@@ -116,9 +116,9 @@ namespace InstructionHandler
 
         string msg = context->get_label(context->address_bank(), i);
         if (msg.empty())
-            output->setAddress("($%.2X,X)", i);
+            output->setDirectAddress("($%.2X,X)", i);
         else
-            output->setAddress("(%s,X)", msg.c_str());
+            output->setSymbolicAddress("(%s,X)", msg.c_str());
     }
 
     /* $xx,X */
@@ -129,9 +129,9 @@ namespace InstructionHandler
 
         string msg = context->get_label(context->address_bank(), i);
         if (msg.empty())
-            output->setAddress("$%.2X,X", i);
+            output->setDirectAddress("$%.2X,X", i);
         else
-            output->setAddress("%s,X", msg.c_str());
+            output->setSymbolicAddress("%s,X", msg.c_str());
     }
 
     /* $xxxx,X */
@@ -143,9 +143,9 @@ namespace InstructionHandler
 
         string msg = context->get_label(context->address_bank(), address_16bit(i, j));
         if (msg.empty())
-            output->setAddress("$%.4X,X", address_16bit(i, j));
+            output->setDirectAddress("$%.4X,X", address_16bit(i, j));
         else
-            output->setAddress("%s,X", msg.c_str());
+            output->setSymbolicAddress("%s,X", msg.c_str());
     }
 
     /* $xxxxxx,X */
@@ -158,9 +158,9 @@ namespace InstructionHandler
 
         string msg = context->get_label(k, address_16bit(i, j));
         if (msg.empty())
-            output->setAddress("$%.6X,X", address_24bit(i, j, k));
+            output->setDirectAddress("$%.6X,X", address_24bit(i, j, k));
         else
-            output->setAddress("%s,X", msg.c_str());
+            output->setSymbolicAddress("%s,X", msg.c_str());
     }
 
     /* $xxxx,Y */
@@ -172,9 +172,9 @@ namespace InstructionHandler
 
         string msg = context->get_label(context->address_bank(), address_16bit(i, j));
         if (msg.empty())
-            output->setAddress("$%.4X,Y", address_16bit(i, j));
+            output->setDirectAddress("$%.4X,Y", address_16bit(i, j));
         else
-            output->setAddress("%s,Y", msg.c_str());
+            output->setSymbolicAddress("%s,Y", msg.c_str());
     }
 
     /* ($xx) */
@@ -185,9 +185,9 @@ namespace InstructionHandler
 
         string msg = context->get_label(context->address_bank(), i);
         if (msg.empty())
-            output->setAddress("($%.2X)", i);
+            output->setDirectAddress("($%.2X)", i);
         else
-            output->setAddress("(%s)", msg.c_str());
+            output->setSymbolicAddress("(%s)", msg.c_str());
     }
 
     /* [$xx] */
@@ -198,9 +198,9 @@ namespace InstructionHandler
 
         string msg = context->get_label(context->address_bank(), i);
         if (msg.empty())
-            output->setAddress("[$%.2X]", i);
+            output->setDirectAddress("[$%.2X]", i);
         else
-            output->setAddress("[%s]", msg.c_str());
+            output->setSymbolicAddress("[%s]", msg.c_str());
     }
 
     /* $xx,S */
@@ -211,9 +211,9 @@ namespace InstructionHandler
 
         string msg = context->get_label(context->address_bank(), i);
         if (msg.empty())
-            output->setAddress("$%.x,S", i);
+            output->setDirectAddress("$%.x,S", i);
         else
-            output->setAddress("%s,S", msg.c_str());
+            output->setSymbolicAddress("%s,S", msg.c_str());
     }
 
     /* ($xx,S),Y */
@@ -224,9 +224,9 @@ namespace InstructionHandler
 
         string msg = context->get_label(context->address_bank(), i);
         if (msg.empty())
-            output->setAddress("($%.2X,S),Y", i);
+            output->setDirectAddress("($%.2X,S),Y", i);
         else
-            output->setAddress("(%s,S),Y", msg.c_str());
+            output->setSymbolicAddress("(%s,S),Y", msg.c_str());
     }
 
     /* relative */
@@ -238,9 +238,9 @@ namespace InstructionHandler
 
         string msg = context->get_label(context->address_bank(), pc + r);
         if (msg.empty())
-            output->setAddress("$%.4X", pc + r);
+            output->setDirectAddress("$%.4X", pc + r);
         else
-            output->setAddress("%s", msg.c_str());
+            output->setSymbolicAddress("%s", msg.c_str());
     }
 
     /* relative long */
@@ -256,9 +256,9 @@ namespace InstructionHandler
         long xx = full_address(context->address_bank(), pc) + ll;
         string msg = context->get_label(bank_from_addr24(xx), addr16_from_addr24(xx));
         if (msg.empty())
-            output->setAddress("$%.6x", xx);
+            output->setDirectAddress("$%.6x", xx);
         else
-            output->setAddress("%s", msg.c_str());
+            output->setSymbolicAddress("%s", msg.c_str());
     }
 
     /* PER/PEA $xxxx */
@@ -268,7 +268,7 @@ namespace InstructionHandler
         unsigned char j = context->read_next_byte(NULL);
         output->addInstructionBytes(i, j);
 
-        output->setAddress("$%.4X", address_16bit(i, j));
+        output->setDirectAddress("$%.4X", address_16bit(i, j));
     }
 
     /* [$xxxx] */
@@ -280,9 +280,9 @@ namespace InstructionHandler
 
         string msg = context->get_label(context->address_bank(), address_16bit(i, j));
         if (msg.empty())
-            output->setAddress("[$%.4X]", address_16bit(i, j));
+            output->setDirectAddress("[$%.4X]", address_16bit(i, j));
         else
-            output->setAddress("[%s]", msg.c_str());
+            output->setSymbolicAddress("[%s]", msg.c_str());
     }
 
     /* ($xxxx) */
@@ -294,9 +294,9 @@ namespace InstructionHandler
 
         string msg = context->get_label(context->address_bank(), address_16bit(i, j));
         if (msg.empty())
-            output->setAddress("($%.4X)", address_16bit(i, j));
+            output->setDirectAddress("($%.4X)", address_16bit(i, j));
         else
-            output->setAddress("(%s)", msg.c_str());
+            output->setSymbolicAddress("(%s)", msg.c_str());
     }
 
     /* ($xxxx,X) */
@@ -308,9 +308,9 @@ namespace InstructionHandler
 
         string msg = context->get_label(context->address_bank(), address_16bit(i, j));
         if (msg.empty())
-            output->setAddress("($%.4X,X)", address_16bit(i, j));
+            output->setDirectAddress("($%.4X,X)", address_16bit(i, j));
         else
-            output->setAddress("(%s,X)", msg.c_str());
+            output->setSymbolicAddress("(%s,X)", msg.c_str());
     }
 
     /* $xx,Y */
@@ -321,9 +321,9 @@ namespace InstructionHandler
 
         string msg = context->get_label(context->address_bank(), i);
         if (msg.empty())
-            output->setAddress("$%.2X,Y", i);
+            output->setDirectAddress("$%.2X,Y", i);
         else
-            output->setAddress("%s,Y", msg.c_str());
+            output->setSymbolicAddress("%s,Y", msg.c_str());
     }
 
     /* #$xx */
@@ -332,7 +332,7 @@ namespace InstructionHandler
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
 
-        output->setAddress("#$%.2X", i);
+        output->setDirectAddress("#$%.2X", i);
     }
 
     /* REP */
@@ -341,7 +341,7 @@ namespace InstructionHandler
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
 
-        output->setAddress("#$%.2X", i);
+        output->setDirectAddress("#$%.2X", i);
 
         if (i & 0x20) { context->set_accum_16(1); context->set_flag(0x20); }
         if (i & 0x10) { context->set_index_16(1); context->set_flag(0x10); }
@@ -353,7 +353,7 @@ namespace InstructionHandler
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
 
-        output->setAddress("#$%.2X", i);
+        output->setDirectAddress("#$%.2X", i);
 
         if (i & 0x20) { context->set_accum_16(0); context->set_flag(0x02); }
         if (i & 0x10) { context->set_index_16(0); context->set_flag(0x01); }
@@ -369,10 +369,10 @@ namespace InstructionHandler
             unsigned char j = context->read_next_byte(NULL);
             output->addInstructionBytes(j);
 
-            output->setAddress("#$%.4X", address_16bit(i, j));
+            output->setDirectAddress("#$%.4X", address_16bit(i, j));
         }
         else
-            output->setAddress("#$%.2X", i);
+            output->setDirectAddress("#$%.2X", i);
     }
 
     /* MVN/MVP */
@@ -382,7 +382,7 @@ namespace InstructionHandler
         unsigned char j = context->read_next_byte(NULL);
         output->addInstructionBytes(i, j);
 
-        output->setAddress("$%.2X,$%.2X", i, j);
+        output->setDirectAddress("$%.2X,$%.2X", i, j);
     }
 
     /* $xxxxxx, .db :$xxxxxx */
@@ -399,7 +399,7 @@ namespace InstructionHandler
 
         string msg = context->get_label(k, address_16bit(i, j));
         if (msg.empty()){
-            output->setAddress("$%.6X & $FFFF", address_24bit(i, j, k));
+            output->setDirectAddress("$%.6X & $FFFF", address_24bit(i, j, k));
             if (i == 0 && j == 0 && k == 0){
                 output->setAdditionalInstruction(".db $00");  //WLA cannot take bank of $000000
             }
@@ -408,7 +408,7 @@ namespace InstructionHandler
             }
         }
         else {
-            output->setAddress("%s", msg.c_str());
+            output->setSymbolicAddress("%s", msg.c_str());
             if (oldk == 0xFF){
                 output->setAdditionalInstruction(".db $%.2X", oldk);
             }
