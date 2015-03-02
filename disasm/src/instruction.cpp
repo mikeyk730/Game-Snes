@@ -111,8 +111,9 @@ string Instruction::getAddress() const
 
 string Instruction::annotatedName() const
 {
-    return m_name_provider ? m_name_provider->get_name(m_metadata.opcode()) 
+    string name = m_name_provider ? m_name_provider->get_name(m_metadata.opcode()) 
         : m_metadata.internal_name();
+    return name + m_metadata.annotation(m_accum_16, m_index_16);
 }
 
 string Instruction::toString() const
