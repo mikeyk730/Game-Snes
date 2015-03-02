@@ -75,6 +75,7 @@ struct Instruction
 
     void set_ram_comment(const std::string& ram_comment) { m_ram_comment = ram_comment; }
     std::string ram_comment() const { return m_ram_comment; }
+    std::string flag_comment(int flags) const;
 
     int comment_level() const { return m_comment_level; }
 

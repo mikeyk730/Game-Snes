@@ -92,7 +92,7 @@ private:
     bool m_quiet;
     int m_current_pass;
     int m_passes_to_make;
-    int m_flag; 
+    int m_flag; //indicates whether accum/index have changed size during the current instruction
 
     unsigned char m_current_bank;
     unsigned int m_current_addr;

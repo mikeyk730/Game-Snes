@@ -50,14 +50,12 @@ void DefaultOutput::PrintInstruction(const Instruction& instr, const string& lab
 
     string comment = user_comment;
 
-    if (flags != 0){
+    string flag_comment = instr.flag_comment(flags);
+    if (!flag_comment.empty()){
         if (!comment.empty()){
             comment += " ; ";
         }
-        if (flags & 0x10) comment += "Index (16 bit) ";
-        if (flags & 0x20) comment += "Accum (16 bit) ";
-        if (flags & 0x01) comment += "Index (8 bit) ";
-        if (flags & 0x02) comment += "Accum (8 bit) ";
+        comment += flag_comment;
     }
 
     string ram_comment = instr.ram_comment();

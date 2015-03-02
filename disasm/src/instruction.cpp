@@ -109,6 +109,18 @@ string Instruction::getAddress() const
     return address;
 }
 
+string Instruction::flag_comment(int flags) const
+{
+    string comment;
+    if (m_comment_level > 1 && flags != 0){
+        if (flags & 0x10) comment += "Index (16 bit) ";
+        if (flags & 0x20) comment += "Accum (16 bit) ";
+        if (flags & 0x01) comment += "Index (8 bit) ";
+        if (flags & 0x02) comment += "Accum (8 bit) ";
+    }
+    return comment;
+}
+
 string Instruction::annotatedName() const
 {
     string name = m_name_provider ? m_name_provider->get_name(m_metadata.opcode()) 

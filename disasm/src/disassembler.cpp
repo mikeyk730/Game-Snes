@@ -85,6 +85,9 @@ int Disassembler::get_offset(unsigned char bank, unsigned int pc)
 
 std::string Disassembler::get_comment(unsigned char bank, unsigned int pc)
 {
+    if (m_range_properties.m_comment_level == 0)
+        return "";
+
     auto it = m_comment_lookup.find(full_address(bank,pc));
     if (it != m_comment_lookup.end())
         return it->second;

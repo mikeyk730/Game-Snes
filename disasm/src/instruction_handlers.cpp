@@ -433,7 +433,7 @@ std::string getRAMComment(unsigned int addr, int comment_level)
 
     string comment;
 
-    if (comment_level)
+    if (comment_level > 2)
     {
         switch (addr)
         {
@@ -442,55 +442,55 @@ std::string getRAMComment(unsigned int addr, int comment_level)
             comment = "/ Play sound effect";
             break;*/
         case 0x2100: comment = "Screen Display Register";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";a0000bbbb a: 0=screen on, 1=screen off  b = brightness";
             } break;
         case 0x2101: comment = "OAM Size and Data Area Designation";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";aaabbccc a = Size  b = Name Selection  c = Base Selection";
             } break;
         case 0x2102: comment = "Address for Accessing OAM"; break;
         case 0x2104: comment = "OAM Data Write"; break;
         case 0x2105: comment = "BG Mode and Tile Size Setting";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";abcdefff abcd = BG tile size (4321), 0 = 8x8, 1 = 16x16";
                 comment += spaces(10);  comment += ";e = BG 3 High Priority  f = BG Mode";
             } break;
         case 0x2106: comment = "Mosaic Size and BG Enable";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";aaaabbbb a = Mosaic Size  b = Mosaic BG Enable";
             } break;
         case 0x2107: comment = "BG 1 Address and Size";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";aaaaaabb a = Screen Base Address (Upper 6-bit)  b = Screen Size";
             } break;
         case 0x2108: { comment += "; BG 2 Address and Size";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";aaaaaabb a = Screen Base Address (Upper 6-bit).  b = Screen Size";
             } break;
         case 0x2109: comment = "BG 3 Address and Size";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";aaaaaabb a = Screen Base Address (Upper 6-bit)  b = Screen Size";
             } break;
         case 0x210A: comment = "BG 4 Address and Size";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";aaaaaabb a = Screen Base Address (Upper 6-bit)  b = Screen Size";
             } break;
         case 0x210b: comment = "BG 1 & 2 Tile Data Designation";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";aaaabbbb a = BG 2 Tile Base Address  b = BG 1 Tile Base Address";
             } break;
         case 0x210c: comment = "BG 3 & 4 Tile Data Designation";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";aaaabbbb a = BG 4 Tile Base Address  b = BG 3 Tile Base Address";
             } break;
@@ -508,7 +508,7 @@ std::string getRAMComment(unsigned int addr, int comment_level)
         case 0x2118: comment = "Data for VRAM Write (Low Byte)"; break;
         case 0x2119: comment = "Data for VRAM Write (High Byte)"; break;
         case 0x211a: comment = "Initial Setting for Mode 7";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";aa0000bc a = Screen Over  b = Vertical Flip  c = Horizontal Flip";
             } break;
@@ -521,17 +521,17 @@ std::string getRAMComment(unsigned int addr, int comment_level)
         case 0x2121: comment = "Address for CG-RAM Write"; break;
         case 0x2122: comment = "Data for CG-RAM Write"; break;
         case 0x2123: comment = "BG 1 and 2 Window Mask Settings";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";aaaabbbb a = BG 2 Window Settings  b = BG 1 Window Settings";
             } break;
         case 0x2124: comment = "BG 3 and 4 Window Mask Settings";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";aaaabbbb a = BG 4 Window Settings  b = BG 3 Window Settings";
             } break;
         case 0x2125: comment = "OBJ and Color Window Settings";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";aaaabbbb a = Color Window Settings  b = OBJ Window Settings";
             } break;
@@ -540,55 +540,55 @@ std::string getRAMComment(unsigned int addr, int comment_level)
         case 0x2128: comment = "Window 2 Left Postion Designation"; break;
         case 0x2129: comment = "Window 2 Right Postion Designation"; break;
         case 0x212a: comment = "BG 1, 2, 3 and 4 Window Logic Settings";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";aabbccdd a = BG 4  b = BG 3  c = BG 2  d = BG 1";
             } break;
         case 0x212b: comment = "Color and OBJ Window Logic Settings";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";0000aabb a = Color Window  b = OBJ Window";
             } break;
         case 0x212c: comment = "Background and Object Enable";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";000abcde a = Object  b = BG 4  c = BG 3  d = BG 2  e = BG 1";
             } break;
         case 0x212d: comment = "Sub Screen Designation";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";000abcde a = Object  b = BG 4  c = BG 3  d = BG 2  e = BG 1";
             } break;
         case 0x212e: comment = "Window Mask Designation for Main Screen";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";000abcde a = Object  b = BG 4  c = BG 3  d = BG 2  e = BG 1";
             } break;
         case 0x212f: comment = "Window Mask Designation for Sub Screen";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";000abcde a = Object  b = BG 4  c = BG 3  d = BG 2  e = BG 1";
             } break;
         case 0x2130: comment = "Initial Settings for Color Addition";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";aabb00cd a = Main Color Window On/Off b = Sub Color Window On/Off";
                 comment += spaces(10); comment += ";c = Fixed Color Add/Subtract Enable  d = Direct Select";
             } break;
         case 0x2131: comment = "Add/Subtract Select and Enable";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";abcdefgh  a = 0 = Addition, 1 = Subtraction  b = 1/2 Enable";
                 comment += spaces(10);
                 comment += ";cdefgh = Enables  c = Back, d = Object, efgh = BG 4, 3, 2, 1";
             } break;
         case 0x2132: comment = "Fixed Color Data";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";abcddddd a = Blue  b = Green  c = Red  dddd = Color Data";
             } break;
         case 0x2133: comment = "Screen Initial Settings";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";ab00cdef a = External Sync  b = ExtBG Mode  c = Pseudo 512 Mode";
                 comment += spaces(10); comment += ";d = Vertical Size  e = Object-V Select  f = Interlace";
@@ -606,7 +606,7 @@ std::string getRAMComment(unsigned int addr, int comment_level)
         case 0x213e: case 0x213f: comment = "PPU Status Flag"; break;
         case 0x2140: case 0x2141: case 0x2142: case 0x2143: comment = "APU I/O Port"; break;
         case 0x4200: comment = "NMI, V/H Count, and Joypad Enable";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";a0bc000d a = NMI  b = V-Count  c = H-Count  d = Joypad";
             } break;
@@ -621,32 +621,32 @@ std::string getRAMComment(unsigned int addr, int comment_level)
         case 0x4209: comment = "V-Count Timer (Upper 8 Bits)"; break;
         case 0x420a: comment = "V-Count Timer MSB (Bit 0)"; break;
         case 0x420b: comment = "Regular DMA Channel Enable";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";abcdefgh  a = Channel 7 .. h = Channel 0: 0 = Enable  1 = Disable";
             } break;
         case 0x420c: comment = "H-DMA Channel Enable";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";abcdefgh  a = Channel 7 .. h = Channel 0: 0 = Enable  1 = Disable";
             } break;
         case 0x420d: comment = "Cycle Speed Designation";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";0000000a a: 0 = 2.68 MHz, 1 = 3.58 MHz";
             } break;
         case 0x4210: comment = "NMI Enable";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";a0000000 a: 0 = Disabled, 1 = Enabled";
             } break;
         case 0x4211: comment = "IRQ Flag By H/V Count Timer";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";a0000000 a: 0 = H/V Timer Disabled, 1 = H/V Timer is Time Up";
             } break;
         case 0x4212: comment = "H/V Blank Flags and Joypad Status";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";ab00000c a = V Blank  b = H Blank  c = Joypad Ready to Be Read";
             } break;
@@ -656,18 +656,18 @@ std::string getRAMComment(unsigned int addr, int comment_level)
         case 0x4216: comment = "Product/Remainder Result (Low Byte)"; break;
         case 0x4217: comment = "Product/Remainder Result (High Byte)"; break;
         case 0x4218: case 0x421a: case 0x421c: case 0x421e: comment = "Joypad " + to_string((addr - 0x4217) / 2 + 1, 1, false) + "Data (Low Byte)";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";abcd0000 a = Button A  b = X  c = L  d = R";
             } break;
         case 0x4219: case 0x421b: case 0x421d: case 0x421f: comment = "Joypad " + to_string((addr - 0x4218) / 2 + 1, 1, false) + "Data (High Byte)";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";abcdefgh a = B b = Y c = Select d = Start efgh = Up/Dn/Lt/Rt";
             } break;
         case 0x4300: case 0x4310: case 0x4320: case 0x4330: case 0x4340:
         case 0x4350: case 0x4360: case 0x4370: comment = "Parameters for DMA Transfer";
-            if (comment_level > 1) {
+            if (comment_level > 3) {
                 comment += spaces(10);
                 comment += ";ab0cdeee a = Direction  b = Type  c = Inc/Dec  d = Auto/Fixed";
                 comment += spaces(10); comment += ";e = Word Size Select";

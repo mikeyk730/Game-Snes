@@ -5,7 +5,7 @@
 
 struct DisassemblerProperties{
   DisassemblerProperties() :
-    m_comment_level(1),
+    m_comment_level(3),
     m_quiet(false),
     m_start_w_accum_16(false),
     m_start_w_index_16(false),
