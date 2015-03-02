@@ -41,3 +41,8 @@ namespace Address
 
     std::string to_string(int i, int length, bool in_hex = true);
 }
+
+namespace Input
+{
+    bool is_comment(const std::string& line);
+}

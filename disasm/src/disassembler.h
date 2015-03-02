@@ -2,12 +2,14 @@
 #define DISASSEMBLER_H
 
 #include <iostream>
+#include <memory>
 #include <string>
 #include <map>
 #include "request.h"
 
 class InstructionMetadata;
 struct OutputHandler;
+struct InstructionNameProvider;
 
 struct Disassembler{
 private:    
@@ -26,12 +28,13 @@ public:
 
     void setProcessFlags();
 
-    void load_data(char *fname, bool is_ptr_data = false);
-    void load_comments(char* fname);
-    void load_symbols(char *fname, bool ram = false);
-    void load_symbols2(char *fname);
-    void load_accum_bytes(char *fname, bool accum);
-    void load_offsets(char *fname);
+    void load_data(const char *filename, bool is_ptr_data = false); //todo: separate
+    void load_comments(const char *filename);
+    void load_symbols(const char *filename, bool ram = false); //todo: separate
+    void load_symbols2(const char *filename); //todo: rename
+    void load_accum_bytes(char *fname, bool accum);//todo: rename
+    void load_offsets(const char *filename); //load instructions whose targets need to be adjusted 
+    void load_instruction_names(const char *filename);
 
     bool add_label(int bank, int pc, const std::string& label);
     void mark_label_used(int bank, int pc, const std::string& label);
@@ -51,6 +54,9 @@ public:
     inline void passes(int passes) { m_passes_to_make = passes; }
     bool finalPass() const { return (m_current_pass == m_passes_to_make); }
     bool printInstructionBytes() const { return (!m_range_properties.m_quiet && finalPass()); }
+
+    int header_size() const { return m_header_size; }
+    void header_size(int size) { m_header_size = size; }
 
     char read_next_byte();
 
@@ -98,7 +104,10 @@ private:
 
     OutputHandler* m_noop_handler;
     OutputHandler* m_output_handler;
+    std::shared_ptr<InstructionNameProvider> m_instruction_name_provider;
+
     FILE* m_rom_file;
+    int m_header_size;
 };
 
 #endif

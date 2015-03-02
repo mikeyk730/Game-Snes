@@ -20,3 +20,11 @@ namespace Address
         return ss.str();
     }
 }
+
+namespace Input
+{
+    bool is_comment(const string& line)
+    {
+        return (line.length() < 1 || line[0] == ';');
+    }
+}

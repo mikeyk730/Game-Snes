@@ -1,19 +1,32 @@
+#include <map>
+#include <memory>
 #include <string>
 #include <sstream>
 
 struct DisassemblerContext;
 struct Instruction;
 
+struct InstructionNameProvider
+{
+    InstructionNameProvider();
+    InstructionNameProvider(std::istream& input);
+    std::string get_name(int opcode) const;
+
+private:
+    std::map<int, std::string> m_names;
+};
+
+
 class InstructionMetadata{
     typedef void(*InstructionHandlerPtr)(DisassemblerContext*, Instruction*);
     typedef std::string(*AnnotationHandlerPtr)(bool, bool);
 public:
     InstructionMetadata();
-    InstructionMetadata(const std::string& name, unsigned int opcode, InstructionHandlerPtr address_mode_handler, AnnotationHandlerPtr annotation_handler = 0);
+    InstructionMetadata(unsigned int opcode, InstructionHandlerPtr address_mode_handler, AnnotationHandlerPtr annotation_handler = 0);
 
-    std::string name() const {
-        return m_name;
-    }
+    //std::string name() const {
+    //    return m_name;
+    //}
 
     bool is_snes_instruction() const
     {
@@ -25,17 +38,17 @@ public:
         return m_opcode;
     }
 
-    std::string annotated_name(bool is_accum_16, bool is_index_16) const;
+    std::string annotation(bool is_accum_16, bool is_index_16) const;
 
     bool isBranch() const;
+    bool isJump() const;
     bool isReturn() const;
-    bool isCodeBreak() const;
+    bool isCodeBreak() const { return isReturn() || isJump(); }
 
     InstructionHandlerPtr handler() const { return m_instruction_handler; }
     AnnotationHandlerPtr annotationHandler() const { return m_annotation_handler; }
 
 private:
-    std::string m_name;
     unsigned int m_opcode;
 
     InstructionHandlerPtr m_instruction_handler;
@@ -44,7 +57,7 @@ private:
 
 struct Instruction
 {
-    Instruction(const InstructionMetadata& metadata, bool accum_16, bool index_16, int comment_level);
+    Instruction(const InstructionMetadata& metadata, std::shared_ptr<InstructionNameProvider> name_provider, bool accum_16, bool index_16, int comment_level);
     
     void addInstructionBytes(unsigned char a);
     void addInstructionBytes(unsigned char a, unsigned char b);
@@ -54,6 +67,7 @@ struct Instruction
     void setAddress(const char *format, ...);
     std::string getAddress() const;
 
+    std::string annotatedName() const;
     std::string toString() const;
 
     void setAdditionalInstruction(const char* format, ...);
@@ -75,5 +89,6 @@ private:
     bool m_index_16;
     int m_comment_level;
     std::string m_ram_comment;
+    std::shared_ptr<InstructionNameProvider> m_name_provider;
 };
 

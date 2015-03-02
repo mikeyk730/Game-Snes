@@ -31,6 +31,8 @@ void main (int argc, char *argv[])
     //process arguments
     for(int i = 1; i < argc; ++i){
         string current(argv[i]);
+        if (current == "--instr" && ++i < argc)
+            disasm.load_instruction_names(argv[i]);
         if (current == "--data" && ++i < argc)
             disasm.load_data(argv[i]);
         else if (current == "--ptr" && ++i < argc)
@@ -53,6 +55,8 @@ void main (int argc, char *argv[])
             disasm.hirom(true);
         else if (current == "--quiet")
             disasm.quiet(true);
+        else if (current == "--noheader")
+            disasm.header_size(0);
         else if (current == "--2pass")
             disasm.passes(2);
 
@@ -63,8 +67,6 @@ void main (int argc, char *argv[])
     }
 
     while(1){
-        fseek(srcfile, 512, 0);
-
         Request request;
         if (!request.get(cin, disasm.hirom()))
             break;
