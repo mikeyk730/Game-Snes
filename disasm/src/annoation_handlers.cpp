@@ -1,4 +1,5 @@
 #include <string>
+#include <algorithm>
 #include "annotation_handlers.h"
 
 using namespace std;
@@ -20,6 +21,21 @@ namespace
     inline std::string Long(bool is_accum_16, bool is_index_16, bool is_symbolic_address){
         return ".L";
     }
+
+    inline std::string SymbolicLong(bool is_accum_16, bool is_index_16, bool is_symbolic_address){
+        return is_symbolic_address ? ".l" : "";
+    }
+
+    inline std::string SymbolicWord(bool is_accum_16, bool is_index_16, bool is_symbolic_address){
+        return is_symbolic_address ? ".w" : "";
+    }
+}
+
+std::shared_ptr<AnnotationProvider> CreateAnnotationProvider (const std::string& type)
+{
+    if (type == "smas")
+        return make_shared<SmasAnnotations>();
+    return make_shared<DefaultAnnotations>();
 }
 
 AnnotationProvider::~AnnotationProvider()
@@ -121,5 +137,22 @@ string DefaultAnnotations::get_annotation(int opcode, bool is_accum_16, bool is_
     return "";
 }
 
-DefaultAnnotations::~DefaultAnnotations()
-{ }
+SmasAnnotations::SmasAnnotations()
+{
+    m_handlers.insert(make_pair(0xB9, &SymbolicWord));
+    m_handlers.insert(make_pair(0xBD, &SymbolicWord));
+    m_handlers.insert(make_pair(0xBF, &SymbolicLong));
+}
+
+string SmasAnnotations::get_annotation(int opcode, bool is_accum_16, bool is_index_16, bool is_symbolic_address)
+{
+    auto it = m_handlers.find(opcode);
+    if (it != m_handlers.end()){
+        auto handler = it->second;
+        string a = (*handler)(is_accum_16, is_index_16, is_symbolic_address);
+        std::transform(a.begin(), a.end(), a.begin(), ::tolower);
+        return a;
+    }
+    return "";
+}
+

@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <sstream>
 #include <fstream>
+#include "byte_properties.h"
 #include "disassembler.h"
 #include "disassembler_context.h"
 #include "request.h"
@@ -16,47 +17,83 @@ using namespace Address;
 using Input::is_comment;
 
 namespace{
-   const int MAX_FILE_SIZE = 0x400000;   
+    istream& get_full_address(istream& in, unsigned int* full)
+    {
+        in >> hex >> *full;
+        return in;
+    }
 
-   istream& get_raw_address(istream& in, unsigned char* bank, unsigned int* addr)
-   {
-       unsigned int full;
-       if (!(in >> hex >> full))
-           return in;
+    unsigned int index_from_full_address(unsigned int full_address)
+    {
+        unsigned char bank = bank_from_addr24(full_address);
+        unsigned int addr = addr16_from_addr24(full_address);
+        return get_index(bank, addr);
+    }
 
-       *addr = addr16_from_addr24(full);
-       *bank = bank_from_addr24(full);
+    istream& get_raw_address(istream& in, unsigned char* bank, unsigned int* addr)
+    {
+        unsigned int full;
+        if (!(in >> hex >> full))
+            return in;
 
-       return in;
-   }
+        *addr = addr16_from_addr24(full);
+        *bank = bank_from_addr24(full);
 
-   istream& get_data_address(istream& in, unsigned char* bank, unsigned int* addr)
-   {
-       get_raw_address(in, bank, addr);
+        return in;
+    }
 
-       if (*addr < 0x8000)
-           *addr += 0x8000;
+    istream& get_data_address(istream& in, unsigned char* bank, unsigned int* addr)
+    {
+        get_raw_address(in, bank, addr);
 
-       return in;
-   }
+        if (*addr < 0x8000)
+            *addr += 0x8000;
 
-   void increment_address(unsigned char* bank, unsigned int* pc, bool hirom)
-   {
-       ++(*pc);
-       if (*pc > 0x0ffff){
-           ++(*bank);
-           *pc -= (hirom ? 0x10000 : 0x8000);
-       }
-   }
+        return in;
+    }
+
+    void increment_address(unsigned char* bank, unsigned int* pc, bool hirom)
+    {
+        ++(*pc);
+        if (*pc > 0x0ffff){
+            ++(*bank);
+            *pc -= (hirom ? 0x10000 : 0x8000);
+        }
+    }
 }
+
+DisassemblerState::DisassemblerState() :
+m_accum_16(false),
+m_index_16(false)
+{}
+
+unsigned int DisassemblerState::get_current_index() const
+{
+    return get_index(m_current_bank, m_current_addr);
+}
+
+unsigned int DisassemblerState::get_current_address() const
+{
+    return full_address(m_current_bank, m_current_addr);
+}
+
+void DisassemblerState::increment_address()
+{
+    ::increment_address(&m_current_bank, &m_current_addr, m_hirom);
+}
+
+void DisassemblerState::set_address(unsigned char bank, unsigned int pc)
+{
+    m_current_bank = bank;
+    m_current_addr = pc;
+}
+
 
 Disassembler::Disassembler(FILE* rom_file) :
 m_hirom(false),
 m_current_pass(1),
 m_passes_to_make(1),
 m_flag(0),
-m_accum_16(false),
-m_index_16(false),
 m_output_handler(new DefaultOutput()),
 m_noop_handler(new NoOutput()),
 m_rom_file(rom_file),
@@ -65,8 +102,16 @@ m_header_size(512),
 m_annotation_provider(new DefaultAnnotations)
 { 
     initialize_instruction_lookup(); 
-    m_data = new unsigned char[MAX_FILE_SIZE];
-    memset(m_data, 0, MAX_FILE_SIZE);
+
+    //todo: move to class, use actual file size
+    m_data = new ByteProperties[MAX_FILE_SIZE];
+    for (int bank = 0; bank < MAX_FILE_SIZE / BANK_SIZE; ++bank)
+    {
+        for (int i = bank * BANK_SIZE; i < BANK_SIZE; ++i)
+        {
+            m_data[i].data_bank(bank);
+        }
+    }
 }
 
 Disassembler::~Disassembler()
@@ -74,42 +119,38 @@ Disassembler::~Disassembler()
     delete [] m_data;
 }
 
-int Disassembler::get_offset(unsigned char bank, unsigned int pc)
-{
-    auto it = m_load_offsets.find(full_address(bank, pc));
-    if (it != m_load_offsets.end())
-        return it->second;
-    return 0;
+//todo: move hirom to state and test
+void Disassembler::hirom(bool hirom) 
+{ 
+    m_state.hirom(hirom);
+    m_hirom = hirom; 
 }
 
-std::string Disassembler::get_comment(unsigned char bank, unsigned int pc)
+int Disassembler::get_offset()
+{
+    int index = m_state.get_current_index();
+    return m_data[index].load_offset();
+}
+
+std::string Disassembler::get_comment()
 {
     if (m_range_properties.m_comment_level == 0)
         return "";
 
-    auto it = m_comment_lookup.find(full_address(bank,pc));
-    if (it != m_comment_lookup.end())
-        return it->second;
-    return "";
+    int i = m_state.get_current_index();
+    return m_data[i].comment();
 }
 
-int Disassembler::get_default_ptr_bank() const
+int Disassembler::get_data_bank() const
 {
-    auto it = m_ptr_bank_lookup.find(get_index(m_current_bank, m_current_addr));
-    if (it != m_ptr_bank_lookup.end())
-        return it->second;
-    return m_current_bank;
-}
-
-unsigned int Disassembler::current_full_address() const
-{
-    return full_address(m_current_bank, m_current_addr);
+    int i = m_state.get_current_index();
+    return m_data[i].data_bank();
 }
 
 char Disassembler::read_next_byte()
 {
     char c = read_char(m_rom_file);
-    increment_address(&m_current_bank, &m_current_addr, m_hirom);
+    m_state.increment_address();
     return c;
 }
 
@@ -123,8 +164,8 @@ void Disassembler::handleRequest(const Request& request)
     m_end = full_address(request.m_properties.m_end_bank,
         request.m_properties.m_end_addr);
 
-    m_accum_16 = request.m_properties.m_start_w_accum_16;
-    m_index_16 = request.m_properties.m_start_w_index_16;
+    m_state.is_accum_16bit(request.m_properties.m_start_w_accum_16);
+    m_state.is_index_16bit(request.m_properties.m_start_w_index_16);
 
     disassembleRange(request);
 
@@ -145,14 +186,13 @@ void Disassembler::disassembleRange(const Request& request)
     do{
         m_range_properties = request.m_properties;
 
-        m_current_bank = m_range_properties.m_start_bank;
-        m_current_addr = m_range_properties.m_start_addr;
+        m_state.set_address(m_range_properties.m_start_bank, m_range_properties.m_start_addr);
 
         fseek(m_rom_file, header_size(), 0);
         if (m_hirom)
-            fseek(m_rom_file, current_full_address(), 1);
+            fseek(m_rom_file, m_state.get_current_address(), 1);
         else
-            fseek(m_rom_file, m_current_bank * 32768 + m_current_addr - 0x8000, 1);
+            fseek(m_rom_file, m_state.get_current_index(), 1);
 
         if (request.m_type == Request::Dcb)
             doDcb();
@@ -183,11 +223,13 @@ void Disassembler::load_accum_bytes(char *fname, bool accum)
         string type;
         int fulladdr, bytes;
         if(!(line_stream >> hex >> fulladdr >> type >> dec >> bytes)) continue;
+
+        int index = index_from_full_address(fulladdr);
         
         if(type == "A" || type == "AI" || type == "IA")
-            m_accum_lookup.insert(make_pair(fulladdr, bytes));
+            m_data[index].reset_accum_to = bytes;
         if(type == "I" || type == "AI" || type == "IA")
-            m_index_lookup.insert(make_pair(fulladdr, bytes));
+            m_data[index].reset_index_to = bytes;
     }
 }
 
@@ -195,16 +237,18 @@ void Disassembler::setProcessFlags()
 {    
     m_flag = 0;
 
-    map<int, int>::iterator it = m_accum_lookup.find(current_full_address());
-    if (it != m_accum_lookup.end()){
-        m_accum_16 = ((it->second) == 16);
-        m_flag |= (m_accum_16) ? 0x20 : 0x02;
+    int i = m_state.get_current_index();
+
+    if (m_data[i].reset_accum_to){
+        bool is_accum_16 = (m_data[i].reset_accum_to == 16);
+        m_state.is_accum_16bit(is_accum_16);
+        m_flag |= (is_accum_16) ? 0x20 : 0x02;
     }
 
-    map<int, int>::iterator it2 = m_index_lookup.find(current_full_address());
-    if (it2 != m_index_lookup.end()){
-        m_index_16 = ((it2->second) == 16);    
-        m_flag |= (m_index_16) ? 0x10 : 0x01;
+    if (m_data[i].reset_index_to){
+        bool is_index_16 = (m_data[i].reset_index_to == 16);
+        m_state.is_index_16bit(is_index_16);
+        m_flag |= (is_index_16) ? 0x10 : 0x01;
     }
 }
 
@@ -217,16 +261,23 @@ void Disassembler::load_comments(const char* fname)
         if (is_comment(line)) continue;
 
         istringstream ss(line);
-        int hex_addr;
-        if (!(ss >> hex >> hex_addr)) continue;
+        unsigned char bank;
+        unsigned int addr;
+        if (!get_data_address(ss, &bank, &addr))
+            continue;
         
         ss.get(); //consume space delimiter
 
         string comment;
         if(!getline(ss, comment)) continue;
 
-        if(!m_comment_lookup.insert(make_pair(hex_addr, comment)).second)
+        unsigned int index = get_index(bank, addr);
+        if (!m_data[index].comment().empty()){
             cerr << "failed to add comment >" << comment << "<" << endl;
+            continue;
+        }
+
+        m_data[index].comment(comment);
     }
     cerr << "; Reading comments... done." << endl;
 }
@@ -238,11 +289,9 @@ void Disassembler::load_offsets(const char* fname)
     while (getline(in, line)){
         if (is_comment(line)) continue;
 
-        string label;
-
         istringstream ss(line);
-        int hex_addr;
-        if (!(ss >> hex >> hex_addr)) continue;
+        unsigned int hex_addr;
+        if (!get_full_address(ss, &hex_addr)) continue;
 
         int offset = 1;
         if (!(ss >> dec >> offset)){
@@ -250,10 +299,12 @@ void Disassembler::load_offsets(const char* fname)
             exit(-1);
         }
 
-        auto result = m_load_offsets.insert(make_pair(hex_addr, offset));
-        if (!result.second){
+        int index = index_from_full_address(hex_addr);
+        if (m_data[index].load_offset() != 0){
             cerr << "failed to add load offset >" << line << "<" << endl;
+            continue;
         }
+        m_data[index].load_offset(offset);
     }
 }
 
@@ -290,11 +341,10 @@ void Disassembler::load_symbols2(const char *fname)
     cerr << "using method 2" << endl;
     cerr << "; Reading symbols" << endl;
     fstream in(fname);
-    int fulladdr;
-    while (in >> hex >> fulladdr){
+    unsigned int fulladdr;
+    while (get_full_address(in, &fulladdr)){
         string label = "CODE_" + to_string(fulladdr, 6);
-        if(!m_label_lookup.insert(make_pair(fulladdr, label)).second)
-            cerr << "failed to add symbol2 >" << label << "<" << endl;
+        m_data[index_from_full_address(fulladdr)].label(label);
     }
     cerr << "; Reading symbols... done." << endl;
 }
@@ -327,9 +377,9 @@ void Disassembler::load_data(const char *fname, bool is_ptr_data)
             exit(-1);
         }        
 
-        if (m_data[index] != 0){
+        if (m_data[index].type() != 0){
             cerr << "Address " << to_string(bank,2) << to_string(addr,4) 
-                << " already flagged as data.  Type: " << int(m_data[index]) << endl;
+                << " already flagged as data.  Type: " << int(m_data[index].type()) << endl;
             continue;
         }
 
@@ -341,11 +391,13 @@ void Disassembler::load_data(const char *fname, bool is_ptr_data)
                 exit(-1);
             }
             for (int i = 0; i < size; i += flag_byte){
-                m_ptr_bank_lookup.insert(make_pair(index+i, ptr_bank));
+                m_data[index+i].data_bank(ptr_bank);
             }
         }
 
-        memset(&m_data[index], flag_byte, size);
+        for (int i = 0; i < size; ++i){
+            m_data[index + i].type(flag_byte);
+        }
 
         //no label, create one
         if(!(line_stream >> label)){
@@ -367,13 +419,24 @@ void Disassembler::load_instruction_names(const char* filename)
     cerr << "; Reading instrucions... done." << endl;
 }
 
+void Disassembler::set_output_format(const char* output_format)
+{
+    m_output_handler = CreateOutputHandler(output_format);
+}
+
+void Disassembler::set_annotation_format(const char* output_format)
+{
+    m_annotation_provider = CreateAnnotationProvider(output_format);
+}
+
 bool Disassembler::add_label(int bank, int pc, const string& label)
 {
-    int full_addr = full_address(bank,pc);
-    if (!m_label_lookup.insert(make_pair(full_addr, label)).second){
+    int index = get_index(bank, pc);
+    if (!m_data[index].label().empty()){
         cerr << "failed to add symbol >" << label << "<" << endl;
         return false;
     }
+    m_data[index].label(label);
     return true;
 }
 
@@ -385,10 +448,15 @@ void Disassembler::mark_label_used(int bank, int pc, const string& label)
 
 string Disassembler::get_instr_label(const InstructionMetadata& instr, unsigned char bank, int pc, int offset)
 {
+    //todo:remove
+    //if (!instr.isBranch() && !instr.isJump() && !instr.isCall()) return "";
+
+    if (pc < 0x8000 && bank != 0x7f) bank = 0x7e;
+
     pc -= offset;
     bool is_branch = instr.isBranch();
 
-    string label = get_label_helper(bank, pc, true, true, is_branch);
+    string label = get_label_helper(full_address(bank, pc), true, true, is_branch);
 
     if (offset != 0){
         stringstream ss;
@@ -402,15 +470,15 @@ string Disassembler::get_instr_label(const InstructionMetadata& instr, unsigned 
     return label;
 }
 
-string Disassembler::get_line_label(unsigned char bank, int pc, bool use_addr_label)
+string Disassembler::get_line_label(bool use_addr_label)
 {
-    return get_label_helper(bank, pc, use_addr_label, false, false);
+    return get_label_helper(m_state.get_current_address(), use_addr_label, false, false);
 }
 
-string Disassembler::get_label_helper(unsigned char bank, int pc, bool use_addr_label, bool mark_instruction_used, bool is_branch)
+string Disassembler::get_label_helper(unsigned int key, bool use_addr_label, bool mark_instruction_used, bool is_branch)
 {
-    if (pc < 0x8000 && bank != 0x7f) bank = 0x7e;
-    int key = full_address(bank,pc);
+    unsigned char bank = bank_from_addr24(key);
+    unsigned int pc = addr16_from_addr24(key);
 
     // does the symbol lie outside of the range we are disassembling?
     bool is_extern = (key < m_start || key > m_end);
@@ -424,9 +492,8 @@ string Disassembler::get_label_helper(unsigned char bank, int pc, bool use_addr_
             label = it->second;
     }
     else{
-        map<int, string>::iterator it = m_label_lookup.find(key);
-        if (it != m_label_lookup.end()){
-            label = it->second;
+        label = m_data[index_from_full_address(key)].label();
+        if (!label.empty()){
             mark_label_used(bank, pc, label); // always include user-provided labels
         }
 
@@ -464,33 +531,33 @@ void Disassembler::doSmart()
             request.m_properties.m_start_bank = bank;
             request.m_properties.m_start_addr = pc;
  
-            if (m_data[i] == 1){
+            if (m_data[i].type() == 1){
                 request.m_type = Request::Dcb;
                 do{
                     ++i;
                     increment_address(&bank, &pc, m_hirom);
-                } while ((m_data[i] == 1) && (full_address(bank, pc) < end_full_address));
+                } while ((m_data[i].type() == 1) && (full_address(bank, pc) < end_full_address));
             }
-            else if (m_data[i] == 2){
+            else if (m_data[i].type() == 2){
                 request.m_type = Request::Ptr;
                 do{
                     ++i;
                     increment_address(&bank, &pc, m_hirom);
-                } while ((m_data[i] == 2) && (full_address(bank, pc) < end_full_address));
+                } while ((m_data[i].type() == 2) && (full_address(bank, pc) < end_full_address));
             }
-            else if (m_data[i] == 3){
+            else if (m_data[i].type() == 3){
                 request.m_type = Request::PtrLong;
                 do{
                     ++i;
                     increment_address(&bank, &pc, m_hirom);
-                } while ((m_data[i] == 3) && (full_address(bank, pc) < end_full_address));
+                } while ((m_data[i].type() == 3) && (full_address(bank, pc) < end_full_address));
             }
             else{
                 request.m_type = Request::Asm;
                 do{
                     ++i;
                     increment_address(&bank, &pc, m_hirom);
-                } while ((m_data[i] == 0) && (full_address(bank, pc) < end_full_address));
+                } while ((m_data[i].type() == 0) && (full_address(bank, pc) < end_full_address));
             }
 
             request.m_properties.m_end_bank = bank;
@@ -505,14 +572,14 @@ void Disassembler::doDcb(int bytes_per_line)
 
     unsigned int end_full_address = m_range_properties.full_end_address();
 
-    while (current_full_address() < end_full_address){
+    while (m_state.get_current_address() < end_full_address){
         vector<unsigned char> bytes;
         string comment;
         string label;
         bool end_of_chunk = false;
 
-        for (int j = 0; j < bytes_per_line && current_full_address() < end_full_address; ++j){
-            string current_label = get_line_label(m_current_bank, m_current_addr, false);
+        for (int j = 0; j < bytes_per_line && m_state.get_current_address() < end_full_address; ++j){
+            string current_label = get_line_label(false);
             if (!current_label.empty()){
                 if (j == 0){
                     label = current_label;
@@ -523,7 +590,7 @@ void Disassembler::doDcb(int bytes_per_line)
                 }
             }
 
-            string current_comment = get_comment(m_current_bank, m_current_addr);
+            string current_comment = get_comment();
             if (!current_comment.empty()) {
                 if (comment.empty()){
                     comment = current_comment;
@@ -533,15 +600,15 @@ void Disassembler::doDcb(int bytes_per_line)
                 }
             }
 
-            if (m_current_addr == 0x8000){
-                output_handler()->BankStart(m_current_bank);
+            if (m_state.is_bank_start()){
+                output_handler()->BankStart(m_state.get_current_bank());
             }
 
             unsigned char c = read_next_byte();
             bytes.push_back(c);
         }
 
-        if (current_full_address() == end_full_address){
+        if (m_state.get_current_address() == end_full_address){
             end_of_chunk = true;
         }
 
@@ -557,18 +624,18 @@ void Disassembler::doPtr(bool long_ptrs)
 
     unsigned int end_full_address = m_range_properties.full_end_address();
 
-    while (current_full_address() < end_full_address){
+    while (m_state.get_current_address() < end_full_address){
 
-        if (m_current_addr == 0x8000){
-            output_handler()->BankStart(m_current_bank);
+        if (m_state.is_bank_start()){
+            output_handler()->BankStart(m_state.get_current_bank());
         }
 
-        string label = get_line_label(m_current_bank, m_current_addr, false);
-        string comment = get_comment(m_current_bank, m_current_addr);
-        unsigned char default_bank = get_default_ptr_bank();
+        string label = get_line_label(false);
+        string comment = get_comment();
+        int data_bank = get_data_bank();
         setProcessFlags();
 
-        disassembleInstruction(m_instruction_lookup[long_ptrs ? 0x101 : 0x100], default_bank, label, comment, 0);
+        disassembleInstruction(m_instruction_lookup[long_ptrs ? 0x101 : 0x100], label, comment, 0, data_bank);
     }
 
     output_handler()->PtrBlockEnd();
@@ -579,15 +646,16 @@ void Disassembler::doDisasm()
     output_handler()->CodeBlockStart();
     unsigned int end_full_address = m_range_properties.full_end_address();
 
-    while (current_full_address() < end_full_address){
+    while (m_state.get_current_address() < end_full_address){
 
-        if (m_current_addr == 0x8000){
-            output_handler()->BankStart(m_current_bank);
+        if (m_state.is_bank_start()){
+            output_handler()->BankStart(m_state.get_current_bank());
         }
 
-        string label = get_line_label(m_current_bank, m_current_addr, true);
-        string comment = get_comment(m_current_bank, m_current_addr);
-        int offset = get_offset(m_current_bank, m_current_addr);
+        string label = get_line_label(true); //todo: make function
+        string comment = get_comment();
+        int offset = get_offset();
+        int data_bank = get_data_bank();
         setProcessFlags();
 
         unsigned char code = read_next_byte();
@@ -597,7 +665,7 @@ void Disassembler::doDisasm()
         }
 
         InstructionMetadata instr = m_instruction_lookup[code];
-        disassembleInstruction(instr, m_current_bank, label, comment, offset);
+        disassembleInstruction(instr, label, comment, offset, data_bank);
         if (m_range_properties.m_stop_at_rts && instr.isReturn()){
             break;
         }
@@ -605,11 +673,10 @@ void Disassembler::doDisasm()
     output_handler()->CodeBlockEnd();
 }
 
-void Disassembler::disassembleInstruction(const InstructionMetadata& instr, unsigned char default_bank, const string& label, const string& comment, int offset)
+void Disassembler::disassembleInstruction(const InstructionMetadata& instr, const string& label, const string& comment, int offset, int data_bank)
 {
-    DisassemblerContext context((Disassembler*)this, instr, &m_current_addr, &m_flag, &m_accum_16,
-        &m_index_16, default_bank, offset);
-    Instruction output(instr, m_instruction_name_provider, m_annotation_provider, m_accum_16, m_index_16, m_range_properties.m_comment_level);
+    DisassemblerContext context((Disassembler*)this, instr, &m_state, &m_flag, data_bank, offset);
+    Instruction output(instr, m_instruction_name_provider, m_annotation_provider, m_state, m_range_properties.m_comment_level);
 
     auto instruction_handler = instr.handler();
     instruction_handler(&context, &output);
@@ -795,7 +862,7 @@ void Disassembler::initialize_instruction_lookup()
     m_instruction_lookup.insert(make_pair(0xFA, InstructionMetadata("PLX", 0xFA, &InstructionHandler::Implied)));
     m_instruction_lookup.insert(make_pair(0x7A, InstructionMetadata("PLY", 0x7A, &InstructionHandler::Implied)));
     m_instruction_lookup.insert(make_pair(0xC2, InstructionMetadata("REP", 0xC2, &InstructionHandler::ImmediateREP)));
-    m_instruction_lookup.insert(make_pair(0x2E, InstructionMetadata("ROL", 0x2E, &InstructionHandler::Immediate)));
+    m_instruction_lookup.insert(make_pair(0x2E, InstructionMetadata("ROL", 0x2E, &InstructionHandler::Absolute)));
     m_instruction_lookup.insert(make_pair(0x26, InstructionMetadata("ROL", 0x26, &InstructionHandler::DirectPage)));
     m_instruction_lookup.insert(make_pair(0x2A, InstructionMetadata("ROL", 0x2A, &InstructionHandler::Implied)));
     m_instruction_lookup.insert(make_pair(0x36, InstructionMetadata("ROL", 0x36, &InstructionHandler::DPIndexedX)));

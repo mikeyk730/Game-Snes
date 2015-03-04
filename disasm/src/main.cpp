@@ -33,7 +33,11 @@ void main (int argc, char *argv[])
         string current(argv[i]);
         if (current == "--instr" && ++i < argc)
             disasm.load_instruction_names(argv[i]);
-        if (current == "--data" && ++i < argc)
+        else if (current == "--output" && ++i < argc)
+            disasm.set_output_format(argv[i]);
+        else if (current == "--annotate" && ++i < argc)
+            disasm.set_annotation_format(argv[i]);
+        else if (current == "--data" && ++i < argc)
             disasm.load_data(argv[i]);
         else if (current == "--ptr" && ++i < argc)
             disasm.load_data(argv[i], true);
@@ -47,7 +51,7 @@ void main (int argc, char *argv[])
             disasm.load_comments(argv[i]);
 		else if (current == "--offsets" && ++i < argc)
 			disasm.load_offsets(argv[i]);
-		else if (current == "--accum" && ++i < argc)
+		else if (current == "--accum" && ++i < argc) //todo: rename
             disasm.load_accum_bytes(argv[i], true);
         else if (current == "--index" && ++i < argc)
             disasm.load_accum_bytes(argv[i], false);

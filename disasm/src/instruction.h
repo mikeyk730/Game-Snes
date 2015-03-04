@@ -4,6 +4,7 @@
 #include <sstream>
 
 struct DisassemblerContext;
+struct DisassemblerState;
 struct Instruction;
 struct AnnotationProvider;
 
@@ -32,13 +33,14 @@ public:
         return m_opcode < 0x100;
     }
 
-    unsigned char opcode() const
+    unsigned int opcode() const
     {
         return m_opcode;
     }
 
     bool isBranch() const;
     bool isJump() const;
+    bool isCall() const;
     bool isReturn() const;
     bool isCodeBreak() const { return isReturn() || isJump(); }
 
@@ -53,7 +55,7 @@ private:
 
 struct Instruction
 {
-    Instruction(const InstructionMetadata& metadata, std::shared_ptr<InstructionNameProvider> name_provider, std::shared_ptr<AnnotationProvider> annotation_provider, bool accum_16, bool index_16, int comment_level);
+    Instruction(const InstructionMetadata& metadata, std::shared_ptr<InstructionNameProvider> name_provider, std::shared_ptr<AnnotationProvider> annotation_provider, const DisassemblerState& state, int comment_level);
     
     void addInstructionBytes(unsigned char a);
     void addInstructionBytes(unsigned char a, unsigned char b);
@@ -85,8 +87,8 @@ private:
     char address[80];
     bool m_is_address_symbolic;
     char additional_instruction[80];
-    bool m_accum_16;
-    bool m_index_16;
+    bool m_initial_accum_16;
+    bool m_initial_index_16;
     int m_comment_level;
     std::string m_ram_comment;
     std::shared_ptr<InstructionNameProvider> m_name_provider;

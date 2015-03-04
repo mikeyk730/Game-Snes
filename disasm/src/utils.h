@@ -2,6 +2,9 @@
 
 namespace Address
 {
+    const int MAX_FILE_SIZE = 0x400000;
+    const unsigned int BANK_SIZE = 0x08000;
+
     inline unsigned int address_16bit(unsigned char i, unsigned char j)
     {
         return j * 256 + i;
@@ -28,7 +31,6 @@ namespace Address
 
     inline unsigned int get_index(unsigned char bank, unsigned int pc)
     {
-        const unsigned int BANK_SIZE = 0x08000;
         return bank * BANK_SIZE + pc - 0x08000;
     }
 

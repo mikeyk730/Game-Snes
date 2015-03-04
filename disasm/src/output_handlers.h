@@ -1,3 +1,4 @@
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -30,6 +31,20 @@ struct DefaultOutput : public OutputHandler
     virtual void DataBlockEnd();
 };
 
+struct SmasOutput : public OutputHandler
+{
+    virtual void PrintData(const std::vector<unsigned char>& bytes, const std::string& label, const std::string& comment, bool print_bytes, bool end_of_chunk);
+    virtual void PrintInstruction(const Instruction& instr, const std::string& label, const std::string& comment, bool print_bytes, int flags);
+    virtual void BankStart(int bank);
+    virtual void PassStart();
+    virtual void CodeBlockStart();
+    virtual void CodeBlockEnd();
+    virtual void PtrBlockStart();
+    virtual void PtrBlockEnd();
+    virtual void DataBlockStart();
+    virtual void DataBlockEnd();
+};
+
 struct NoOutput : public OutputHandler
 {
     virtual void PrintData(const std::vector<unsigned char>& bytes, const std::string& label, const std::string& comment, bool print_bytes, bool end_of_chunk) {}
@@ -43,3 +58,5 @@ struct NoOutput : public OutputHandler
     virtual void DataBlockStart() {}
     virtual void DataBlockEnd() {}
 };
+
+std::shared_ptr<OutputHandler> CreateOutputHandler(const std::string& type);

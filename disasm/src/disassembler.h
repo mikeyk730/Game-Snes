@@ -11,6 +11,38 @@ class InstructionMetadata;
 struct OutputHandler;
 struct InstructionNameProvider;
 struct AnnotationProvider;
+struct ByteProperties;
+
+struct DisassemblerState
+{
+    DisassemblerState();
+
+    void hirom(bool hi) { m_hirom = hi; } //todo: move to ctor
+
+    void increment_address();
+    void set_address(unsigned char bank, unsigned int pc);
+    unsigned int get_current_index() const;
+    unsigned int get_current_address() const;
+
+    unsigned int get_current_bank() const { return m_current_bank; }
+    unsigned int get_current_pc() const { return m_current_addr; }
+
+    bool is_accum_16bit() const { return m_accum_16; }
+    void is_accum_16bit(bool is_16bit) { m_accum_16 = is_16bit; }
+
+    bool is_index_16bit() const { return m_index_16; }
+    void is_index_16bit(bool is_16bit) { m_index_16 = is_16bit; }
+
+    bool is_bank_start() const { return m_current_addr == 0x8000; }
+
+    bool m_hirom;
+    unsigned char m_current_bank;
+    unsigned int m_current_addr;
+    bool m_accum_16;
+    bool m_index_16;
+    bool m_data_bank;
+};
+
 
 struct Disassembler{
 private:    
@@ -36,18 +68,20 @@ public:
     void load_accum_bytes(char *fname, bool accum);//todo: rename
     void load_offsets(const char *filename); //load instructions whose targets need to be adjusted 
     void load_instruction_names(const char *filename);
+    void set_output_format(const char* output_format);
+    void set_annotation_format(const char* output_format);
 
     bool add_label(int bank, int pc, const std::string& label);
     void mark_label_used(int bank, int pc, const std::string& label);
     std::string get_instr_label(const InstructionMetadata& instr, unsigned char bank, int pc, int offset);
-    std::string get_line_label(unsigned char bank, int pc, bool use_addr_label);
+    std::string get_line_label(bool use_addr_label);
 
-    int get_offset(unsigned char bank, unsigned int pc);
-    std::string get_comment(unsigned char bank, unsigned int pc);
-    int get_default_ptr_bank() const;
+    int get_offset();
+    std::string get_comment();
+    int get_data_bank() const;
 
-    inline void hirom(bool hirom) { m_hirom = hirom; }
-    inline bool hirom() const { return m_hirom; }
+    void hirom(bool hirom);
+    bool hirom() const { return m_hirom; }
 
     inline void quiet(bool q) { m_quiet = q; }
     inline bool quiet() const { return m_quiet; }
@@ -62,44 +96,32 @@ public:
     char read_next_byte();
 
 private:
-    std::string get_label_helper(unsigned char bank, int pc, bool use_addr_label, bool mark_instruction_used, bool is_branch);
+    std::string get_label_helper(unsigned int full_address, bool use_addr_label, bool mark_instruction_used, bool is_branch);
     void disassembleRange(const Request& request);
-    void disassembleInstruction(const InstructionMetadata& instr, unsigned char default_bank, const std::string& label, const std::string& comment, int offset);
+    void disassembleInstruction(const InstructionMetadata& instr, const std::string& label, const std::string& comment, int offset, int data_bank);
     std::shared_ptr<OutputHandler> output_handler() const
     {
         return finalPass() ? m_output_handler : m_noop_handler;
     }
 
-    unsigned int current_full_address() const;
-
     std::map<int, InstructionMetadata> m_instruction_lookup;
-    std::map<int, std::string> m_label_lookup;
     std::map<int, std::string> m_ram_lookup;
     std::map<int, std::string> m_used_label_lookup;
-    std::map<int, std::string> m_comment_lookup;
     std::map<int, std::string> m_unresolved_symbol_lookup;
-    std::map<int, int> m_load_offsets;
-
-    std::map<int, int> m_accum_lookup;
-    std::map<int, int> m_index_lookup;
-    std::map<int, int> m_ptr_bank_lookup;
-
-    // m_data holds a char for every byte of the rom, indicating if that byte is data, code, ptr, etc
-    unsigned char *m_data; 
+    
+    // todo: make this a class
+    ByteProperties *m_data; 
 
     DisassemblerProperties m_range_properties;
 
-    bool m_hirom;
     bool m_quiet;
     int m_current_pass;
     int m_passes_to_make;
     int m_flag; //indicates whether accum/index have changed size during the current instruction
 
-    unsigned char m_current_bank;
-    unsigned int m_current_addr;
-    bool m_accum_16;
-    bool m_index_16;
+    DisassemblerState m_state;
 
+    bool m_hirom;
     int m_start;
     int m_end;
 

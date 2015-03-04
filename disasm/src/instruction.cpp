@@ -1,6 +1,7 @@
 #include <cstdarg>
 #include <iomanip>
 #include <iostream>
+#include "disassembler.h"
 #include "instruction.h"
 #include "annotation_handlers.h"
 #include "utils.h"
@@ -28,18 +29,28 @@ bool InstructionMetadata::isBranch() const
         m_opcode == 0xD0 ||
         m_opcode == 0x10 ||
         m_opcode == 0x80 ||
+        m_opcode == 0x82 ||
         m_opcode == 0x50 ||
         m_opcode == 0x70;
+}
+
+bool InstructionMetadata::isCall() const
+{
+    return       
+        m_opcode == 0x4C ||
+        m_opcode == 0x5C ||
+        m_opcode == 0x6C ||
+        m_opcode == 0x7C ||
+        m_opcode == 0xDC ||
+        m_opcode == 0x80;
 }
 
 bool InstructionMetadata::isJump() const
 {
     return
-        m_opcode == 0x4C ||
-        m_opcode == 0x5C ||
-        m_opcode == 0x6C ||
-        m_opcode == 0x7C ||
-        m_opcode == 0xDC;
+        m_opcode == 0x20 ||
+        m_opcode == 0x22 ||
+        m_opcode == 0xFC;
 }
 
 bool InstructionMetadata::isReturn() const
@@ -50,14 +61,14 @@ bool InstructionMetadata::isReturn() const
         m_opcode == 0x6B;   //RTL
 }
 
-Instruction::Instruction(const InstructionMetadata& metadata, shared_ptr<InstructionNameProvider> name_provider, shared_ptr<AnnotationProvider> annotation_provider, bool accum_16, bool index_16, int comment_level)
+Instruction::Instruction(const InstructionMetadata& metadata, shared_ptr<InstructionNameProvider> name_provider, shared_ptr<AnnotationProvider> annotation_provider, const DisassemblerState& state, int comment_level)
 : m_metadata(metadata),
 m_name_provider(name_provider), 
 m_annotation_provider(annotation_provider),
 m_is_address_symbolic(false),
-m_accum_16(accum_16),
-m_index_16(index_16),
-m_comment_level(comment_level)
+m_comment_level(comment_level),
+m_initial_accum_16(state.is_accum_16bit()), 
+m_initial_index_16(state.is_index_16bit())
 {
     address[0] = 0;
     additional_instruction[0] = 0;
@@ -133,7 +144,7 @@ string Instruction::annotatedName() const
 {
     string name = m_name_provider ? m_name_provider->get_name(m_metadata.opcode()) 
         : m_metadata.internal_name();
-    string annotation = m_annotation_provider->get_annotation(m_metadata.opcode(), m_accum_16, m_index_16, isAddressSymbolic());
+    string annotation = m_annotation_provider->get_annotation(m_metadata.opcode(), m_initial_accum_16, m_initial_index_16, isAddressSymbolic());
     return name + annotation;
 }
 

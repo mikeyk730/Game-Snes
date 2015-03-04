@@ -1,4 +1,3 @@
-struct DisasmState;
 struct DisassemblerContext;
 struct Instruction;
 

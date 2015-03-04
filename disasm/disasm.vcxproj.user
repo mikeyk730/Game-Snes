@@ -3,10 +3,10 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LocalDebuggerCommand>$(TargetPath)</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArguments>--ptr $(TargetDir)\all.ptr --data $(TargetDir)\all.data $(TargetDir)\mario.smc</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>--ptr $(TargetDir)\all.ptr --data $(TargetDir)\all.data --comment $(TargetDir)\all.comment $(TargetDir)\mario.smc</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LocalDebuggerCommandArguments>--comment $(TargetDir)\all.comment --ptr $(TargetDir)\all.ptr --data $(TargetDir)\all.data $(TargetDir)\mario.smc</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>--ptr $(TargetDir)\all.ptr --data $(TargetDir)\all.data --comment $(TargetDir)\all.comment $(TargetDir)\mario.smc</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>

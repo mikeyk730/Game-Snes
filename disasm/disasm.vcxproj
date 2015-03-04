@@ -87,6 +87,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\annoation_handlers.cpp" />
+    <ClCompile Include="src\byte_properties.cpp" />
     <ClCompile Include="src\disassembler_context.cpp" />
     <ClCompile Include="src\instruction.cpp" />
     <ClCompile Include="src\instruction_handlers.cpp" />
@@ -98,6 +99,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\annotation_handlers.h" />
+    <ClInclude Include="src\byte_properties.h" />
     <ClInclude Include="src\disassembler_context.h" />
     <ClInclude Include="src\instruction.h" />
     <ClInclude Include="src\instruction_handlers.h" />

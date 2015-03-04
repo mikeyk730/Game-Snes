@@ -9,6 +9,8 @@ using namespace Address;
 
 string getRAMComment(unsigned int addr, int comment_level);
 
+//todo: data_bank is not used correctly
+
 namespace InstructionHandler
 {
     void Implied(DisassemblerContext* context, Instruction* output)
@@ -43,7 +45,7 @@ namespace InstructionHandler
         unsigned char j = context->read_next_byte(NULL);
         output->addInstructionBytes(i, j);
 
-        string msg = context->get_label(context->address_bank(), address_16bit(i, j));
+        string msg = context->get_label(context->data_bank(), address_16bit(i, j));
 
         if (msg.empty())
             output->setDirectAddress("$%.4X", address_16bit(i, j));
@@ -75,7 +77,7 @@ namespace InstructionHandler
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
 
-        string msg = context->get_label(context->address_bank(), i);
+        string msg = context->get_label(context->data_bank(), i);
         if (msg.empty())
             output->setDirectAddress("$%.2X", i);
         else
@@ -88,7 +90,7 @@ namespace InstructionHandler
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
 
-        string msg = context->get_label(context->address_bank(), i);
+        string msg = context->get_label(context->data_bank(), i);
         if (msg.empty())
             output->setDirectAddress("($%.2X),Y", i);
         else
@@ -101,7 +103,7 @@ namespace InstructionHandler
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
 
-        string msg = context->get_label(context->address_bank(), i);
+        string msg = context->get_label(context->data_bank(), i);
         if (msg.empty())
             output->setDirectAddress("[$%.2X],Y", i);
         else
@@ -114,7 +116,7 @@ namespace InstructionHandler
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
 
-        string msg = context->get_label(context->address_bank(), i);
+        string msg = context->get_label(context->data_bank(), i);
         if (msg.empty())
             output->setDirectAddress("($%.2X,X)", i);
         else
@@ -127,7 +129,7 @@ namespace InstructionHandler
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
 
-        string msg = context->get_label(context->address_bank(), i);
+        string msg = context->get_label(context->data_bank(), i);
         if (msg.empty())
             output->setDirectAddress("$%.2X,X", i);
         else
@@ -141,7 +143,7 @@ namespace InstructionHandler
         unsigned char j = context->read_next_byte(NULL);
         output->addInstructionBytes(i, j);
 
-        string msg = context->get_label(context->address_bank(), address_16bit(i, j));
+        string msg = context->get_label(context->data_bank(), address_16bit(i, j));
         if (msg.empty())
             output->setDirectAddress("$%.4X,X", address_16bit(i, j));
         else
@@ -170,7 +172,7 @@ namespace InstructionHandler
         unsigned char j = context->read_next_byte(NULL);
         output->addInstructionBytes(i, j);
 
-        string msg = context->get_label(context->address_bank(), address_16bit(i, j));
+        string msg = context->get_label(context->data_bank(), address_16bit(i, j));
         if (msg.empty())
             output->setDirectAddress("$%.4X,Y", address_16bit(i, j));
         else
@@ -183,7 +185,7 @@ namespace InstructionHandler
         unsigned char  i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
 
-        string msg = context->get_label(context->address_bank(), i);
+        string msg = context->get_label(context->data_bank(), i);
         if (msg.empty())
             output->setDirectAddress("($%.2X)", i);
         else
@@ -196,7 +198,7 @@ namespace InstructionHandler
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
 
-        string msg = context->get_label(context->address_bank(), i);
+        string msg = context->get_label(context->data_bank(), i);
         if (msg.empty())
             output->setDirectAddress("[$%.2X]", i);
         else
@@ -209,7 +211,7 @@ namespace InstructionHandler
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
 
-        string msg = context->get_label(context->address_bank(), i);
+        string msg = context->get_label(context->data_bank(), i);
         if (msg.empty())
             output->setDirectAddress("$%.x,S", i);
         else
@@ -222,7 +224,7 @@ namespace InstructionHandler
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
 
-        string msg = context->get_label(context->address_bank(), i);
+        string msg = context->get_label(context->data_bank(), i);
         if (msg.empty())
             output->setDirectAddress("($%.2X,S),Y", i);
         else
@@ -236,7 +238,7 @@ namespace InstructionHandler
         char r = context->read_next_byte(&pc);
         output->addInstructionBytes((unsigned char)r);
 
-        string msg = context->get_label(context->address_bank(), pc + r);
+        string msg = context->get_label(context->data_bank(), pc + r);
         if (msg.empty())
             output->setDirectAddress("$%.4X", pc + r);
         else
@@ -253,7 +255,7 @@ namespace InstructionHandler
 
         long ll = address_16bit(i, j);
         if (ll > 32767) ll = -(65536 - ll);
-        long xx = full_address(context->address_bank(), pc) + ll;
+        long xx = full_address(context->data_bank(), pc) + ll;
         string msg = context->get_label(bank_from_addr24(xx), addr16_from_addr24(xx));
         if (msg.empty())
             output->setDirectAddress("$%.6x", xx);
@@ -278,7 +280,7 @@ namespace InstructionHandler
         unsigned char j = context->read_next_byte(NULL);
         output->addInstructionBytes(i, j);
 
-        string msg = context->get_label(context->address_bank(), address_16bit(i, j));
+        string msg = context->get_label(context->data_bank(), address_16bit(i, j));
         if (msg.empty())
             output->setDirectAddress("[$%.4X]", address_16bit(i, j));
         else
@@ -292,7 +294,7 @@ namespace InstructionHandler
         unsigned char j = context->read_next_byte(NULL);
         output->addInstructionBytes(i, j);
 
-        string msg = context->get_label(context->address_bank(), address_16bit(i, j));
+        string msg = context->get_label(context->data_bank(), address_16bit(i, j));
         if (msg.empty())
             output->setDirectAddress("($%.4X)", address_16bit(i, j));
         else
@@ -306,7 +308,7 @@ namespace InstructionHandler
         unsigned char j = context->read_next_byte(NULL);
         output->addInstructionBytes(i, j);
 
-        string msg = context->get_label(context->address_bank(), address_16bit(i, j));
+        string msg = context->get_label(context->data_bank(), address_16bit(i, j));
         if (msg.empty())
             output->setDirectAddress("($%.4X,X)", address_16bit(i, j));
         else
@@ -319,7 +321,7 @@ namespace InstructionHandler
         unsigned char i = context->read_next_byte(NULL);
         output->addInstructionBytes(i);
 
-        string msg = context->get_label(context->address_bank(), i);
+        string msg = context->get_label(context->data_bank(), i);
         if (msg.empty())
             output->setDirectAddress("$%.2X,Y", i);
         else
@@ -395,7 +397,7 @@ namespace InstructionHandler
 
         unsigned char oldk = k;
         if (k == 0xFF)
-            k = context->address_bank();
+            k = context->data_bank();
 
         string msg = context->get_label(k, address_16bit(i, j));
         if (msg.empty()){
