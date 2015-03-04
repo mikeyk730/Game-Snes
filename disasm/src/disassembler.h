@@ -40,7 +40,7 @@ struct DisassemblerState
     unsigned int m_current_addr;
     bool m_accum_16;
     bool m_index_16;
-    bool m_data_bank;
+    //unsigned char m_data_bank; //todo: move this here
 };
 
 
@@ -61,6 +61,7 @@ public:
 
     void setProcessFlags();
 
+    void load_data_bank(const char *filename);
     void load_data(const char *filename, bool is_ptr_data = false); //todo: separate
     void load_comments(const char *filename);
     void load_symbols(const char *filename, bool ram = false); //todo: separate

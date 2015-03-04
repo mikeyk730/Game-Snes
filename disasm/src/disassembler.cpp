@@ -63,6 +63,7 @@ namespace{
 }
 
 DisassemblerState::DisassemblerState() :
+m_hirom(false),
 m_accum_16(false),
 m_index_16(false)
 {}
@@ -107,9 +108,9 @@ m_annotation_provider(new DefaultAnnotations)
     m_data = new ByteProperties[MAX_FILE_SIZE];
     for (int bank = 0; bank < MAX_FILE_SIZE / BANK_SIZE; ++bank)
     {
-        for (int i = bank * BANK_SIZE; i < BANK_SIZE; ++i)
+        for (int i = 0; i < BANK_SIZE; ++i)
         {
-            m_data[i].data_bank(bank);
+            m_data[bank*BANK_SIZE + i].data_bank(bank);
         }
     }
 }
@@ -344,9 +345,38 @@ void Disassembler::load_symbols2(const char *fname)
     unsigned int fulladdr;
     while (get_full_address(in, &fulladdr)){
         string label = "CODE_" + to_string(fulladdr, 6);
-        m_data[index_from_full_address(fulladdr)].label(label);
+        if (m_data[index_from_full_address(fulladdr)].label().empty())
+            m_data[index_from_full_address(fulladdr)].label(label);
     }
     cerr << "; Reading symbols... done." << endl;
+}
+
+void Disassembler::load_data_bank(const char *filename)
+{
+    fstream in(filename);
+    string line;
+    while (getline(in, line)){
+        if (is_comment(line)) continue;
+
+        string label;
+        istringstream line_stream(line);
+
+        unsigned char bank, end_bank;
+        unsigned int addr, end_addr;
+        int data_bank;
+        if (!get_data_address(line_stream, &bank, &addr) ||
+            !get_data_address(line_stream, &end_bank, &end_addr) ||
+            !(line_stream >> hex >> data_bank)){
+            cerr << "Couldn't read data bank line: " << line << endl;
+            continue;
+        }
+
+        unsigned int index = get_index(bank, addr);
+        unsigned int size = get_index(end_bank, end_addr) - index;
+        for (int i = 0; i < size; ++i){
+            m_data[index + i].data_bank(data_bank);
+        }
+    }
 }
 
 void Disassembler::load_data(const char *fname, bool is_ptr_data)
@@ -385,13 +415,9 @@ void Disassembler::load_data(const char *fname, bool is_ptr_data)
 
         int flag_byte = 1;
         if (is_ptr_data){
-            int ptr_bank;
-            if (!(line_stream >> flag_byte >> hex >> ptr_bank)){
+            if (!(line_stream >> flag_byte)){
                 cerr << "couldn't read pointer size in: " << line << endl;
                 exit(-1);
-            }
-            for (int i = 0; i < size; i += flag_byte){
-                m_data[index+i].data_bank(ptr_bank);
             }
         }
 

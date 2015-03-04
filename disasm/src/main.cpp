@@ -37,6 +37,8 @@ void main (int argc, char *argv[])
             disasm.set_output_format(argv[i]);
         else if (current == "--annotate" && ++i < argc)
             disasm.set_annotation_format(argv[i]);
+        else if (current == "--dbank" && ++i < argc)
+            disasm.load_data_bank(argv[i]);
         else if (current == "--data" && ++i < argc)
             disasm.load_data(argv[i]);
         else if (current == "--ptr" && ++i < argc)

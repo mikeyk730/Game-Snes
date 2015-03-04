@@ -34,7 +34,7 @@ bool InstructionMetadata::isBranch() const
         m_opcode == 0x70;
 }
 
-bool InstructionMetadata::isCall() const
+bool InstructionMetadata::isJump() const
 {
     return       
         m_opcode == 0x4C ||
@@ -45,7 +45,7 @@ bool InstructionMetadata::isCall() const
         m_opcode == 0x80;
 }
 
-bool InstructionMetadata::isJump() const
+bool InstructionMetadata::isCall() const
 {
     return
         m_opcode == 0x20 ||
